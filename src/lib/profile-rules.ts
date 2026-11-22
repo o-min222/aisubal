@@ -89,6 +89,10 @@ export const PROFILE_ERRORS: Record<string, string> = {
   profile_bio_too_long: '소개는 160자까지예요.',
   profile_avatar_invalid: '아바타 이미지를 다시 올려주세요.',
   profile_nickname_taken: '이미 쓰는 별명이에요.',
+  handle_change_cooldown: '핸들은 14일 동안 2번까지 바꿀 수 있어요. 프로필에서 다음 변경 가능일을 확인하세요.',
+  handle_on_hold: '최근에 다른 멤버가 쓰던 핸들이라 14일 동안 보호 중이에요.',
+  handle_taken: '이미 쓰는 핸들이에요. 다른 핸들을 골라주세요.',
+  handle_change_use_rpc: '핸들은 프로필에서만 바꿀 수 있어요.',
   links_invalid: '링크는 12개까지 저장할 수 있어요.',
   links_invalid_url: '링크 주소를 확인해주세요.',
 }

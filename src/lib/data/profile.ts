@@ -2,6 +2,8 @@ import type { Member } from '@/lib/supabase/types'
 import { LINK_KIND_SET, MAX_LINKS, validateLink, type LinkVisibility, type ProfileLink } from '@/lib/profile-rules'
 import { sb, useMockData as isMock } from './client'
 import { msg } from '@/i18n/translate'
+import { quotaFrom, type HandleCheckState, type HandleHistoryRow, type HandleStatus } from '@/lib/handle-policy'
+import { validateHandle } from '@/lib/profile-rules'
 
 /**
  * Self-made profile (0010): saved through profile_save / links_save RPCs.
@@ -28,6 +30,81 @@ export async function handleAvailable(handle: string): Promise<boolean> {
   const { data, error } = await supabase.rpc('profile_handle_available', { p_handle: handle })
   if (error) throw new Error(error.message)
   return Boolean(data)
+}
+
+// ---- @handle change policy (0032) ----
+type MockHandleRow = HandleHistoryRow & { memberId: string }
+const gh = globalThis as unknown as { __aisubalHandles?: MockHandleRow[]; __aisubalHandleNow?: Map<string, string> }
+const mockHistory = () => (gh.__aisubalHandles ??= [])
+const mockHandleNow = () => (gh.__aisubalHandleNow ??= new Map())
+const HOLD_MS = 14 * 86_400_000
+
+function mockStatus(member: Member, candidate?: string | null): HandleStatus {
+  const current = mockHandleNow().get(member.id) ?? mockStore().get(member.id)?.handle ?? member.handle ?? null
+  const now = Date.now()
+  const mine = mockHistory().filter((r) => r.memberId === member.id).sort((a, b) => b.changedAt.localeCompare(a.changedAt))
+  let check: HandleStatus['check'] = null
+  const v = (candidate ?? '').trim().replace(/^@/, '').toLowerCase()
+  if (v) {
+    const hold = mockHistory().find((r) => r.old === v && Date.parse(r.releasedAt) > now)
+    const state: HandleCheckState =
+      v === current ? 'same'
+      : !validateHandle(v).ok ? 'invalid'
+      : TAKEN.has(v) || [...mockStore().entries()].some(([id, p]) => id !== member.id && p.handle === v) ? 'taken'
+      : hold && hold.memberId !== member.id ? 'on_hold'
+      : hold ? 'own_hold' : 'available'
+    check = { handle: v, state, heldUntil: state === 'own_hold' && hold ? hold.releasedAt : null }
+  }
+  return { current, firstIsFree: !current, quota: quotaFrom(mine.map((r) => new Date(r.changedAt))), check, history: mine.slice(0, 10).map(({ memberId: _m, ...r }) => r) }
+}
+
+/** Quota, my own change history and (optionally) a live check of a candidate handle. */
+export async function handleStatus(member: Member, candidate?: string | null): Promise<HandleStatus> {
+  if (isMock()) return mockStatus(member, candidate)
+  const supabase = await sb()
+  const { data, error } = await supabase.rpc('profile_handle_status', { p_handle: candidate ?? null })
+  if (error) throw Object.assign(new Error(error.message), { details: error.details })
+  return data as HandleStatus
+}
+
+/** Change the @handle under the policy. Errors carry the DB code (+ details = next date for cooldown). */
+export async function changeHandle(member: Member, handle: string): Promise<HandleStatus> {
+  if (isMock()) {
+    const st = mockStatus(member, handle)
+    const c = st.check!
+    if (c.state === 'same') return st
+    if (c.state === 'invalid') throw new Error('profile_handle_invalid')
+    if (c.state === 'taken') throw new Error('handle_taken')
+    if (c.state === 'on_hold') throw new Error('handle_on_hold')
+    if (st.current && st.quota.remaining <= 0) throw Object.assign(new Error('handle_change_cooldown'), { details: st.quota.nextAt })
+    const now = new Date()
+    if (st.current) {
+      for (const r of mockHistory()) if (r.memberId === member.id && r.old === c.handle && Date.parse(r.releasedAt) > now.getTime()) r.releasedAt = now.toISOString()
+      mockHistory().push({ memberId: member.id, old: st.current, new: c.handle, changedAt: now.toISOString(), releasedAt: new Date(now.getTime() + HOLD_MS).toISOString() })
+    }
+    mockHandleNow().set(member.id, c.handle)
+    const cur = mockStore().get(member.id)
+    if (cur) cur.handle = c.handle
+    return mockStatus(member)
+  }
+  const supabase = await sb()
+  const { data, error } = await supabase.rpc('profile_change_handle', { p_handle: handle })
+  if (error) throw Object.assign(new Error(error.message), { details: error.details })
+  return data as HandleStatus
+}
+
+/** /u/{old}: an old handle → its member during the 14-day hold, or later while nobody has claimed it. */
+export async function memberIdByOldHandle(handle: string): Promise<string | null> {
+  if (isMock()) {
+    const now = Date.now()
+    const r = mockHistory().filter((x) => x.old === handle).sort((a, b) => b.changedAt.localeCompare(a.changedAt))[0]
+    if (!r) return null
+    const claimed = [...mockHandleNow().values()].includes(handle) || [...mockStore().values()].some((p) => p.handle === handle)
+    return Date.parse(r.releasedAt) > now || !claimed ? r.memberId : null
+  }
+  const supabase = await sb()
+  const { data } = await supabase.rpc('member_id_by_old_handle', { p_handle: handle })
+  return (data as string | null) ?? null
 }
 
 export async function saveProfile(member: Member, input: ProfileInput): Promise<void> {

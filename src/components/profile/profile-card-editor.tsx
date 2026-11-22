@@ -10,6 +10,7 @@ import { ServiceIcon } from '@/components/service-chip'
 import { AdaptiveSheet } from '@/components/adaptive-sheet'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { LinksEditor } from '@/components/profile/links-editor'
+import { HandleField } from '@/components/profile/handle-field'
 import { LinkIcon } from '@/components/profile/link-icon'
 import { Picker, type Item, type StackEditorInitial } from '@/components/profile/stack-editor'
 import type { ProfileFormMember } from '@/components/profile/profile-form'
@@ -62,7 +63,8 @@ export function ProfileCardEditor({
   const last = useRef({ name, handle: normalizeHandle(handle), bio, showReal })
 
   async function saveProfile(patch: Partial<{ name: string; handle: string; bio: string; showReal: boolean; avatar: string }> = {}) {
-    const next = { name, handle: normalizeHandle(handle), bio, showReal, ...patch }
+    // the handle is changed only through HandleField (policy + confirm); keep the saved one here
+    const next = { name, handle: last.current.handle || normalizeHandle(handle), bio, showReal, ...patch }
     if (next.handle) next.handle = normalizeHandle(next.handle)
     const nameOk = validateDisplayName(next.name)
     if (!nameOk.ok) return toast.error(nameOk.reason)
@@ -279,24 +281,7 @@ export function ProfileCardEditor({
             onBlur={() => void saveProfile()}
             onKeyDown={(e) => e.key === 'Enter' && e.currentTarget.blur()}
           />
-          <label className="pe-handle">
-            <span aria-hidden>@</span>
-            <input
-              className="pe-inline"
-              value={handle}
-              maxLength={20}
-              placeholder="handle"
-              aria-label={tx('핸들')}
-              aria-invalid={Boolean(handleErr)}
-              onChange={(e) => {
-                setHandle(e.target.value.replace(/^@/, ''))
-                setHandleErr(null)
-              }}
-              onBlur={() => void saveProfile()}
-              onKeyDown={(e) => e.key === 'Enter' && e.currentTarget.blur()}
-            />
-          </label>
-          {handleErr && <p className="text-[12px] text-c-b42318 mt-0.5">{handleErr}</p>}
+          <HandleField initial={me.handle ?? ''} onChanged={(h) => { setHandle(h); last.current = { ...last.current, handle: h } }} />
           <textarea
             className="pe-inline pe-bio"
             value={bio}

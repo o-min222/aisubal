@@ -1,10 +1,10 @@
 import { notFound, redirect } from 'next/navigation'
-import { getMemberIdByHandle } from '@/lib/data/members'
+import { resolveHandle } from '@/lib/data/members'
 
-/** @handle → profile. Mentions link here; names never resolve to people. */
+/** @handle → profile. Mentions link here; names never resolve to people. Old handles resolve during their hold (0032). */
 export default async function HandlePage({ params }: { params: Promise<{ handle: string }> }) {
   const { handle } = await params
-  const id = await getMemberIdByHandle(decodeURIComponent(handle).toLowerCase()).catch(() => null)
+  const id = await resolveHandle(decodeURIComponent(handle).toLowerCase()).catch(() => null)
   if (!id) notFound()
   redirect(`/members/${id}`)
 }

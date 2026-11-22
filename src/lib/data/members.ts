@@ -111,3 +111,12 @@ export async function getMemberIdByHandle(handle: string): Promise<string | null
   const { data } = await supabase.from('members').select('id').eq('handle', handle).not('signup_completed_at', 'is', null).maybeSingle()
   return (data as { id: string } | null)?.id ?? null
 }
+
+/** Current handle first; else an old handle during its 14-day hold (or released but unclaimed). */
+export async function resolveHandle(handle: string): Promise<string | null> {
+  if (!/^[a-z0-9_]{3,20}$/.test(handle)) return null
+  const id = await getMemberIdByHandle(handle).catch(() => null)
+  if (id) return id
+  const { memberIdByOldHandle } = await import('./profile')
+  return memberIdByOldHandle(handle).catch(() => null)
+}
