@@ -8,18 +8,13 @@ import {
   MUTABLE_TOOLBOX,
 } from '@/lib/mock-toolbox'
 import {
-  canonicalUrl,
   compatSummary,
-  extractGithubOwnerRepo,
-  inferToolboxType,
   recomputeRating,
   recordMention,
   sortEntries,
   type ToolboxSort,
-  upsertByCanonicalUrl,
 } from '@/lib/toolbox-rules'
 import type {
-  Member,
   Post,
   ToolboxCompatVote,
   ToolboxEntry,
@@ -27,7 +22,7 @@ import type {
   ToolboxMention,
   ToolboxReview,
 } from '@/lib/supabase/types'
-import { sb, useMockData } from './client'
+import { sb, useMockData as isMock } from './client'
 import type { ToolboxEntryDetails } from './types'
 import { msg } from '@/i18n/translate'
 
@@ -35,25 +30,13 @@ export type { ToolboxEntryDetails } from './types'
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
-type CreateToolboxInput = {
-  name: string
-  one_liner: string
-  description?: string
-  type?: ToolboxEntry['type']
-  tags?: string[]
-  canonical_url: string
-  github_url?: string | null
-  homepage_url?: string | null
-  license?: string | null
-}
-
 export async function listToolbox(opts?: {
   type?: string
   tag?: string
   q?: string
   sort?: ToolboxSort
 }): Promise<ToolboxEntry[]> {
-  if (useMockData()) return mockList(opts)
+  if (isMock()) return mockList(opts)
 
   const supabase = await sb()
   let query = supabase.from('toolbox_entries').select('*')
@@ -76,14 +59,14 @@ export async function listToolbox(opts?: {
 }
 
 export async function featuredToolbox(limit = 4): Promise<ToolboxEntry[]> {
-  if (useMockData()) return mockFeatured(limit)
+  if (isMock()) return mockFeatured(limit)
   const list = await listToolbox({ sort: 'trending' })
   return list.filter((e) => e.featured).slice(0, limit)
 }
 
 /** Old gallery slug → current slug (0035 toolbox_slug_redirects), or null. */
 export async function galleryRedirectSlug(oldSlug: string): Promise<string | null> {
-  if (useMockData() || UUID_RE.test(oldSlug)) return null
+  if (isMock() || UUID_RE.test(oldSlug)) return null
   const supabase = await sb()
   const { data } = await supabase
     .from('toolbox_slug_redirects')
@@ -97,7 +80,7 @@ export async function galleryRedirectSlug(oldSlug: string): Promise<string | nul
 export async function getToolboxEntry(
   idOrSlug: string
 ): Promise<ToolboxEntryDetails | null> {
-  if (useMockData()) return mockGetEntry(idOrSlug)
+  if (isMock()) return mockGetEntry(idOrSlug)
 
   const supabase = await sb()
   const { data: entry, error } = await supabase
@@ -128,88 +111,10 @@ export async function getToolboxEntry(
   }
 }
 
-export async function createToolboxEntry(
-  member: Member,
-  data: CreateToolboxInput
-): Promise<{ entry: ToolboxEntryDetails; created: boolean }> {
-  const url = canonicalUrl(data.canonical_url)
-  const repo = extractGithubOwnerRepo(url)
-  const type = data.type || inferToolboxType(url, data.name)
-  const slug =
-    (repo ? `${repo.owner}-${repo.repo}` : data.name)
-      .toLowerCase()
-      .replace(/[^a-z0-9가-힣]+/gi, '-')
-      .replace(/^-|-$/g, '') || `tool-${Date.now()}`
-
-  if (useMockData()) {
-    const result = upsertByCanonicalUrl(MUTABLE_TOOLBOX, {
-      slug,
-      name: data.name,
-      one_liner: data.one_liner,
-      description: data.description || data.one_liner,
-      type,
-      tags: data.tags || [],
-      canonical_url: url,
-      github_url: data.github_url ?? (repo ? url : null),
-      homepage_url: data.homepage_url ?? null,
-      license: data.license ?? null,
-      last_commit_at: null,
-      source_repo: repo ? `${repo.owner}/${repo.repo}` : null,
-      icon_url: null,
-      mention_count: 0,
-      install_count: 0,
-      avg_rating: 0,
-      rating_count: 0,
-      featured: false,
-      created_by_id: member.id,
-      install_snippets: {},
-    })
-    MUTABLE_TOOLBOX.splice(0, MUTABLE_TOOLBOX.length, ...result.entries)
-    return {
-      entry: mockGetEntry(result.entry.id)!,
-      created: result.created,
-    }
-  }
-
-  const supabase = await sb()
-
-  const { data: existing } = await supabase
-    .from('toolbox_entries')
-    .select('*')
-    .eq('canonical_url', url)
-    .maybeSingle()
-
-  if (existing) {
-    return { entry: (await getToolboxEntry((existing as ToolboxEntry).id))!, created: false }
-  }
-
-  const { data: inserted, error } = await supabase
-    .from('toolbox_entries')
-    .insert({
-      slug,
-      name: data.name,
-      one_liner: data.one_liner,
-      description: data.description || data.one_liner,
-      type,
-      tags: data.tags || [],
-      canonical_url: url,
-      github_url: data.github_url ?? (repo ? url : null),
-      homepage_url: data.homepage_url ?? null,
-      license: data.license ?? null,
-      source_repo: repo ? `${repo.owner}/${repo.repo}` : null,
-      install_snippets: {}, // unverified until a reviewer confirms (0033)
-      created_by_id: member.id,
-    })
-    .select('*')
-    .single()
-  if (error) throw error
-  return { entry: (await getToolboxEntry((inserted as ToolboxEntry).id))!, created: true }
-}
-
 export async function recordToolboxInstall(
   idOrSlug: string
 ): Promise<ToolboxEntryDetails> {
-  if (useMockData()) {
+  if (isMock()) {
     const entry = MUTABLE_TOOLBOX.find((e) => e.id === idOrSlug || e.slug === idOrSlug)
     if (!entry) throw new Error(msg('항목을 찾을 수 없습니다.'))
     entry.install_count += 1
@@ -231,7 +136,7 @@ export async function upsertToolboxReview(
   rating: number,
   body: string
 ): Promise<ToolboxEntryDetails> {
-  if (useMockData()) {
+  if (isMock()) {
     const entry = MUTABLE_TOOLBOX.find((e) => e.id === entryId || e.slug === entryId)
     if (!entry) throw new Error(msg('항목을 찾을 수 없습니다.'))
     const idx = MUTABLE_REVIEWS.findIndex(
@@ -288,7 +193,7 @@ export async function voteToolboxCompat(
   environment: ToolboxEnvironment,
   works: boolean
 ): Promise<ToolboxEntryDetails> {
-  if (useMockData()) {
+  if (isMock()) {
     const entry = MUTABLE_TOOLBOX.find((e) => e.id === entryId || e.slug === entryId)
     if (!entry) throw new Error(msg('항목을 찾을 수 없습니다.'))
     const idx = MUTABLE_COMPAT.findIndex(
@@ -330,7 +235,7 @@ export async function voteToolboxCompat(
 export async function aggregateMentionsFromPosts(
   posts: Array<Pick<Post, 'id' | 'url' | 'link_title' | 'link_description' | 'link_favicon'>> = []
 ) {
-  if (useMockData()) {
+  if (isMock()) {
     mockAggregate(posts as Parameters<typeof mockAggregate>[0])
     return
   }

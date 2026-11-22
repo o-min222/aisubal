@@ -34,7 +34,8 @@ export const TOOL_SCOPES: Record<string, string[]> = {
   list_tools: GALLERY_R,
   read_tool: GALLERY_R,
   get_install_instructions: GALLERY_R,
-  install_tool: ['toolbox_write'],
+  // 0058: recording an install is counted once per member, so any gallery read scope may call it
+  install_tool: GALLERY_R,
   set_tool_usage: ['toolbox_write'],
   launch_product: ['products_write'],
   // archive

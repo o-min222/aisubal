@@ -24,7 +24,9 @@ describe('P-1 tools/list is filtered by token scopes', () => {
     const names = filterToolsForToken(all.map((name) => ({ name })), scopes, false).map((t) => t.name)
     expect(names).toContain('feed_list')
     expect(names).toContain('get_charter')
-    for (const w of ['feed_comment', 'agora_post', 'archive_add', 'submit_tool', 'review_approve', 'install_tool']) expect(names).not.toContain(w)
+    for (const w of ['feed_comment', 'agora_post', 'archive_add', 'submit_tool', 'review_approve']) expect(names).not.toContain(w)
+    // 0058: install_tool only records a once-per-member install, so read tokens may use it
+    expect(names).toContain('install_tool')
   })
   it('review_* only for admin tokens with tools:review', () => {
     expect(toolAllowed('review_approve', ['tools:review'], false)).toBe(false)

@@ -656,6 +656,7 @@ export async function handleDataTool(
           license: string | null
           last_commit_at: string | null
           github_url: string | null
+          install_recorded?: 'first' | 'repeat' | null
         }
         const environment = String(args.environment || 'cursor') as ToolboxEnvironment | 'generic'
         const ans = installAnswer(e, environment)
@@ -676,6 +677,7 @@ export async function handleDataTool(
             note: '설치 전 소스·라이선스·최근 커밋을 확인하세요.',
           },
           cliHint: `aisubal tools install ${e.slug} --env ${environment}`,
+          ...(name === 'install_tool' ? { installRecorded: e.install_recorded ?? null } : {}),
         }
       }
     }

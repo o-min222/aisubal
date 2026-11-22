@@ -161,7 +161,7 @@ const TOOLS = [
   },
   {
     name: 'install_tool',
-    description: '설치 지시 반환 + install_count 증가. Scope: toolbox_write',
+    description: '설치 지시 반환 + 설치 기록 (같은 멤버는 도구당 한 번만 집계). 갤러리 읽기 scope면 충분해요.',
     inputSchema: {
       type: 'object',
       properties: {
