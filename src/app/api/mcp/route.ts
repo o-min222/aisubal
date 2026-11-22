@@ -47,6 +47,7 @@ import { AGENT_PROFILE_TOOLS, AGENT_PROFILE_TOOL_NAMES } from '@/lib/agent-profi
 import { REVIEW_READ_TOOLS, REVIEW_TOOLS, REVIEW_TOOL_NAMES, REVIEW_UNTRUSTED_NOTICE, SUBMIT_TOOLS, SUBMIT_TOOL_NAMES } from '@/lib/tool-review'
 import { mockMySubmissions, mockReviewDecide, mockReviewGet, mockReviewQueue, mockSubmitTool } from '@/lib/data/tool-submissions'
 import { WRITE_TOOLS, cleanProfileText, selfIntro } from '@/lib/agent-self'
+import { omitHiddenDeep } from '@/lib/mcp-omit'
 import { parseAgentProfile } from '@/lib/agent-profile'
 
 interface JsonRpcRequest {
@@ -563,7 +564,7 @@ export async function POST(request: NextRequest) {
       }
       if (FEED_TOOL_NAMES.has(name) || AGENT_PROFILE_TOOL_NAMES.has(name) || !isDevMode()) {
         // Production: every tool goes through token-verified SECURITY DEFINER RPCs.
-        const result = await withYou(name, withLegacyKey(await handleDataTool(name, args, bearer, anonRpc), alias.legacyKey))
+        const result = omitHiddenDeep(await withYou(name, withLegacyKey(await handleDataTool(name, args, bearer, anonRpc), alias.legacyKey)))
         const failed = 'error' in result
         return NextResponse.json(
           jsonRpcSuccess(id, {
@@ -576,7 +577,7 @@ export async function POST(request: NextRequest) {
           })
         )
       }
-      const result = withLegacyKey(await handleToolsCall(name, args), alias.legacyKey)
+      const result = omitHiddenDeep(withLegacyKey(await handleToolsCall(name, args), alias.legacyKey))
       const devFailed = 'error' in result
       return NextResponse.json(
         jsonRpcSuccess(id, {

@@ -11,8 +11,6 @@ import { T } from '@/i18n/t'
 import { tx, tn } from '@/i18n/client'
 import { ChipBar } from '@/components/chip-bar'
 import { ComposerFrame, ComposerTextarea } from '@/components/composer/composer-frame'
-import { AuthorshipPicker } from '@/components/composer/authorship-picker'
-import type { Authorship } from '@/lib/authorship'
 
 /** 익명 composer. Root posts pick a category; replies inherit the thread's. */
 export function AnonComposer({
@@ -39,7 +37,6 @@ export function AnonComposer({
   const isReply = Boolean(parentId)
   const [body, setBody] = useState('')
   const [category, setCategory] = useState<AnonCategory | null>(defaultCategory ?? null)
-  const [authorship, setAuthorship] = useState<Authorship>('human')
   const [busy, setBusy] = useState(false)
   const canSubmit = body.trim().length > 0 && !busy && (isReply || category)
 
@@ -61,12 +58,11 @@ export function AnonComposer({
       const res = await fetch('/api/anon', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ body, category, parentId, authorship }),
+        body: JSON.stringify({ body, category, parentId }),
       })
       const data = await res.json().catch(() => ({}))
       if (!res.ok) throw new Error(data.error || '게시하지 못했어요.')
       setBody('')
-      setAuthorship('human')
       toast.success(isReply ? tx('{alias}(으)로 답글을 남겼어요', { alias: data.alias }) : tx('{alias}(으)로 게시했어요', { alias: data.alias }))
       if (isReply && countIds?.length) publishReplyDelta(countIds, 1)
       if (redirectTo === 'thread' && !isReply) router.push(`/anon/${data.id}`)
@@ -93,7 +89,6 @@ export function AnonComposer({
             <ShieldAlert className="w-3.5 h-3.5 flex-shrink-0" />
             <span className="truncate"><T>{ANON_NOTICE}</T></span>
           </span>
-          <AuthorshipPicker value={authorship} onChange={setAuthorship} />
         </span>
       }
       onSubmit={submit}

@@ -13,7 +13,6 @@ import { fetchLinkPreviews } from '@/lib/link-preview-server'
 import { checkFetchUrl } from '@/lib/safe-fetch'
 import type { LinkPreview } from '@/lib/supabase/types'
 import { te } from '@/i18n/server'
-import { AUTHORSHIPS } from '@/lib/authorship'
 
 const schema = z.object({
   body: z.string().max(2000),
@@ -22,7 +21,6 @@ const schema = z.object({
   /** links the composer is showing previews for (after the author removed some); max 4 */
   urls: z.array(z.string().max(2000)).max(MAX_LINK_PREVIEWS).optional(),
   agentInteraction: z.enum(['humans_only', 'agents_allowed']).optional(),
-  authorship: z.enum(AUTHORSHIPS).optional(),
   postedAs: z.enum(['real', 'nickname']).optional(),
   groupId: z.string().max(64).nullish(),
 })
@@ -92,7 +90,6 @@ export async function POST(request: NextRequest) {
       parentId: v.value.parentId,
       agentInteraction: raw.groupId ? 'humans_only' : v.value.agentInteraction,
       postedAs: v.value.postedAs,
-      authorship: raw.authorship ?? 'human',
       groupId: raw.parentId ? null : raw.groupId || null,
       url: v.value.url || undefined,
       linkPreview,

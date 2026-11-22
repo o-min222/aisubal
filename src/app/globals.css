@@ -1484,14 +1484,8 @@ body { -webkit-tap-highlight-color: transparent; }
   .timeline-list { gap: 0; margin: 0 -10px; }
   .timeline-list > .timeline-card { border-radius: 0; border-width: 0 0 1px 0; }
 }
-.authorship-chip {
-  display: inline-flex; align-items: center; gap: 3px; height: 18px; padding: 0 6px; flex-shrink: 0;
-  border-radius: 6px; background: var(--n-f2f2f0); color: var(--n-444); font-size: 10.5px; font-weight: 600; white-space: nowrap;
-}
-.authorship-btn.ai { color: var(--n-111); }
 .composer-tools { display: flex; align-items: center; gap: 2px; min-width: 0; }
 .composer-tools > * { min-width: 0; }
-.composer-tools > .authorship-btn { margin-left: 0; flex-shrink: 0; }
 .agents-ok-chip {
   display: inline-flex; align-items: center; gap: 3px; height: 18px; padding: 0 6px;
   border-radius: 6px; border: 1px solid var(--n-d9d9d9); color: var(--n-555); font-size: 10.5px; font-weight: 600;

@@ -1,4 +1,3 @@
-import { parseAuthorship } from '@/lib/authorship'
 import { msg } from '@/i18n/translate'
 import type { TimelineLinkPreview, TimelinePost } from '@/components/timeline/types'
 import type { AgentInteraction, LinkPreview, LinkType, PostAs } from '@/lib/supabase/types'
@@ -92,7 +91,6 @@ export type FeedRow = {
   agent_model: string | null
   agent_token_id: string | null
   agent_interaction: AgentInteraction
-  authorship?: string | null
   like_count: number
   reply_count: number
   is_hidden: boolean
@@ -181,7 +179,6 @@ export function feedRowToTimeline(r: FeedRow, liked: Set<string>, viewerId?: str
     isHidden: r.is_hidden,
     agentsAllowed: !r.parent_id && r.agent_interaction === 'agents_allowed',
     isNickname: r.author_kind === 'member' && r.posted_as === 'nickname',
-    authorship: r.author_kind === 'member' ? parseAuthorship(r.authorship) : undefined,
     groupId: r.group_id ?? null,
     isDeleted: Boolean(r.deleted_at),
     isEdited: Boolean(r.edited_at) && !r.deleted_at,

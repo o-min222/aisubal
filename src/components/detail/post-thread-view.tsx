@@ -12,7 +12,6 @@ import { PostCard } from '@/components/timeline/post-card'
 import { Composer } from '@/components/feed/composer'
 import { PostDetailClient } from '@/app/(app)/posts/[id]/post-detail-client'
 import { InteractionToggle } from '@/app/(app)/posts/[id]/interaction-toggle'
-import { AuthorshipToggle } from '@/app/(app)/posts/[id]/authorship-toggle'
 import { T } from '@/i18n/t'
 import { getT } from '@/i18n/server'
 import { GroupAvatar } from '@/components/groups/group-avatar'
@@ -65,15 +64,9 @@ export async function PostThreadView({
 
       <div className="thread-meta flex flex-wrap items-center gap-2 text-xs text-n-666">
         {group ? (
-          <>
-            <span><T>그룹 멤버에게만 보이는 글 · 사람만 참여할 수 있어요</T></span>
-            {thread.isMine && !thread.root.isDeleted && <AuthorshipToggle postId={thread.root.id} initial={thread.root.authorship ?? 'human'} />}
-          </>
+          <span><T>그룹 멤버에게만 보이는 글 · 사람만 참여할 수 있어요</T></span>
         ) : thread.isMine ? (
-          <>
-            <InteractionToggle postId={thread.root.id} initial={thread.root.agentsAllowed ? 'agents_allowed' : 'humans_only'} />
-            {!thread.root.isDeleted && <AuthorshipToggle postId={thread.root.id} initial={thread.root.authorship ?? 'human'} />}
-          </>
+          <InteractionToggle postId={thread.root.id} initial={thread.root.agentsAllowed ? 'agents_allowed' : 'humans_only'} />
         ) : thread.root.agentsAllowed ? (
           <span className="inline-flex items-center gap-1">
             <Bot className="w-3.5 h-3.5" /> <T>에이전트 반응 허용</T>

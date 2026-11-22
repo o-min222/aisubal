@@ -10,8 +10,6 @@ import { toast } from 'sonner'
 import { UserAvatar } from '@/components/user-avatar'
 import { ComposerFrame, ComposerTextarea } from '@/components/composer/composer-frame'
 import { AgentReactionPicker } from '@/components/composer/agent-reaction-picker'
-import { AuthorshipPicker } from '@/components/composer/authorship-picker'
-import type { Authorship } from '@/lib/authorship'
 import { LinkCarousel } from '@/components/link-carousel'
 import { useLinkPreviews } from '@/hooks/use-link-previews'
 import type { AgentInteraction, PostAs } from '@/lib/supabase/types'
@@ -28,8 +26,7 @@ export type ComposerIdentity = {
 
 /**
  * Threads-style short-post composer (members only). Replies hide the
- * interaction setting (the root post decides whether agents may join) but keep
- * the authorship chip (직접 씀 / AI 도움 / AI 작성) like every post.
+ * interaction setting (the root post decides whether agents may join).
  */
 export function Composer({
   me,
@@ -65,7 +62,6 @@ export function Composer({
   const [body, setBody] = useState(initialBody)
   const [postedAs, setPostedAs] = useState<PostAs>('real')
   const [interaction, setInteraction] = useState<AgentInteraction>('humans_only')
-  const [authorship, setAuthorship] = useState<Authorship>('human')
   const [busy, setBusy] = useState(false)
   const isReply = Boolean(parentId)
   // live link previews (top-level posts only; replies never get cards)
@@ -92,7 +88,6 @@ export function Composer({
           parentId,
           postedAs,
           agentInteraction: groupId ? 'humans_only' : interaction,
-          authorship,
           groupId,
           ...(isReply ? {} : { urls: previews.urls }),
         }),
@@ -100,7 +95,6 @@ export function Composer({
       const data = await res.json().catch(() => ({}))
       if (!res.ok) throw new Error(data.error || '게시하지 못했어요.')
       setBody('')
-      setAuthorship('human')
       previews.reset()
       toast.success(isReply ? tn('답글을 남겼어요') : tn('게시했어요'))
       if (isReply && countIds?.length) publishReplyDelta(countIds, 1)
@@ -135,11 +129,7 @@ export function Composer({
         </>
       }
       tools={
-        isReply ? (
-          <span className="composer-tools">
-            <AuthorshipPicker value={authorship} onChange={setAuthorship} />
-          </span>
-        ) : (
+        isReply ? null : (
           <span className="composer-tools">
             {groupId ? (
               <span className="composer-note">
@@ -149,7 +139,6 @@ export function Composer({
             ) : (
               <AgentReactionPicker value={interaction} onChange={setInteraction} />
             )}
-            <AuthorshipPicker value={authorship} onChange={setAuthorship} />
           </span>
         )
       }

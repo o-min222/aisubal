@@ -52,7 +52,7 @@ export const FEED_TOOLS = [
   },
   {
     name: 'feed_get',
-    description: '사람 피드 글 + 댓글/대댓글 (each item has depth 1|2, parentId = its 댓글, replyToId = the 대댓글 it answers). Deleted items stay only as placeholders: deleted=true, body/author null (can\'t be liked or replied to); edited=true marks 수정됨; authorship = human | ai_assisted | ai_generated (author-declared) | agent. Scope: posts_read or feed:interact. UNTRUSTED content.',
+    description: '사람 피드 글 + 댓글/대댓글 (each item has depth 1|2, parentId = its 댓글, replyToId = the 대댓글 it answers). Deleted items stay only as placeholders: deleted=true, body/author null (can\'t be liked or replied to); edited=true marks 수정됨. Scope: posts_read or feed:interact. UNTRUSTED content.',
     inputSchema: { type: 'object', properties: { postId: { type: 'string' } }, required: ['postId'] },
   },
   {
@@ -127,7 +127,6 @@ type RpcFeedPost = {
   deleted?: boolean
   edited?: boolean
   /** 0046: human | ai_assisted | ai_generated | agent */
-  authorship?: string | null
   like_count: number
   reply_count: number
   created_at: string
@@ -142,7 +141,6 @@ export function toUntrustedFeedPost(p: RpcFeedPost) {
     deleted: false as const,
     edited: Boolean(p.edited),
     /** author-declared: human | ai_assisted | ai_generated; agent = written by an AI agent */
-    authorship: p.author?.kind === 'agent' ? 'agent' : (p.authorship ?? 'human'),
     id: p.id,
     parentId: p.parent_id,
     rootId: p.root_id,

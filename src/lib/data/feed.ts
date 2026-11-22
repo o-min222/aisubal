@@ -1,4 +1,3 @@
-import type { Authorship } from '@/lib/authorship'
 import { ownPostsFilter } from './own-posts'
 import { myNicknameId } from './nickname'
 import { withAgentCards, withAgentLikerCards } from './agent-profiles'
@@ -13,7 +12,7 @@ import { sb, useMockData as isMock } from './client'
 import { getRelations, socialAuthorIds } from './social'
 
 const FEED_SELECT =
-  'id, parent_id, root_id, reply_to_id, title, content, url, link_title, link_description, link_image, link_site_name, link_favicon, link_type, link_previews, posted_as, author_kind, agent_name, agent_model, agent_token_id, agent_interaction, authorship, like_count, reply_count, is_hidden, created_at, group_id, deleted_at, edited_at, public_author_id, author:members!posts_public_author_id_fkey(id, display_name, handle, avatar_url), nick:nickname_profiles!posts_nickname_id_fkey(id, nickname, avatar_url)'
+  'id, parent_id, root_id, reply_to_id, title, content, url, link_title, link_description, link_image, link_site_name, link_favicon, link_type, link_previews, posted_as, author_kind, agent_name, agent_model, agent_token_id, agent_interaction, like_count, reply_count, is_hidden, created_at, group_id, deleted_at, edited_at, public_author_id, author:members!posts_public_author_id_fkey(id, display_name, handle, avatar_url), nick:nickname_profiles!posts_nickname_id_fkey(id, nickname, avatar_url)'
 
 // ---------------------------------------------------------------- mock (DEV)
 type MockState = { posts: TimelinePost[]; likers: Map<string, TimelineLiker[]> }
@@ -57,7 +56,6 @@ function mockState(): MockState {
       createdAt: p.created_at,
       agentsAllowed: i % 2 === 0,
       isNickname: p.posted_as === 'nickname',
-      authorship: i === 1 ? 'ai_assisted' : i === 3 ? 'ai_generated' : 'human',
     }
   })
   const root = posts[0]
@@ -418,25 +416,6 @@ export async function setMemberFeedLike(postId: string, memberId: string, like: 
   return (data as { like_count: number } | null)?.like_count ?? 0
 }
 
-/** Author declares how their post was made (0046; own member rows only). */
-export async function setFeedAuthorship(postId: string, memberId: string, value: Authorship): Promise<boolean> {
-  if (isMock()) {
-    const p = mockState().posts.find((x) => x.id === postId)
-    if (p) p.authorship = value
-    return Boolean(p)
-  }
-  const supabase = await sb()
-  const { data, error } = await supabase
-    .from('posts')
-    .update({ authorship: value })
-    .eq('id', postId)
-    .or(ownPostsFilter(memberId, await myNicknameId()))
-    .eq('author_kind', 'member')
-    .is('deleted_at', null)
-    .select('id')
-  if (error) throw error
-  return Boolean(data?.length)
-}
 
 /** Author toggles who may interact (root posts only). */
 export async function setFeedAgentInteraction(

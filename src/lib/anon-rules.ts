@@ -1,5 +1,4 @@
 import { msg as M } from '@/i18n/translate'
-import { AUTHORSHIPS, parseAuthorship, type Authorship } from '@/lib/authorship'
 import type { TimelinePost } from '@/components/timeline/types'
 
 /** 익명 board rules shared by API routes, the mock store and tests. */
@@ -51,21 +50,19 @@ export function pickAlias(used: Iterable<string>, rand: () => number = Math.rand
   return `익명의 ${ANON_ANIMALS[Math.floor(rand() * ANON_ANIMALS.length)]} ${taken.size + 1}`
 }
 
-export type AnonInput = { body: string; category: AnonCategory | null; parentId: string | null; authorship: Authorship }
+export type AnonInput = { body: string; category: AnonCategory | null; parentId: string | null }
 
 export function validateAnonInput(raw: {
   body?: unknown
   category?: unknown
   parentId?: unknown
-  authorship?: unknown
 }): { ok: true; value: AnonInput } | { ok: false; error: string } {
   const body = typeof raw.body === 'string' ? raw.body.trim() : ''
   if (!body) return { ok: false, error: M('내용을 입력해주세요.') }
   if ([...body].length > ANON_MAX_CHARS) return { ok: false, error: M('글이 너무 길어요. 나눠서 올려 주세요.') }
   const parentId = typeof raw.parentId === 'string' && raw.parentId ? raw.parentId : null
   if (!parentId && !isAnonCategory(raw.category)) return { ok: false, error: M('카테고리를 골라주세요.') }
-  if (raw.authorship != null && !AUTHORSHIPS.includes(raw.authorship as Authorship)) return { ok: false, error: M('잘못된 설정값입니다.') }
-  return { ok: true, value: { body, category: parentId ? null : (raw.category as AnonCategory), parentId, authorship: parseAuthorship(raw.authorship) } }
+  return { ok: true, value: { body, category: parentId ? null : (raw.category as AnonCategory), parentId } }
 }
 
 /** Shape returned by the anon_* RPCs. Deliberately has no member/author id. */
@@ -79,7 +76,6 @@ export type AnonRow = {
   alias: string
   isOp: boolean
   /** 0047: author-declared */
-  authorship?: string | null
   likeCount: number
   replyCount: number
   likedByMe: boolean
@@ -118,7 +114,6 @@ export function anonRowToTimeline(r: AnonRow): TimelinePost {
     isMine: r.isMine,
     reportedByMe: r.reportedByMe,
     category: r.category,
-    authorship: parseAuthorship(r.authorship),
   }
 }
 
@@ -135,7 +130,6 @@ const ERRORS: Record<string, [number, string]> = {
   anon_report_reason: [400, '신고 사유를 골라주세요.'],
   anon_report_own: [400, '내 글은 신고할 수 없어요.'],
   anon_trace_reason: [400, '조회 사유를 입력해주세요.'],
-  anon_bad_authorship: [400, '잘못된 설정값입니다.'],
 }
 
 /** Maps RPC exception codes to HTTP status + Korean copy. Unknown → 500. */

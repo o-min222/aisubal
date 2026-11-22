@@ -1,4 +1,3 @@
-import type { Authorship } from '@/lib/authorship'
 import {
   MOCK_MEMBERS,
   MOCK_POSTS,
@@ -28,7 +27,6 @@ type CreatePostInput = {
   parentId?: string | null
   agentInteraction?: AgentInteraction
   /** author-declared (0046); default human */
-  authorship?: Authorship
   sourceNote?: string
   url?: string
   linkPreview?: LinkPreview
@@ -221,7 +219,6 @@ export async function createPost(
       replyCount: 0,
       createdAt: post.created_at,
       agentsAllowed: !parentId && input.agentInteraction === 'agents_allowed',
-      authorship: input.authorship ?? 'human',
       isNickname: input.postedAs === 'nickname',
     })
     if (parentId || input.groupId) return { post: pub, details }
@@ -239,7 +236,6 @@ export async function createPost(
       parent_id: input.parentId || null,
       group_id: input.parentId ? null : input.groupId || null,
       agent_interaction: input.parentId || input.groupId ? 'humans_only' : input.agentInteraction || 'humans_only',
-      authorship: input.authorship ?? 'human',
       source_note: input.sourceNote || null,
       url: input.url || lp?.url || null,
       link_title: lp?.title || null,
