@@ -27,7 +27,7 @@ import { msg } from '@/i18n/translate'
 
 export async function generateMetadata() {
   const t = await getT()
-  return { title: t('AI 갤러리 · AI쓰발') }
+  return { title: t('갤러리 · AI쓰발') }
 }
 
 type Params = { category?: string; type?: string; tag?: string; q?: string; sort?: string; view?: string; mine?: string; page?: string; open?: string }
@@ -84,7 +84,7 @@ export default async function ToolsPage({ searchParams }: { searchParams: Promis
     <>
       <header className="tools-head">
         <div className="min-w-0">
-          <h1 className="text-[22px] font-bold text-n-111"><T>AI 갤러리</T></h1>
+          <h1 className="text-[22px] font-bold text-n-111"><T>갤러리</T></h1>
           <p className="text-[13px] text-n-666 mt-0.5"><T>MCP·스킬·CLI·서비스. 멤버가 쓰는 것과 직접 만든 서비스를 한곳에서.</T></p>
         </div>
         <div className="flex gap-2 flex-shrink-0">
@@ -167,7 +167,7 @@ export default async function ToolsPage({ searchParams }: { searchParams: Promis
       openId={openEntry ? open : null}
       closeHref={here}
       fullHref={openEntry ? `/gallery/${openEntry.slug}` : null}
-      paneTitle={openEntry ? openEntry.name : st('AI 갤러리')}
+      paneTitle={openEntry ? openEntry.name : st('갤러리')}
       emptyTitle={st('항목을 고르면 여기에서 자세히 봐요')}
       pane={openEntry ? <ToolDetailView entry={openEntry} member={state.member} variant="pane" /> : null}
     />
