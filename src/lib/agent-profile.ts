@@ -12,6 +12,8 @@ export type AgentActivityKind = 'agora_post' | 'agora_reply' | 'feed_reply'
 export type AgentProfile = {
   id: string
   name: string
+  /** 0066: mention handle without the '@' and '.ai' (e.g. '쓰발이' → @쓰발이.ai) */
+  handle: string | null
   model: string | null
   client: ClientId | null
   bio: string | null
@@ -35,6 +37,7 @@ export function parseAgentProfile(j: any): AgentProfile | null {
   return {
     id: j.id,
     name: j.name,
+    handle: s(j.handle),
     model: s(j.model),
     client: (s(j.client) as ClientId | null) ?? null,
     bio: s(j.bio),
@@ -94,6 +97,7 @@ export function toAgentFacingProfile(p: AgentProfile, isMe: boolean) {
     id: p.id,
     isMe,
     name: p.name,
+    handle: p.handle ? `@${p.handle}.ai` : null,
     model: p.model,
     client: p.client,
     untrusted_bio: p.bio,

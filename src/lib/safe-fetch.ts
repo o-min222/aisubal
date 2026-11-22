@@ -224,6 +224,79 @@ export async function safeFetchText(raw: string, accept = 'text/html,application
   return { ok: false, error: 'too_many_redirects', redirects }
 }
 
+// ------------------------------------------------------------------ webhook POST
+export const WEBHOOK_UA = 'AIsubalWebhook/1.0 (+https://aisubal.vercel.app/skill.md)'
+
+/** https-only variant of checkFetchUrl for agent webhooks. */
+export function checkWebhookUrl(raw: string): UrlCheck {
+  const c = checkFetchUrl(raw)
+  if (!c.ok) return c
+  if (c.url.protocol !== 'https:') return { ok: false, reason: 'scheme_not_allowed' }
+  if (net.isIP(c.url.hostname.replace(/^\[|\]$/g, ''))) return { ok: false, reason: 'blocked_host' }
+  return c
+}
+
+/** Resolves the host now and refuses private / reserved answers (save-time check; delivery re-checks at connect). */
+export function resolvesPublic(host: string): Promise<boolean> {
+  return new Promise((resolve) => {
+    dnsLookup(host, { all: true, verbatim: true }, (err, addrs) => {
+      const list = (addrs || []) as LookupAddress[]
+      resolve(!err && list.length > 0 && !list.some((a) => isBlockedIp(a.address)))
+    })
+  })
+}
+
+export type WebhookPostResult = { ok: boolean; status: number | null; error: string | null }
+
+/**
+ * One signed webhook POST: https only, no redirects (a 3xx counts as failure),
+ * the DNS answer checked inside the socket lookup, 5 s timeout, response body
+ * discarded after 8 KB.
+ */
+export function safeWebhookPost(raw: string, body: string, headers: Record<string, string>): Promise<WebhookPostResult> {
+  const check = checkWebhookUrl(raw)
+  if (!check.ok) return Promise.resolve({ ok: false, status: null, error: check.reason })
+  return new Promise((resolve) => {
+    let settled = false
+    const done = (r: WebhookPostResult) => {
+      if (!settled) {
+        settled = true
+        resolve(r)
+      }
+    }
+    const req = https.request(
+      check.url,
+      {
+        method: 'POST',
+        agent: false,
+        lookup: safeLookup as unknown as typeof dnsLookup,
+        timeout: 5000,
+        headers: { ...headers, 'user-agent': WEBHOOK_UA, 'content-type': 'application/json; charset=utf-8', 'content-length': String(Buffer.byteLength(body)) },
+      },
+      (res) => {
+        const status = res.statusCode || 0
+        let size = 0
+        res.on('data', (c: Buffer) => {
+          size += c.length
+          if (size > 8192) res.destroy()
+        })
+        const fin = () => done({ ok: status >= 200 && status < 300, status, error: status >= 200 && status < 300 ? null : `http_${status}` })
+        res.on('end', fin)
+        res.on('close', fin)
+        res.on('error', fin)
+      }
+    )
+    const hard = setTimeout(() => req.destroy(new Error('timeout')), 6000)
+    req.on('timeout', () => req.destroy(new Error('timeout')))
+    req.on('error', (e) => {
+      const code = (e as NodeJS.ErrnoException).code
+      done({ ok: false, status: null, error: code === 'EBLOCKED' ? 'blocked_address' : e.message === 'timeout' ? 'timeout' : 'connect_failed' })
+    })
+    req.on('close', () => clearTimeout(hard))
+    req.end(body)
+  })
+}
+
 // ------------------------------------------------------------------ HTML → snapshot
 const ENTITIES: Record<string, string> = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ', '#39': "'" }
 function decodeEntities(s: string): string {

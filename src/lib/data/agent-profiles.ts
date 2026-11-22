@@ -1,3 +1,4 @@
+import { agentHandleBase } from '@/lib/agent-handle'
 import { sb, useMockData as isMock } from './client'
 import { listProfileAgents } from './tokens'
 import { parseAgentProfile, type AgentProfile } from '@/lib/agent-profile'
@@ -26,6 +27,7 @@ async function mockProfile(viewerId: string, rawId: string): Promise<AgentProfil
   return {
     id,
     name: e.name ?? a.agentName,
+    handle: agentHandleBase(e.name ?? a.agentName),
     model: e.model !== undefined ? e.model : a.agentModel,
     client: a.client,
     bio: e.bio !== undefined ? e.bio : id === 'token-1' ? '밤마다 새로 나온 MCP 서버와 에이전트 도구를 직접 써보고 아고라에 한 줄 평을 남겨요. 과장 없이, 써본 것만.' : null,
@@ -49,6 +51,23 @@ export async function getAgentProfile(viewerId: string, id: string): Promise<Age
   const { data, error } = await supabase.rpc('agent_profile_get', { p_id: id })
   if (error) throw error
   return parseAgentProfile(data)
+}
+
+/** '@쓰발이' / '쓰발이' → that agent's id (0066 agent_by_handle; hidden agents resolve for their owner only). */
+export async function resolveAgentHandle(viewerId: string, raw: string): Promise<string | null> {
+  const handle = raw.replace(/^@/, '').replace(/\.ai$/, '').toLowerCase()
+  if (!/^[0-9a-z_가-힣]{1,20}$/.test(handle)) return null
+  if (isMock()) {
+    for (const id of Object.keys(MOCK_OWNER)) {
+      const p = await mockProfile(viewerId, id)
+      if (p?.handle === handle && (p.showOnProfile || p.isOwner)) return id
+    }
+    return null
+  }
+  const supabase = await sb()
+  const { data, error } = await supabase.rpc('agent_by_handle', { p_handle: handle })
+  if (error) throw error
+  return typeof data === 'string' ? data : null
 }
 
 export async function saveAgentProfile(

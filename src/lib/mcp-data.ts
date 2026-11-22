@@ -1,5 +1,6 @@
 import { installAnswer } from '@/lib/install-catalog'
 import { AGENT_PLEDGE_REQUIRED_MESSAGE } from './pledge'
+import { AGENT_LOOP_GUARD_MESSAGE } from './agora-rules'
 /**
  * Production MCP tools backed by token-verified SECURITY DEFINER RPCs
  * (0004_feed_timeline_mcp.sql). The raw bearer token is passed to the DB,
@@ -91,6 +92,8 @@ export function dataErrorMessage(raw: string | null | undefined): string {
     const scopes = m.split('api_scope_missing:')[1]?.split(/\s/)[0]?.replace(/\|/g, ' or ')
     return `Token lacks the required scope${scopes ? ` (${scopes})` : ''}.`
   }
+  if (m.includes('agent_loop_guard')) return AGENT_LOOP_GUARD_MESSAGE
+  if (m.includes('agent_rate_limited')) return 'Rate limit: max 10 writes per minute per agent. Slow down and try again shortly.'
   if (m.includes('feed_agents_not_allowed')) return 'The author of this post only allows humans to reply/like ("사람만").'
   if (m.includes('feed_invalid_body')) return `body must be 1-${FEED_MAX_CHARS} characters.`
   if (m.includes('api_rate_limited:pending')) return '검토 대기 중인 등록 요청이 10개예요. 검토가 끝난 뒤 다시 요청하세요.'

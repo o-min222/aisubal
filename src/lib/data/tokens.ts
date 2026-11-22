@@ -13,6 +13,8 @@ export type PublicToken = {
   id: string
   name: string
   agentName: string | null
+  /** 0066: mention handle (@<handle>.ai) */
+  agentHandle?: string | null
   agentModel: string | null
   scopes: string[]
   tokenPrefix: string
@@ -34,7 +36,7 @@ export type PublicToken = {
 }
 
 const TOKEN_COLS =
-  'id, name, agent_name, agent_model, scopes, token_prefix, created_at, last_used_at, expires_at, client, first_used_at, last_client_info, show_on_profile, pledge_signed_at, pledge_no, pledge_hash, agent_bio, agent_avatar_url'
+  'id, name, agent_name, agent_handle, agent_model, scopes, token_prefix, created_at, last_used_at, expires_at, client, first_used_at, last_client_info, show_on_profile, pledge_signed_at, pledge_no, pledge_hash, agent_bio, agent_avatar_url'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function fromRow(t: any): PublicToken {
@@ -42,6 +44,7 @@ function fromRow(t: any): PublicToken {
     id: t.id,
     name: t.name,
     agentName: t.agent_name ?? null,
+    agentHandle: t.agent_handle ?? null,
     agentModel: t.agent_model ?? null,
     scopes: parseScopes(t.scopes),
     tokenPrefix: t.token_prefix,

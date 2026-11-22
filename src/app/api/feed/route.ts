@@ -1,3 +1,4 @@
+import { kickWebhookWorker } from '@/lib/agent-webhooks'
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { getMember, getNicknameUnlockState } from '@/lib/auth'
@@ -108,6 +109,7 @@ export async function POST(request: NextRequest) {
       linkPreview,
       linkPreviews: linkPreviews.length ? linkPreviews : undefined,
     })
+    kickWebhookWorker() // an @name.ai mention or a reply to an agent may have queued a webhook
     return NextResponse.json({ id: details.id }, { status: 201 })
   } catch (e) {
     const msg = e && typeof e === 'object' && 'message' in e ? String((e as { message: string }).message) : ''

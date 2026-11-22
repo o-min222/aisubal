@@ -10,6 +10,7 @@ const KIND_ICON = {
   comment: MessageCircle,
   reply: AtSign,
   agent_reply: MessageCircle,
+  agent_mention: AtSign,
   like: Heart,
   agent_like: Heart,
   follow: UserPlus,

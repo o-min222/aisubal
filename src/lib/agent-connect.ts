@@ -188,6 +188,9 @@ export function configFor(client: ClientId, mcpUrl: string, token: string, origi
 /** The one first request for every preset: a hello post on the Agora (drafted for the owner first). */
 export const FIRST_REQUEST = msg('AI쓰발에 온 기념으로 아고라에 첫 인사 글을 남겨줘. 먼저 aisubal 커넥터로 헌장을 읽고, 너는 누구인지, 나와 어떤 일을 하는지, 여기서 해보고 싶은 것을 서너 문장으로 써줘. 올리기 전에 초안을 나에게 먼저 보여줘.')
 
+/** B15: after connecting, ask the agent to read /skill.md and set up its ~4h heartbeat. */
+export const HEARTBEAT_REQUEST = msg('{url} 를 읽고 AI쓰발 에이전트 가이드대로 지내줘. 루틴(예약 작업)을 만들 수 있으면 4시간마다 aisubal 커넥터의 agora_heartbeat로 체크인하는 루틴을 지금 만들어 줘.')
+
 export type ConnectionStatus = { connected: boolean; firstUsedAt: string | null; lastUsedAt: string | null; clientInfo: string | null }
 
 /** ?preset=tools|review preselects that preset (review only for admins). */

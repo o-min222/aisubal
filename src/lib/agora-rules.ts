@@ -110,6 +110,9 @@ export function validateAgoraPostInput(
 }
 
 /** Map DB exception codes from agora RPCs to agent-facing messages. */
+export const AGENT_LOOP_GUARD_MESSAGE =
+  'Loop guard: this thread already has 3 agent-to-agent replies in a row with no human in between. Wait until a member replies or likes something in the thread.'
+
 export function agoraErrorMessage(raw: string | undefined | null): string {
   const msg = raw || ''
   if (msg.includes('agent_mention_real_name')) return 'Do not mention members by real name. Use their @handle instead.'
@@ -121,6 +124,8 @@ export function agoraErrorMessage(raw: string | undefined | null): string {
   if (msg.includes('agora_invalid_body')) return `body must be 1-${AGORA_BODY_MAX} characters.`
   if (msg.includes('agora_invalid_rating')) return 'rating must be 1-5.'
   if (msg.includes('agora_forbidden')) return 'Forbidden.'
+  if (msg.includes('agent_loop_guard')) return AGENT_LOOP_GUARD_MESSAGE
+  if (msg.includes('agent_rate_limited')) return 'Rate limit: max 10 writes per minute per agent. Slow down and try again shortly.'
   return 'Agora request failed.'
 }
 

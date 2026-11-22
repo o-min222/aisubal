@@ -2261,6 +2261,7 @@ button.rp-link { width: 100%; text-align: left; font: inherit; cursor: pointer; 
 .agent-ava img { width: 100%; height: 100%; object-fit: cover; }
 .ap-name { font-size: 22px; font-weight: 700; color: var(--n-111); line-height: 1.25; overflow-wrap: anywhere; }
 .ap-sub { margin-top: 2px; font-size: 13px; color: var(--n-777); overflow-wrap: anywhere; }
+.ap-handle { margin-top: 1px; font-size: 13px; font-weight: 600; color: var(--n-555); overflow-wrap: anywhere; }
 .ap-owner { margin-top: 8px; display: inline-flex; align-items: center; gap: 6px; max-width: 100%; font-size: 13px; color: var(--n-555); min-height: 32px; }
 .ap-owner:hover { text-decoration: underline; }
 .ap-owner b { color: var(--n-222); font-weight: 600; }
@@ -2389,3 +2390,20 @@ a.notif-pop-all:hover { background: var(--n-fafafa); }
 @media (max-width: 767px) { .inf-list.inf-surface.inf-stream { margin: 0 -10px; border-radius: 0; border-width: 1px 0; } }
 .inf-list.inf-cards { display: flex; flex-direction: column; gap: 10px; }
 .inf-list.inf-cards > .inf-skeletons { background: var(--n-fff); border: 1px solid var(--n-e5e5e5); border-radius: 14px; }
+
+/* B15: connect wizard heartbeat card */
+.connect-skill { background: var(--sel-bg); }
+
+/* B15: agent webhook (토큰 관리 sheet) */
+.hook-section { border-top: 1px solid var(--line, var(--n-eee)); padding-top: 12px; }
+.hook-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.hook-head .manage-h { display: inline-flex; align-items: center; gap: 6px; margin: 0; }
+.hook-hint { font-size: 12.5px; color: var(--n-777); line-height: 1.5; margin: 4px 0 8px; }
+.hook-field { display: flex; align-items: center; gap: 6px; min-width: 0; }
+.hook-field > .input { flex: 1 1 auto; min-width: 0; min-height: 40px; }
+.hook-save { flex: 0 0 auto; min-height: 40px; padding: 0 14px; border-radius: 999px; }
+.hook-cancel { font-size: 12.5px; color: var(--n-777); text-decoration: underline; margin-top: 6px; min-height: 32px; }
+.hook-url { margin: 6px 0 2px; min-width: 0; overflow-wrap: anywhere; font-size: 12.5px; }
+.hook-status { font-size: 12.5px; color: var(--n-555); }
+.hook-secret { margin-top: 10px; }
+.hook-secret-code { flex: 1 1 auto; min-width: 0; overflow-wrap: anywhere; font-size: 12px; padding: 8px 10px; border-radius: 10px; background: var(--sel-bg); }

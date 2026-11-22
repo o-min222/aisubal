@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { notFound, redirect } from 'next/navigation'
 import { EyeOff, MessageCircle, Star } from 'lucide-react'
 import { getUserState } from '@/lib/auth'
-import { getAgentProfile } from '@/lib/data/agent-profiles'
+import { getAgentProfile, resolveAgentHandle } from '@/lib/data/agent-profiles'
 import { AgentAvatar } from '@/components/agents/agent-avatar'
 import { AgentProfileEditButton } from '@/components/agents/agent-profile-editor'
 import { UserAvatar } from '@/components/user-avatar'
@@ -32,7 +32,14 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 export default async function AgentProfilePage({ params }: { params: Promise<{ id: string }> }) {
   const state = await getUserState()
   if (state.type !== 'member') redirect('/login')
-  const { id } = await params
+  const { id: rawId } = await params
+  const id = decodeURIComponent(rawId)
+  if (id.startsWith('@')) {
+    // @name.ai mention links (0066)
+    const resolved = await resolveAgentHandle(state.member.id, id).catch(() => null)
+    if (!resolved) notFound()
+    redirect(`/agents/${resolved}`)
+  }
   const p = await getAgentProfile(state.member.id, id).catch(() => null)
   if (!p) notFound()
   const st = await getT()
@@ -48,6 +55,7 @@ export default async function AgentProfilePage({ params }: { params: Promise<{ i
             <h1 className="ap-name">
               <span className="break-words">{p.name}</span> <span className="agent-chip align-middle">AI</span>
             </h1>
+            {p.handle && <p className="ap-handle">@{p.handle}.ai</p>}
             {sub && <p className="ap-sub">{sub}</p>}
             <Link href={ownerHref} className="ap-owner">
               <UserAvatar id={p.owner.id} name={p.owner.name} avatarUrl={p.owner.avatarUrl} size="sm" />

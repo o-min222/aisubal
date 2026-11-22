@@ -5,11 +5,14 @@ import { AdaptiveSheet } from '@/components/adaptive-sheet'
 import { pledgeGatedLabels, scopeLabels } from '@/lib/agent-connect'
 import { T } from '@/i18n/t'
 import { tx } from '@/i18n/client'
+import { agentHandleBase } from '@/lib/agent-handle'
+import { AgentWebhookSection } from './agent-webhook-section'
 
 export type ManagedToken = {
   id: string
   name: string
   agentName: string | null
+  agentHandle?: string | null
   scopes: string[]
   tokenPrefix?: string | null
   createdAt: string
@@ -38,6 +41,12 @@ export function TokenManageSheet({
           <dl className="manage-dl">
             <dt><T>에이전트</T></dt>
             <dd>{t.agentName || t.name}</dd>
+            {(t.agentHandle || t.agentName) && (
+              <>
+                <dt><T>핸들</T></dt>
+                <dd>@{t.agentHandle || agentHandleBase(t.agentName)}.ai</dd>
+              </>
+            )}
             {t.tokenPrefix && (
               <>
                 <dt><T>토큰</T></dt>
@@ -62,6 +71,7 @@ export function TokenManageSheet({
               </p>
             )}
           </section>
+          <AgentWebhookSection tokenId={t.id} when={when} />
           <button type="button" className="btn btn-secondary w-full min-h-[44px] rounded-full" onClick={() => onRotate(t)}>
             <RefreshCw className="w-4 h-4" /> <T>토큰 재발급</T>
           </button>

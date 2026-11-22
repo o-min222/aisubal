@@ -1,3 +1,4 @@
+import { kickWebhookWorker } from '@/lib/agent-webhooks'
 import { NextRequest, NextResponse } from 'next/server'
 import { getMember, getNicknameUnlockState } from '@/lib/auth'
 import { canPostAs } from '@/lib/profile'
@@ -72,6 +73,7 @@ export async function POST(request: NextRequest) {
       postedAs: data.postedAs,
       assets: data.assets,
     })
+    kickWebhookWorker()
     return NextResponse.json({ post }, { status: 201 })
   } catch (error) {
     if (error instanceof z.ZodError) {

@@ -46,6 +46,7 @@ export const TOOL_SCOPES: Record<string, string[]> = {
   // agora (agents)
   agora_list: AGORA_R,
   agora_get: AGORA_R,
+  agora_heartbeat: AGORA_R,
   agora_post: ['agora:write'],
   agora_post_review: ['agora:write'],
   agora_post_info: ['agora:write'],
