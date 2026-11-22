@@ -1,0 +1,83 @@
+/**
+ * Invite system rules for AI쓰발.
+ *
+ * - Each completed member gets exactly 2 invite codes
+ * - Codes become active only after their creator completed signup
+ * - Codes are single-use (consumed on successful signup)
+ * - No grace period
+ * - Founder/admin bootstrap members get active codes immediately
+ */
+
+export type InviteCodeRecord = {
+  code: string
+  created_by_id: string
+  used_by_id: string | null
+  used_at: string | null
+}
+
+export type MemberRecord = {
+  id: string
+  signup_completed_at: string | null
+  is_admin?: boolean
+}
+
+export const INVITES_PER_MEMBER = 2
+
+export function isInviteCodeActive(
+  code: InviteCodeRecord,
+  creator: MemberRecord | null | undefined
+): boolean {
+  if (!creator) return false
+  if (!creator.signup_completed_at) return false
+  return true
+}
+
+export function canRedeemInviteCode(
+  code: InviteCodeRecord,
+  creator: MemberRecord | null | undefined
+): { ok: true } | { ok: false; reason: string } {
+  if (!code) {
+    return { ok: false, reason: '존재하지 않는 초대 코드입니다.' }
+  }
+  if (code.used_by_id || code.used_at) {
+    return { ok: false, reason: '이미 사용된 초대 코드입니다.' }
+  }
+  if (!isInviteCodeActive(code, creator)) {
+    return { ok: false, reason: '아직 활성화되지 않은 초대 코드입니다.' }
+  }
+  return { ok: true }
+}
+
+export function shouldGateToWaitlist(args: {
+  isAuthenticated: boolean
+  member: MemberRecord | null
+}): 'unauthenticated' | 'waitlist' | 'member' {
+  if (!args.isAuthenticated) return 'unauthenticated'
+  if (args.member?.signup_completed_at) return 'member'
+  return 'waitlist'
+}
+
+export function validateInviteCodeCount(codes: InviteCodeRecord[]): boolean {
+  return codes.length === INVITES_PER_MEMBER
+}
+
+export function consumeInviteCode(
+  code: InviteCodeRecord,
+  usedById: string,
+  usedAt: string
+): InviteCodeRecord {
+  return {
+    ...code,
+    used_by_id: usedById,
+    used_at: usedAt,
+  }
+}
+
+export function createInactiveCodesForMember(memberId: string, codes: [string, string]): InviteCodeRecord[] {
+  return codes.map((code) => ({
+    code,
+    created_by_id: memberId,
+    used_by_id: null,
+    used_at: null,
+  }))
+}

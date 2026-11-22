@@ -1,0 +1,197 @@
+import { MOCK_MEMBERS } from '@/lib/mock-data'
+import { sb, useMockData } from './client'
+import { MEMBER_PUBLIC_COLUMNS } from './member-columns'
+
+export type InviteCodeRow = {
+  code: string
+  isUsed: boolean
+  isActive: boolean
+  usedBy: { displayName: string } | null
+  usedAt: string | null
+}
+
+export async function listMyInviteCodes(memberId: string, signupCompleted: boolean) {
+  if (useMockData()) {
+    return {
+      codes: [
+        {
+          code: 'AXK8M2PQ',
+          isUsed: false,
+          isActive: signupCompleted,
+          usedBy: null,
+          usedAt: null,
+        },
+        {
+          code: 'B7NJ4TRW',
+          isUsed: true,
+          isActive: signupCompleted,
+          usedBy: { displayName: '김개발' },
+          usedAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+        },
+      ] satisfies InviteCodeRow[],
+      codesActive: signupCompleted,
+    }
+  }
+
+  const supabase = await sb()
+  const { data, error } = await supabase
+    .from('invite_codes')
+    .select('code, used_by_id, used_at, used_by:members!invite_codes_used_by_id_fkey(display_name)')
+    .eq('created_by_id', memberId)
+    .order('created_at', { ascending: true })
+
+  if (error) throw error
+
+  const codes: InviteCodeRow[] = (data || []).map((row) => {
+    const usedBy = row.used_by as { display_name?: string } | null
+    return {
+      code: row.code,
+      isUsed: !!row.used_by_id,
+      isActive: signupCompleted,
+      usedBy: usedBy?.display_name ? { displayName: usedBy.display_name } : null,
+      usedAt: row.used_at,
+    }
+  })
+
+  return { codes, codesActive: signupCompleted }
+}
+
+export async function validateInviteCode(code: string): Promise<{
+  valid: boolean
+  inviter?: { displayName: string }
+  error?: string
+}> {
+  if (useMockData()) {
+    if (code.length !== 8) return { valid: false, error: '초대 코드는 8자리입니다.' }
+    return { valid: true, inviter: { displayName: '개발자' } }
+  }
+
+  const supabase = await sb()
+  const { data, error } = await supabase.rpc('validate_invite_code', {
+    p_code: code,
+  })
+
+  if (error) {
+    console.error('validate_invite_code', error)
+    return { valid: false, error: '유효하지 않은 초대 코드입니다.' }
+  }
+
+  const result = data as {
+    ok?: boolean
+    valid?: boolean
+    inviter_display_name?: string
+    error?: string
+  }
+
+  if (!result?.ok && !result?.valid) {
+    return { valid: false, error: result?.error || '유효하지 않은 초대 코드입니다.' }
+  }
+
+  return {
+    valid: true,
+    inviter: { displayName: result.inviter_display_name || '멤버' },
+  }
+}
+
+/** Admin-only invite tree (emails via SECURITY DEFINER RPC after 0002). */
+export async function getInviteTree() {
+  if (useMockData()) {
+    return {
+      id: 'founder',
+      displayName: '창립자',
+      email: 'founder@aisubal.local',
+      joinedAt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
+      isBanned: false,
+      invitedCount: 2,
+      children: [
+        {
+          id: 'user-1',
+          displayName: '김개발',
+          email: 'kim@example.com',
+          joinedAt: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000).toISOString(),
+          isBanned: false,
+          invitedCount: 1,
+          children: [
+            {
+              id: 'user-3',
+              displayName: '박AI',
+              email: 'park@example.com',
+              joinedAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+              isBanned: false,
+              invitedCount: 0,
+              children: [],
+            },
+          ],
+        },
+        {
+          id: 'user-2',
+          displayName: '이프론트',
+          email: 'lee@example.com',
+          joinedAt: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString(),
+          isBanned: false,
+          invitedCount: 0,
+          children: [],
+        },
+      ],
+    }
+  }
+
+  const supabase = await sb()
+  const { data, error } = await supabase.rpc('admin_invite_tree')
+  if (error) throw error
+
+  type Flat = {
+    id: string
+    displayName: string
+    email: string
+    joinedAt: string
+    isBanned: boolean
+    invitedCount: number
+    invitedById: string | null
+    depth: number
+  }
+
+  type Node = {
+    id: string
+    displayName: string
+    email: string
+    joinedAt: string
+    isBanned: boolean
+    invitedCount: number
+    children: Node[]
+  }
+
+  const rows = (data || []) as Flat[]
+  const byId = new Map<string, Node>()
+  for (const r of rows) {
+    byId.set(r.id, {
+      id: r.id,
+      displayName: r.displayName,
+      email: r.email,
+      joinedAt: r.joinedAt,
+      isBanned: r.isBanned,
+      invitedCount: r.invitedCount,
+      children: [],
+    })
+  }
+  const roots: Node[] = []
+  for (const r of rows) {
+    const node = byId.get(r.id)!
+    if (r.invitedById && byId.has(r.invitedById)) {
+      byId.get(r.invitedById)!.children.push(node)
+    } else {
+      roots.push(node)
+    }
+  }
+  // API historically returned a single root; if multiple founders, wrap
+  if (roots.length === 1) return roots[0]
+  return {
+    id: 'root',
+    displayName: '커뮤니티',
+    email: '',
+    joinedAt: new Date(0).toISOString(),
+    isBanned: false,
+    invitedCount: roots.length,
+    children: roots,
+  }
+}
