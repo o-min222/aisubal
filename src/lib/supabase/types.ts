@@ -101,10 +101,12 @@ export type Post = {
   link_previews?: LinkPreview[] | null
   author_id: string // always set for admin moderation
   posted_as: PostAs
-  nickname_profile_id: string | null // set when posted_as=nickname
+  /** write-only: not readable by members (0036) */
+  nickname_profile_id?: string | null // set when posted_as=nickname
   is_hidden: boolean
   is_agent_posted: boolean
-  agent_token_name: string | null
+  /** not readable by members (0036) */
+  agent_token_name?: string | null
   created_at: string
   updated_at: string
   // 0004 timeline columns (optional so legacy fixtures stay valid)

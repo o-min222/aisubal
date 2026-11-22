@@ -125,7 +125,7 @@ export async function adminResolveReport(
   if (fetchErr) throw fetchErr
 
   if (action === 'delete') {
-    const { error: delErr } = await supabase.from('posts').delete().eq('id', report.post_id)
+    const { error: delErr } = await supabase.rpc('posts__delete', { p_post_id: report.post_id })
     if (delErr) throw delErr
   }
 
@@ -219,13 +219,10 @@ export async function adminSetPostHidden(id: string, hidden: boolean) {
   }
 
   const supabase = await sb()
-  const { data, error } = await supabase
-    .from('posts')
-    .update({ is_hidden: hidden })
-    .eq('id', id)
-    .select('id, is_hidden, updated_at')
-    .single()
+  const { data: rows, error } = await supabase.rpc('posts__set_hidden', { p_post_id: id, p_hidden: hidden })
   if (error) throw error
+  const data = (rows as Array<{ id: string; is_hidden: boolean; updated_at: string }> | null)?.[0]
+  if (!data) throw new Error('post not found')
   return { id: data.id, isHidden: data.is_hidden, updatedAt: data.updated_at }
 }
 
@@ -233,8 +230,9 @@ export async function adminDeletePost(id: string) {
   if (useMockData()) return { deletedId: id }
 
   const supabase = await sb()
-  const { error } = await supabase.from('posts').delete().eq('id', id)
+  const { data, error } = await supabase.rpc('posts__delete', { p_post_id: id })
   if (error) throw error
+  if (data !== true) throw new Error('post not found')
   return { deletedId: id }
 }
 

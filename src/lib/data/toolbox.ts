@@ -220,13 +220,7 @@ export async function recordToolboxInstall(
   const current = await getToolboxEntry(idOrSlug)
   if (!current) throw new Error(msg('항목을 찾을 수 없습니다.'))
   const supabase = await sb()
-  const { error } = await supabase
-    .from('toolbox_entries')
-    .update({
-      install_count: current.install_count + 1,
-      updated_at: new Date().toISOString(),
-    })
-    .eq('id', current.id)
+  const { error } = await supabase.rpc('toolbox__record_install', { p_entry_id: current.id })
   if (error) throw error
   return (await getToolboxEntry(current.id))!
 }
@@ -283,15 +277,7 @@ export async function upsertToolboxReview(
   )
   if (error) throw error
 
-  const { data: reviews } = await supabase
-    .from('toolbox_reviews')
-    .select('*')
-    .eq('entry_id', current.id)
-  const ratingInfo = recomputeRating((reviews || []) as ToolboxReview[], current.id)
-  await supabase
-    .from('toolbox_entries')
-    .update({ avg_rating: ratingInfo.avg, rating_count: ratingInfo.count })
-    .eq('id', current.id)
+  // avg_rating / rating_count are kept by the toolbox_reviews_counter trigger
 
   return (await getToolboxEntry(current.id))!
 }
@@ -352,67 +338,11 @@ export async function aggregateMentionsFromPosts(
   const { isToolishUrl } = await import('@/lib/toolbox-rules')
   const supabase = await sb()
 
+  // Links my post to an existing gallery entry (0036 RPC). New entries only come
+  // from reviewed submissions, so unknown URLs are no longer auto-created here.
   for (const post of posts) {
     if (!post.url || !isToolishUrl(post.url)) continue
-    const key = canonicalUrl(post.url)
-
-    let { data: found } = await supabase
-      .from('toolbox_entries')
-      .select('*')
-      .eq('canonical_url', key)
-      .maybeSingle()
-
-    if (!found) {
-      const name = post.link_title || key
-      const slug =
-        key.split('/').filter(Boolean).slice(-2).join('-') || `auto-${post.id}`
-      const { data: inserted, error } = await supabase
-        .from('toolbox_entries')
-        .insert({
-          slug,
-          name,
-          one_liner: post.link_description || `${name} — 커뮤니티에서 언급됨`,
-          description: post.link_description || '',
-          type: 'mcp_server',
-          tags: ['커뮤니티언급'],
-          canonical_url: key,
-          github_url: key.includes('github.com') ? key : null,
-          icon_url: post.link_favicon,
-          install_snippets: {},
-        })
-        .select('*')
-        .single()
-      if (error && error.code !== '23505') throw error
-      found = inserted || found
-      if (!found) {
-        const again = await supabase
-          .from('toolbox_entries')
-          .select('*')
-          .eq('canonical_url', key)
-          .maybeSingle()
-        found = again.data
-      }
-    }
-    if (!found) continue
-
-    const entry = found as ToolboxEntry
-    await supabase.from('toolbox_mentions').upsert(
-      {
-        entry_id: entry.id,
-        post_id: post.id,
-        url: key,
-      },
-      { onConflict: 'entry_id,post_id,url', ignoreDuplicates: true }
-    )
-
-    const { count } = await supabase
-      .from('toolbox_mentions')
-      .select('id', { count: 'exact', head: true })
-      .eq('entry_id', entry.id)
-    await supabase
-      .from('toolbox_entries')
-      .update({ mention_count: count ?? entry.mention_count })
-      .eq('id', entry.id)
+    await supabase.rpc('toolbox__record_post_mention', { p_post_id: post.id })
   }
 
   // silence unused in mock-only path helpers

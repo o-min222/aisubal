@@ -12,6 +12,10 @@ import { sb, useMockData } from './client'
 import { MEMBER_EMBED, MEMBER_PUBLIC_COLUMNS } from './member-columns'
 import type { PostWithDetails } from './types'
 
+/** posts columns readable by members (0036): no nickname_profile_id / agent_token_name. */
+export const POST_COLUMNS =
+  'id, title, content, url, link_title, link_description, link_image, link_site_name, link_favicon, link_type, link_previews, author_id, posted_as, is_hidden, is_agent_posted, created_at, updated_at, parent_id, root_id, reply_to_id, thread_depth, like_count, reply_count, agent_interaction, author_kind, agent_token_id, agent_name, agent_model, group_id, source_note'
+
 export type { PostWithDetails } from './types'
 
 type CreatePostInput = {
@@ -61,7 +65,7 @@ export async function listPosts(): Promise<PostWithDetails[]> {
   const supabase = await sb()
   const { data: rows, error } = await supabase
     .from('posts')
-    .select(`*, assets(*), author:members!posts_author_id_fkey(${MEMBER_EMBED})`)
+    .select(`${POST_COLUMNS}, assets(*), author:members!posts_author_id_fkey(${MEMBER_EMBED})`)
     .eq('is_hidden', false)
     .is('parent_id', null)
     .order('created_at', { ascending: false })
@@ -69,7 +73,7 @@ export async function listPosts(): Promise<PostWithDetails[]> {
 
   if (error) throw error
 
-  const typed = (rows || []) as Array<Post & { assets: Asset[]; author: Member }>
+  const typed = (rows || []) as unknown as Array<Post & { assets: Asset[]; author: Member }>
   return Promise.all(
     typed
       .filter((row) => row.author)
@@ -85,14 +89,14 @@ export async function getPost(id: string): Promise<PostWithDetails | null> {
   const supabase = await sb()
   const { data: row, error } = await supabase
     .from('posts')
-    .select(`*, assets(*), author:members!posts_author_id_fkey(${MEMBER_EMBED})`)
+    .select(`${POST_COLUMNS}, assets(*), author:members!posts_author_id_fkey(${MEMBER_EMBED})`)
     .eq('id', id)
     .maybeSingle()
 
   if (error) throw error
   if (!row) return null
 
-  const { assets, author, ...post } = row as Post & {
+  const { assets, author, ...post } = row as unknown as Post & {
     assets: Asset[]
     author: Member
   }
@@ -229,7 +233,7 @@ export async function createPost(
       nickname_profile_id:
         input.postedAs === 'nickname' ? nicknameProfilePublicId(member.id) : null,
     })
-    .select('*')
+    .select(POST_COLUMNS)
     .single()
 
   if (error) throw error
@@ -273,14 +277,12 @@ export async function deletePost(id: string, memberId: string): Promise<boolean>
     return true
   }
 
+  // no direct DELETE grant on posts (0036): owner/admin delete via RPC
+  void memberId
   const supabase = await sb()
-  const { error, count } = await supabase
-    .from('posts')
-    .delete({ count: 'exact' })
-    .eq('id', id)
-    .eq('author_id', memberId)
+  const { data, error } = await supabase.rpc('posts__delete', { p_post_id: id })
   if (error) throw error
-  return (count ?? 0) > 0
+  return data === true
 }
 
 /** Resolve author Member for a post (mock or supabase). */
