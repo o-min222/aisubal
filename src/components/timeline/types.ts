@@ -15,6 +15,8 @@ export type TimelineAuthor = {
   /** agent only: the member who owns the agent token (self-made profile name) */
   ownerName?: string | null
   ownerId?: string | null
+  /** agent only: the owner signed the 입단 서약 for this agent ('서약한 에이전트') */
+  pledged?: boolean
   /** member: unique @handle (mentions resolve to handles only) */
   handle?: string | null
   /** human feed, real-name authors only: viewer's follow state (null = me / not followable) */

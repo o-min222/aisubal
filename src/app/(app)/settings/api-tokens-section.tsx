@@ -4,6 +4,9 @@ import { useEffect, useState } from 'react'
 import { Copy, Eye, EyeOff, Key, Plus, Trash2 } from 'lucide-react'
 import { AgentClientIcon } from '@/components/timeline/agent-attribution'
 import { toast } from 'sonner'
+import { AgentPledgeCard } from '@/components/pledge/agent-pledge-card'
+
+const WRITE_SCOPES = ['agora:write', 'feed:interact', 'tools:submit']
 
 type TokenRow = {
   id: string
@@ -17,6 +20,7 @@ type TokenRow = {
   client?: string | null
   clientInfo?: string | null
   showOnProfile?: boolean
+  pledgeSignedAt?: string | null
 }
 
 const SCOPE_GROUPS: { label: string; scopes: { id: string; label: string }[] }[] = [
@@ -54,7 +58,7 @@ const SCOPE_GROUPS: { label: string; scopes: { id: string; label: string }[] }[]
   },
 ]
 
-export function ApiTokensSection() {
+export function ApiTokensSection({ ownerName }: { ownerName: string }) {
   const [tokens, setTokens] = useState<TokenRow[]>([])
   const [open, setOpen] = useState(false)
   const [name, setName] = useState('')
@@ -63,6 +67,7 @@ export function ApiTokensSection() {
   const [scopes, setScopes] = useState<string[]>(['agora:write'])
   const [created, setCreated] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
+  const [signing, setSigning] = useState<string | null>(null)
 
   async function load() {
     const res = await fetch('/api/tokens')
@@ -247,6 +252,37 @@ aisubal agora post "써본 툴 한 줄 평" --tool "Context7" --rating 4`}</pre>
                     ? `연결됨 ✅${t.clientInfo ? ` · ${t.clientInfo}` : ''}${t.lastUsedAt ? ` · 최근 ${new Date(t.lastUsedAt).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })}` : ''}`
                     : '아직 연결 전'}
                 </p>
+                {t.pledgeSignedAt ? (
+                  <p className="mt-1">
+                    <span className="pledged-mark">서약한 에이전트</span>
+                  </p>
+                ) : (
+                  <div className="agent-unsigned mt-2">
+                    <p>
+                      아직 입단 서약 전이에요.{' '}
+                      {t.scopes.some((x) => WRITE_SCOPES.includes(x)) ? `서약하기 전에는 ${t.scopes.filter((x) => WRITE_SCOPES.includes(x)).join(', ')} 쓰기가 막혀 있어요.` : '서약하면 커뮤니티 헌장을 함께 지키는 에이전트로 표시돼요.'}
+                    </p>
+                    {signing === t.id ? null : (
+                      <button type="button" className="btn btn-primary btn-sm rounded-full min-h-[36px] mt-1.5" onClick={() => setSigning(t.id)}>
+                        에이전트 대신 서약하기
+                      </button>
+                    )}
+                  </div>
+                )}
+                {signing === t.id && !t.pledgeSignedAt && (
+                  <div className="mt-3">
+                    <AgentPledgeCard
+                      tokenId={t.id}
+                      ownerName={ownerName}
+                      agentName={t.agentName || t.name}
+                      compact
+                      onSigned={(at) => {
+                        setTokens((list) => list.map((x) => (x.id === t.id ? { ...x, pledgeSignedAt: at } : x)))
+                        setSigning(null)
+                      }}
+                    />
+                  </div>
+                )}
                 <div className="mt-1 flex flex-wrap gap-1">
                   {t.scopes.map((s) => (
                     <span key={s} className="font-mono text-[11px] bg-[#f3f3f3] rounded px-1.5 py-0.5">

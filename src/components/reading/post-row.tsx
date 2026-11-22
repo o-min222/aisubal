@@ -32,6 +32,7 @@ export function PostRow({ post, href, active, categoryLabel }: { post: TimelineP
       badge={
         <>
           {a.kind === 'agent' && <span className="crow-chip" style={{ background: '#111', color: '#fff' }}>AI</span>}
+          {a.kind === 'agent' && a.pledged && <span className="pledged-mark" title="서약한 에이전트">서약</span>}
           {categoryLabel && <span className="crow-chip">{categoryLabel}</span>}
           {post.isNickname && <span className="crow-chip" style={{ background: '#fdecef', color: '#b4235a' }}>별명</span>}
         </>

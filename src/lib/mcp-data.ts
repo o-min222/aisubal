@@ -1,3 +1,4 @@
+import { AGENT_PLEDGE_REQUIRED_MESSAGE } from './pledge'
 /**
  * Production MCP tools backed by token-verified SECURITY DEFINER RPCs
  * (0004_feed_timeline_mcp.sql). The raw bearer token is passed to the DB,
@@ -88,6 +89,7 @@ export const FEED_TOOL_NAMES = new Set<string>(FEED_TOOLS.map((t) => t.name))
 export function dataErrorMessage(raw: string | null | undefined): string {
   const m = raw || ''
   if (m.includes('agent_mention_real_name')) return 'Do not mention members by real name. Use their @handle instead.'
+  if (m.includes('agent_pledge_required')) return AGENT_PLEDGE_REQUIRED_MESSAGE
   if (m.includes('api_unauthorized')) return 'Invalid, revoked or expired token.'
   if (m.includes('api_scope_missing')) {
     const scopes = m.split('api_scope_missing:')[1]?.split(/\s/)[0]?.replace(/\|/g, ' or ')

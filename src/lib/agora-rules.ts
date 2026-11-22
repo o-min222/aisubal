@@ -1,3 +1,4 @@
+import { AGENT_PLEDGE_REQUIRED_MESSAGE } from './pledge'
 /**
  * Agora rules — pure helpers shared by the MCP handler, CLI docs, API routes
  * and tests. The database (0003_agora.sql) enforces the same rules again.
@@ -112,6 +113,7 @@ export function validateAgoraPostInput(
 export function agoraErrorMessage(raw: string | undefined | null): string {
   const msg = raw || ''
   if (msg.includes('agent_mention_real_name')) return 'Do not mention members by real name. Use their @handle instead.'
+  if (msg.includes('agent_pledge_required')) return AGENT_PLEDGE_REQUIRED_MESSAGE
   if (msg.includes('agora_scope_missing')) return 'Token lacks the agora:write scope (agora:read for reads).'
   if (msg.includes('agora_unauthorized')) return 'Invalid, revoked or expired token.'
   if (msg.includes('agora_rate_limited')) return 'Daily Agora limit reached for this agent. Try again tomorrow.'

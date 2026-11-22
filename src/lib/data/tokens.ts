@@ -17,10 +17,12 @@ export type PublicToken = {
   firstUsedAt: string | null
   clientInfo: string | null
   showOnProfile: boolean
+  /** 에이전트 서약 (0018): null = not signed yet → write tools are refused */
+  pledgeSignedAt: string | null
 }
 
 const TOKEN_COLS =
-  'id, name, agent_name, agent_model, scopes, token_prefix, created_at, last_used_at, expires_at, client, first_used_at, last_client_info, show_on_profile'
+  'id, name, agent_name, agent_model, scopes, token_prefix, created_at, last_used_at, expires_at, client, first_used_at, last_client_info, show_on_profile, pledge_signed_at'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function fromRow(t: any): PublicToken {
@@ -38,6 +40,7 @@ function fromRow(t: any): PublicToken {
     firstUsedAt: t.first_used_at ?? null,
     clientInfo: t.last_client_info ?? null,
     showOnProfile: t.show_on_profile !== false,
+    pledgeSignedAt: t.pledge_signed_at ?? null,
   }
 }
 
@@ -69,6 +72,7 @@ export async function listApiTokens(memberId: string): Promise<PublicToken[]> {
         firstUsedAt: new Date(Date.now() - 13 * 24 * 60 * 60 * 1000).toISOString(),
         clientInfo: 'claude-code 2.1.4',
         showOnProfile: true,
+        pledgeSignedAt: mockPledged().get('token-1') ?? new Date(Date.now() - 13 * 24 * 60 * 60 * 1000).toISOString(),
       },
       {
         id: 'token-2',
@@ -84,6 +88,7 @@ export async function listApiTokens(memberId: string): Promise<PublicToken[]> {
         firstUsedAt: null,
         clientInfo: null,
         showOnProfile: true,
+        pledgeSignedAt: mockPledged().get('token-2') ?? null,
       },
     ]
   }
@@ -129,6 +134,7 @@ export async function issueApiToken(
         firstUsedAt: null,
         clientInfo: null,
         showOnProfile: true,
+        pledgeSignedAt: null,
       },
     }
   }
@@ -151,6 +157,37 @@ export async function issueApiToken(
 
   if (error) throw error
   return { token: { ...fromRow(data), token: raw } }
+}
+
+const gp = globalThis as unknown as { __aisubalTokenPledge?: Map<string, string> }
+const mockPledged = (): Map<string, string> => (gp.__aisubalTokenPledge ??= new Map())
+
+/** Owner signs the 입단 서약 on the agent's behalf (signature = owner's own nickname). */
+export async function signTokenPledge(memberId: string, tokenId: string, signature: string, ownerName: string): Promise<{ ok: true; signedAt: string } | { ok: false; error: 'signature_mismatch' | 'token_not_found' | 'failed' }> {
+  if (useMockData()) {
+    if (signature.replace(/\s+/g, ' ').trim().toLowerCase() !== ownerName.replace(/\s+/g, ' ').trim().toLowerCase()) return { ok: false, error: 'signature_mismatch' }
+    const at = mockPledged().get(tokenId) ?? new Date().toISOString()
+    mockPledged().set(tokenId, at)
+    return { ok: true, signedAt: at }
+  }
+  const supabase = await sb()
+  const { data, error } = await supabase.rpc('token_pledge_sign', { p_token_id: tokenId, p_version: 1, p_signature: signature })
+  if (error) {
+    const m = error.message || ''
+    return { ok: false, error: m.includes('signature_mismatch') ? 'signature_mismatch' : m.includes('token_not_found') ? 'token_not_found' : 'failed' }
+  }
+  return { ok: true, signedAt: String((data as Record<string, unknown>).signedAt) }
+}
+
+/** Token ids (agents) that signed the charter, for the '서약한 에이전트' mark. */
+export async function pledgedAgents(tokenIds: string[]): Promise<Set<string>> {
+  const ids = [...new Set(tokenIds.filter((x) => /^[0-9a-f-]{36}$/i.test(x)))].slice(0, 300)
+  if (useMockData()) return new Set(tokenIds)
+  if (!ids.length) return new Set()
+  const supabase = await sb()
+  const { data, error } = await supabase.rpc('agents_pledged', { p_tokens: ids })
+  if (error) return new Set()
+  return new Set((data as string[]) || [])
 }
 
 export async function revokeApiToken(memberId: string, tokenId: string): Promise<boolean> {

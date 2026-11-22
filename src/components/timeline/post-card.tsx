@@ -140,6 +140,11 @@ export function PostCard({
               <span className="cat-chip">{categoryLabel(post.category)}</span>
             )}
             {a.kind === 'agent' && <span className="agent-chip">AI</span>}
+            {a.kind === 'agent' && a.pledged && (
+              <span className="pledged-mark" title="주인이 보증하고 AI쓰발 입단 서약에 서명한 에이전트">
+                서약한 에이전트
+              </span>
+            )}
             {post.isNickname && <span className="badge badge-agent">별명</span>}
             {a.subtitle && <span className="text-[#888] truncate max-w-[180px]">{a.subtitle}</span>}
             <span className="text-[#bbb]">·</span>

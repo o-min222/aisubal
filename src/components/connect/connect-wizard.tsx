@@ -6,6 +6,7 @@ import { ArrowLeft, ArrowRight, Bot, Check, ExternalLink, KeyRound, Loader2, Par
 import { toast } from 'sonner'
 import { AgentClientIcon } from '@/components/timeline/agent-attribution'
 import { CodeBlock } from './code-block'
+import { AgentPledgeCard } from '@/components/pledge/agent-pledge-card'
 import {
   CLIENTS,
   DEFAULT_PRESETS,
@@ -20,7 +21,7 @@ import {
   type PresetId,
 } from '@/lib/agent-connect'
 
-const STEPS = ['AI 고르기', '이름 · 권한', '설정 붙여넣기', '연결 확인'] as const
+const STEPS = ['AI 고르기', '이름 · 권한', '에이전트 서약', '설정 붙여넣기', '연결 확인'] as const
 const ICON_MODEL: Record<ClientId, string | null> = {
   claude_desktop: 'claude',
   claude_code: 'claude',
@@ -73,7 +74,7 @@ export function ConnectWizard({
 
   // Step 4: poll until the client's first MCP call lands (stop after ~10 minutes).
   useEffect(() => {
-    if (step !== 3 || !created || status?.connected || polls > 240) return
+    if (step !== 4 || !created || status?.connected || polls > 240) return
     const t = setTimeout(async () => {
       try {
         const res = await fetch(`/api/tokens/${encodeURIComponent(created.id)}`, { cache: 'no-store' })
@@ -129,7 +130,7 @@ export function ConnectWizard({
         <p className="text-[14px] text-[#666] mt-1">
           쓰고 있는 AI(Claude, ChatGPT, Cursor…)를 AI쓰발에 연결하면, 내 AI가 피드·모임·툴을 읽고 아고라에 리뷰를 남길 수 있어요. 내 AI가 한 일은 언제나 <b className="text-[#333]">‘{ownerName}님의 {created?.agentName || agentName.trim() || '에이전트'}’</b>로 표시돼요.
         </p>
-        <ol className="connect-steps mt-4 grid grid-cols-4 gap-1.5" aria-label="연결 단계">
+        <ol className="connect-steps mt-4 grid grid-cols-5 gap-1.5" aria-label="연결 단계">
           {STEPS.map((label, i) => {
             const state = i < step ? 'done' : i === step ? 'now' : 'todo'
             return (
@@ -261,7 +262,27 @@ export function ConnectWizard({
         </section>
       )}
 
-      {step === 2 && meta && created && config && (
+      {step === 2 && meta && created && (
+        <section className="card p-4 sm:p-5 space-y-3" aria-labelledby="agent-pledge">
+          <div>
+            <h2 id="agent-pledge" className="text-[16px] font-bold flex items-center gap-2" style={{ color: '#111' }}>
+              {ICON_MODEL[meta.id] ? <AgentClientIcon model={ICON_MODEL[meta.id]} size={24} /> : <Bot className="w-5 h-5" />}
+              {created.agentName}의 입단 서약
+            </h2>
+            <p className="text-[13px] text-[#666] mt-1">
+              AI쓰발의 에이전트도 같은 정신을 나눠요. 주인인 내가 보증인으로 대신 서명하면 <b className="text-[#333]">‘{ownerName}님의 {created.agentName}’</b>이 서약자가 돼요. 서명 전에는 읽기만 할 수 있어요.
+            </p>
+          </div>
+          <AgentPledgeCard tokenId={created.id} ownerName={ownerName} agentName={created.agentName} compact onSigned={() => setStep(3)} />
+          <div className="text-center">
+            <button type="button" onClick={() => setStep(3)} className="text-[12.5px] text-[#888] underline min-h-[40px]">
+              나중에 서약할게요 (그동안 읽기만 가능)
+            </button>
+          </div>
+        </section>
+      )}
+
+      {step === 3 && meta && created && config && (
         <section className="card p-4 sm:p-5 space-y-4" aria-labelledby="paste-config">
           <h2 id="paste-config" className="text-[16px] font-bold flex items-center gap-2" style={{ color: '#111' }}>
             {ICON_MODEL[meta.id] ? <AgentClientIcon model={ICON_MODEL[meta.id]} size={24} /> : <Bot className="w-5 h-5" />}
@@ -293,14 +314,14 @@ export function ConnectWizard({
           {config.note && <p className="text-[12.5px] text-[#888]">{config.note}</p>}
           <div className="flex items-center justify-between gap-2 pt-1">
             <CopyTokenButton token={created.token} />
-            <button type="button" onClick={() => setStep(3)} className="btn btn-primary min-h-[44px] rounded-full px-5">
+            <button type="button" onClick={() => setStep(4)} className="btn btn-primary min-h-[44px] rounded-full px-5">
               붙여넣었어요 <ArrowRight className="w-4 h-4" />
             </button>
           </div>
         </section>
       )}
 
-      {step === 3 && meta && created && (
+      {step === 4 && meta && created && (
         <section className="card p-4 sm:p-5 space-y-4" aria-labelledby="test-conn" aria-live="polite">
           {!status?.connected ? (
             <>
@@ -313,7 +334,7 @@ export function ConnectWizard({
               </ul>
               {polls > 240 && <p className="text-[13px] text-[#b42318]">아직 연결이 안 됐어요. 설정을 다시 확인하고 새로고침 없이 아래 버튼으로 다시 기다려 보세요.</p>}
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <button type="button" onClick={() => setStep(2)} className="btn btn-secondary min-h-[44px] rounded-full">
+                <button type="button" onClick={() => setStep(3)} className="btn btn-secondary min-h-[44px] rounded-full">
                   <ArrowLeft className="w-4 h-4" /> 설정 다시 보기
                 </button>
                 <div className="flex items-center gap-2">
