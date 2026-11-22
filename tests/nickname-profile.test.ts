@@ -60,8 +60,8 @@ describe('게시물별 프로필 선택', () => {
     expect(author.kind).toBe('nickname')
     if (author.kind === 'nickname') {
       expect(author.nickname).toBe(realMember.nickname)
-      expect(author.id).toBe(nicknameProfilePublicId(realMember.id))
-      expect(author.id).not.toBe(realMember.id)
+      expect(author.id).toBe(nicknameProfilePublicId(realMember.nickname_id!))
+      expect(author.id).not.toContain(realMember.id.replace(/-/g, '').slice(0, 8))
     }
   })
 
@@ -88,6 +88,14 @@ describe('실명/별명 연결 및 이메일 유출 방지', () => {
         expect(text).not.toContain(member.id)
       }
     }
+  })
+
+  it('별명 프로필이 없어도 별명 게시는 실명으로 바뀌지 않는다', () => {
+    const bare = { ...realMember, nickname: null, nickname_bio: null, nickname_avatar_url: null, nickname_id: null }
+    const author = toPublicAuthor(bare, 'nickname')
+    expect(author.kind).toBe('nickname')
+    expect(JSON.stringify(author)).not.toContain(realMember.display_name)
+    expect(JSON.stringify(author)).not.toContain(realMember.id)
   })
 
   it('별명 작성자 객체에 실명 필드가 없다', () => {

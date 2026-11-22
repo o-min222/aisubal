@@ -22,6 +22,7 @@ const DEV_MEMBER: Member = {
   nickname_bio: '어둠의 AI 클럽에서 온 별명.',
   nickname_avatar_url: null,
   nickname_created_at: '2026-11-15T00:00:00Z',
+  nickname_id: '8b3c4d5e-6f7a-4b8c-9d0e-1f2a3b4c5d6e',
   is_admin: true,
   is_banned: false,
   banned_at: null,

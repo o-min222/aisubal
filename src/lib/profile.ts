@@ -8,10 +8,12 @@ export const NICKNAME_MIN = 2
 export const NICKNAME_MAX = 24
 export const NICKNAME_REGEX = /^[a-zA-Z0-9가-힣_]{2,24}$/
 
-/** Opaque public id for a nickname profile — must NOT equal member.id */
-export function nicknameProfilePublicId(memberId: string): string {
-  // Deterministic opaque id so seed/dev stays stable without leaking member uuid as-is
-  return `nick_${memberId.replace(/-/g, '').slice(0, 16)}`
+/**
+ * Public id for a 부캐: derived ONLY from its own nickname_profiles.id (0052), never from the
+ * member id (the old member-uuid prefix was linkable back to the member).
+ */
+export function nicknameProfilePublicId(nicknameId: string): string {
+  return `nick_${nicknameId}`
 }
 
 export function memberHasNicknameProfile(member: Member): boolean {
@@ -59,13 +61,14 @@ export function canPostAs(
 
 /** Build the public author object for a post — never links nickname ↔ real identity */
 export function toPublicAuthor(member: Member, postedAs: PostAs): PublicAuthor {
-  if (postedAs === 'nickname' && member.nickname) {
+  // 부캐 rows never fall back to the real name — without a nickname profile they stay anonymous.
+  if (postedAs === 'nickname') {
     return {
       kind: 'nickname',
-      id: nicknameProfilePublicId(member.id),
-      nickname: member.nickname,
-      bio: member.nickname_bio,
-      avatar_url: member.nickname_avatar_url,
+      id: member.nickname_id ? nicknameProfilePublicId(member.nickname_id) : 'nick_unknown',
+      nickname: member.nickname || '별명',
+      bio: member.nickname ? member.nickname_bio : null,
+      avatar_url: member.nickname ? member.nickname_avatar_url : null,
     }
   }
   return {

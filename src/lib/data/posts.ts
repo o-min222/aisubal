@@ -57,7 +57,7 @@ function authorOf(author: Member | null, nick: NickRow | null): Member | null {
   if (!nick) return null
   return {
     id: nick.id, auth_id: '', email: '', display_name: nick.nickname, handle: null, bio: null, avatar_url: null,
-    nickname: nick.nickname, nickname_bio: nick.bio, nickname_avatar_url: nick.avatar_url, nickname_created_at: nick.created_at,
+    nickname_id: nick.id, nickname: nick.nickname, nickname_bio: nick.bio, nickname_avatar_url: nick.avatar_url, nickname_created_at: nick.created_at,
   } as unknown as Member
 }
 
@@ -175,7 +175,7 @@ export async function createPost(
       author_id: member.id,
       posted_as: input.postedAs,
       nickname_profile_id:
-        input.postedAs === 'nickname' ? nicknameProfilePublicId(member.id) : null,
+        input.postedAs === 'nickname' && member.nickname_id ? nicknameProfilePublicId(member.nickname_id) : null,
       is_hidden: false,
       is_agent_posted: false,
       agent_token_name: null,

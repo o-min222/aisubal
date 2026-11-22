@@ -9,7 +9,7 @@ import { MOCK_MEMBERS } from '@/lib/mock-data'
 import { addUpvote, removeUpvote, rankProducts, countUpvotes, type RankingWindow } from '@/lib/product-rules'
 import { toPublicAuthor } from '@/lib/profile'
 import type { Member, Product, ProductComment, ProductUpdate, PublicAuthor } from '@/lib/supabase/types'
-import { sb, useMockData } from './client'
+import { sb, useMockData as isMock } from './client'
 import { MEMBER_PUBLIC_COLUMNS } from './member-columns'
 import type { ProductWithDetails } from './types'
 import { msg } from '@/i18n/translate'
@@ -30,7 +30,7 @@ type CreateProductInput = {
 }
 
 async function makerAuthors(makerIds: string[]): Promise<PublicAuthor[]> {
-  if (useMockData()) {
+  if (isMock()) {
     return makerIds
       .map((id) => MOCK_MEMBERS.find((m) => m.id === id))
       .filter((m): m is Member => Boolean(m))
@@ -52,19 +52,21 @@ async function hydrateProduct(
   product: Product,
   viewerId?: string
 ): Promise<ProductWithDetails> {
-  if (useMockData()) {
+  if (isMock()) {
     return mockGetDetails(product.id, viewerId)!
   }
 
   const supabase = await sb()
   const [{ data: upvotes }, { data: comments }, { data: updates }] = await Promise.all([
     supabase.from('product_upvotes').select('*').eq('product_id', product.id),
-    supabase.from('product_comments').select('*').eq('product_id', product.id).order('created_at'),
+    // 0056: clients read public_member_id (null on 부캐 rows) + the 부캐 profile, never member_id
+    supabase.from('product_comments').select('id, product_id, posted_as, body, created_at, member_id:public_member_id, nick:nickname_profiles!product_comments_nickname_id_fkey(id, nickname, bio, avatar_url, created_at)').eq('product_id', product.id).order('created_at'),
     supabase.from('product_updates').select('*').eq('product_id', product.id).order('created_at', { ascending: false }),
   ])
 
-  const commentRows = (comments || []) as ProductComment[]
-  const commentMemberIds = commentRows.map((c) => c.member_id)
+  type CommentRow = Omit<ProductComment, 'member_id' | 'nickname_profile_id'> & { member_id: string | null; nick: { id: string; nickname: string; bio: string | null; avatar_url: string | null; created_at: string } | null }
+  const commentRows = (comments || []) as unknown as CommentRow[]
+  const commentMemberIds = commentRows.map((c) => c.member_id).filter((id): id is string => Boolean(id))
   const members = new Map<string, Member>()
   const allIds = [...new Set([...product.maker_ids, ...commentMemberIds])]
   if (allIds.length) {
@@ -86,19 +88,23 @@ async function hydrateProduct(
     ...product,
     makers: makers.length ? makers : await makerAuthors(product.maker_ids),
     upvote_count: (upvotes || []).length,
-    comments: commentRows.map((c) => {
-      const m = members.get(c.member_id)
+    comments: commentRows.map(({ nick, ...c }) => {
+      const base = { ...c, member_id: c.member_id ?? '', nickname_profile_id: null }
+      if (c.posted_as === 'nickname') {
+        return {
+          ...base,
+          author: toPublicAuthor(
+            { id: '', display_name: '', nickname_id: nick?.id ?? null, nickname: nick?.nickname ?? null, nickname_bio: nick?.bio ?? null, nickname_avatar_url: nick?.avatar_url ?? null } as unknown as Member,
+            'nickname',
+          ),
+        }
+      }
+      const m = c.member_id ? members.get(c.member_id) : undefined
       return {
-        ...c,
+        ...base,
         author: m
-          ? toPublicAuthor(m, c.posted_as)
-          : {
-              kind: 'real' as const,
-              id: c.member_id,
-              display_name: '멤버',
-              bio: null,
-              avatar_url: null,
-            },
+          ? toPublicAuthor(m, 'real')
+          : { kind: 'real' as const, id: c.member_id ?? '', display_name: '멤버', bio: null, avatar_url: null },
       }
     }),
     updates: (updates || []) as ProductUpdate[],
@@ -114,7 +120,7 @@ export async function getProductDetails(
   productId: string,
   viewerId?: string
 ): Promise<ProductWithDetails | null> {
-  if (useMockData()) return mockGetDetails(productId, viewerId)
+  if (isMock()) return mockGetDetails(productId, viewerId)
 
   const supabase = await sb()
   const { data, error } = await supabase
@@ -132,7 +138,7 @@ export async function listProductsRanked(
   viewerId?: string,
   now = new Date()
 ): Promise<ProductWithDetails[]> {
-  if (useMockData()) return mockListRanked(window, viewerId, now)
+  if (isMock()) return mockListRanked(window, viewerId, now)
 
   const supabase = await sb()
   const { data: products, error } = await supabase.from('products').select('*')
@@ -157,7 +163,7 @@ export async function featuredProducts(
   limit = 3,
   viewerId?: string
 ): Promise<ProductWithDetails[]> {
-  if (useMockData()) return mockFeatured(limit, viewerId)
+  if (isMock()) return mockFeatured(limit, viewerId)
 
   const supabase = await sb()
   const { data, error } = await supabase
@@ -175,7 +181,7 @@ export async function createProduct(
   member: Member,
   data: CreateProductInput
 ): Promise<ProductWithDetails> {
-  if (useMockData()) {
+  if (isMock()) {
     const product: Product = {
       id: `product-${Date.now()}`,
       name: data.name,
@@ -225,7 +231,7 @@ export async function toggleProductUpvote(
   memberId: string,
   action: 'add' | 'remove'
 ): Promise<ProductWithDetails | null> {
-  if (useMockData()) {
+  if (isMock()) {
     if (action === 'add') {
       const result = addUpvote(MUTABLE_UPVOTES, productId, memberId)
       if (!result.ok) throw new Error(result.reason)

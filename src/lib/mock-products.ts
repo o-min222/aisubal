@@ -72,7 +72,7 @@ const COMMENTS: ProductComment[] = [
     product_id: 'product-2',
     member_id: 'member-1',
     posted_as: 'nickname',
-    nickname_profile_id: nicknameProfilePublicId('member-1'),
+    nickname_profile_id: nicknameProfilePublicId('6f1c2d3e-4a5b-4c6d-8e7f-90a1b2c3d4e5'),
     body: '주간 리포트 자동화가 핵심이군요. 써볼게요.',
     created_at: '2026-11-19T15:00:00Z',
   },
