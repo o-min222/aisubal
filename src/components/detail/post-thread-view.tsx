@@ -43,9 +43,9 @@ export async function PostThreadView({
     <div className="space-y-3">
       {variant === 'page' &&
         (group ? (
-          <Link href={`/groups/${group.slug}`} className="inline-flex items-center gap-1.5 text-sm font-semibold min-h-[36px]" style={{ color: 'var(--c-5b3fc4)' }}>
+          <Link href={`/groups/${group.slug}`} className="inline-flex items-center gap-1.5 text-sm font-semibold min-h-[36px] text-n-555 hover:text-n-111">
             <ArrowLeft className="w-4 h-4" />
-            <GroupAvatar name={group.name} size={16} className="align-[-3px]" /> {group.name} 그룹
+            <GroupAvatar name={group.name} size={16} className="align-[-3px]" /> <T s="{name} 그룹" vars={{ name: group.name }} />
           </Link>
         ) : (
           <Link href="/feed" className="hidden md:inline-flex items-center gap-1 text-sm text-n-666 hover:text-n-111 min-h-[36px]">

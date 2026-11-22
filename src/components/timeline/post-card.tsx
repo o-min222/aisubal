@@ -280,7 +280,7 @@ export function PostCard({
             {replyHref ? (
               <Link
                 href={replyHref}
-                className="inline-flex items-center gap-1 text-sm text-n-555 hover:text-n-111"
+                className="tc-act inline-flex items-center gap-1 text-sm text-n-555 hover:text-n-111"
                 aria-label={tx('답글')}
               >
                 <span className="tap-target inline-flex items-center justify-center rounded-full hover:bg-n-f2f2f2">
