@@ -3,6 +3,7 @@ import { Bot, ChevronUp, Download, Star, Users } from 'lucide-react'
 import { toolHref, type ToolListItem } from '@/lib/tool-rules'
 import { ToolTypeChips } from '@/components/tools/type-chips'
 import { UsageToggle } from './usage-toggle'
+import { ToolIcon } from './tool-icon'
 import { UserAvatar } from '@/components/user-avatar'
 import type { ToolSocialUser } from '@/lib/data/tools'
 import { T } from '@/i18n/t'
@@ -35,18 +36,6 @@ async function SocialUsers({ users, total }: { users: ToolSocialUser[]; total: n
       </span>
       {total > users.length && <span className="text-n-999 whitespace-nowrap"><T s="· 전체 {total}명" vars={{ total }} /></span>}
     </span>
-  )
-}
-
-export function ToolIcon({ name, iconUrl, dim = 'w-11 h-11' }: { name: string; iconUrl?: string | null; dim?: string }) {
-  if (iconUrl) {
-    // eslint-disable-next-line @next/next/no-img-element
-    return <img src={iconUrl} alt="" className={`${dim} rounded-xl object-cover border border-n-eee bg-n-fff flex-shrink-0`} />
-  }
-  return (
-    <div className={`product-icon ${dim} text-base flex-shrink-0`} aria-hidden>
-      {name.charAt(0).toUpperCase()}
-    </div>
   )
 }
 

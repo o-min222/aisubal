@@ -2,7 +2,7 @@ import { Bot, ChevronUp, Star, Users } from 'lucide-react'
 import type { ToolListItem } from '@/lib/tool-rules'
 import { ToolTypeChips } from '@/components/tools/type-chips'
 import type { ToolSocialUser } from '@/lib/data/tools'
-import { ToolIcon } from '@/components/tools/tool-card'
+import { ToolIcon } from '@/components/tools/tool-icon'
 import { CompactRow } from './compact-row'
 import { T } from '@/i18n/t'
 

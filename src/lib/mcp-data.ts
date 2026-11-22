@@ -22,6 +22,8 @@ import { fetchPageSnapshot } from '@/lib/safe-fetch'
 import { isStale } from '@/lib/tool-review'
 import { AGENT_BIO_MAX, AGENT_NAME_MAX, AGENT_PROFILE_NOTICE, parseAgentProfile, toAgentFacingProfile } from '@/lib/agent-profile'
 import { revalidatePath } from 'next/cache'
+import { after } from 'next/server'
+import { resolveServiceIcon } from '@/lib/service-icon'
 import type {
   ToolboxEnvironment,
   ToolboxType,
@@ -567,7 +569,7 @@ export async function handleDataTool(
         const requested = str(args.type) as ToolboxType | null
         if (requested === 'product') return { error: '직접 만든 프로덕트는 launch_product로 등록하세요.' }
         const type = requested || inferToolboxType(url, nm)
-        return (await call('mcp_tool_submit', {
+        const res = (await call('mcp_tool_submit', {
           p_payload: {
             name: nm,
             oneLiner: args.oneLiner,
@@ -580,6 +582,8 @@ export async function handleDataTool(
             install_snippets: {},
           },
         })) as Record<string, unknown>
+        storeServiceIconLater(res, url, (icon) => call('mcp_tool_store_icon', { p_id: res.id, p_icon: icon }))
+        return res
       }
       case 'my_tool_submissions':
         return (await call('mcp_tool_submissions_mine', { p_limit: num(args.limit, 20, 50) })) as Record<string, unknown>
@@ -687,5 +691,22 @@ export async function handleDataTool(
     return { error: `Unknown tool: ${name}` }
   } catch (e) {
     return { error: dataErrorMessage(e instanceof Error ? e.message : String(e)) }
+  }
+}
+
+/**
+ * After a 등록 request lands, look up the service's own logo (SSRF-safe, server-side) and store it on
+ * the submission; approval copies it to the gallery entry (0071). Runs after the response so the
+ * agent never waits on a third-party site; any failure just leaves the letter mark.
+ */
+function storeServiceIconLater(res: Record<string, unknown>, url: string, store: (icon: string) => Promise<unknown>) {
+  if (typeof res.id !== 'string' || (res.status !== 'pending' && res.status !== 'approved')) return
+  try {
+    after(async () => {
+      const icon = await resolveServiceIcon({ url }).catch(() => null)
+      if (icon) await store(icon).catch(() => null)
+    })
+  } catch {
+    // outside a request scope (scripts/tests): skip
   }
 }

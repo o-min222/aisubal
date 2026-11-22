@@ -1,6 +1,7 @@
 'use client'
 
 import { useMemo, useState } from 'react'
+import { ToolIcon } from '@/components/tools/tool-icon'
 import Link from 'next/link'
 import {
   ArrowLeft,
@@ -139,9 +140,7 @@ export function ToolboxDetailClient({ entry: initial, mentionPosts, member, aiRa
 
       <article className="card p-6">
         <div className="flex gap-4 items-start">
-          <div className="product-icon w-16 h-16 text-xl flex-shrink-0">
-            {entry.name.charAt(0)}
-          </div>
+          <ToolIcon name={entry.name} iconUrl={entry.icon_url} dim="w-16 h-16" text="text-xl" />
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap gap-2 mb-2">
               <span className="badge badge-mcp"><T>{TOOLBOX_TYPE_LABEL[entry.type]}</T></span>

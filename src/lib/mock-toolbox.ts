@@ -21,6 +21,35 @@ import { verifiedSnippets } from '@/lib/install-catalog'
 
 export type { ToolboxEntryDetails } from '@/lib/data/types'
 
+/** The logos prod resolved for the same entries (0071 backfill); DSPy left out to show the letter fallback. */
+const MOCK_ICONS: Record<string, string> = {
+  "Ollama": 'https://avatars.githubusercontent.com/u/151674099?s=128&v=4',
+  "Claude Code": 'https://avatars.githubusercontent.com/u/76263028?s=128&v=4',
+  "Vercel AI SDK": 'https://avatars.githubusercontent.com/u/14985020?s=128&v=4',
+  "MCP Reference Servers": 'https://avatars.githubusercontent.com/u/182288589?s=128&v=4',
+  "MCP TypeScript SDK": 'https://avatars.githubusercontent.com/u/182288589?s=128&v=4',
+  "Aider": 'https://avatars.githubusercontent.com/u/172139148?s=128&v=4',
+  "Continue": 'https://avatars.githubusercontent.com/u/127876214?s=128&v=4',
+  "Supabase MCP": 'https://avatars.githubusercontent.com/u/54469796?s=128&v=4',
+  "Context7": 'https://avatars.githubusercontent.com/u/74989412?s=128&v=4',
+  "OpenAI Codex CLI": 'https://avatars.githubusercontent.com/u/14957082?s=128&v=4',
+  "Gemini CLI": 'https://avatars.githubusercontent.com/u/161781182?s=128&v=4',
+  "GitHub MCP Server": 'https://avatars.githubusercontent.com/u/9919?s=128&v=4',
+  "Anthropic Courses": 'https://avatars.githubusercontent.com/u/76263028?s=128&v=4',
+  "Anthropic Skills": 'https://avatars.githubusercontent.com/u/76263028?s=128&v=4',
+  "Playwright MCP": 'https://avatars.githubusercontent.com/u/6154722?s=128&v=4',
+  "Firecrawl MCP": 'https://avatars.githubusercontent.com/u/135057108?s=128&v=4',
+  "Exa MCP": 'https://avatars.githubusercontent.com/u/77906174?s=128&v=4',
+  "Chrome DevTools MCP": 'https://avatars.githubusercontent.com/u/11260967?s=128&v=4',
+  "Brave Search MCP": 'https://avatars.githubusercontent.com/u/12301619?s=128&v=4',
+  "Browserbase MCP": 'https://avatars.githubusercontent.com/u/158221360?s=128&v=4',
+  "Awesome MCP Servers": 'https://avatars.githubusercontent.com/u/108313943?s=128&v=4',
+  "Next.js": 'https://avatars.githubusercontent.com/u/14985020?s=128&v=4',
+  "Supabase Postgres Best Practices": 'https://avatars.githubusercontent.com/u/54469796?s=128&v=4',
+  "Vercel MCP": 'https://assets.vercel.com/image/upload/q_auto/front/favicon/vercel/apple-touch-icon-180x180.png',
+  "pstack": 'https://avatars.githubusercontent.com/u/126759922?s=128&v=4',
+}
+
 function entry(
   partial: Omit<
     ToolboxEntry,
@@ -43,7 +72,7 @@ function entry(
   return {
     ...partial,
     canonical_url: canonicalUrl(partial.canonical_url),
-    icon_url: partial.icon_url ?? null,
+    icon_url: partial.icon_url ?? MOCK_ICONS[partial.name] ?? null,
     homepage_url: partial.homepage_url ?? null,
     source_repo: source,
     install_snippets: verified?.snippets ?? {},
