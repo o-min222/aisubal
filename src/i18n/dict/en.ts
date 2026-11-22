@@ -1753,6 +1753,7 @@ const en: Record<string, string> = {
   "내 글에는 좋아요를 누를 수 없어요.": "You can’t like your own post.",
   "내 글에는 좋아요를 누를 수 없어요": "You can’t like your own post",
   "내 글은 신고할 수 없어요.": "You can’t report your own post.",
+  "아카이브에서 찾지 못했어요.": "Couldn’t find it in your archive.",
 }
 
 export default en

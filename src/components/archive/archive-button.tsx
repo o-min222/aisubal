@@ -51,10 +51,10 @@ export function ArchiveButton({
   }
 
   async function openEdit() {
-    // Saved earlier: re-saving is idempotent and returns the row (memo/tags untouched).
+    // Saved earlier: only read the row for the memo/tags sheet — never re-POST (N-5).
     setBusy(true)
     try {
-      const res = await fetch('/api/archive', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ kind, ref: refId, hint }) })
+      const res = await fetch(`/api/archive?kind=${kind}&ref=${encodeURIComponent(refId)}`)
       const d = await res.json()
       if (!res.ok) throw new Error(d.error)
       setSheet({ id: d.item.id, memo: d.item.memo ?? '', tags: (d.item.tags ?? []).map((t: string) => `#${t}`).join(' ') })

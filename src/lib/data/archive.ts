@@ -224,6 +224,18 @@ export async function removeArchiveByRef(memberId: string, kind: ArchiveKind, re
   return !error
 }
 
+/** The viewer's saved row for one source (memo/tags sheet) — a read, never a re-save. */
+export async function getArchiveItemByRef(memberId: string, kind: ArchiveKind, ref: string): Promise<{ id: string; memo: string | null; tags: string[] } | null> {
+  if (isMock()) {
+    const it = mockItems(memberId).find((i) => i.kind === kind && i.ref === ref)
+    return it ? { id: it.id, memo: it.memo ?? null, tags: it.tags ?? [] } : null
+  }
+  const supabase = await sb()
+  const { data } = await supabase.from('archive_entries').select('id, memo, tags').eq('owner_id', memberId).eq('kind', kind).eq('ref', ref).maybeSingle()
+  const row = data as { id: string; memo: string | null; tags: string[] | null } | null
+  return row ? { id: row.id, memo: row.memo, tags: row.tags ?? [] } : null
+}
+
 /** 'n saved' counts without exposing who (posts' archive_count). */
 export async function archiveSaveCounts(kind: ArchiveKind, refs: string[]): Promise<Record<string, number>> {
   if (!refs.length || isMock()) return {}

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getMember } from '@/lib/auth'
-import { addToArchive, listArchive, removeArchiveByRef } from '@/lib/data/archive'
+import { addToArchive, getArchiveItemByRef, listArchive, removeArchiveByRef } from '@/lib/data/archive'
 import { isArchiveKind } from '@/lib/archive-rules'
 import { te } from '@/i18n/server'
 
@@ -10,6 +10,13 @@ export async function GET(req: NextRequest) {
   if (!member) return NextResponse.json({ error: await te('인증이 필요합니다.') }, { status: 401 })
   const sp = req.nextUrl.searchParams
   const kind = sp.get('kind')
+  // one saved item by source (the '담김' sheet): GET /api/archive?kind=post&ref=…
+  const ref = sp.get('ref')
+  if (ref) {
+    if (!isArchiveKind(kind)) return NextResponse.json({ error: await te('담을 항목을 찾을 수 없어요.') }, { status: 400 })
+    const item = await getArchiveItemByRef(member.id, kind, ref.slice(0, 2048))
+    return item ? NextResponse.json({ item }) : NextResponse.json({ error: await te('아카이브에서 찾지 못했어요.') }, { status: 404 })
+  }
   const page = await listArchive(member.id, {
     kind: isArchiveKind(kind) ? kind : null,
     tag: sp.get('tag')?.slice(0, 24) || null,
