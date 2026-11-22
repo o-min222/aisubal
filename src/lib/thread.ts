@@ -47,3 +47,11 @@ export function twoLevelThread<T extends ThreadPost>(rootId: string, posts: T[])
 export function commentTotal(groups: CommentGroup<unknown>[]) {
   return groups.reduce((n, g) => n + 1 + g.replies.length, 0)
 }
+
+/**
+ * Comment count shown on lists and detail headers — one rule everywhere (matches the
+ * DB reply_count since 0044): replies that are neither hidden nor deleted.
+ */
+export function visibleReplyCount(replies: Array<{ isHidden?: boolean; isDeleted?: boolean }>): number {
+  return replies.filter((r) => !r.isHidden && !r.isDeleted).length
+}

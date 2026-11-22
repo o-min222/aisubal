@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
 import type { getAnonThread } from '@/lib/data/anon'
-import { twoLevelThread } from '@/lib/thread'
+import { twoLevelThread, visibleReplyCount } from '@/lib/thread'
 import { CommentList } from '@/components/comments/comment-list'
 import { PostCard } from '@/components/timeline/post-card'
 import { AnonComposer } from '@/components/anon/anon-composer'
@@ -63,7 +63,7 @@ export function AnonThreadView({
             />
           </div>
         )}
-        <div className="px-4 pt-3 pb-2 text-sm font-semibold text-n-111 border-b border-n-eee"><T s="댓글 {count}" vars={{ count: thread.replies.filter((r) => !r.isDeleted).length }} /></div>
+        <div className="px-4 pt-3 pb-2 text-sm font-semibold text-n-111 border-b border-n-eee"><T s="댓글 {count}" vars={{ count: visibleReplyCount(thread.replies) }} /></div>
         {groups.length === 0 ? (
           <p className="px-4 py-6 text-sm text-n-888 text-center"><T>첫 댓글을 남겨보세요.</T></p>
         ) : (

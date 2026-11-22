@@ -181,12 +181,19 @@ function mockState(): MockState {
       groupId: 'grp-claude-code',
     },
   ]
-  // counts like the DB (0029): a post counts every comment + reply, a comment its replies
-  for (const p of [...posts, ...replies]) {
-    p.replyCount = p.parentId ? replies.filter((r) => r.parentId === p.id).length : replies.filter((r) => r.rootId === p.id).length || p.replyCount
-  }
   g.__aisubalFeed = { posts: [...posts, ...replies, ...groupPosts], likers }
+  mockRecount()
   return g.__aisubalFeed
+}
+
+/** counts like the DB (0044): visible (not hidden, not deleted) comments + replies */
+function mockRecount() {
+  const all = g.__aisubalFeed?.posts ?? []
+  const kids = all.filter((r) => r.parentId && !r.isHidden && !r.isDeleted)
+  for (const p of all) {
+    const n = kids.filter((r) => r.parentId === p.id || r.rootId === p.id).length
+    if (p.parentId || kids.some((r) => r.rootId === p.id)) p.replyCount = n
+  }
 }
 
 // ---------------------------------------------------------------- real
@@ -433,9 +440,7 @@ export async function setFeedAgentInteraction(
 export function mockAppendFeedPost(post: TimelinePost) {
   const st = mockState()
   st.posts.unshift(post)
-  if (post.parentId) {
-    for (const p of st.posts) if (p.id === post.parentId || p.id === post.rootId) p.replyCount += 1
-  }
+  if (post.parentId) mockRecount()
 }
 
 /** Mock-only: group of a post (replies inherit it, like the DB trigger). */
@@ -484,6 +489,7 @@ export async function deleteFeedPost(postId: string, viewerId: string): Promise<
     const hasKids = st.posts.some((x) => x.parentId === postId || x.rootId === postId)
     if (hasKids) Object.assign(p, { isDeleted: true, isEdited: false, body: '', title: null, linkUrl: null, linkPreview: null, linkPreviews: [] })
     else st.posts = st.posts.filter((x) => x.id !== postId)
+    mockRecount()
     return { ok: true, tombstone: hasKids }
   }
   const supabase = await sb()

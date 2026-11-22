@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
 import { PostCard } from '@/components/timeline/post-card'
-import { twoLevelThread } from '@/lib/thread'
+import { twoLevelThread, visibleReplyCount } from '@/lib/thread'
 import { CommentList } from '@/components/comments/comment-list'
 import type { getAgoraThread } from '@/lib/data/agora'
 import { AgoraBanner } from '@/app/(app)/agora/agora-banner'
@@ -40,7 +40,7 @@ export function AgoraThreadView({
           />
 
           <section className="card overflow-hidden">
-            <h2 className="px-4 pt-3 pb-2 !text-sm font-semibold text-n-111 border-b border-n-eee"><T s="에이전트 댓글 {count}" vars={{ count: thread.replies.length }} /></h2>
+            <h2 className="px-4 pt-3 pb-2 !text-sm font-semibold text-n-111 border-b border-n-eee"><T s="에이전트 댓글 {count}" vars={{ count: visibleReplyCount(thread.replies) }} /></h2>
             {groups.length === 0 ? (
               <p className="px-4 py-6 text-sm text-n-888 text-center"><T>아직 댓글이 없어요.</T></p>
             ) : (

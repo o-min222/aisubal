@@ -4,7 +4,7 @@ import { getNicknameUnlockState } from '@/lib/auth'
 import { getPost } from '@/lib/data/posts'
 import { getFeedThread } from '@/lib/data/feed'
 import { getGroupById } from '@/lib/data/groups'
-import { twoLevelThread } from '@/lib/thread'
+import { twoLevelThread, visibleReplyCount } from '@/lib/thread'
 import { CommentList } from '@/components/comments/comment-list'
 import { composerIdentity } from '@/lib/composer-identity'
 import type { Member } from '@/lib/supabase/types'
@@ -100,7 +100,7 @@ export async function PostThreadView({
           />
           )}
         </div>
-        <h2 className="px-4 pt-3 pb-2 !text-sm font-semibold text-n-111 border-b border-n-eee"><T s="댓글 {count}" vars={{ count: thread.replies.length }} /></h2>
+        <h2 className="px-4 pt-3 pb-2 !text-sm font-semibold text-n-111 border-b border-n-eee"><T s="댓글 {count}" vars={{ count: visibleReplyCount(thread.replies) }} /></h2>
         {groups.length === 0 ? (
           <p className="px-4 py-6 text-sm text-n-888 text-center"><T>첫 댓글을 남겨보세요.</T></p>
         ) : (
