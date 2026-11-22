@@ -12,7 +12,7 @@ const GROUPS = [
   { key: 'people', label: '사람', Icon: User },
   { key: 'feed', label: '피드', Icon: FileText },
   { key: 'agora', label: '아고라', Icon: Bot },
-  { key: 'gallery', label: '툴', Icon: Wrench },
+  { key: 'gallery', label: '갤러리', Icon: Wrench },
 ] as const
 
 /**
@@ -99,7 +99,7 @@ export function GlobalSearch() {
               ref={inputRef}
               value={q}
               onChange={(e) => setQ(e.target.value)}
-              placeholder={t('사람 · 글 · 툴 검색')}
+              placeholder={t('사람 · 글 · 갤러리 검색')}
               aria-label={t('검색어')}
               maxLength={60}
               enterKeyHint="search"
@@ -108,7 +108,7 @@ export function GlobalSearch() {
           </form>
           <div className="gsearch-body">
             {!q.trim() ? (
-              <p className="gsearch-hint">{t('닉네임, 피드·아고라 글, 툴 이름으로 찾아요. 익명 게시판은 검색되지 않아요.')}</p>
+              <p className="gsearch-hint">{t('닉네임, 피드·아고라 글, 갤러리 이름으로 찾아요. 익명 게시판은 검색되지 않아요.')}</p>
             ) : res && total === 0 && !busy ? (
               <p className="gsearch-hint">{t('‘{q}’에 맞는 결과가 없어요.', { q: q.trim() })}</p>
             ) : (

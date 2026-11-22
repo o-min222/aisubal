@@ -59,13 +59,13 @@ export function SubmissionRow({ s, mode, dups = [], log = [], open = false }: { 
         </p>
       )}
       {s.entry && s.status === 'approved' && (
-        <Link href={`/tools/${s.entry.slug}`} className="text-[13px] text-c-06c">
-          <T>등록된 툴 보기 →</T>
+        <Link href={`/gallery/${s.entry.slug}`} className="text-[13px] text-c-06c">
+          <T>갤러리에서 보기 →</T>
         </Link>
       )}
       {s.duplicateOf && (
         <p className="text-[12.5px] text-n-666">
-          <T>중복:</T> <Link href={`/tools/${s.duplicateOf.slug}`} className="text-c-06c">{s.duplicateOf.name}</Link>
+          <T>중복:</T> <Link href={`/gallery/${s.duplicateOf.slug}`} className="text-c-06c">{s.duplicateOf.name}</Link>
         </p>
       )}
       {mode === 'admin' && dups.length > 0 && (
@@ -74,7 +74,7 @@ export function SubmissionRow({ s, mode, dups = [], log = [], open = false }: { 
           <span><T s="중복 후보: {v}" vars={{ v: dups.map((d, i) => (
               <span key={d.id}>
                 {i > 0 && ', '}
-                <Link href={`/tools/${d.slug}`} className="text-c-06c">{d.name}</Link> ({DUP_REASON_LABEL[d.reason] ?? d.reason})
+                <Link href={`/gallery/${d.slug}`} className="text-c-06c">{d.name}</Link> ({DUP_REASON_LABEL[d.reason] ?? d.reason})
               </span>
             )) }} /></span>
         </p>

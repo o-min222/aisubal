@@ -1,5 +1,6 @@
 import { Bot, ChevronUp, Star, Users } from 'lucide-react'
-import { TOOL_TYPE_CHIP, type ToolListItem } from '@/lib/tool-rules'
+import type { ToolListItem } from '@/lib/tool-rules'
+import { ToolTypeChips } from '@/components/tools/type-chips'
 import type { ToolSocialUser } from '@/lib/data/tools'
 import { ToolIcon } from '@/components/tools/tool-card'
 import { CompactRow } from './compact-row'
@@ -19,8 +20,7 @@ export function ToolRow({ tool, href, active, social = [] }: { tool: ToolListIte
       title={tool.name}
       badge={
         <>
-          <span className="cat-chip"><T>{TOOL_TYPE_CHIP[tool.type]}</T></span>
-          {isLaunch && <span className="launch-chip"><T>런치</T></span>}
+          <ToolTypeChips entry={tool} />
           {tool.used_by_me && <span className="crow-chip" style={{ background: 'var(--c-e8f5ee)', color: 'var(--c-1f7a4d)' }}><T>사용 중</T></span>}
         </>
       }

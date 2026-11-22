@@ -9,7 +9,7 @@ import { msg } from '@/i18n/translate'
 
 const TABS = [
   { href: '/feed', label: msg('홈'), icon: Home },
-  { href: '/tools', label: msg('툴'), icon: Wrench },
+  { href: '/gallery', label: msg('갤러리'), icon: Wrench },
   { href: '/posts/new', label: msg('작성'), icon: PlusSquare },
   { href: '/archive', label: msg('아카이브'), icon: Archive },
   { href: '/me', label: msg('내 정보'), icon: UserRound },

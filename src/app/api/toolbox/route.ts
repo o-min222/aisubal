@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
 
 /**
  * Tools are agent-only now: members ask their own AI to call `submit_tool`
- * (tools:submit), and the request goes into the admin review queue. Guide: /tools/new
+ * (tools:submit), and the request goes into the admin review queue. Guide: /gallery/new
  */
 export async function POST() {
   const member = await getMember()
@@ -29,7 +29,7 @@ export async function POST() {
     return NextResponse.json({ error: await te('인증이 필요합니다.') }, { status: 401 })
   }
   return NextResponse.json(
-    { error: await te('툴은 내 AI가 등록 요청해요 (submit_tool, tools:submit). 관리자 검토 후 공개돼요.'), guide: '/tools/new' },
+    { error: await te('갤러리 항목은 내 AI가 등록 요청해요 (submit_tool, tools:submit). 관리자 검토 후 공개돼요.'), guide: '/gallery/new' },
     { status: 410 }
   )
 }

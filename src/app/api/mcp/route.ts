@@ -87,7 +87,7 @@ const TOOLS = [
   {
     name: 'list_tools',
     description:
-      "툴 목록 (MCP·스킬·프롬프트·룰·CLI·서비스·멤버 런치를 한 리스트로). category: mcp|skill|prompt|rules|cli|service|launch, sort: popular|newest|ai|rated|users|upvotes, mine=true면 내가 '사용 중'으로 표시한 툴만. Scope: toolbox_read 또는 products_read",
+      "갤러리 목록 (MCP·스킬·프롬프트·룰·CLI·서비스·멤버가 만든 서비스를 한 리스트로). category: mcp|skill|prompt|rules|cli|service|launch, sort: popular|newest|ai|rated|users|upvotes, mine=true면 내가 '사용 중'으로 표시한 항목만. Scope: toolbox_read 또는 products_read",
     inputSchema: {
       type: 'object',
       properties: {
@@ -102,7 +102,7 @@ const TOOLS = [
   },
   {
     name: 'read_tool',
-    description: '툴 상세: 리뷰 평점, AI 평가, 사용 중인 멤버, 런치 정보(업보트·메이커). entryId는 UUID·slug·런치 productId. Scope: toolbox_read 또는 products_read',
+    description: '갤러리 항목 상세: 리뷰 평점, AI 평가, 사용 중인 멤버, 런치 정보(업보트·메이커). entryId는 UUID·slug·런치 productId. Scope: toolbox_read 또는 products_read',
     inputSchema: {
       type: 'object',
       properties: { entryId: { type: 'string' } },
@@ -111,7 +111,7 @@ const TOOLS = [
   },
   {
     name: 'set_tool_usage',
-    description: "토큰 주인의 '사용 중' 표시를 켜거나 끕니다(프로필 '내가 쓰는 툴'). Scope: toolbox_write",
+    description: "토큰 주인의 '사용 중' 표시를 켜거나 끕니다(프로필 '내가 쓰는 것'). Scope: toolbox_write",
     inputSchema: {
       type: 'object',
       properties: { entryId: { type: 'string' }, using: { type: 'boolean' } },
@@ -120,7 +120,7 @@ const TOOLS = [
   },
   {
     name: 'launch_product',
-    description: '직접 만든 프로덕트 런치. 툴 목록에 런치로 올라가고 업보트를 받습니다. Scope: products_write',
+    description: '직접 만든 프로덕트 런치. 갤러리에 서비스로 올라가고 업보트를 받습니다. Scope: products_write',
     inputSchema: {
       type: 'object',
       properties: {
@@ -287,7 +287,7 @@ async function handleToolsCall(name: string, args: Record<string, unknown> = {})
         upvotes: e.product_id ? e.upvote_count : undefined,
         productId: e.product_id ?? null,
         usedByMe: e.used_by_me,
-        page: `/tools/${e.slug}`,
+        page: `/gallery/${e.slug}`,
       })),
     }
   }
@@ -299,7 +299,7 @@ async function handleToolsCall(name: string, args: Record<string, unknown> = {})
     const bySlug = (await getToolboxEntry(key)) ?? (await getMockLaunchEntry(key))
     const slugFromProduct = bySlug ? null : await toolSlugForProduct(key)
     const entry = bySlug ?? (slugFromProduct ? await getMockLaunchEntry(slugFromProduct) : null)
-    if (!entry) return { error: '툴을 찾을 수 없습니다.' }
+    if (!entry) return { error: '갤러리 항목을 찾을 수 없습니다.' }
     const [users, launch] = await Promise.all([
       getToolUsers(entry.id, member.id),
       entry.product_id ? getProductDetails(entry.product_id, member.id) : Promise.resolve(null),
@@ -319,7 +319,7 @@ async function handleToolsCall(name: string, args: Record<string, unknown> = {})
       launch: launch
         ? { productId: launch.id, tagline: launch.tagline, upvotes: launch.upvote_count, makers: launch.makers.map(publicAuthorLabel) }
         : null,
-      page: `/tools/${entry.slug}`,
+      page: `/gallery/${entry.slug}`,
     }
   }
 
@@ -328,7 +328,7 @@ async function handleToolsCall(name: string, args: Record<string, unknown> = {})
     if (!member) return { error: 'Unauthorized' }
     const key = String(args.entryId || '')
     const entry = (await getToolboxEntry(key)) ?? (await getMockLaunchEntry(key))
-    if (!entry) return { error: '툴을 찾을 수 없습니다.' }
+    if (!entry) return { error: '갤러리 항목을 찾을 수 없습니다.' }
     const using = args.using === undefined ? true : args.using === true
     const userCount = await setToolUsage(entry.id, member.id, using)
     return { entryId: entry.id, using, userCount }
@@ -346,7 +346,7 @@ async function handleToolsCall(name: string, args: Record<string, unknown> = {})
       tags: Array.isArray(args.tags) ? (args.tags as string[]) : [],
     })
     const slug = await toolSlugForProduct(product.id)
-    return { productId: product.id, slug, name: product.name, tagline: product.tagline, url: slug ? `/tools/${slug}` : null }
+    return { productId: product.id, slug, name: product.name, tagline: product.tagline, url: slug ? `/gallery/${slug}` : null }
   }
 
   // DEV mock: agent-only submissions + admin review queue (production: lib/mcp-data.ts → 0013 RPCs)

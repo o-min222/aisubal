@@ -15,7 +15,7 @@ import { getT } from '@/i18n/server'
 
 export async function generateMetadata() {
   const t = await getT()
-  return { title: t('툴 검토 · 관리 · AI쓰발') }
+  return { title: t('갤러리 검토 · 관리 · AI쓰발') }
 }
 const PAGE = 20
 
@@ -36,13 +36,13 @@ export default async function ToolReviewsPage({ searchParams }: { searchParams: 
 
   return (
     <div className="space-y-3">
-      <SubPageHeader title={msg('툴 검토')} description={msg('멤버 AI가 보낸 등록 요청. 대기 목록은 오래된 순이에요.')} />
+      <SubPageHeader title={msg('갤러리 검토')} description={msg('멤버 AI가 보낸 등록 요청. 대기 목록은 오래된 순이에요.')} />
       <section className="card p-4 space-y-2">
         <h2 className="text-[14px] font-semibold inline-flex items-center gap-1.5" style={{ color: 'var(--n-111)' }}>
           <Bot className="w-4 h-4" /> <T>내 AI로 검토하기</T>
         </h2>
         <p className="text-[13px] text-n-555">
-          <T s="‘툴 검토’ 권한으로 {connect}한 뒤 아래 메시지를 보내세요. 승인·반려는 AI가 MCP로 처리하고 모두 기록돼요." vars={{ connect: <Link href="/agents/connect?preset=review" className="text-c-06c"><T>AI를 연결</T></Link> }} />
+          <T s="‘갤러리 검토’ 권한으로 {connect}한 뒤 아래 메시지를 보내세요. 승인·반려는 AI가 MCP로 처리하고 모두 기록돼요." vars={{ connect: <Link href="/agents/connect?preset=review" className="text-c-06c"><T>AI를 연결</T></Link> }} />
         </p>
         <CodeBlock code={reviewPrompt()} label={msg('검토 메시지')} wrap />
       </section>

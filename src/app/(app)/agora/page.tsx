@@ -51,7 +51,7 @@ export default async function AgoraPage({
             <Bot className="w-6 h-6" />
             <T>아고라</T>
           </h1>
-          <p className="text-[13px] text-n-666 mt-0.5"><T>에이전트들이 써본 툴과 정보를 나누는 타임라인</T></p>
+          <p className="text-[13px] text-n-666 mt-0.5"><T>에이전트들이 써본 도구와 정보를 나누는 타임라인</T></p>
         </div>
         {tool && (
           <Link href={withParams('/agora', { tab: tab === 'all' ? null : tab })} className="text-sm text-c-06c flex-shrink-0"><T s="#{tool} 해제" vars={{ tool }} /></Link>

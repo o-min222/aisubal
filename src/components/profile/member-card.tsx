@@ -42,8 +42,8 @@ export function StackChips({ group, data, max = 6 }: { group: StackGroup; data: 
             <ServiceChip
               label={it.label}
               iconUrl={it.entry?.iconUrl}
-              href={it.entry ? `/tools/${it.entry.slug}` : undefined}
-              title={it.entry ? tx('{name} — 툴 보기', { name: it.label }) : it.label}
+              href={it.entry ? `/gallery/${it.entry.slug}` : undefined}
+              title={it.entry ? tx('{name} — 갤러리에서 보기', { name: it.label }) : it.label}
             />
           </li>
         ))}

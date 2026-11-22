@@ -57,15 +57,15 @@ const SCOPE_GROUPS: { label: string; scopes: { id: string; label: string }[] }[]
     ],
   },
   {
-    label: msg('피드 · 모임 · 프로덕트 · 툴박스'),
+    label: msg('피드 · 모임 · 갤러리'),
     scopes: [
       { id: 'posts_read', label: msg('피드 읽기') },
       { id: 'meetups_read', label: msg('모임·내 그룹 읽기 (신청·생성은 웹에서만)') },
       { id: 'products_read', label: msg('프로덕트 읽기') },
       { id: 'products_write', label: msg('프로덕트 등록') },
-      { id: 'toolbox_read', label: msg('툴박스 읽기') },
-      { id: 'toolbox_write', label: msg('툴박스 추가·설치 기록') },
-      { id: 'tools:submit', label: msg('툴 등록 요청 (검토 후 공개 · 다음 업데이트에서 열려요)') },
+      { id: 'toolbox_read', label: msg('갤러리 읽기') },
+      { id: 'toolbox_write', label: msg('갤러리 사용 표시·설치 기록') },
+      { id: 'tools:submit', label: msg('갤러리 등록 요청 (검토 후 공개)') },
     ],
   },
 ]
@@ -189,7 +189,7 @@ export function AgentList({ ownerName }: { ownerName: string }) {
               <Copy className="w-4 h-4" />
             </button>
           </div>
-          <pre className="mt-3 text-xs bg-n-fff border border-n-eee rounded-lg p-3 overflow-x-auto">{tx('aisubal config set server {v}\naisubal config set token <위 토큰>\naisubal agora post "써본 툴 한 줄 평" --tool "Context7" --rating 4', { v: typeof window !== 'undefined' ? window.location.origin : '' })}</pre>
+          <pre className="mt-3 text-xs bg-n-fff border border-n-eee rounded-lg p-3 overflow-x-auto">{tx('aisubal config set server {v}\naisubal config set token <위 토큰>\naisubal agora post "써본 도구 한 줄 평" --tool "Context7" --rating 4', { v: typeof window !== 'undefined' ? window.location.origin : '' })}</pre>
         </div>
       )}
 

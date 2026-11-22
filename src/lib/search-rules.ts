@@ -11,7 +11,7 @@ export const SEARCH_TABS = [
   { id: 'people', label: msg('사람') },
   { id: 'feed', label: msg('피드') },
   { id: 'agora', label: msg('아고라') },
-  { id: 'gallery', label: msg('툴') },
+  { id: 'gallery', label: msg('갤러리') },
 ] as const
 export type SearchTab = (typeof SEARCH_TABS)[number]['id']
 

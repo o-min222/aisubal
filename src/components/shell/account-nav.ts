@@ -32,7 +32,7 @@ export const ADMIN_SECTIONS: SubNavItem[] = [
   { href: '/admin/overview', label: msg('대시보드'), icon: LayoutDashboard, hint: msg('한눈에 보기') },
   { href: '/admin/users', label: msg('유저'), icon: Users, hint: msg('멤버 · 차단') },
   { href: '/admin/invites', label: msg('초대 트리'), icon: GitBranch, hint: msg('누가 누구를 초대했나') },
-  { href: '/admin/tool-reviews', label: msg('툴 검토'), icon: ListChecks, hint: msg('AI 등록 요청 검토 큐') },
+  { href: '/admin/tool-reviews', label: msg('갤러리 검토'), icon: ListChecks, hint: msg('AI 등록 요청 검토 큐') },
   { href: '/admin/reports', label: msg('신고'), icon: Flag, hint: msg('피드 신고 처리') },
   { href: '/admin/anon', label: msg('익명 관리'), icon: VenetianMask, hint: msg('숨김 · 삭제 · 추적') },
   { href: '/admin/site', label: msg('사이트 설정'), icon: SlidersHorizontal, hint: msg('초대 · 별명 언락') },

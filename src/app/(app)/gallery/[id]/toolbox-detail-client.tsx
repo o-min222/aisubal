@@ -129,11 +129,11 @@ export function ToolboxDetailClient({ entry: initial, mentionPosts, member, aiRa
     <div className={variant === 'page' ? 'max-w-3xl mx-auto space-y-4' : 'space-y-3'}>
       {variant === 'page' && (
         <Link
-          href={entry.product_id ? '/tools?category=launch' : '/tools'}
+          href={entry.product_id ? '/gallery?category=launch' : '/gallery'}
           className="inline-flex items-center gap-2 text-sm text-n-666 hover:text-n-111"
         >
           <ArrowLeft className="w-4 h-4" />
-          <T>툴 목록</T>
+          <T>갤러리</T>
         </Link>
       )}
 
@@ -190,7 +190,7 @@ export function ToolboxDetailClient({ entry: initial, mentionPosts, member, aiRa
                   <T>홈페이지</T> <ExternalLink className="w-3.5 h-3.5" />
                 </a>
               )}
-              <ArchiveButton kind="tool" refId={entry.id} variant="pill" hint={{ title: entry.name, excerpt: entry.one_liner ?? undefined, url: `/tools/${entry.id}` }} />
+              <ArchiveButton kind="tool" refId={entry.id} variant="pill" hint={{ title: entry.name, excerpt: entry.one_liner ?? undefined, url: `/gallery/${entry.id}` }} />
             </div>
           </div>
         </div>

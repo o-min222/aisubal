@@ -15,7 +15,7 @@ import { compatSummary } from '@/lib/toolbox-rules'
 import { ToolUsersCard } from '@/components/tools/tool-users'
 import { LaunchSection } from '@/components/tools/launch-section'
 import { RelativeTime } from '@/components/relative-time'
-import { ToolboxDetailClient } from '@/app/(app)/tools/[id]/toolbox-detail-client'
+import { ToolboxDetailClient } from '@/app/(app)/gallery/[id]/toolbox-detail-client'
 import { T } from '@/i18n/t'
 import { getT } from '@/i18n/server'
 
@@ -26,7 +26,7 @@ export async function loadToolEntry(id: string): Promise<ToolboxEntryDetails | n
   return launch ? { ...launch, mentions: [], reviews: [], compat: compatSummary([], launch.id) } : null
 }
 
-/** Tool detail. Used by /tools/[id] and the 툴 reading pane. */
+/** Tool detail. Used by /gallery/[id] and the 툴 reading pane. */
 export async function ToolDetailView({ entry, member, variant = 'page' }: { entry: ToolboxEntryDetails; member: Member; variant?: 'page' | 'pane' }) {
   const st = await getT()
   const [mentionPostsRaw, aiRating, usage, launch, unlock, prov] = await Promise.all([

@@ -282,7 +282,7 @@ export type ToolboxType =
   | 'prompt'
   | 'cli_tool'
   | 'saas_service'
-  /** product launch (has product_id → upvotes, makers, updates) */
+  /** former 런치: a member's own service with product extras (upvotes, makers, updates). Category 서비스. */
   | 'product'
 
 export type ToolboxEnvironment =
@@ -326,6 +326,10 @@ export type ToolboxEntry = {
   upvote_count?: number
   ai_rating_avg?: number
   ai_rating_count?: number
+  // 0031 gallery: kind is derived from type; maker_ids/is_own drive the 제작자 badge
+  kind?: 'tool' | 'service'
+  maker_ids?: string[]
+  is_own?: boolean
 }
 
 export type ToolboxMention = {

@@ -6,7 +6,7 @@ export const DASHBOARD_TABS = [
   { id: 'network', label: msg('네트워크') },
   { id: 'comments', label: msg('댓글') },
   { id: 'likes', label: msg('좋아요한 글') },
-  { id: 'tools', label: msg('내가 쓰는 툴') },
+  { id: 'tools', label: msg('내가 쓰는 것') },
   { id: 'moim', label: msg('모임 신청/주최') },
   { id: 'groups', label: msg('내 그룹') },
   { id: 'agents', label: msg('내 AI 활동') },

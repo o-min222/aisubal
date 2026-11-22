@@ -15,7 +15,7 @@ export function ToolSearch({ initial }: { initial: string }) {
     const sp = new URLSearchParams(params.toString())
     if (next.trim()) sp.set('q', next.trim())
     else sp.delete('q')
-    router.push(`/tools${sp.toString() ? `?${sp}` : ''}`)
+    router.push(`/gallery${sp.toString() ? `?${sp}` : ''}`)
   }
 
   return (
@@ -31,8 +31,8 @@ export function ToolSearch({ initial }: { initial: string }) {
       <input
         value={q}
         onChange={(e) => setQ(e.target.value)}
-        placeholder={tx('툴 이름, 태그, 한 줄 소개')}
-        aria-label={tx('툴 검색')}
+        placeholder={tx('이름, 태그, 한 줄 소개')}
+        aria-label={tx('갤러리 검색')}
         enterKeyHint="search"
         className="w-full h-11 pl-9 pr-10 rounded-full border border-n-e3e3e3 bg-n-fff text-[15px]"
       />

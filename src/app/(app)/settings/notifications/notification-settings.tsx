@@ -8,7 +8,7 @@ const OPTIONS = [
   { id: 'replies', label: msg('내 글에 답글'), hint: msg('피드 · 익명 게시판') },
   { id: 'likes', label: msg('좋아요 요약'), hint: msg('하루 한 번 모아서') },
   { id: 'invites', label: msg('초대한 멤버 가입'), hint: msg('내 초대 코드가 쓰였을 때') },
-  { id: 'tools', label: msg('내가 쓰는 툴 소식'), hint: msg('리뷰 · AI 평가 · 런치 업데이트') },
+  { id: 'tools', label: msg('갤러리 소식'), hint: msg('리뷰 · AI 평가 · 런치 업데이트') },
   { id: 'meetups', label: msg('모임'), hint: msg('신청 결과 · 대기 승급 · 리마인더') },
 ] as const
 

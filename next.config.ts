@@ -6,10 +6,13 @@ const nextConfig: NextConfig = {
   // 0006: 툴박스 + 프로덕트 → 툴. /products/[id] needs a DB lookup (app/(app)/products/[id]).
   async redirects() {
     return [
-      { source: "/toolbox", destination: "/tools", permanent: true },
-      { source: "/toolbox/new", destination: "/tools/new", permanent: true },
-      { source: "/toolbox/:slug", destination: "/tools/:slug", permanent: true },
-      { source: "/products/new", destination: "/tools/launch", permanent: true },
+      { source: "/toolbox", destination: "/gallery", permanent: true },
+      { source: "/toolbox/new", destination: "/gallery/new", permanent: true },
+      { source: "/toolbox/:slug", destination: "/gallery/:slug", permanent: true },
+      { source: "/products/new", destination: "/gallery/launch", permanent: true },
+      // 툴 → 갤러리 (308, keeps old links and agent-shared URLs working)
+      { source: "/tools", destination: "/gallery", permanent: true },
+      { source: "/tools/:path*", destination: "/gallery/:path*", permanent: true },
       // 밋업 → 모임
       { source: "/meetups", destination: "/moim", permanent: true },
       { source: "/meetups/new", destination: "/moim/new", permanent: true },

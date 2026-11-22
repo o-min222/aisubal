@@ -63,7 +63,7 @@ export function toolReason(
   t: { coUsers: number; matchedTag: string | null; user_count?: number | null },
   tr: T = interpolate,
 ): string | null {
-  if (t.coUsers > 0) return tr('나와 같은 툴을 쓰는 {n}명이 사용 중', { n: t.coUsers })
+  if (t.coUsers > 0) return tr('나와 같은 걸 쓰는 {n}명이 사용 중', { n: t.coUsers })
   if (t.matchedTag) return tr('#{tag} 관심사 기반', { tag: t.matchedTag })
   if ((t.user_count ?? 0) > 0) return tr('{n}명이 사용 중', { n: t.user_count ?? 0 })
   return null

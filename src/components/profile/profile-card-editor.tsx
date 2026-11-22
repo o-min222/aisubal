@@ -235,8 +235,8 @@ export function ProfileCardEditor({
                       </>
                     )}
                     {isUsed && it.slug && (
-                      <DropdownMenuItem render={<Link href={`/tools/${it.slug}`} />}>
-                        <ChevronRight className="w-4 h-4" /> <T>툴 페이지 보기</T>
+                      <DropdownMenuItem render={<Link href={`/gallery/${it.slug}`} />}>
+                        <ChevronRight className="w-4 h-4" /> <T>갤러리에서 보기</T>
                       </DropdownMenuItem>
                     )}
                     <DropdownMenuItem variant="destructive" onClick={() => (isUsed ? void toggleUsage(it, false) : setGroup(g, own.filter((_, j) => j !== idx)))}>
@@ -384,7 +384,7 @@ export function ProfileCardEditor({
                 setAdding(null)
               }}
             />
-            <p className="text-[12px] text-n-888 mt-2">{adding === 'skills' ? <T>툴에서 고르면 ‘사용 중’으로 바로 표시돼요. 목록에 없으면 직접 입력.</T> : <T>목록에 없으면 직접 입력하고 Enter.</T>}</p>
+            <p className="text-[12px] text-n-888 mt-2">{adding === 'skills' ? <T>갤러리에서 고르면 ‘사용 중’으로 바로 표시돼요. 목록에 없으면 직접 입력.</T> : <T>목록에 없으면 직접 입력하고 Enter.</T>}</p>
           </div>
         )}
       </AdaptiveSheet>

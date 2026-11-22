@@ -14,7 +14,7 @@ import { msg } from '@/i18n/translate'
 
 export async function generateMetadata() {
   const t = await getT()
-  return { title: t('내 툴 등록 요청 · AI쓰발') }
+  return { title: t('내 갤러리 등록 요청 · AI쓰발') }
 }
 const PAGE = 20
 
@@ -28,21 +28,21 @@ export default async function MySubmissionsPage({ searchParams }: { searchParams
   const status = parseStatusTab(sp.status, 'all')
   const page = parsePage(sp.page)
   const { items, total, counts } = await listSubmissions(state.member.id, { scope: 'mine', status, page, pageSize: PAGE }).catch(() => ({ items: [], total: 0, counts: { all: 0, pending: 0, approved: 0, rejected: 0, withdrawn: 0 } }))
-  // statusUrl from submit_tool: /tools/submissions?open=<id> pins that request (with its log) on top
+  // statusUrl from submit_tool: /gallery/submissions?open=<id> pins that request (with its log) on top
   const opened = sp.open ? await getSubmission(state.member.id, sp.open).catch(() => null) : null
   const pinned = opened && opened.submission.submitterId === state.member.id ? opened : null
-  const href = (s: string) => (s === 'all' ? '/tools/submissions' : `/tools/submissions?status=${s}`)
+  const href = (s: string) => (s === 'all' ? '/gallery/submissions' : `/gallery/submissions?status=${s}`)
 
   return (
     <div className="space-y-3">
       <section className="card p-4 flex items-start justify-between gap-3">
         <div className="min-w-0">
           <h1 className="text-[18px] font-bold" style={{ color: 'var(--n-111)' }}>
-            <T>내 툴 등록 요청</T>
+            <T>내 갤러리 등록 요청</T>
           </h1>
           <p className="text-[13px] text-n-666"><T>내 AI가 보낸 요청과 검토 결과예요. 검토 대기 중이면 철회할 수 있어요.</T></p>
         </div>
-        <Link href="/tools/new" className="btn btn-primary btn-sm rounded-full min-h-[40px] flex-shrink-0 inline-flex items-center gap-1">
+        <Link href="/gallery/new" className="btn btn-primary btn-sm rounded-full min-h-[40px] flex-shrink-0 inline-flex items-center gap-1">
           <Plus className="w-4 h-4" /> <T>등록 요청</T>
         </Link>
       </section>
@@ -58,7 +58,7 @@ export default async function MySubmissionsPage({ searchParams }: { searchParams
         <div className="card p-8 text-center text-sm text-n-888">
           {status === 'all' ? (
             <>
-              <T>아직 요청이 없어요.</T> <Link href="/tools/new" className="text-c-06c"><T>내 AI에게 등록을 부탁해 보세요.</T></Link>
+              <T>아직 요청이 없어요.</T> <Link href="/gallery/new" className="text-c-06c"><T>내 AI에게 등록을 부탁해 보세요.</T></Link>
             </>
           ) : (
             <T s="{status} 요청이 없어요." vars={{ status: <T>{STATUS_LABEL[status]}</T> }} />

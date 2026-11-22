@@ -76,7 +76,7 @@ export function Picker({ onPick, suggestions, skillsOnly, placeholder, disabled 
               <button type="button" onClick={() => pick({ label: h.name, entryId: h.id, iconUrl: h.icon_url, slug: h.slug })}>
                 <ServiceIcon label={h.name} iconUrl={h.icon_url} />
                 <span className="truncate">{h.name}</span>
-                <span className="ml-auto text-[11px] text-n-999"><T>툴</T></span>
+                <span className="ml-auto text-[11px] text-n-999"><T>갤러리</T></span>
               </button>
             </li>
           ))}
@@ -218,7 +218,7 @@ export function StackEditor({ initial }: { initial: StackEditorInitial }) {
         <Picker onPick={add(subs, setSubs)} suggestions={SUB_SUGGESTIONS} placeholder={tx('구독 서비스 검색 또는 직접 입력')} />
       </div>
       <div className="space-y-2">
-        {head('skills', tx('툴에서 고르면 ‘사용 중’으로 바로 표시돼요. 목록에 없으면 직접 입력.'))}
+        {head('skills', tx('갤러리에서 고르면 ‘사용 중’으로 바로 표시돼요. 목록에 없으면 직접 입력.'))}
         <Chips items={[...used, ...extras]} onRemove={(i) => (i < used.length ? toggleUsage(used[i], false) : setExtras(extras.filter((_, j) => j !== i - used.length)))} />
         <Picker
           skillsOnly

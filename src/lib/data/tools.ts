@@ -5,20 +5,23 @@ import { MOCK_PRODUCTS, MUTABLE_UPVOTES } from '@/lib/mock-products'
 import { MUTABLE_TOOLBOX } from '@/lib/mock-toolbox'
 import { toPublicAuthor } from '@/lib/profile'
 import {
+  coUsage,
   filterTools,
+  kindOfType,
   sortTools,
   type ToolCategory,
   type ToolListItem,
   type ToolSort,
 } from '@/lib/tool-rules'
 import { mockHandle, mockPerson } from '@/lib/mock-social'
+import { rankToolsForMember } from '@/lib/recommend-rules'
 import { sortByRelation, type Relation } from '@/lib/social-rules'
 import { sb, useMockData as isMock } from './client'
 import { getRelations, socialAuthorIds } from './social'
 import { MEMBER_PUBLIC_COLUMNS } from './member-columns'
 
 /**
- * Unified '툴' data: toolbox entries + product launches (type 'product')
+ * 갤러리 data: toolbox entries (MCP · 스킬 · CLI · 서비스, members' own services included)
  * plus '사용 중' (tool_users). Reads go through member RLS.
  */
 
@@ -62,6 +65,9 @@ function mockEntries(): ToolboxEntry[] {
     ai_rating_count: [5, 3, 0, 2, 4, 0, 1][i % 7],
     product_id: null,
     launched_at: null,
+    kind: kindOfType(e.type),
+    maker_ids: e.maker_ids ?? [],
+    is_own: (e.maker_ids ?? []).length > 0,
   }))
   const launches: ToolboxEntry[] = MOCK_PRODUCTS.map((p) => ({
     id: `tool-${p.id}`,
@@ -93,6 +99,9 @@ function mockEntries(): ToolboxEntry[] {
     upvote_count: MUTABLE_UPVOTES.filter((u) => u.product_id === p.id).length,
     ai_rating_avg: 0,
     ai_rating_count: 0,
+    kind: 'service',
+    maker_ids: p.maker_ids,
+    is_own: p.maker_ids.length > 0,
   }))
   return [...tools, ...launches]
 }
@@ -128,14 +137,21 @@ export const myToolIds = cache(async (memberId: string): Promise<Set<string>> =>
 
 export async function listTools(
   viewerId: string,
-  opts: { category?: ToolCategory | null; tag?: string | null; q?: string | null; sort?: ToolSort; mine?: boolean } = {},
+  opts: { category?: ToolCategory | null; tag?: string | null; q?: string | null; sort?: ToolSort; mine?: boolean; rec?: boolean } = {},
 ): Promise<ToolListItem[]> {
   const [entries, mine] = await Promise.all([allEntries(), myToolIds(viewerId)])
   const filtered = filterTools(entries, { ...opts, onlyIds: opts.mine ? mine : null })
+  if (opts.rec) {
+    // 추천: what people who use what I use also use, then tags of my tools, then popularity.
+    // Things I already use are left out. Same scoring as the right rail (recommend-rules).
+    const pairs = await usagePairsAround(viewerId).catch(() => [])
+    const myTags = [...new Set(entries.filter((e) => mine.has(e.id)).flatMap((e) => e.tags.map((t) => t.toLowerCase())))]
+    return rankToolsForMember(filtered, myTags, mine, filtered.length, coUsage(pairs, viewerId)).map((e) => ({ ...e, used_by_me: false }))
+  }
   return sortTools(filtered, opts.sort ?? 'popular').map((e) => ({ ...e, used_by_me: mine.has(e.id) }))
 }
 
-/** Tools a member marked '사용 중' (profile: 내가 쓰는 툴). */
+/** Tools a member marked '사용 중' (profile: 내가 쓰는 것). */
 export async function listMemberTools(memberId: string): Promise<ToolboxEntry[]> {
   if (isMock()) {
     const order = mockUsage().usage.filter((u) => u.member_id === memberId).map((u) => u.entry_id)

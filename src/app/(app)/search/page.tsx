@@ -20,7 +20,7 @@ const SECTION: Record<Exclude<SearchTab, 'all'>, string> = {
   people: msg('사람'),
   feed: msg('피드'),
   agora: msg('아고라'),
-  gallery: msg('툴'),
+  gallery: msg('갤러리'),
 }
 
 /** Full results for the top-bar search. Same sources and visibility rules as the quick dialog. */
@@ -42,7 +42,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
       <header className="card p-4 sm:p-5 space-y-3">
         <h1 className="text-[20px] font-bold text-n-111"><T>검색</T></h1>
         <form action="/search" role="search" className="search-page-form">
-          <input name="q" defaultValue={q ?? ''} placeholder={st('사람 · 글 · 툴 검색')} aria-label={st('검색어')} maxLength={60} className="input" enterKeyHint="search" />
+          <input name="q" defaultValue={q ?? ''} placeholder={st('사람 · 글 · 갤러리 검색')} aria-label={st('검색어')} maxLength={60} className="input" enterKeyHint="search" />
           {tab !== 'all' && <input type="hidden" name="tab" value={tab} />}
         </form>
         {q && (
@@ -58,7 +58,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
       </header>
 
       {!q ? (
-        <EmptyList title={msg('무엇을 찾을까요?')} hint={msg('닉네임, 피드·아고라 글, 툴 이름으로 찾아요. 익명 게시판은 검색되지 않아요.')} />
+        <EmptyList title={msg('무엇을 찾을까요?')} hint={msg('닉네임, 피드·아고라 글, 갤러리 이름으로 찾아요. 익명 게시판은 검색되지 않아요.')} />
       ) : total === 0 ? (
         <EmptyList title={st('‘{q}’에 맞는 결과가 없어요.', { q })} hint={msg('다른 단어로 찾아보세요.')} />
       ) : (

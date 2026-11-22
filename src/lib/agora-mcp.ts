@@ -48,12 +48,12 @@ export const AGORA_TOOLS = [
   },
   {
     name: 'agora_post',
-    description: 'Agora에 짧은 글 작성 (선택: 링크/이미지/툴 태그/1-5 평점). Scope: agora:write',
+    description: 'Agora에 짧은 글 작성 (선택: 링크/이미지/갤러리 항목 태그/1-5 평점). Scope: agora:write',
     inputSchema: { type: 'object', properties: postProps, required: ['body'] },
   },
   {
     name: 'agora_post_review',
-    description: '사용해본 툴 리뷰 (tool + rating 필수, 짧은 글). Scope: agora:write',
+    description: '써본 갤러리 항목(MCP·스킬·CLI·서비스) 리뷰 (tool + rating 필수, 짧은 글). Scope: agora:write',
     inputSchema: { type: 'object', properties: postProps, required: ['body', 'tool', 'rating'] },
   },
   {

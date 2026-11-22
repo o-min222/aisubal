@@ -2,21 +2,21 @@ import { msg } from '@/i18n/translate'
 import type { ToolboxEntry, ToolboxType } from '@/lib/supabase/types'
 
 /**
- * '툴' section rules: one list for skills/MCP/CLI/services and product launches.
- * Category chips are tags over `type`; free tags filter on `tags`.
+ * 갤러리 rules: one list for MCP servers, skills, CLIs and services (members' own services
+ * included). Category chips are tags over `type`; free tags filter on `tags`.
+ * The type values are unchanged for backward compatibility: rules (cursor_rules) and prompts
+ * are 스킬 with a small sub-label, and former 런치 (product) entries are 서비스.
  */
 export const TOOL_CATEGORIES = [
   { id: 'mcp', label: 'MCP', types: ['mcp_server'] },
-  { id: 'skill', label: msg('스킬'), types: ['agent_skill'] },
-  { id: 'prompt', label: msg('프롬프트'), types: ['prompt'] },
-  { id: 'rules', label: msg('룰'), types: ['cursor_rules'] },
+  { id: 'skill', label: msg('스킬'), types: ['agent_skill', 'cursor_rules', 'prompt'] },
   { id: 'cli', label: 'CLI', types: ['cli_tool'] },
-  { id: 'service', label: msg('서비스/프로덕트'), types: ['saas_service', 'product'] },
-  { id: 'launch', label: msg('런치'), types: ['product'] },
+  { id: 'service', label: msg('서비스'), types: ['saas_service', 'product'] },
 ] as const satisfies ReadonlyArray<{ id: string; label: string; types: readonly ToolboxType[] }>
 
 export type ToolCategory = (typeof TOOL_CATEGORIES)[number]['id']
 export type ToolSort = 'popular' | 'newest' | 'ai'
+export type ToolKind = 'tool' | 'service'
 
 export const TOOL_SORTS: { id: ToolSort; label: string }[] = [
   { id: 'popular', label: msg('인기') },
@@ -24,14 +24,30 @@ export const TOOL_SORTS: { id: ToolSort; label: string }[] = [
   { id: 'ai', label: msg('AI 평가') },
 ]
 
+/** Category label for a type (the chip on rows and cards). */
 export const TOOL_TYPE_CHIP: Record<ToolboxType, string> = {
   mcp_server: 'MCP',
   agent_skill: msg('스킬'),
-  prompt: msg('프롬프트'),
-  cursor_rules: msg('룰'),
+  prompt: msg('스킬'),
+  cursor_rules: msg('스킬'),
   cli_tool: 'CLI',
   saas_service: msg('서비스'),
-  product: msg('프로덕트'),
+  product: msg('서비스'),
+}
+
+/** Small sub-label next to the category chip for types folded into a category. */
+export const TOOL_SUBLABEL: Partial<Record<ToolboxType, string>> = {
+  cursor_rules: msg('룰'),
+  prompt: msg('프롬프트'),
+}
+
+export function kindOfType(type: string): ToolKind {
+  return type === 'saas_service' || type === 'product' ? 'service' : 'tool'
+}
+
+/** 제작자 badge: an approved "내가 만든 서비스예요" or a former launch with makers. */
+export function isOwnEntry(e: Pick<ToolboxEntry, 'is_own' | 'maker_ids' | 'product_id'>): boolean {
+  return Boolean(e.is_own ?? (e.maker_ids && e.maker_ids.length > 0))
 }
 
 export function isToolCategory(v: unknown): v is ToolCategory {
@@ -44,12 +60,22 @@ export function parseToolSort(v: string | null | undefined): ToolSort {
   return 'popular'
 }
 
-/** Old ?type=mcp_server links map onto the new category chips. */
+/** Old category ids and ?type= values that now live in another category. */
+const LEGACY_CATEGORY: Record<string, ToolCategory> = {
+  launch: 'service',
+  product: 'service',
+  products: 'service',
+  rules: 'skill',
+  prompt: 'skill',
+  prompts: 'skill',
+}
+
+/** Old ?type=mcp_server / ?category=launch|rules|prompt links map onto the 4 category chips. */
 export function categoryFromLegacyType(type: string | null | undefined): ToolCategory | null {
   if (!type) return null
   if (isToolCategory(type)) return type
-  if (type === 'product') return 'launch'
-  const c = TOOL_CATEGORIES.find((x) => x.id !== 'launch' && (x.types as readonly string[]).includes(type))
+  if (LEGACY_CATEGORY[type]) return LEGACY_CATEGORY[type]
+  const c = TOOL_CATEGORIES.find((x) => (x.types as readonly string[]).includes(type))
   return c ? c.id : null
 }
 
@@ -128,5 +154,5 @@ export function coUsage(pairs: Array<{ member_id: string; entry_id: string }>, v
 }
 
 export function toolHref(e: Pick<ToolboxEntry, 'slug'>): string {
-  return `/tools/${e.slug}`
+  return `/gallery/${e.slug}`
 }

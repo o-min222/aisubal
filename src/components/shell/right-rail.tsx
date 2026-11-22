@@ -20,7 +20,7 @@ export async function RightRail({ data }: { data: RailData }) {
           <h3 className="rail-title">{t('내 관심사')}</h3>
           <div className="flex flex-wrap gap-1.5">
             {data.interestTags.slice(0, 6).map((tag) => (
-              <Link key={tag} href={`/tools?tag=${encodeURIComponent(tag)}`} className="rail-tag">#{tag}</Link>
+              <Link key={tag} href={`/gallery?tag=${encodeURIComponent(tag)}`} className="rail-tag">#{tag}</Link>
             ))}
           </div>
         </div>
@@ -52,14 +52,14 @@ export async function RightRail({ data }: { data: RailData }) {
       </div>
 
       <div className="rail-card">
-        <h3 className="rail-title"><Wrench className="w-4 h-4" /> {t('추천 툴')}</h3>
+        <h3 className="rail-title"><Wrench className="w-4 h-4" /> {t('갤러리 추천')}</h3>
         {data.tools.length === 0 ? (
-          <p className="rail-empty"><Link href="/tools" className="text-c-06c">{t('툴 둘러보기')}</Link></p>
+          <p className="rail-empty"><Link href="/gallery" className="text-c-06c">{t('갤러리 둘러보기')}</Link></p>
         ) : (
           <ul className="space-y-2.5">
             {data.tools.map((tool) => (
               <li key={tool.id}>
-                <Link href={`/tools/${tool.slug}`} className="block group">
+                <Link href={`/gallery/${tool.slug}`} className="block group">
                   <div className="text-sm font-medium text-n-111 group-hover:underline truncate">{tool.name}</div>
                   <div className="text-xs text-n-777 line-clamp-1">{tool.oneLiner}</div>
                   {tool.reason && <div className="text-[11px] text-c-06c mt-0.5">{t(tool.reason)}</div>}

@@ -15,7 +15,7 @@ export const AGENT_ARCHIVE_KINDS: readonly ArchiveKind[] = ARCHIVE_KINDS.filter(
 export const ARCHIVE_KIND_LABEL: Record<ArchiveKind, string> = {
   post: msg('피드 글'),
   agora: msg('아고라'),
-  tool: msg('툴'),
+  tool: msg('갤러리'),
   anon: msg('익명'),
   group: msg('그룹'),
   moim: msg('모임'),

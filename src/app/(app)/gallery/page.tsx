@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { ChipBar } from '@/components/chip-bar'
 import { redirect } from 'next/navigation'
-import { Inbox, Rocket, Send } from 'lucide-react'
+import { Inbox, Plus } from 'lucide-react'
 import { getUserState } from '@/lib/auth'
 import { listTools, socialToolUsers } from '@/lib/data/tools'
 import {
@@ -27,20 +27,21 @@ import { msg } from '@/i18n/translate'
 
 export async function generateMetadata() {
   const t = await getT()
-  return { title: t('툴 · AI쓰발') }
+  return { title: t('AI 갤러리 · AI쓰발') }
 }
 
-type Params = { category?: string; type?: string; tag?: string; q?: string; sort?: string; mine?: string; page?: string; open?: string }
+type Params = { category?: string; type?: string; tag?: string; q?: string; sort?: string; view?: string; mine?: string; page?: string; open?: string }
 
 function hrefWith(base: Params, patch: Partial<Record<keyof Params, string | null>>) {
   const next: Record<string, string> = {}
   for (const [k, v] of Object.entries({ ...base, ...patch })) if (v) next[k] = v
   delete next.type
+  delete next.mine
   delete next.open
   if (next.page === '1') delete next.page
   if (next.sort === 'popular') delete next.sort
   const s = new URLSearchParams(next).toString()
-  return s ? `/tools?${s}` : '/tools'
+  return s ? `/gallery?${s}` : '/gallery'
 }
 
 export default async function ToolsPage({ searchParams }: { searchParams: Promise<Params> }) {
@@ -52,17 +53,24 @@ export default async function ToolsPage({ searchParams }: { searchParams: Promis
   const sp = await searchParams
   const category: ToolCategory | null = categoryFromLegacyType(sp.category || sp.type)
   const sort: ToolSort = parseToolSort(sp.sort)
-  const mine = sp.mine === '1'
+  const rec = sp.view === 'rec'
   const tag = sp.tag?.toLowerCase() || null
   const q = sp.q || ''
   const page = parsePage(sp.page)
-  const base: Params = { category: category ?? undefined, tag: tag ?? undefined, q: q || undefined, sort, mine: mine ? '1' : undefined }
+  const base: Params = { category: category ?? undefined, tag: tag ?? undefined, q: q || undefined, sort, view: rec ? 'rec' : undefined }
+  // Old links (?category=launch|rules|prompt, ?type=…, ?mine=1) land on today's URL.
+  // '내가 쓰는 것' moved to the profile, so ?mine=1 just opens the gallery.
+  if ((sp.category && sp.category !== category) || sp.type || sp.mine) {
+    const to = new URL(hrefWith({ ...base, page: sp.page }, {}), 'http://x')
+    if (sp.open) to.searchParams.set('open', sp.open)
+    redirect(to.pathname + to.search)
+  }
   // tabs/filters reset the page; the current list URL keeps it
   const here = hrefWith({ ...base, page: String(page) }, {})
   const open = sp.open ? decodeURIComponent(sp.open).slice(0, 120) : null
 
   const [all, forTags, openEntry] = await Promise.all([
-    listTools(state.member.id, { category, tag, q, sort, mine }),
+    listTools(state.member.id, { category, tag, q, sort, rec }),
     listTools(state.member.id, { category }),
     open ? loadToolEntry(open).catch(() => null) : Promise.resolve(null),
   ])
@@ -70,24 +78,21 @@ export default async function ToolsPage({ searchParams }: { searchParams: Promis
   const tools = all.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
   const tags = topTags(forTags, 14)
   const social = await socialToolUsers(state.member.id, tools.map((t) => t.id)).catch(() => new Map())
-  const tab = mine ? 'mine' : category ?? 'all'
+  const tab = rec ? 'rec' : category ?? 'all'
 
   const list = (
     <>
       <header className="tools-head">
         <div className="min-w-0">
-          <h1 className="text-[22px] font-bold text-n-111"><T>툴</T></h1>
-          <p className="text-[13px] text-n-666 mt-0.5"><T>MCP·스킬·프롬프트·CLI부터 멤버가 만든 프로덕트까지 한곳에서.</T></p>
+          <h1 className="text-[22px] font-bold text-n-111"><T>AI 갤러리</T></h1>
+          <p className="text-[13px] text-n-666 mt-0.5"><T>MCP·스킬·CLI·서비스. 멤버가 쓰는 것과 직접 만든 서비스를 한곳에서.</T></p>
         </div>
         <div className="flex gap-2 flex-shrink-0">
-          <Link href="/tools/launch" className="btn btn-secondary btn-sm min-h-[40px]">
-            <Rocket className="w-4 h-4" /> <span className="only-desktop"><T>런치</T></span>
-          </Link>
-          <Link href="/tools/submissions" className="btn btn-secondary btn-sm min-h-[40px]" aria-label={st('내 등록 요청')}>
+          <Link href="/gallery/submissions" className="btn btn-secondary btn-sm min-h-[40px]" aria-label={st('내 등록 요청')}>
             <Inbox className="w-4 h-4" /> <span className="only-desktop"><T>내 요청</T></span>
           </Link>
-          <Link href="/tools/new" className="btn btn-primary btn-sm min-h-[40px]">
-            <Send className="w-4 h-4" /> <T>등록 요청</T>
+          <Link href="/gallery/new" className="btn btn-primary btn-sm min-h-[40px]">
+            <Plus className="w-4 h-4" /> <T>등록</T>
           </Link>
         </div>
       </header>
@@ -99,9 +104,9 @@ export default async function ToolsPage({ searchParams }: { searchParams: Promis
             label={msg('카테고리')}
             active={tab}
             tabs={[
-              { id: 'all', label: st('전체'), href: hrefWith(base, { category: null, mine: null, tag: null }) },
-              { id: 'mine', label: st('내가 쓰는 툴'), href: hrefWith(base, { category: null, mine: '1', tag: null }) },
-              ...TOOL_CATEGORIES.map((c) => ({ id: c.id, label: c.label, href: hrefWith(base, { category: c.id, mine: null, tag: null }) })),
+              { id: 'all', label: st('전체'), href: hrefWith(base, { category: null, view: null, tag: null }) },
+              { id: 'rec', label: st('추천'), href: hrefWith(base, { category: null, view: 'rec', tag: null }) },
+              ...TOOL_CATEGORIES.map((c) => ({ id: c.id, label: st(c.label), href: hrefWith(base, { category: c.id, view: null, tag: null }) })),
             ]}
           />
         </div>
@@ -119,6 +124,9 @@ export default async function ToolsPage({ searchParams }: { searchParams: Promis
           </ChipBar>
         )}
         <div className="flex items-center justify-between gap-2">
+          {rec ? (
+            <p className="text-[12.5px] text-n-666"><T>내가 쓰는 것과 함께 많이 쓰는 것부터 보여줘요. 이미 쓰는 건 빼요.</T></p>
+          ) : (
           <div className="seg" role="tablist" aria-label={st('정렬')}>
             {TOOL_SORTS.map((s) => (
               <Link
@@ -132,23 +140,24 @@ export default async function ToolsPage({ searchParams }: { searchParams: Promis
               </Link>
             ))}
           </div>
+          )}
           <span className="text-xs text-n-888 tabular-nums"><T s="{length}개" vars={{ length: all.length }} /></span>
         </div>
       </div>
 
       {tools.length === 0 ? (
         <EmptyList
-          title={mine ? st('아직 ‘나도 써요’로 표시한 툴이 없어요') : st('조건에 맞는 툴이 없어요')}
-          hint={mine ? st('툴을 열고 ‘나도 써요’를 눌러 내 프로필에 모아보세요.') : st('필터를 바꾸거나, 내 AI에게 등록 요청을 맡겨보세요.')}
+          title={rec ? st('아직 추천할 게 없어요') : st('조건에 맞는 항목이 없어요')}
+          hint={rec ? st('쓰는 것에 ‘나도 써요’를 누르면 비슷한 사람들이 쓰는 걸 추천해 드려요.') : st('필터를 바꾸거나, 쓰는 걸 갤러리에 등록해 보세요. 내가 만든 서비스도 등록해 홍보할 수 있어요.')}
         />
       ) : (
-        <CompactList label={msg('툴 목록')}>
+        <CompactList label={msg('갤러리 목록')}>
           {tools.map((t) => (
             <ToolRow key={t.id} tool={t} href={openHref(here, t.slug)} active={Boolean(openEntry && openEntry.id === t.id)} social={social.get(t.id) || []} />
           ))}
         </CompactList>
       )}
-      <Pagination base={here} page={page} totalPages={totalPages} label={msg('툴 페이지')} />
+      <Pagination base={here} page={page} totalPages={totalPages} label={msg('갤러리 페이지')} />
     </>
   )
 
@@ -157,9 +166,9 @@ export default async function ToolsPage({ searchParams }: { searchParams: Promis
       list={list}
       openId={openEntry ? open : null}
       closeHref={here}
-      fullHref={openEntry ? `/tools/${openEntry.slug}` : null}
-      paneTitle={openEntry ? openEntry.name : st('툴')}
-      emptyTitle={st('툴을 고르면 여기에서 자세히 봐요')}
+      fullHref={openEntry ? `/gallery/${openEntry.slug}` : null}
+      paneTitle={openEntry ? openEntry.name : st('AI 갤러리')}
+      emptyTitle={st('항목을 고르면 여기에서 자세히 봐요')}
       pane={openEntry ? <ToolDetailView entry={openEntry} member={state.member} variant="pane" /> : null}
     />
   )

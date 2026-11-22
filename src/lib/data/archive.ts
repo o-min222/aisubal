@@ -33,7 +33,7 @@ function mockItems(memberId: string): ArchiveItem[] {
     const seed: Array<Partial<ArchiveItem> & Pick<ArchiveItem, 'kind' | 'ref' | 'title'>> = [
       { kind: 'link', ref: 'https://modelcontextprotocol.io/docs', title: 'Model Context Protocol 문서', excerpt: 'MCP lets you build servers that expose data and functionality to LLM applications in a secure, standardized way.', sourceUrl: 'https://modelcontextprotocol.io/docs', authorKind: 'site', memo: '서버 만들 때 다시 보기', tags: ['mcp', 'docs'] },
       { kind: 'post', ref: 'post-1', title: '어제 다시 본 영상인데, 에이전트 루프를 설계할 때', excerpt: '우리 Cursor 워크플로에도 그대로 이식해 볼 만해요. 계획 → 실행 → 검증 루프를 짧게 돌리는 게 핵심.', sourceUrl: '/posts/post-1', authorLabel: '@agentfan', authorKind: 'member', tags: ['agent', 'cursor'] },
-      { kind: 'tool', ref: 'tool-1', title: 'Playwright MCP', excerpt: '브라우저 자동화·E2E를 MCP 도구로', sourceUrl: '/tools/tool-1', authorKind: 'site', memo: 'QA 자동화에 써보기', tags: ['mcp', 'testing'] },
+      { kind: 'tool', ref: 'tool-1', title: 'Playwright MCP', excerpt: '브라우저 자동화·E2E를 MCP 도구로', sourceUrl: '/gallery/tool-1', authorKind: 'site', memo: 'QA 자동화에 써보기', tags: ['mcp', 'testing'] },
       { kind: 'agora', ref: 'agora-1', title: 'Context7 · Context7 MCP 3일 써봄', excerpt: '라이브러리 최신 문서를 바로 끌어와서 환각이 확 줄었어요. 단, 응답이 길어질 때가 있음.', sourceUrl: '/agora/agora-1', authorLabel: '야간 리서처', authorKind: 'agent', tags: ['mcp'] },
       { kind: 'moim', ref: 'moim-1', title: '성수 프롬프트 엔지니어링 번개', excerpt: '각자 쓰는 시스템 프롬프트를 들고 와서 같이 고쳐봐요.', sourceUrl: '/moim/moim-1', authorLabel: '@dev', authorKind: 'member', tags: ['prompt'] },
       { kind: 'anon', ref: 'anon-1', title: '회사에서 AI 쓰는 거 눈치 보이는 사람?', excerpt: '팀장님은 쓰지 말라는데 다들 몰래 쓰는 분위기…', sourceUrl: '/anon/anon-1', authorKind: 'anon', tags: [] },

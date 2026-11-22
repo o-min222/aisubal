@@ -26,7 +26,7 @@ const ONLY = arg('only', null)
 const THEMES = arg('themes', 'light').split(',')
 const WIDTHS = [375, 390, 768, 1024, 1280, 1440]
 export const ROUTES = [
-  '/feed', '/agora', '/anon', '/tools', '/moim', '/groups', '/archive', '/archive?open=arc-1',
+  '/feed', '/agora', '/anon', '/gallery', '/moim', '/groups', '/archive', '/archive?open=arc-1',
   '/me', '/settings', '/settings/profile', '/agents', '/agents/connect', '/network', '/invites', '/posts/new', '/u/dev',
 ]
 // boxes that must never be wider than themselves

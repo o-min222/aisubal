@@ -8,5 +8,5 @@ export async function generateMetadata() {
 
 /** 프로덕트 merged into 툴 (0006). */
 export default function ProductsRedirect() {
-  redirect('/tools?category=launch')
+  redirect('/gallery?category=launch')
 }

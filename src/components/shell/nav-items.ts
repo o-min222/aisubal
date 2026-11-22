@@ -25,7 +25,7 @@ export type NavItem = {
  * behind the avatar / profile card — see account-menu.tsx.
  */
 export const SIDE_NAV: NavItem[] = [
-  { href: '/tools', label: msg('툴'), icon: Wrench },
+  { href: '/gallery', label: msg('갤러리'), icon: Wrench },
   { href: '/archive', label: msg('아카이브'), icon: Archive },
   { href: '/moim', label: msg('모임'), icon: CalendarDays },
   { href: '/groups', label: msg('그룹'), icon: Users },

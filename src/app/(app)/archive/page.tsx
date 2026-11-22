@@ -96,7 +96,7 @@ export default async function ArchivePage({ searchParams }: { searchParams: Prom
       {data.items.length === 0 ? (
         <EmptyList
           title={filtered ? st('조건에 맞는 항목이 없어요') : st('아직 담은 게 없어요')}
-          hint={filtered ? st('필터를 풀거나 다른 말로 찾아보세요.') : st('글·아고라·툴·모임·프로필의 북마크 버튼으로 모아 보세요.')}
+          hint={filtered ? st('필터를 풀거나 다른 말로 찾아보세요.') : st('글·아고라·갤러리·모임·프로필의 북마크 버튼으로 모아 보세요.')}
         />
       ) : (
         <ArchiveList items={data.items} base={base} openId={openItem?.id ?? null} />

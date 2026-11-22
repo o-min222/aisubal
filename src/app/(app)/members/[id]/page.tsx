@@ -175,11 +175,11 @@ export default async function MemberProfilePage({ params, searchParams }: { para
       <section className="card p-4" aria-labelledby="my-tools">
         <div className="flex items-center justify-between gap-2 mb-3">
           <h2 id="my-tools" className="text-sm font-semibold text-n-111 inline-flex items-center gap-1.5">
-            <Wrench className="w-4 h-4" /> {isMe ? <T>내가 쓰는 툴</T> : <T s="{name}님이 쓰는 툴" vars={{ name: member.display_name }} />}
+            <Wrench className="w-4 h-4" /> {isMe ? <T>내가 쓰는 것</T> : <T s="{name}님이 쓰는 것" vars={{ name: member.display_name }} />}
             <span className="text-n-888 font-normal tabular-nums">{tools.length}</span>
           </h2>
           {isMe && (
-            <Link href="/tools?mine=1" className="text-xs text-c-06c inline-flex items-center min-h-[32px]">
+            <Link href="/gallery?mine=1" className="text-xs text-c-06c inline-flex items-center min-h-[32px]">
               <T>관리</T> <ChevronRight className="w-3.5 h-3.5" />
             </Link>
           )}
@@ -188,10 +188,10 @@ export default async function MemberProfilePage({ params, searchParams }: { para
           <p className="text-sm text-n-888">
             {isMe ? (
               <>
-                <T s="아직 없어요. {tools}에서 ‘나도 써요’를 눌러 모아보세요." vars={{ tools: <Link href="/tools" className="text-c-06c"><T>툴</T></Link> }} />
+                <T s="아직 없어요. {tools}에서 ‘나도 써요’를 눌러 모아보세요." vars={{ tools: <Link href="/gallery" className="text-c-06c"><T>갤러리</T></Link> }} />
               </>
             ) : (
-              <T>아직 표시한 툴이 없어요.</T>
+              <T>아직 표시한 게 없어요.</T>
             )}
           </p>
         ) : (

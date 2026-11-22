@@ -6,7 +6,7 @@ import { AdaptiveSheet } from '@/components/adaptive-sheet'
 import { SIDE_NAV, isActive } from './nav-items'
 import { useT } from '@/i18n/client'
 
-const IN_TABS = new Set(['/feed', '/tools', '/archive', '/members/me'])
+const IN_TABS = new Set(['/feed', '/gallery', '/archive', '/members/me'])
 
 /** Mobile menu sheet: content sections not in the tab bar (account items live in the account menu). */
 export function MoreSheet({

@@ -357,7 +357,7 @@ function toolSummary(e: Record<string, unknown>) {
     productId: e.product_id ?? null,
     usedByMe: e.used_by_me === true,
     url: e.canonical_url,
-    page: `/tools/${e.slug}`,
+    page: `/gallery/${e.slug}`,
   }
 }
 
@@ -528,7 +528,7 @@ export async function handleDataTool(
           slug: e?.slug ?? null,
           name: p.name,
           tagline: p.tagline,
-          url: e?.slug ? `/tools/${e.slug}` : `/products/${p.id}`,
+          url: e?.slug ? `/gallery/${e.slug}` : `/products/${p.id}`,
         }
       }
       // ------------------------------------------------------------ tool submissions (agent-only) + review queue

@@ -133,7 +133,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
     { label: st('게시물'), value: stats.posts, tab: 'posts' },
     { label: st('댓글'), value: stats.comments, tab: 'comments' },
     { label: st('받은 좋아요'), value: stats.likesReceived, tab: 'posts' },
-    { label: st('쓰는 툴'), value: tools.length, tab: 'tools' },
+    { label: st('쓰는 것'), value: tools.length, tab: 'tools' },
     { label: st('모임'), value: moims.length, tab: 'moim' },
     { label: st('그룹'), value: groups.length, tab: 'groups' },
     { label: st('AI 활동'), value: agentActs, tab: 'agents' },
@@ -188,7 +188,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
       </ul>
     ) : (
       <Empty>
-        <T>아직 ‘쓰는 중’으로 표시한 툴이 없어요.</T> <Link href="/tools" className="text-c-06c"><T>툴 둘러보기</T></Link>
+        <T>아직 ‘쓰는 중’으로 표시한 게 없어요.</T> <Link href="/gallery" className="text-c-06c"><T>갤러리 둘러보기</T></Link>
       </Empty>
     )
   } else if (tab === 'moim') {

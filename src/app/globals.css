@@ -1630,10 +1630,14 @@ body { -webkit-tap-highlight-color: transparent; }
 }
 .tool-stats { display: flex; flex-wrap: wrap; gap: 4px 12px; margin-top: 6px; font-size: 12.5px; color: var(--n-777); }
 .tool-stats > span { display: inline-flex; align-items: center; gap: 4px; }
-.launch-chip {
-  display: inline-flex; align-items: center; height: 20px; padding: 0 7px; border-radius: 999px;
-  background: var(--c-fff1e6); color: var(--c-c2581f); font-size: 11px; font-weight: 700;
+/* 제작자: a member's own service (was the 런치 chip) */
+.maker-chip {
+  display: inline-flex; align-items: center; gap: 3px; height: 20px; padding: 0 7px; border-radius: 999px;
+  background: var(--c-fff1e6); color: var(--c-c2581f); font-size: 11px; font-weight: 700; white-space: nowrap;
 }
+/* sub-label inside a category chip: 스킬 · 룰 / 스킬 · 프롬프트 */
+.cat-chip .cat-sub { margin-left: 3px; font-weight: 500; color: var(--n-888); }
+.cat-chip .cat-sub::before { content: '·'; margin-right: 3px; }
 .tag-chip {
   flex: 0 0 auto; display: inline-flex; align-items: center; min-height: 32px; padding: 0 10px; border-radius: 999px;
   color: var(--n-555); font-size: 12.5px; font-weight: 500; background: var(--n-efefed); white-space: nowrap;

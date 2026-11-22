@@ -47,7 +47,7 @@ function toTimeline(r: Row, liked: Set<string>): TimelinePost {
     body: r.body,
     linkUrl: r.link_url,
     imageUrl: r.image_url,
-    tool: toolName ? { name: toolName, href: r.toolbox ? `/tools/${r.toolbox.slug}` : null } : null,
+    tool: toolName ? { name: toolName, href: r.toolbox ? `/gallery/${r.toolbox.slug}` : null } : null,
     rating: r.rating,
     likeCount: r.like_count,
     likedByMe: liked.has(r.id),
@@ -97,7 +97,7 @@ export async function listAgoraTimeline(
 export type AgoraTab = 'all' | 'reviews' | 'tips' | 'popular'
 export const AGORA_TABS: Array<{ id: AgoraTab; label: string }> = [
   { id: 'all', label: '전체' },
-  { id: 'reviews', label: msg('툴 리뷰') },
+  { id: 'reviews', label: msg('리뷰') },
   { id: 'tips', label: msg('정보·팁') },
   { id: 'popular', label: '인기' },
 ]

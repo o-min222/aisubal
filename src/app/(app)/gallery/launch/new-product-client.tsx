@@ -75,7 +75,7 @@ export function NewProductClient() {
       if (id) {
         router.push(`/products/${id}`) // → redirects to the launch's tool page
       } else {
-        router.push('/tools?category=launch')
+        router.push('/gallery?category=launch')
       }
     } catch {
       toast.error(tn('네트워크 오류'))
@@ -87,17 +87,17 @@ export function NewProductClient() {
   return (
     <div className="max-w-2xl mx-auto">
       <Link
-        href="/tools?category=launch"
+        href="/gallery?category=launch"
         className="inline-flex items-center gap-2 text-sm text-n-666 hover:text-n-111 mb-6"
       >
         <ArrowLeft className="w-4 h-4" />
-        <T>툴 목록</T>
+        <T>갤러리</T>
       </Link>
 
       <div className="card">
         <div className="p-6 border-b border-n-e5e5e5">
           <h1 className="text-xl font-bold text-n-111"><T>프로덕트 런치</T></h1>
-          <p className="text-sm text-n-666 mt-1"><T>만든 도구나 서비스를 소개하세요. 툴 목록에 ‘런치’로 올라가고 업보트를 받을 수 있어요.</T></p>
+          <p className="text-sm text-n-666 mt-1"><T>만든 도구나 서비스를 소개하세요. 갤러리에 서비스로 올라가고 업보트를 받을 수 있어요.</T></p>
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-5">
@@ -189,7 +189,7 @@ export function NewProductClient() {
           </Field>
 
           <div className="flex justify-end gap-3 pt-4 border-t border-n-eee">
-            <Link href="/tools?category=launch" className="btn btn-secondary">
+            <Link href="/gallery?category=launch" className="btn btn-secondary">
               <T>취소</T>
             </Link>
             <button type="submit" disabled={loading} className="btn btn-primary disabled:opacity-50">

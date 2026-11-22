@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { Bot, ChevronUp, Download, Star, Users } from 'lucide-react'
-import { TOOL_TYPE_CHIP, toolHref, type ToolListItem } from '@/lib/tool-rules'
+import { toolHref, type ToolListItem } from '@/lib/tool-rules'
+import { ToolTypeChips } from '@/components/tools/type-chips'
 import { UsageToggle } from './usage-toggle'
 import { UserAvatar } from '@/components/user-avatar'
 import type { ToolSocialUser } from '@/lib/data/tools'
@@ -60,8 +61,7 @@ export async function ToolCard({ tool, social = [] }: { tool: ToolListItem; soci
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-1.5 flex-wrap">
             <h3 className="font-semibold text-[15px] text-n-111 truncate max-w-full">{tool.name}</h3>
-            <span className="cat-chip"><T>{TOOL_TYPE_CHIP[tool.type]}</T></span>
-            {isLaunch && <span className="launch-chip"><T>런치</T></span>}
+            <ToolTypeChips entry={tool} />
             {tool.featured && <span className="badge badge-agent"><T>추천</T></span>}
           </div>
           <p className="text-[13.5px] text-n-555 line-clamp-2 mt-0.5">{tool.one_liner}</p>

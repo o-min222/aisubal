@@ -17,7 +17,7 @@ async function handle(using: boolean, { params }: Params) {
   const member = await getMember()
   if (!member) return NextResponse.json({ error: await te('인증이 필요합니다.') }, { status: 401 })
   const entryId = await resolve((await params).id)
-  if (!entryId) return NextResponse.json({ error: await te('툴을 찾을 수 없습니다.') }, { status: 404 })
+  if (!entryId) return NextResponse.json({ error: await te('갤러리 항목을 찾을 수 없습니다.') }, { status: 404 })
   try {
     const userCount = await setToolUsage(entryId, member.id, using)
     return NextResponse.json({ ok: true, entryId, using, userCount })
@@ -31,7 +31,7 @@ export async function GET(_req: Request, { params }: Params) {
   const member = await getMember()
   if (!member) return NextResponse.json({ error: await te('인증이 필요합니다.') }, { status: 401 })
   const entryId = await resolve((await params).id)
-  if (!entryId) return NextResponse.json({ error: await te('툴을 찾을 수 없습니다.') }, { status: 404 })
+  if (!entryId) return NextResponse.json({ error: await te('갤러리 항목을 찾을 수 없습니다.') }, { status: 404 })
   return NextResponse.json(await getToolUsers(entryId, member.id))
 }
 

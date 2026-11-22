@@ -58,17 +58,19 @@ function entry(over: Partial<ToolboxEntry>): ToolboxEntry {
 }
 
 describe('tool rules (unified 툴 list)', () => {
-  it('maps categories, including launches inside 서비스/프로덕트', () => {
-    expect(TOOL_CATEGORIES.map((c) => c.id)).toEqual(['mcp', 'skill', 'prompt', 'rules', 'cli', 'service', 'launch'])
+  it('4 gallery categories; rules/prompts live under 스킬 and launches under 서비스', () => {
+    expect(TOOL_CATEGORIES.map((c) => c.id)).toEqual(['mcp', 'skill', 'cli', 'service'])
     expect(typesForCategory('service')).toEqual(['saas_service', 'product'])
-    expect(typesForCategory('launch')).toEqual(['product'])
+    expect(typesForCategory('skill')).toEqual(['agent_skill', 'cursor_rules', 'prompt'])
+    expect(categoryFromLegacyType('launch')).toBe('service')
+    expect(categoryFromLegacyType('rules')).toBe('skill')
     expect(typesForCategory(null)).toBeNull()
   })
 
   it('accepts legacy ?type= values from old /toolbox links', () => {
     expect(categoryFromLegacyType('mcp_server')).toBe('mcp')
     expect(categoryFromLegacyType('agent_skill')).toBe('skill')
-    expect(categoryFromLegacyType('product')).toBe('launch')
+    expect(categoryFromLegacyType('product')).toBe('service')
     expect(categoryFromLegacyType('cli')).toBe('cli')
     expect(categoryFromLegacyType('nope')).toBeNull()
     expect(parseToolSort('ai')).toBe('ai')
@@ -96,7 +98,7 @@ describe('tool rules (unified 툴 list)', () => {
     expect(sortTools([b, c, a], 'popular')[0].id).toBe('a')
     expect(sortTools([a, b, c], 'newest').map((e) => e.id)).toEqual(['c', 'b', 'a'])
     expect(sortTools([a, b, c], 'ai')[0].id).toBe('c')
-    expect(toolHref({ slug: 'claude-code' })).toBe('/tools/claude-code')
+    expect(toolHref({ slug: 'claude-code' })).toBe('/gallery/claude-code')
   })
 
   it('co-usage: tools used by people who share my tools, excluding mine', () => {
@@ -118,7 +120,7 @@ describe('tool rules (unified 툴 list)', () => {
     const tools = [entry({ id: 't1' }), entry({ id: 't2' }), entry({ id: 't3', tags: ['mcp'] }), entry({ id: 't9', user_count: 9 })]
     const ranked = rankToolsForMember(tools, ['mcp'], new Set(['t1']), 3, co)
     expect(ranked.map((r) => r.id)).toEqual(['t2', 't3', 't9'])
-    expect(toolReason(ranked[0])).toBe('나와 같은 툴을 쓰는 2명이 사용 중')
+    expect(toolReason(ranked[0])).toBe('나와 같은 걸 쓰는 2명이 사용 중')
     expect(toolReason({ coUsers: 0, matchedTag: null, user_count: 9 })).toBe('9명이 사용 중')
   })
 })
@@ -147,7 +149,7 @@ describe('사용 중 (mock store)', () => {
 
   it('includes launches in the same list and resolves old product ids', async () => {
     const { listTools, toolSlugForProduct } = await import('@/lib/data/tools')
-    const launches = await listTools('dev-user-id', { category: 'launch' })
+    const launches = (await listTools('dev-user-id', { category: 'service' })).filter((t) => t.type === 'product')
     expect(launches.length).toBeGreaterThan(0)
     expect(launches.every((t) => t.type === 'product' && t.product_id)).toBe(true)
     expect(await toolSlugForProduct(launches[0].product_id!)).toBe(launches[0].slug)
@@ -173,7 +175,7 @@ describe('MCP: unified tool names + legacy aliases', () => {
     const out = await handleDataTool('list_tools', { category: 'launch', sort: 'ai', mine: true }, 'tok_1234567890abcdef', r)
     expect(r).toHaveBeenCalledWith('mcp_tools_list', expect.objectContaining({ p_category: 'launch', p_sort: 'ai', p_mine: true }))
     const t = (out.tools as Array<Record<string, unknown>>)[0]
-    expect(t).toMatchObject({ category: 'launch', upvotes: 3, userCount: 2, usedByMe: true, page: '/tools/s' })
+    expect(t).toMatchObject({ category: 'launch', upvotes: 3, userCount: 2, usedByMe: true, page: '/gallery/s' })
   })
 
   it('set_tool_usage goes through the token RPC', async () => {
@@ -196,30 +198,30 @@ describe('MCP: unified tool names + legacy aliases', () => {
 })
 
 describe('routes, redirects and navigation', () => {
-  it('old URLs redirect into /tools', () => {
+  it('old URLs redirect into /gallery', () => {
     const cfg = read('next.config.ts')
-    expect(cfg).toMatch(/source: "\/toolbox", destination: "\/tools"/)
-    expect(cfg).toMatch(/source: "\/products\/new", destination: "\/tools\/launch"/)
-    expect(read('src/app/(app)/products/page.tsx')).toMatch(/\/tools\?category=launch/)
+    expect(cfg).toMatch(/source: "\/toolbox", destination: "\/gallery"/)
+    expect(cfg).toMatch(/source: "\/products\/new", destination: "\/gallery\/launch"/)
+    expect(read('src/app/(app)/products/page.tsx')).toMatch(/\/gallery\?category=launch/)
     expect(read('src/app/(app)/products/[id]/page.tsx')).toMatch(/toolSlugForProduct/)
     expect(existsSync(path.join(root, 'src/app/(app)/toolbox'))).toBe(false)
   })
 
   it('side panel holds content sections only; account items live in the account menu', () => {
     const hrefs = SIDE_NAV.map((i) => i.href)
-    expect(hrefs).toEqual(['/tools', '/archive', '/moim', '/groups', '/anon'])
+    expect(hrefs).toEqual(['/gallery', '/archive', '/moim', '/groups', '/anon'])
     // 네트워크 moved into 내 대시보드; the old URL redirects there
     expect(read('src/app/(app)/network/page.tsx')).toMatch(/redirect\(networkHref/)
     for (const h of ['/members/me', '/invites', '/settings', '/admin', '/toolbox', '/products']) expect(hrefs).not.toContain(h)
     const menu = read('src/components/shell/account-menu.tsx')
     for (const s of ['내 프로필', '초대', '설정', '관리', '로그아웃']) expect(menu).toContain(s)
     expect(menu).toMatch(/me\.isAdmin && <Group/)
-    expect(read('src/components/shell/bottom-tabs.tsx')).toMatch(/href: '\/tools', label: (?:msg\()?'툴'/)
+    expect(read('src/components/shell/bottom-tabs.tsx')).toMatch(/href: '\/gallery', label: (?:msg\()?'갤러리'/)
   })
 
   it('settings and admin have sub-sections with list → detail', () => {
     expect(SETTINGS_SECTIONS.map((s) => s.label)).toEqual(['계정', '프로필 편집', '내 에이전트', '알림'])
-    expect(ADMIN_SECTIONS.map((s) => s.label)).toEqual(['대시보드', '유저', '초대 트리', '툴 검토', '신고', '익명 관리', '사이트 설정'])
+    expect(ADMIN_SECTIONS.map((s) => s.label)).toEqual(['대시보드', '유저', '초대 트리', '갤러리 검토', '신고', '익명 관리', '사이트 설정'])
     expect(subNavActive('/settings', '/settings/account', '/settings', '/settings/account')).toBe(true)
     expect(subNavActive('/settings/tokens', '/settings/account', '/settings', '/settings/account')).toBe(false)
     expect(read('src/app/(app)/admin/layout.tsx')).toMatch(/is_admin\) redirect/)
