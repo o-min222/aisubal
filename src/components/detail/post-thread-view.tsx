@@ -14,6 +14,7 @@ import { PostDetailClient } from '@/app/(app)/posts/[id]/post-detail-client'
 import { InteractionToggle } from '@/app/(app)/posts/[id]/interaction-toggle'
 import { AuthorshipToggle } from '@/app/(app)/posts/[id]/authorship-toggle'
 import { T } from '@/i18n/t'
+import { getT } from '@/i18n/server'
 import { GroupAvatar } from '@/components/groups/group-avatar'
 
 
@@ -29,6 +30,7 @@ export async function PostThreadView({
   reply?: string
   variant?: 'page' | 'pane'
 }) {
+  const st = await getT()
   const unlock = await getNicknameUnlockState()
   const legacy = await getPost(thread.root.id)
   const showLegacy = Boolean(legacy && legacy.assets.length > 0)
@@ -54,13 +56,14 @@ export async function PostThreadView({
           </Link>
         ))}
 
+      <article className="thread-surface">
       {showLegacy && legacy ? (
         <PostDetailClient post={legacy} member={member} />
       ) : (
         <PostCard post={thread.root} afterDeleteHref={group ? `/groups/${group.slug}` : '/feed'} likeEndpoint={`/api/feed/${thread.root.id}/like`} likersEndpoint={`/api/feed/${thread.root.id}/likers`} />
       )}
 
-      <div className="flex flex-wrap items-center gap-2 text-xs text-n-666 px-1">
+      <div className="thread-meta flex flex-wrap items-center gap-2 text-xs text-n-666">
         {group ? (
           <>
             <span><T>그룹 멤버에게만 보이는 글 · 사람만 참여할 수 있어요</T></span>
@@ -82,8 +85,8 @@ export async function PostThreadView({
         )}
       </div>
 
-      <section className="card overflow-hidden">
-        <div className="px-4 pt-3 pb-3 border-b border-n-eee">
+      <section className="thread-replies" aria-label={st('댓글')}>
+        <div className="thread-compose">
           {replyTarget && (
             <div className="text-xs text-n-666 mb-2 flex items-center gap-2">
               <span>
@@ -108,7 +111,7 @@ export async function PostThreadView({
           />
           )}
         </div>
-        <h2 className="px-4 pt-3 pb-2 !text-sm font-semibold text-n-111 border-b border-n-eee"><T s="댓글 {count}" vars={{ count: visibleReplyCount(thread.replies) }} /></h2>
+        <h2 className="thread-count"><T s="댓글 {count}" vars={{ count: visibleReplyCount(thread.replies) }} /></h2>
         {groups.length === 0 ? (
           <p className="px-4 py-6 text-sm text-n-888 text-center"><T>첫 댓글을 남겨보세요.</T></p>
         ) : (
@@ -129,6 +132,7 @@ export async function PostThreadView({
           />
         )}
       </section>
+      </article>
     </div>
   )
 }

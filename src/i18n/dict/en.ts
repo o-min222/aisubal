@@ -1861,6 +1861,7 @@ const en: Record<string, string> = {
   "예전 주소로 들어와도 새 주소로 이동해요.": "Links to the old address will redirect here.",
   "{name} 그룹": "{name} group",
   "그룹 소개": "About",
+  "답글 {count}개 더 보기": "Show {count} more replies",
 }
 
 export default en

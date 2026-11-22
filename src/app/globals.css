@@ -2163,18 +2163,30 @@ button.rp-link { width: 100%; text-align: left; font: inherit; cursor: pointer; 
 .comment-group { border-bottom: 1px solid var(--n-eee); }
 .comment-group:last-child { border-bottom: 0; }
 .comment-group > .timeline-card-reply, .comment-reply > .timeline-card-reply { border-bottom: 0; }
-/* replies sit under the comment's avatar column, with a thread line */
-.comment-replies { margin: -4px 0 6px 36px; padding-left: 8px; border-left: 2px solid var(--n-eee); }
-@media (min-width: 640px) { .comment-replies { margin-left: 52px; } }
-.timeline-card-l2 { padding: 8px 12px 4px 8px; }
+/* X-style inline threads: 대댓글 share the comment's avatar column (centre 36px from the card
+   edge), and a 2px line runs from the comment's avatar through every reply avatar. */
+.comment-replies { margin: 0; padding: 0; }
+.comment-group .tc-avatar { position: relative; }
+.comment-group.has-replies > .timeline-card .tc-avatar::after,
+.comment-reply:not(:last-child) .tc-avatar::after,
+.comment-reply .tc-avatar::before {
+  content: ''; position: absolute; left: 50%; width: 2px; margin-left: -1px; background: var(--n-e5e5e5); border-radius: 2px;
+}
+.comment-group.has-replies > .timeline-card .tc-avatar::after { top: 44px; bottom: -8px; }
+.comment-reply .tc-avatar::before { top: -8px; height: 12px; }
+.comment-reply:not(:last-child) .tc-avatar::after { top: 40px; bottom: -4px; }
+.timeline-card-l2 { padding: 8px 16px 4px 20px; }
 .timeline-card-l2 .tc-avatar .rounded-full, .timeline-card-l2 .tc-avatar img { width: 32px !important; height: 32px !important; min-width: 32px; }
 .timeline-card-l2 .tc-avatar svg { width: 16px; height: 16px; }
-.reply-mention { color: var(--c-06c); font-weight: 600; margin-right: 4px; }
+.timeline-card-l2 > .flex { gap: 16px; }
+.timeline-card-l2 .tc-avatar { width: 32px; display: flex; flex-direction: column; align-items: center; }
+.timeline-card-l2 .tc-avatar > * { max-width: 32px; }
+.comment-more { position: relative; padding: 0 16px 8px 68px; }
+.comment-more::before { content: ''; position: absolute; left: 35px; top: 0; height: 18px; width: 2px; background: var(--n-e5e5e5); border-radius: 2px; }
 .reply-fold-btn {
-  display: inline-flex; align-items: center; gap: 8px; min-height: 36px; padding: 4px 8px;
-  font-size: 13px; font-weight: 600; color: var(--n-666); border-radius: 8px;
+  display: inline-flex; align-items: center; min-height: 36px; padding: 4px 10px; margin-left: -10px;
+  font-size: 13px; font-weight: 600; color: var(--n-666); border-radius: 999px;
 }
-.reply-fold-btn::before { content: ''; width: 20px; height: 1px; background: var(--n-ccc); }
 .reply-fold-btn:hover { color: var(--n-111); background: var(--n-f5f5f5); }
 
 /* ---- @handle inline editor (0032 policy) ---- */
@@ -2318,3 +2330,17 @@ button.rp-link { width: 100%; text-align: left; font: inherit; cursor: pointer; 
 /* card actions stay neutral (the unlayered global link colour would paint them blue) */
 a.tc-act { color: var(--n-555); }
 a.tc-act:hover { color: var(--n-111); text-decoration: none; }
+
+/* Post page: the post, its settings line, the reply box and the thread read as one surface */
+.thread-surface { background: var(--n-fff); border: 1px solid var(--n-e5e5e5); border-radius: 14px; overflow: hidden; }
+.thread-surface > .timeline-card { border: 0; border-radius: 0; padding: 16px 16px 6px; }
+.thread-surface > .timeline-card .whitespace-pre-wrap { font-size: 16px; line-height: 1.65; }
+.thread-meta { padding: 2px 16px 10px; border-bottom: 1px solid var(--n-eee); }
+.thread-compose { padding: 12px 16px; border-bottom: 1px solid var(--n-eee); }
+.thread-count { padding: 12px 16px 4px; font-size: 14px !important; font-weight: 650; color: var(--n-111); }
+.thread-replies .comment-group { border-bottom: 1px solid var(--n-f0f0f0); }
+.thread-replies .comment-group:last-child { border-bottom: 0; }
+@media (max-width: 767px) {
+  .thread-surface { margin: 0 -10px; border-radius: 0; border-width: 1px 0; }
+}
+.timeline-card header a:not(.mention) { color: var(--n-111); }
