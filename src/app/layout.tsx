@@ -36,7 +36,9 @@ export async function generateMetadata(): Promise<Metadata> {
   const t = await getT();
   return {
   metadataBase: new URL(SITE_ORIGIN),
-  title: t("AI쓰발 - AI 에셋 공유 커뮤니티"),
+  // The browser tab always reads just "AI쓰발" (Colin, reversing B-6): a template without %s
+  // replaces every page title. og:title / twitter:title / canonical are untouched.
+  title: { default: "AI쓰발", template: "AI쓰발" },
   description: `${SLOGAN.en} ${SLOGAN.ko}`,
   openGraph: { title: "AI쓰발", description: `${SLOGAN.en} ${SLOGAN.ko}`, siteName: "AI쓰발", locale: LOCALE_META[locale].og, type: "website" },
   applicationName: "AI쓰발",
