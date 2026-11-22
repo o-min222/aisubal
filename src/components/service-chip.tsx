@@ -1,16 +1,22 @@
 'use client'
 
 import Link from 'next/link'
-import { useState, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { letterHue, serviceIconUrl } from '@/lib/service-logos'
 
 /** 14px logo: catalog icon → known service logo → tiny letter mark. */
 export function ServiceIcon({ label, iconUrl }: { label: string; iconUrl?: string | null }) {
   const src = iconUrl || serviceIconUrl(label)
   const [failed, setFailed] = useState(false)
+  const img = useRef<HTMLImageElement>(null)
+  useEffect(() => {
+    // a server-rendered <img> can fail before hydration attaches onError
+    const el = img.current
+    if (el?.complete && el.naturalWidth === 0) setFailed(true)
+  }, [src])
   if (src && !failed) {
     // eslint-disable-next-line @next/next/no-img-element
-    return <img src={src} alt="" width={14} height={14} loading="lazy" className="svc-icon" onError={() => setFailed(true)} />
+    return <img ref={img} src={src} alt="" width={14} height={14} loading="lazy" className="svc-icon" onError={() => setFailed(true)} />
   }
   return (
     <span className="svc-icon svc-letter" style={{ background: letterHue(label) }} aria-hidden>
