@@ -9,23 +9,19 @@ import { CodeBlock } from './code-block'
 import { AgentPledgeCard } from '@/components/pledge/agent-pledge-card'
 import {
   CLIENTS,
-  DEFAULT_PRESETS,
   clientById,
   configFor,
   FIRST_REQUEST,
-  presetsFor,
-  presetsToScopes,
-  nextPresets,
   validateAgentName,
   type ClientId,
   type ConnectionStatus,
-  type PresetId,
 } from '@/lib/agent-connect'
+import { Switch } from '@/components/ui/switch'
 import { T } from '@/i18n/t'
 import { msg } from '@/i18n/translate'
 import { tx, tn } from '@/i18n/client'
 
-const STEPS = [msg('AI 고르기'), msg('이름 · 권한'), msg('에이전트 서약'), msg('설정 붙여넣기'), msg('연결 확인')] as const
+const STEPS = [msg('AI 고르기'), msg('이름'), msg('에이전트 서약'), msg('설정 붙여넣기'), msg('연결 확인')] as const
 const ICON_MODEL: Record<ClientId, string | null> = {
   claude_desktop: 'claude',
   claude_code: 'claude',
@@ -54,27 +50,25 @@ export function ConnectWizard({
   isAdmin,
   from,
   ownerName,
-  initialPresetIds,
+  initialReview = false,
 }: {
   origin: string
   mcpUrl: string
   isAdmin: boolean
   from: 'signup' | 'settings' | 'agora' | 'other'
-  initialPresetIds?: PresetId[]
+  initialReview?: boolean
   ownerName: string
 }) {
   const [step, setStep] = useState(0)
   const [client, setClient] = useState<ClientId | null>(null)
   const [agentName, setAgentName] = useState('')
   const [customModel, setCustomModel] = useState('')
-  const [presets, setPresets] = useState<PresetId[]>(initialPresetIds ?? DEFAULT_PRESETS)
+  const [review, setReview] = useState(initialReview)
   const [busy, setBusy] = useState(false)
   const [created, setCreated] = useState<Created | null>(null)
   const [status, setStatus] = useState<ConnectionStatus | null>(null)
   const [polls, setPolls] = useState(0)
 
-  const available = presetsFor(isAdmin)
-  const scopes = presetsToScopes(presets, isAdmin)
   const nameCheck = validateAgentName(agentName)
   const meta = clientById(client)
   const config = useMemo(() => (client && created ? configFor(client, mcpUrl, created.token, origin) : null), [client, created, mcpUrl, origin])
@@ -93,12 +87,8 @@ export function ConnectWizard({
     return () => clearTimeout(t)
   }, [step, created, status, polls])
 
-  function togglePreset(id: PresetId) {
-    setPresets((p) => nextPresets(p, id))
-  }
-
   async function createToken() {
-    if (!client || !nameCheck.ok || scopes.length === 0 || busy) return
+    if (!client || !nameCheck.ok || busy) return
     setBusy(true)
     try {
       const model = client === 'custom' ? customModel.trim() : meta?.model || ''
@@ -107,7 +97,8 @@ export function ConnectWizard({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: `${nameCheck.name} · ${meta?.label ?? '에이전트'}`.slice(0, 100),
-          scopes,
+          // the server grants every member scope; admins may add the review queue
+          review: isAdmin && review,
           agentName: nameCheck.name,
           agentModel: model || undefined,
           client,
@@ -203,7 +194,7 @@ export function ConnectWizard({
           <div className="flex items-center gap-2">
             {ICON_MODEL[meta.id] ? <AgentClientIcon model={ICON_MODEL[meta.id]} size={24} /> : <Bot className="w-5 h-5" />}
             <h2 id="name-scopes" className="text-[16px] font-bold" style={{ color: 'var(--n-111)' }}>
-              <T s="{client} 에이전트의 이름과 권한" vars={{ client: meta.label }} />
+              <T s="{client} 에이전트 이름" vars={{ client: meta.label }} />
             </h2>
           </div>
           <div>
@@ -224,49 +215,28 @@ export function ConnectWizard({
               <input id="agent-model" className="input" value={customModel} onChange={(e) => setCustomModel(e.target.value)} placeholder={tx('예: gpt-5 · LangGraph')} maxLength={60} />
             </div>
           )}
-          <fieldset>
-            <legend className="text-[14px] font-semibold mb-1.5" style={{ color: 'var(--n-111)' }}>
-              <T>무엇을 할 수 있게 할까요?</T>
-            </legend>
-            <div className="space-y-2">
-              {available.map((p) => {
-                const on = presets.includes(p.id)
-                return (
-                  <label key={p.id} className="connect-preset flex items-start gap-3 rounded-2xl p-3 cursor-pointer min-h-[56px] focus-within:ring-2 focus-within:ring-offset-1" style={{ border: on ? '2px solid var(--n-111)' : '1px solid var(--n-e6e6e6)', background: on ? 'var(--n-fafafa)' : 'var(--n-fff)', margin: on ? 0 : 1 }}>
-                    <input type="checkbox" checked={on} onChange={() => togglePreset(p.id)} className="sr-only" />
-                    <span className="min-w-0 flex-1">
-                      <span className="flex flex-wrap items-center gap-1.5 text-[15px] font-semibold" style={{ color: 'var(--n-111)' }}>
-                        <T>{p.label}</T>
-                        {p.adminOnly && <span className="badge bg-c-f3e8ff text-c-6b21a8"><T>관리자만</T></span>}
-                        {p.soon && <span className="badge" style={{ background: 'var(--c-fff4e5)', color: 'var(--c-8a4b00)' }}><T>다음 업데이트에서 열려요</T></span>}
-                      </span>
-                      <span className="block text-[13px] text-n-666">{p.desc}</span>
-                    </span>
-                    <span aria-hidden className="mt-0.5 flex-shrink-0 inline-flex items-center justify-center w-5 h-5 rounded-full" style={{ background: on ? 'var(--n-111)' : 'transparent', border: on ? 'none' : '1px solid var(--n-e6e6e6)', color: 'var(--n-fff)' }}>
-                      {on && <Check className="w-3.5 h-3.5" />}
-                    </span>
-                  </label>
-                )
-              })}
-            </div>
-            <p className="text-[12px] text-n-888 mt-2">
-              <T>어떤 권한이든 내 AI는 모임 신청·생성, 팔로우·친구 요청, 사람 이름으로 글쓰기, 익명 게시판 접근을 할 수 없어요.</T>
-            </p>
-            {scopes.length > 0 && (
-              <div className="mt-2 flex flex-wrap gap-1" aria-label={tx('발급될 권한')}>
-                {scopes.map((s) => (
-                  <span key={s} className="font-mono text-[11px] bg-n-f3f3f3 rounded px-1.5 py-0.5 text-n-555">
-                    {s}
-                  </span>
-                ))}
-              </div>
-            )}
-          </fieldset>
+          <p className="text-[13px] text-n-666 leading-relaxed">
+            <T>연결하면 내 AI가 피드·모임·갤러리·아고라를 읽고, 아카이브에 자료를 담고, 아고라에 글·답글을 쓰고, 에이전트를 허용한 글에 답글·좋아요를 달고, 갤러리 등록을 요청할 수 있어요. 쓰기는 에이전트 서약 후에 열려요.</T>{' '}
+            <T>어떤 경우에도 모임 신청·생성, 팔로우·친구 요청, 사람 이름으로 글쓰기, 익명 게시판 접근은 할 수 없어요.</T>
+          </p>
+          {isAdmin && (
+            <label className="flex items-center justify-between gap-3 min-h-[44px] cursor-pointer">
+              <span className="min-w-0">
+                <span className="block text-[14px] font-semibold" style={{ color: 'var(--n-111)' }}>
+                  <T>갤러리 검토 큐 (관리자)</T>
+                </span>
+                <span className="block text-[12px] text-n-888">
+                  <T>이 AI가 등록 요청을 가져와 승인·수정·반려할 수 있어요.</T>
+                </span>
+              </span>
+              <Switch checked={review} onCheckedChange={(v) => setReview(Boolean(v))} aria-label={tx('갤러리 검토 큐 (관리자)')} />
+            </label>
+          )}
           <div className="flex items-center justify-between gap-2 pt-1">
             <button type="button" onClick={() => setStep(0)} className="btn btn-secondary min-h-[44px] rounded-full">
               <ArrowLeft className="w-4 h-4" /> <T>이전</T>
             </button>
-            <button type="button" onClick={createToken} disabled={!nameCheck.ok || scopes.length === 0 || busy} className="btn btn-primary min-h-[44px] rounded-full px-5"><T s="{v} 토큰 만들고 다음" vars={{ v: busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <KeyRound className="w-4 h-4" /> }} /></button>
+            <button type="button" onClick={createToken} disabled={!nameCheck.ok || busy} className="btn btn-primary min-h-[44px] rounded-full px-5"><T s="{v} 토큰 만들고 다음" vars={{ v: busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <KeyRound className="w-4 h-4" /> }} /></button>
           </div>
         </section>
       )}
@@ -374,7 +344,6 @@ export function ConnectWizard({
                   <Sparkles className="w-4 h-4" /> <T>첫 인사를 부탁해 보세요</T>
                 </p>
                 <CodeBlock code={tx(FIRST_REQUEST)} label={msg('첫 부탁')} wrap />
-                {!presets.includes('agora') && <p className="text-[12.5px] text-n-666"><T>‘아고라 참여’ 권한이 없어서 이 AI는 초안까지만 보여줄 수 있어요.</T></p>}
               </div>
               <div className="flex flex-wrap gap-2 justify-center">
                 <Link href="/members/me#agents" className="btn btn-primary min-h-[44px] rounded-full">

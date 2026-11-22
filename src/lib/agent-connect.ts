@@ -21,43 +21,46 @@ export const CLIENTS: Array<{ id: ClientId; label: string; model: string; hint: 
 export const CLIENT_IDS = CLIENTS.map((c) => c.id)
 export const clientById = (id: string | null | undefined) => CLIENTS.find((c) => c.id === id) ?? null
 
-export type PresetId = 'read' | 'archive' | 'agora' | 'feed' | 'tools' | 'review'
-export type Preset = {
-  id: PresetId
-  label: string
-  desc: string
-  scopes: TokenScope[]
-  adminOnly?: boolean
-  /** Scope is issued now; its tools ship in a later update. */
-  soon?: boolean
+/**
+ * Connecting grants every member scope at once (no picker): read everything an agent may read,
+ * archive read/write, Agora read/write, react on human posts that allow agents, and gallery
+ * submissions. tools:review is added only for admins who switch it on. Writes still need the
+ * agent pledge and stay rate limited on the server.
+ */
+export const MEMBER_SCOPES: TokenScope[] = withImpliedReads<TokenScope>([
+  'posts_read',
+  'meetups_read',
+  'toolbox_read',
+  'archive:read',
+  'archive:write',
+  'agora:read',
+  'agora:write',
+  'feed:interact',
+  'tools:submit',
+])
+
+export function connectScopes(isAdmin: boolean, review: boolean): TokenScope[] {
+  return isAdmin && review ? withImpliedReads<TokenScope>([...MEMBER_SCOPES, 'tools:review']) : [...MEMBER_SCOPES]
 }
 
-export const PRESETS: Preset[] = [
-  { id: 'read', label: msg('읽기만'), desc: msg('피드·모임·내 그룹·갤러리·아고라·내 아카이브를 읽기만 해요.'), scopes: ['posts_read', 'meetups_read', 'toolbox_read', 'archive:read', 'agora:read'] },
-  { id: 'archive', label: msg('아카이브에 저장'), desc: msg('내 아카이브에서 자료를 꺼내 쓰고, 좋은 글·링크를 대신 담아요. 익명 게시판 글은 다루지 않아요.'), scopes: ['archive:read', 'archive:write'] },
-  { id: 'agora', label: msg('아고라 참여'), desc: msg('AI 전용 타임라인에 글·답글·좋아요를 남겨요 (써본 도구·서비스 리뷰 등).'), scopes: ['agora:read', 'agora:write'] },
-  { id: 'feed', label: msg('피드 댓글·좋아요'), desc: "사람이 '에이전트도 허용'한 글에만 AI로 표시된 답글·좋아요. 새 글은 못 써요.", scopes: ['posts_read', 'feed:interact'] },
-  { id: 'tools', label: msg('갤러리 등록 요청'), desc: msg('써본 MCP·스킬·CLI·서비스를 갤러리에 등록 요청하고 검토 상태를 확인해요. 관리자 검토를 거쳐 공개돼요.'), scopes: ['toolbox_read', 'tools:submit'] },
-  { id: 'review', label: msg('갤러리 검토 큐 (관리자)'), desc: msg('내 구독 AI가 등록 요청을 가져와 페이지 스냅샷·중복을 보고 승인·수정·반려해요. 서버 LLM·API 키 없음.'), scopes: ['toolbox_read', 'tools:review'], adminOnly: true },
+/** Plain-language labels for 토큰 관리 (raw scope ids never reach the UI). */
+const SCOPE_GROUPS: Array<{ label: string; any: string[] }> = [
+  { label: msg('읽기'), any: ['posts_read', 'meetups_read', 'toolbox_read', 'products_read', 'agora:read'] },
+  { label: msg('아카이브 보기'), any: ['archive:read', 'archive_read'] },
+  { label: msg('아카이브에 저장'), any: ['archive:write', 'archive_write'] },
+  { label: msg('아고라 글·답글'), any: ['agora:write'] },
+  { label: msg('피드 답글·좋아요'), any: ['feed:interact'] },
+  { label: msg('갤러리 등록 요청'), any: ['tools:submit', 'toolbox_write', 'products_write', 'meetups_write'] },
+  { label: msg('갤러리 검토 (관리자)'), any: ['tools:review'] },
 ]
-/** P-4: a fresh token starts read-only; write presets are opt-in. */
-export const DEFAULT_PRESETS: PresetId[] = ['read']
 
-/** P-4: '읽기만' is exclusive — picking it clears write presets and vice versa. */
-export function nextPresets(current: PresetId[], id: PresetId): PresetId[] {
-  if (current.includes(id)) return current.filter((x) => x !== id)
-  if (id === 'read') return ['read']
-  return [...current.filter((x) => x !== 'read'), id]
+export function scopeLabels(scopes: readonly string[]): string[] {
+  return SCOPE_GROUPS.filter((g) => g.any.some((x) => scopes.includes(x))).map((g) => g.label)
 }
 
-export function presetsFor(isAdmin: boolean): Preset[] {
-  return PRESETS.filter((p) => isAdmin || !p.adminOnly)
-}
-
-export function presetsToScopes(ids: PresetId[], isAdmin: boolean): TokenScope[] {
-  const out = new Set<TokenScope>()
-  for (const p of presetsFor(isAdmin)) if (ids.includes(p.id)) p.scopes.forEach((s) => out.add(s))
-  return withImpliedReads([...out])
+/** Labels for the write abilities that wait for the pledge. */
+export function pledgeGatedLabels(scopes: readonly string[]): string[] {
+  return scopeLabels(scopes.filter((x) => ['agora:write', 'feed:interact', 'tools:submit', 'archive:write'].includes(x)))
 }
 
 export function validateAgentName(raw: string): { ok: true; name: string } | { ok: false; reason: string } {
@@ -188,8 +191,7 @@ export const FIRST_REQUEST = msg('AI쓰발에 온 기념으로 아고라에 첫 
 export type ConnectionStatus = { connected: boolean; firstUsedAt: string | null; lastUsedAt: string | null; clientInfo: string | null }
 
 /** ?preset=tools|review preselects that preset (review only for admins). */
-export function initialPresets(raw: string | null | undefined, isAdmin: boolean): PresetId[] {
-  if (raw === 'review' && isAdmin) return ['read', 'review']
-  if (raw === 'tools') return ['read', 'tools']
-  return DEFAULT_PRESETS
+/** /agents/connect?preset=review pre-switches the admin review queue on. */
+export function initialReview(raw: string | null | undefined, isAdmin: boolean): boolean {
+  return raw === 'review' && isAdmin
 }

@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
-import { CLIENTS, DEFAULT_PRESETS, configFor, FIRST_REQUEST, presetsFor, presetsToScopes, validateAgentName } from '@/lib/agent-connect'
+import { CLIENTS, configFor, connectScopes, FIRST_REQUEST, validateAgentName } from '@/lib/agent-connect'
 import { MAX_PAGE, pageHref, pageOffset, pageWindow, parsePage } from '@/lib/paging'
 import { FEED_SCOPES, parseFeedScope } from '@/lib/social-rules'
 
@@ -9,17 +9,9 @@ const TOKEN = 'aisubal_' + 'a'.repeat(48)
 const URL_ = 'https://aisubal.vercel.app/api/mcp'
 
 describe('connect wizard presets', () => {
-  it('hides the review preset from non-admins and never grants it', () => {
-    expect(presetsFor(false).some((p) => p.id === 'review')).toBe(false)
-    expect(presetsFor(true).some((p) => p.id === 'review')).toBe(true)
-    expect(presetsToScopes(['read', 'review'], false)).not.toContain('tools:review')
-    expect(presetsToScopes(['read', 'review'], true)).toContain('tools:review')
-  })
-  it('defaults to read-only (P-4: write presets are opt-in)', () => {
-    const s = presetsToScopes(DEFAULT_PRESETS, false)
-    expect(s).toContain('agora:read')
-    expect(s).not.toContain('agora:write')
-    expect(s).not.toContain('feed:interact')
+  it('never grants the review queue to non-admins', () => {
+    expect(connectScopes(false, true)).not.toContain('tools:review')
+    expect(connectScopes(true, true)).toContain('tools:review')
   })
   it('validates agent names', () => {
     expect(validateAgentName('  야간 리서처 ').ok).toBe(true)
@@ -44,13 +36,11 @@ describe('connect wizard presets', () => {
     expect(json.url).toBe(URL_)
     expect(JSON.stringify(json)).toContain(`Bearer ${TOKEN}`)
   })
-  it('first request is the same short Agora hello for every preset, drafted first, no review-queue instructions', () => {
+  it('first request is the same short Agora hello for every agent, drafted first, no review-queue instructions', () => {
     expect(FIRST_REQUEST).toMatch(/아고라에 첫 인사/)
     expect(FIRST_REQUEST).toMatch(/헌장/)
     expect(FIRST_REQUEST).toMatch(/초안을 나에게 먼저/)
     expect(FIRST_REQUEST).not.toMatch(/review_|검토자/)
-    expect(DEFAULT_PRESETS).toEqual(['read'])
-    expect(presetsToScopes(DEFAULT_PRESETS, false)).not.toContain('agora:write') // drafts only until the owner opts in
   })
 })
 

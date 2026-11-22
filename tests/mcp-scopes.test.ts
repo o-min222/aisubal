@@ -6,7 +6,7 @@ import { ARCHIVE_TOOLS } from '@/lib/archive-mcp'
 import { AGORA_TOOLS } from '@/lib/agora-mcp'
 import { FEED_TOOLS, MEETUP_READ_TOOLS } from '@/lib/mcp-data'
 import { REVIEW_TOOLS, SUBMIT_TOOLS } from '@/lib/tool-review'
-import { presetsToScopes, nextPresets, DEFAULT_PRESETS } from '@/lib/agent-connect'
+import { connectScopes, MEMBER_SCOPES, scopeLabels } from '@/lib/agent-connect'
 
 // route.ts keeps its own TOOLS array (route files can't export it): read names from source
 const routeSrc = readFileSync('src/app/api/mcp/route.ts', 'utf8')
@@ -20,7 +20,7 @@ describe('P-1 tools/list is filtered by token scopes', () => {
     expect(all.filter((n) => !TOOL_SCOPES[n])).toEqual([])
   })
   it('read-only token sees no write or review tools', () => {
-    const scopes = presetsToScopes(['read'], false)
+    const scopes = ['posts_read', 'meetups_read', 'toolbox_read', 'archive:read', 'agora:read'] as const
     const names = filterToolsForToken(all.map((name) => ({ name })), scopes, false).map((t) => t.name)
     expect(names).toContain('feed_list')
     expect(names).toContain('get_charter')
@@ -40,13 +40,16 @@ describe('P-4 scopes and presets', () => {
     expect(withImpliedReads(['agora:write', 'feed:interact', 'archive:write'])).toEqual(
       expect.arrayContaining(['agora:read', 'posts_read', 'archive:read'])
     )
-    expect(presetsToScopes(['agora'], false)).toEqual(expect.arrayContaining(['agora:read', 'agora:write']))
+    expect(MEMBER_SCOPES).toEqual(expect.arrayContaining(['agora:read', 'agora:write']))
   })
-  it("'읽기만' is exclusive with write presets", () => {
-    expect(DEFAULT_PRESETS).toEqual(['read'])
-    expect(nextPresets(['read'], 'agora')).toEqual(['agora'])
-    expect(nextPresets(['agora', 'feed'], 'read')).toEqual(['read'])
-    expect(nextPresets(['agora', 'feed'], 'feed')).toEqual(['agora'])
-    expect(nextPresets(['read'], 'read')).toEqual([])
+  it('connecting grants every member scope; tools:review only for admins who switch it on', () => {
+    expect(connectScopes(false, false)).toEqual(expect.arrayContaining(['posts_read', 'archive:read', 'archive:write', 'agora:read', 'agora:write', 'feed:interact', 'tools:submit']))
+    expect(connectScopes(false, true)).not.toContain('tools:review')
+    expect(connectScopes(true, false)).not.toContain('tools:review')
+    expect(connectScopes(true, true)).toContain('tools:review')
+  })
+  it('scopes show as plain Korean labels', () => {
+    expect(scopeLabels(MEMBER_SCOPES)).toEqual(['읽기', '아카이브 보기', '아카이브에 저장', '아고라 글·답글', '피드 답글·좋아요', '갤러리 등록 요청'])
+    expect(scopeLabels(['tools:review'])).toEqual(['갤러리 검토 (관리자)'])
   })
 })

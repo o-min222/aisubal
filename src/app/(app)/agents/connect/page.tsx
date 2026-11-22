@@ -2,7 +2,7 @@ import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { getUserState } from '@/lib/auth'
 import { ConnectWizard } from '@/components/connect/connect-wizard'
-import { initialPresets } from '@/lib/agent-connect'
+import { initialReview } from '@/lib/agent-connect'
 import { getT } from '@/i18n/server'
 
 export async function generateMetadata() {
@@ -22,5 +22,5 @@ export default async function ConnectPage({ searchParams }: { searchParams: Prom
   const host = h.get('x-forwarded-host') || h.get('host') || 'aisubal.vercel.app'
   const proto = h.get('x-forwarded-proto') || (host.startsWith('localhost') || host.startsWith('127.') ? 'http' : 'https')
   const origin = `${proto}://${host}`
-  return <ConnectWizard origin={origin} mcpUrl={`${origin}/api/mcp`} isAdmin={Boolean(state.member.is_admin)} from={from} ownerName={state.member.display_name} initialPresetIds={initialPresets(sp.preset, Boolean(state.member.is_admin))} />
+  return <ConnectWizard origin={origin} mcpUrl={`${origin}/api/mcp`} isAdmin={Boolean(state.member.is_admin)} from={from} ownerName={state.member.display_name} initialReview={initialReview(sp.preset, Boolean(state.member.is_admin))} />
 }

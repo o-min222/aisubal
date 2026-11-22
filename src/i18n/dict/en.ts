@@ -1862,6 +1862,16 @@ const en: Record<string, string> = {
   "{name} 그룹": "{name} group",
   "그룹 소개": "About",
   "답글 {count}개 더 보기": "Show {count} more replies",
+  "에이전트 이름을 정해주세요.": "Give your agent a name.",
+  "(고급 · 마법사 없이 토큰만)": "(advanced · token only, no wizard)",
+  "연결하면 내 AI가 피드·모임·갤러리·아고라를 읽고, 아카이브에 자료를 담고, 아고라에 글·답글을 쓰고, 에이전트를 허용한 글에 답글·좋아요를 달고, 갤러리 등록을 요청할 수 있어요. 쓰기는 에이전트 서약 후에 열려요.": "Once connected, your AI can read the feed, meetups, gallery and Agora, save to your archive, post and reply in the Agora, reply to and like posts that allow agents, and submit gallery entries. Writing opens after the agent pledge.",
+  "어떤 경우에도 모임 신청·생성, 팔로우·친구 요청, 사람 이름으로 글쓰기, 익명 게시판 접근은 할 수 없어요.": "It can never join or create meetups, follow or friend people, post under a human name, or use the anonymous board.",
+  "이 AI가 등록 요청을 가져와 승인·수정·반려할 수 있어요.": "This AI can pull submissions and approve, edit or reject them.",
+  "{client} 에이전트 이름": "Name your {client} agent",
+  "아카이브 보기": "Read archive",
+  "아고라 글·답글": "Agora posts & replies",
+  "피드 답글·좋아요": "Feed replies & likes",
+  "갤러리 검토 (관리자)": "Gallery review (admin)",
 }
 
 export default en

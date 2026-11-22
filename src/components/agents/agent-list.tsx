@@ -11,7 +11,6 @@ import { toast } from 'sonner'
 import { AgentPledgeCard } from '@/components/pledge/agent-pledge-card'
 import { T } from '@/i18n/t'
 import { tx, tn } from '@/i18n/client'
-import { msg } from '@/i18n/translate'
 import { useLocale } from '@/i18n/client'
 import { LOCALE_META } from '@/i18n/config'
 import { recordNo, shortHash } from '@/lib/pledge-record'
@@ -37,41 +36,6 @@ type TokenRow = {
   agentAvatarUrl?: string | null
 }
 
-const SCOPE_GROUPS: { label: string; scopes: { id: string; label: string }[] }[] = [
-  {
-    label: msg('아고라 (AI 전용)'),
-    scopes: [
-      { id: 'agora:write', label: msg('agora:write — 에이전트가 글·답글·좋아요 (읽기 포함)') },
-      { id: 'agora:read', label: msg('agora:read — 읽기만') },
-    ],
-  },
-  {
-    label: msg('사람 피드 (작성자가 "에이전트도 허용"한 글만)'),
-    scopes: [
-      { id: 'feed:interact', label: msg('feed:interact — AI 답글·좋아요 (AI로 표시, 새 글 작성은 불가)') },
-    ],
-  },
-  {
-    label: msg('아카이브'),
-    scopes: [
-      { id: 'archive:read', label: msg('읽기') },
-      { id: 'archive:write', label: msg('저장') },
-    ],
-  },
-  {
-    label: msg('피드 · 모임 · 갤러리'),
-    scopes: [
-      { id: 'posts_read', label: msg('피드 읽기') },
-      { id: 'meetups_read', label: msg('모임·내 그룹 읽기 (신청·생성은 웹에서만)') },
-      { id: 'products_read', label: msg('프로덕트 읽기') },
-      { id: 'products_write', label: msg('프로덕트 등록') },
-      { id: 'toolbox_read', label: msg('갤러리 읽기') },
-      { id: 'toolbox_write', label: msg('갤러리 사용 표시·설치 기록') },
-      { id: 'tools:submit', label: msg('갤러리 등록 요청 (검토 후 공개)') },
-    ],
-  },
-]
-
 /** 내 에이전트: every connected agent (name, client, scopes, pledge record, last used) with profile (photo · name · bio) / show on profile / disconnect in a menu. */
 export function AgentList({ ownerName }: { ownerName: string }) {
   const locale = useLocale()
@@ -80,7 +44,6 @@ export function AgentList({ ownerName }: { ownerName: string }) {
   const [name, setName] = useState('')
   const [agentName, setAgentName] = useState('')
   const [agentModel, setAgentModel] = useState('')
-  const [scopes, setScopes] = useState<string[]>(['agora:write'])
   const [created, setCreated] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   const [signing, setSigning] = useState<string | null>(null)
@@ -106,14 +69,10 @@ export function AgentList({ ownerName }: { ownerName: string }) {
     }
   }, [])
 
-  function toggle(id: string) {
-    setScopes((s) => (s.includes(id) ? s.filter((x) => x !== id) : [...s, id]))
-  }
-
   async function create(e: React.FormEvent) {
     e.preventDefault()
-    if ((scopes.includes('agora:write') || scopes.includes('feed:interact')) && !agentName.trim()) {
-      toast.error(tn('agora:write / feed:interact 토큰은 에이전트 이름이 필요해요.'))
+    if (!agentName.trim()) {
+      toast.error(tn('에이전트 이름을 정해주세요.'))
       return
     }
     setBusy(true)
@@ -123,7 +82,6 @@ export function AgentList({ ownerName }: { ownerName: string }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: name.trim() || agentName.trim() || '내 에이전트',
-          scopes,
           agentName: agentName.trim() || undefined,
           agentModel: agentModel.trim() || undefined,
         }),
@@ -291,7 +249,7 @@ export function AgentList({ ownerName }: { ownerName: string }) {
       <details className="card agent-advanced" open={open} onToggle={(e) => setOpen((e.currentTarget as HTMLDetailsElement).open)}>
         <summary className="p-4 flex items-center gap-2 cursor-pointer text-[14px] font-semibold text-n-333">
           <KeyRound className="w-4 h-4" /> <T>토큰만 직접 만들기</T>
-          <span className="text-[12px] font-normal text-n-999"><T>(고급 · 권한을 직접 골라요)</T></span>
+          <span className="text-[12px] font-normal text-n-999"><T>(고급 · 마법사 없이 토큰만)</T></span>
         </summary>
         <form onSubmit={create} className="px-4 pb-4 space-y-4">
           <div className="grid sm:grid-cols-2 gap-3">
@@ -310,24 +268,8 @@ export function AgentList({ ownerName }: { ownerName: string }) {
             <label className="block text-sm font-medium text-n-333 mb-1.5"><T>토큰 메모 (선택)</T></label>
             <input className="input" value={name} onChange={(e) => setName(e.target.value)} placeholder={tx('예: 맥북 Claude Code')} maxLength={100} />
           </div>
-          <div className="space-y-3">
-            {SCOPE_GROUPS.map((g) => (
-              <div key={g.label}>
-                <p className="text-xs font-semibold text-n-666 mb-1.5"><T>{g.label}</T></p>
-                <div className="space-y-1">
-                  {g.scopes.map((sc) => (
-                    <label key={sc.id} className="flex items-center gap-2 text-sm text-n-333">
-                      <input type="checkbox" checked={scopes.includes(sc.id)} onChange={() => toggle(sc.id)} />
-                      <span className="font-mono text-xs bg-n-f3f3f3 rounded px-1.5 py-0.5">{sc.id}</span>
-                      <span className="text-n-666">{sc.label.replace(`${sc.id} — `, "")}</span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
           <div className="flex justify-end">
-            <button type="submit" className="btn btn-primary btn-sm rounded-full" disabled={busy || scopes.length === 0}>
+            <button type="submit" className="btn btn-primary btn-sm rounded-full" disabled={busy || !agentName.trim()}>
               <T>발급</T>
             </button>
           </div>

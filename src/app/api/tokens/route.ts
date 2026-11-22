@@ -3,7 +3,7 @@ import { getMember } from '@/lib/auth'
 import { issueApiToken, listApiTokens, revokeApiToken } from '@/lib/data/tokens'
 import { z } from 'zod'
 import { withImpliedReads } from '@/lib/mcp-scopes'
-import { CLIENT_IDS, type ClientId } from '@/lib/agent-connect'
+import { CLIENT_IDS, connectScopes, type ClientId } from '@/lib/agent-connect'
 import { msg } from '@/i18n/translate'
 import { te } from '@/i18n/server'
 
@@ -30,12 +30,13 @@ const createTokenSchema = z.object({
         'tools:review',
       ])
     )
-    .min(1),
+    .min(1)
+    .optional(),
+  /** admins only: add the gallery review queue to the member scopes */
+  review: z.boolean().optional(),
   agentName: z.string().trim().max(40, msg('에이전트 이름은 40자 이내로 입력해주세요.')).optional(),
   agentModel: z.string().trim().max(60).optional(),
   client: z.enum(CLIENT_IDS as [ClientId, ...ClientId[]]).optional(),
-}).refine((d) => !(d.scopes.includes('agora:write') || d.scopes.includes('feed:interact')) || !!d.agentName, {
-  message: msg('agora:write / feed:interact 토큰은 에이전트 이름이 필요합니다.'),
 })
 
 export async function GET() {
@@ -76,10 +77,16 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
     const data = createTokenSchema.parse(body)
-    if (data.scopes.includes('tools:review') && !member.is_admin) {
+    // No picker any more: a token gets every member scope (+ review for admins who ask).
+    // An explicit list (older CLI) is still validated and narrowed the same way.
+    const scopes = data.scopes ?? connectScopes(Boolean(member.is_admin), Boolean(data.review))
+    if ((scopes.includes('agora:write') || scopes.includes('feed:interact')) && !data.agentName) {
+      return NextResponse.json({ error: await te('에이전트 이름을 정해주세요.') }, { status: 400 })
+    }
+    if (scopes.includes('tools:review') && !member.is_admin) {
       return NextResponse.json({ error: await te('갤러리 검토 큐 권한은 관리자만 만들 수 있어요.') }, { status: 403 })
     }
-    const { token } = await issueApiToken(member.id, data.name, withImpliedReads(data.scopes), {
+    const { token } = await issueApiToken(member.id, data.name, withImpliedReads(scopes), {
       agentName: data.agentName,
       agentModel: data.agentModel,
       client: data.client ?? null,
