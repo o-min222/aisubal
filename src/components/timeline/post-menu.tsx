@@ -6,6 +6,7 @@ import { Check, Flag, MoreHorizontal, Pencil, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { AdaptiveSheet } from '@/components/adaptive-sheet'
 import { FEED_REPORT_REASONS } from '@/lib/feed-rules'
+import { ANON_MAX_CHARS, ANON_REPORT_REASONS } from '@/lib/anon-rules'
 import { publishReplyDelta } from '@/lib/count-store'
 import type { TimelinePost } from './types'
 import { T } from '@/i18n/t'
@@ -14,10 +15,13 @@ import { tx, tn } from '@/i18n/client'
 type Step = 'menu' | 'edit' | 'delete' | 'report'
 
 /**
- * ⋯ on feed / group / 아고라 cards. Own rows: 수정 (member-written only) + 삭제;
+ * ⋯ on feed / group / 아고라 / 익명 cards. Own rows: 수정 (human-written only) + 삭제;
  * the agent's owner may delete its posts; everyone else: 신고.
+ * 익명 goes through its own API, where ownership is checked inside the RPC.
  */
-export function PostMenu({ post, kind, afterDeleteHref }: { post: TimelinePost; kind: 'feed' | 'agora'; afterDeleteHref?: string }) {
+export type PostMenuKind = 'feed' | 'agora' | 'anon'
+
+export function PostMenu({ post, kind, afterDeleteHref }: { post: TimelinePost; kind: PostMenuKind; afterDeleteHref?: string }) {
   const router = useRouter()
   const [open, setOpen] = useState(false)
   const [step, setStep] = useState<Step>('menu')
@@ -29,8 +33,9 @@ export function PostMenu({ post, kind, afterDeleteHref }: { post: TimelinePost; 
 
   if (post.isDeleted) return null
   const mine = Boolean(post.isMine)
-  const canEdit = mine && kind === 'feed' && post.author.kind === 'member'
-  const base = kind === 'feed' ? `/api/feed/${post.id}` : `/api/agora/${post.id}`
+  const canEdit = mine && (kind === 'anon' || (kind === 'feed' && post.author.kind === 'member'))
+  const base = `/api/${kind}/${post.id}`
+  const reasons = kind === 'anon' ? ANON_REPORT_REASONS : FEED_REPORT_REASONS
 
   function close(v: boolean) {
     setOpen(v)
@@ -87,6 +92,14 @@ export function PostMenu({ post, kind, afterDeleteHref }: { post: TimelinePost; 
     setBusy(true)
     const full = detail.trim() ? `${reason}: ${detail.trim()}` : reason
     try {
+      if (kind === 'anon') {
+        const d = await call(`${base}/report`, { method: 'POST', body: JSON.stringify({ reason, detail: detail.trim() }) }, tn('신고하지 못했어요.'))
+        setReported(true)
+        close(false)
+        toast.success(d.hidden ? tn('신고가 누적되어 글이 숨겨졌어요.') : tn('신고했어요. 운영자가 확인할게요.'))
+        if (d.hidden) router.refresh()
+        return
+      }
       if (kind === 'feed') await call('/api/reports', { method: 'POST', body: JSON.stringify({ postId: post.id, reason: full }) }, tn('신고하지 못했어요.'))
       else await call(`/api/agora/${post.id}/flag`, { method: 'POST', body: JSON.stringify({ reason: full }) }, tn('신고하지 못했어요.'))
       setReported(true)
@@ -131,7 +144,7 @@ export function PostMenu({ post, kind, afterDeleteHref }: { post: TimelinePost; 
             <textarea
               value={text}
               onChange={(e) => setText(e.target.value)}
-              maxLength={2000}
+              maxLength={kind === 'anon' ? ANON_MAX_CHARS : 2000}
               rows={6}
               autoFocus
               aria-label={tx('글 내용')}
@@ -159,7 +172,7 @@ export function PostMenu({ post, kind, afterDeleteHref }: { post: TimelinePost; 
         {step === 'report' && (
           <div className="space-y-3 py-1">
             <div className="flex flex-col" role="radiogroup" aria-label={tx('신고 사유')}>
-              {FEED_REPORT_REASONS.map((r) => (
+              {reasons.map((r) => (
                 <button key={r} type="button" role="radio" aria-checked={reason === r} onClick={() => setReason(r)} className="sheet-row justify-between">
                   <T>{r}</T>
                   {reason === r && <Check className="w-4 h-4 text-n-111" />}
@@ -167,7 +180,8 @@ export function PostMenu({ post, kind, afterDeleteHref }: { post: TimelinePost; 
               ))}
             </div>
             {reason === '개인정보 노출' && <p className="text-[12px] text-c-8a4b00"><T>전화번호·주소·실명 등 누구의 정보인지 적어주면 빠르게 가릴게요.</T></p>}
-            <textarea value={detail} onChange={(e) => setDetail(e.target.value)} rows={2} maxLength={300} placeholder={tx('자세한 내용 (선택)')} aria-label={tx('신고 상세')} className="input w-full text-sm" />
+            {kind === 'anon' && <p className="text-xs text-n-888"><T>신고는 익명으로 처리돼요. 여러 명이 신고하면 글이 자동으로 숨겨지고 운영자가 검토해요.</T></p>}
+            <textarea value={detail} onChange={(e) => setDetail(e.target.value)} rows={2} maxLength={kind === 'anon' ? 150 : 300} placeholder={tx('자세한 내용 (선택)')} aria-label={tx('신고 상세')} className="input w-full text-sm" />
             <button type="button" onClick={report} disabled={!reason || busy} className="btn btn-primary w-full min-h-[44px] rounded-full">
               {busy ? <T>접수 중…</T> : <T>신고하기</T>}
             </button>

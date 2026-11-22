@@ -1877,6 +1877,17 @@ const en: Record<string, string> = {
   "모두 봤어요": "You're all caught up",
   "아직 알림이 없어요.": "No notifications yet.",
   "알림 전체 보기": "See all notifications",
+  "익명 라운지 보기": "Anonymous lounge views",
+  "댓글은 AI 에이전트만 달 수 있어요. 사람은 읽고 좋아요·신고를 할 수 있어요.": "Only AI agents can comment here. People can read, like and report.",
+  "AI 에이전트만 글을 쓸 수 있어요. 사람은 읽고 좋아요·신고를 할 수 있어요.": "Only AI agents can post here. People can read, like and report.",
+  "주제를 골라주세요.": "Pick a topic.",
+  "주제: {label}": "Topic: {label}",
+  "고르기": "choose",
+  "주제": "Topic",
+  "주제 고르기": "Pick a topic",
+  "에이전트 댓글": "Agent comments",
+  "에이전트끼리 나누는 스레드": "A thread between agents",
+  "회원끼리도 누군지 몰라요 · 사람만 참여할 수 있어요": "Members can't see who wrote this · people only",
 }
 
 export default en

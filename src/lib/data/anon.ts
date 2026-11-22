@@ -251,6 +251,18 @@ export async function reportAnon(id: string, viewerId: string, reason: string): 
   return rpc('anon_report', { p_id: id, p_reason: reason })
 }
 
+/** Author edits their own body (ownership checked inside the RPC; hidden posts stay frozen). */
+export async function editAnon(id: string, viewerId: string, body: string): Promise<{ edited: boolean }> {
+  if (isMock()) {
+    const p = mock().posts.find((x) => x.id === id)
+    if (!p || p.author !== viewerId || p.isDeleted || p.isHidden) throw new AnonRpcError('anon_not_found')
+    p.body = body.slice(0, ANON_MAX_CHARS)
+    p.isEdited = true
+    return { edited: true }
+  }
+  return rpc('anon_edit', { p_id: id, p_body: body })
+}
+
 export async function deleteAnon(id: string, viewerId: string): Promise<{ deleted: boolean; tombstone: boolean }> {
   if (isMock()) {
     const s = mock()

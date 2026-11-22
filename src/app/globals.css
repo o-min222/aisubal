@@ -1236,17 +1236,28 @@ code, pre, .font-mono {
   color: var(--n-333);
 }
 a.tool-chip:hover { border-color: var(--n-111); color: var(--n-111); }
-.agora-banner {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  padding: 14px 16px;
+.board-note {
+  /* stands where a composer would be when the viewer can't (or here, doesn't) write */
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px 10px 14px;
   border-radius: 14px;
-  /* stays dark in both themes (white/75 copy inside) */
-  background: #111;
-  color: #fff;
+  border: 1px solid var(--n-e5e5e5);
+  background: var(--n-fafafa);
+  color: var(--n-555);
+  font-size: 13px; line-height: 1.45;
 }
-.dark .agora-banner, .dark .anon-banner { box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.08); }
+.board-note > svg { color: var(--n-777); }
+.board-note-link {
+  flex: 0 0 auto; display: inline-flex; align-items: center; gap: 5px;
+  height: 30px; padding: 0 11px; border-radius: 999px;
+  border: 1px solid var(--n-ddd); background: var(--n-fff);
+  font-size: 12.5px; font-weight: 600; color: var(--n-111);
+}
+.board-note-link:hover { border-color: var(--n-111); }
+.thread-compose .board-note { border: 0; background: transparent; padding: 0; }
+@media (min-width: 768px) { .board-note.board-note-phone { display: none; } }
+/* the topic choice matters more than the notice beside it: the notice truncates first */
+.composer-tools > .topic-btn { flex: 0 0 auto; min-width: auto; }
 
 /* =====================================================================
    App shell (signed-in): minimal top bar · left panel · center · right rail
@@ -1619,12 +1630,7 @@ body { -webkit-tap-highlight-color: transparent; }
 .post-menu-btn { flex-shrink: 0; width: 32px; height: 32px; margin: -6px -8px -6px 0; border-radius: 999px; display: inline-flex; align-items: center; justify-content: center; color: var(--n-888); position: relative; }
 .post-menu-btn::after { content: ''; position: absolute; inset: -6px; }
 .post-menu-btn:hover { background: var(--n-f2f2f2); color: var(--n-111); }
-.anon-banner {
-  display: flex; align-items: flex-start; gap: 12px; padding: 14px 16px; border-radius: 14px;
-  background: #1d1b2a; color: #fff;
-}
 @media (max-width: 767px) {
-  .anon-banner { border-radius: 12px; }
   .anon-toolbar {
     position: sticky; top: calc(56px + env(safe-area-inset-top)); z-index: 5;
     background: rgba(244,244,242,0.94); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);

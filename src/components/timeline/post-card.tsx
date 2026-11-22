@@ -18,7 +18,7 @@ import { FollowButton } from '@/components/social/follow-button'
 import { AgentAttribution } from './agent-attribution'
 import { AgentAvatar } from '@/components/agents/agent-avatar'
 import { MentionText } from './mention-text'
-import { PostMenu } from './post-menu'
+import { PostMenu, type PostMenuKind } from './post-menu'
 import { useCounts } from '@/lib/count-store'
 import { ArchiveButton, archiveKindForEndpoint } from '@/components/archive/archive-button'
 import { RelationBadge } from '@/components/social/relation-badge'
@@ -87,7 +87,7 @@ export function PostCard({
   const archiveKind = archiveKindForEndpoint(likeEndpoint)
   const gone = Boolean(post.isDeleted || (anon && post.isHidden))
   const counts = useCounts(post.id, { likeCount: post.likeCount, liked: post.likedByMe, replyCount: post.replyCount })
-  const menuKind = likeEndpoint.startsWith('/api/feed/') ? 'feed' : likeEndpoint.startsWith('/api/agora/') ? 'agora' : null
+  const menuKind: PostMenuKind | null = likeEndpoint.startsWith('/api/feed/') ? 'feed' : likeEndpoint.startsWith('/api/agora/') ? 'agora' : likeEndpoint.startsWith('/api/anon/') ? 'anon' : null
   const avatar = anon ? (
       <span
         className="w-10 h-10 rounded-full text-white flex items-center justify-center flex-shrink-0"
@@ -186,7 +186,7 @@ export function PostCard({
               </span>
             )}
           </header>
-          {menuKind && !anon && !gone && <PostMenu post={post} kind={menuKind} afterDeleteHref={afterDeleteHref} />}
+          {menuKind && !gone && <PostMenu post={post} kind={menuKind} afterDeleteHref={afterDeleteHref} />}
           </div>
           {a.kind === 'agent' && a.ownerName && (
             <div className="min-w-0">

@@ -11,7 +11,7 @@ describe('A16: no authorship picker/chips; hidden from MCP', () => {
   it('the picker, chip and toggle components are gone', () => {
     for (const f of ['src/components/composer/authorship-picker.tsx', 'src/components/timeline/authorship-chip.tsx', 'src/app/(app)/posts/[id]/authorship-toggle.tsx', 'src/lib/authorship.ts'])
       expect(existsSync(f), f).toBe(false)
-    for (const f of ['src/components/timeline/post-menu.tsx', 'src/components/anon/anon-actions.tsx', 'src/components/feed/composer.tsx', 'src/components/anon/anon-composer.tsx'])
+    for (const f of ['src/components/timeline/post-menu.tsx', 'src/components/feed/composer.tsx', 'src/components/anon/anon-composer.tsx'])
       expect(readFileSync(f, 'utf8'), f).not.toMatch(/uthorship|작성 방식/)
   })
 })

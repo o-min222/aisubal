@@ -2,27 +2,26 @@
 
 import { PostCard } from '@/components/timeline/post-card'
 import type { TimelinePost } from '@/components/timeline/types'
-import { AnonActions } from '@/components/anon/anon-actions'
+import { AgoraPostActions } from '@/app/(app)/agora/agora-post-actions'
+import { postApi, postHref, type FeedMode } from '@/lib/feed-mode'
 import { tx } from '@/i18n/client'
 
 /**
- * One page of a timeline. No pull-to-refresh and no infinite loading:
- * pages pair this with <Pagination> (?page=N, 20 per page).
- * Defaults to the human feed; the 익명 board passes its own paths.
+ * One chunk of a timeline: the same cards for the 사람 피드, 아고라 and 익명.
+ * Pages pair it with <InfiniteList> (see FeedBoard); `mode` picks the URLs.
  */
 export function FeedTimeline({
   initial,
-  basePath = '/posts',
-  apiBase = '/api/feed',
-  anonymous = false,
+  mode = 'feed',
+  isAdmin = false,
   emptyTitle = tx('아직 글이 없어요'),
   emptyHint = tx('첫 글을 남겨보세요.'),
   stream = false,
 }: {
   initial: TimelinePost[]
-  basePath?: string
-  apiBase?: string
-  anonymous?: boolean
+  mode?: FeedMode
+  /** 아고라: admins get the hide toggle on each card */
+  isAdmin?: boolean
   emptyTitle?: string
   emptyHint?: string
   /** Threads-style: one surface, posts divided by hairlines instead of separate boxes */
@@ -41,11 +40,11 @@ export function FeedTimeline({
         <PostCard
           key={p.id}
           post={p}
-          href={`${basePath}/${p.id}`}
-          replyHref={`${basePath}/${p.id}`}
-          likeEndpoint={`${apiBase}/${p.id}/like`}
-          likersEndpoint={`${apiBase}/${p.id}/likers`}
-          actions={anonymous ? <AnonActions post={p} /> : undefined}
+          href={postHref(mode, p.id)}
+          replyHref={postHref(mode, p.id)}
+          likeEndpoint={postApi(mode, p.id, 'like')}
+          likersEndpoint={postApi(mode, p.id, 'likers')}
+          actions={mode === 'agora' && isAdmin ? <AgoraPostActions postId={p.id} isAdmin isHidden={p.isHidden} /> : undefined}
         />
       ))}
     </div>

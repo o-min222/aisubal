@@ -1,14 +1,13 @@
 import Link from 'next/link'
-import { ArrowLeft, Bot, BotOff } from 'lucide-react'
+import { Bot, BotOff } from 'lucide-react'
 import { getNicknameUnlockState } from '@/lib/auth'
 import { getPost } from '@/lib/data/posts'
 import { getFeedThread } from '@/lib/data/feed'
 import { getGroupById } from '@/lib/data/groups'
-import { twoLevelThread, visibleReplyCount } from '@/lib/thread'
-import { CommentList } from '@/components/comments/comment-list'
+import { visibleReplyCount } from '@/lib/thread'
 import { composerIdentity } from '@/lib/composer-identity'
 import type { Member } from '@/lib/supabase/types'
-import { PostCard } from '@/components/timeline/post-card'
+import { ThreadLayout } from './thread-layout'
 import { Composer } from '@/components/feed/composer'
 import { PostDetailClient } from '@/app/(app)/posts/[id]/post-detail-client'
 import { InteractionToggle } from '@/app/(app)/posts/[id]/interaction-toggle'
@@ -33,37 +32,29 @@ export async function PostThreadView({
   const unlock = await getNicknameUnlockState()
   const legacy = await getPost(thread.root.id)
   const showLegacy = Boolean(legacy && legacy.assets.length > 0)
-  const groups = twoLevelThread(thread.root.id, thread.replies)
   const replyTarget = reply ? thread.replies.find((r) => r.id === reply && !r.isDeleted) : undefined
   const group = thread.root.groupId ? await getGroupById(member.id, thread.root.groupId).catch(() => null) : null
   const baseMe = composerIdentity(member, unlock.unlocked)
   const me = group ? { ...baseMe, nicknameAvailable: false } : baseMe
   const pageHref = `/posts/${thread.root.id}`
 
+  const groupBack = group ? (
+    <>
+      <GroupAvatar name={group.name} size={16} className="align-[-3px]" /> <T s="{name} 그룹" vars={{ name: group.name }} />
+    </>
+  ) : null
+
   return (
-    <div className="space-y-3">
-      {variant === 'page' &&
-        (group ? (
-          <Link href={`/groups/${group.slug}`} className="inline-flex items-center gap-1.5 text-sm font-semibold min-h-[36px] text-n-555 hover:text-n-111">
-            <ArrowLeft className="w-4 h-4" />
-            <GroupAvatar name={group.name} size={16} className="align-[-3px]" /> <T s="{name} 그룹" vars={{ name: group.name }} />
-          </Link>
-        ) : (
-          <Link href="/feed" className="hidden md:inline-flex items-center gap-1 text-sm text-n-666 hover:text-n-111 min-h-[36px]">
-            <ArrowLeft className="w-4 h-4" />
-            <T>피드</T>
-          </Link>
-        ))}
-
-      <article className="thread-surface">
-      {showLegacy && legacy ? (
-        <PostDetailClient post={legacy} member={member} />
-      ) : (
-        <PostCard post={thread.root} afterDeleteHref={group ? `/groups/${group.slug}` : '/feed'} likeEndpoint={`/api/feed/${thread.root.id}/like`} likersEndpoint={`/api/feed/${thread.root.id}/likers`} />
-      )}
-
-      <div className="thread-meta flex flex-wrap items-center gap-2 text-xs text-n-666">
-        {group ? (
+    <ThreadLayout
+      mode="feed"
+      root={thread.root}
+      replies={thread.replies}
+      back={variant === 'page' ? (group ? { href: `/groups/${group.slug}`, label: groupBack } : { href: '/feed', label: <T>피드</T> }) : undefined}
+      rootNode={showLegacy && legacy ? <PostDetailClient post={legacy} member={member} /> : undefined}
+      afterDeleteHref={group ? `/groups/${group.slug}` : '/feed'}
+      openId={reply}
+      meta={
+        group ? (
           <span><T>그룹 멤버에게만 보이는 글 · 사람만 참여할 수 있어요</T></span>
         ) : thread.isMine ? (
           <InteractionToggle postId={thread.root.id} initial={thread.root.agentsAllowed ? 'agents_allowed' : 'humans_only'} />
@@ -75,11 +66,10 @@ export async function PostThreadView({
           <span className="inline-flex items-center gap-1">
             <BotOff className="w-3.5 h-3.5" /> <T>에이전트 반응 끔</T>
           </span>
-        )}
-      </div>
-
-      <section className="thread-replies" aria-label={st('댓글')}>
-        <div className="thread-compose">
+        )
+      }
+      compose={
+        <>
           {replyTarget && (
             <div className="text-xs text-n-666 mb-2 flex items-center gap-2">
               <span>
@@ -93,39 +83,22 @@ export async function PostThreadView({
           {thread.root.isDeleted && !replyTarget ? (
             <p className="text-sm text-n-888"><T>삭제된 글에는 새 댓글을 달 수 없어요.</T></p>
           ) : (
-          <Composer
-            key={replyTarget?.id || 'root'}
-            me={me}
-            parentId={replyTarget?.id || thread.root.id}
-            countIds={[thread.root.id, ...(replyTarget ? [replyTarget.parentId === thread.root.id ? replyTarget.id : replyTarget.parentId!] : [])]}
-            replyKind={replyTarget ? 'reply' : 'comment'}
-            autoFocus={Boolean(replyTarget)}
-            className="!p-0 !border-0 !shadow-none"
-          />
+            <Composer
+              key={replyTarget?.id || 'root'}
+              me={me}
+              parentId={replyTarget?.id || thread.root.id}
+              countIds={[thread.root.id, ...(replyTarget ? [replyTarget.parentId === thread.root.id ? replyTarget.id : replyTarget.parentId!] : [])]}
+              replyKind={replyTarget ? 'reply' : 'comment'}
+              autoFocus={Boolean(replyTarget)}
+              className="!p-0 !border-0 !shadow-none"
+            />
           )}
-        </div>
-        <h2 className="thread-count"><T s="댓글 {count}" vars={{ count: visibleReplyCount(thread.replies) }} /></h2>
-        {groups.length === 0 ? (
-          <p className="px-4 py-6 text-sm text-n-888 text-center"><T>첫 댓글을 남겨보세요.</T></p>
-        ) : (
-          <CommentList
-            groups={groups}
-            openId={reply}
-            render={(post, { level, replyTo }) => (
-              <PostCard
-                post={post}
-                isReply
-                level={level}
-                replyTo={replyTo}
-                replyHref={post.isDeleted ? undefined : `${pageHref}?reply=${post.id}`}
-                likeEndpoint={`/api/feed/${post.id}/like`}
-                likersEndpoint={`/api/feed/${post.id}/likers`}
-              />
-            )}
-          />
-        )}
-      </section>
-      </article>
-    </div>
+        </>
+      }
+      repliesLabel={st('댓글')}
+      countLabel={<T s="댓글 {count}" vars={{ count: visibleReplyCount(thread.replies) }} />}
+      emptyLabel={<T>첫 댓글을 남겨보세요.</T>}
+      replyHref={(p) => (p.isDeleted ? undefined : `${pageHref}?reply=${p.id}`)}
+    />
   )
 }

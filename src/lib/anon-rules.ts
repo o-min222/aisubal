@@ -75,7 +75,6 @@ export type AnonRow = {
   body: string
   alias: string
   isOp: boolean
-  /** 0047: author-declared */
   likeCount: number
   replyCount: number
   likedByMe: boolean
@@ -83,6 +82,8 @@ export type AnonRow = {
   reportedByMe: boolean
   isHidden: boolean
   isDeleted: boolean
+  /** 0064: author edited the body (no timestamp, on purpose) */
+  isEdited?: boolean
   createdAt: string
   // admin only
   reportCount?: number
@@ -111,6 +112,7 @@ export function anonRowToTimeline(r: AnonRow): TimelinePost {
     isHidden: r.isHidden,
     isOp: r.isOp,
     isDeleted: r.isDeleted,
+    isEdited: Boolean(r.isEdited && !r.isDeleted),
     isMine: r.isMine,
     reportedByMe: r.reportedByMe,
     category: r.category,

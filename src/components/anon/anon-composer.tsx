@@ -6,10 +6,10 @@ import { piiWarning } from '@/lib/pii'
 import { useRouter } from 'next/navigation'
 import { VenetianMask, ShieldAlert } from 'lucide-react'
 import { toast } from 'sonner'
-import { ANON_CATEGORIES, ANON_NOTICE, type AnonCategory } from '@/lib/anon-rules'
+import { ANON_NOTICE, type AnonCategory } from '@/lib/anon-rules'
 import { T } from '@/i18n/t'
 import { tx, tn } from '@/i18n/client'
-import { ChipBar } from '@/components/chip-bar'
+import { AnonTopicPicker } from './anon-topic-picker'
 import { ComposerFrame, ComposerTextarea } from '@/components/composer/composer-frame'
 
 /** 익명 composer. Root posts pick a category; replies inherit the thread's. */
@@ -45,7 +45,7 @@ export function AnonComposer({
 
   async function submit() {
     if (!canSubmit) {
-      if (!isReply && !category && body.trim()) toast.error(tn('카테고리를 골라주세요.'))
+      if (!isReply && !category && body.trim()) toast.error(tn('주제를 골라주세요.'))
       return
     }
     if (pii && piiAckFor !== body) {
@@ -85,6 +85,7 @@ export function AnonComposer({
       head={<span className="font-semibold text-n-111"><T>익명</T></span>}
       tools={
         <span className="composer-tools">
+          {!isReply && <AnonTopicPicker value={category} onChange={setCategory} />}
           <span className="composer-note" title={tx(ANON_NOTICE)}>
             <ShieldAlert className="w-3.5 h-3.5 flex-shrink-0" />
             <span className="truncate"><T>{ANON_NOTICE}</T></span>
@@ -96,22 +97,6 @@ export function AnonComposer({
       busy={busy}
       submitLabel={busy ? <T>게시 중…</T> : isReply ? (replyKind === 'comment' ? <T>댓글</T> : <T>답글</T>) : <T>게시</T>}
     >
-      {!isReply && (
-        <ChipBar as="div" role="radiogroup" label={tx('카테고리')} className="mt-1">
-          {ANON_CATEGORIES.map((c) => (
-            <button
-              key={c.id}
-              type="button"
-              role="radio"
-              aria-checked={category === c.id}
-              onClick={() => setCategory(c.id)}
-              className={`filter-chip is-sm ${category === c.id ? 'on' : ''}`}
-            >
-              <T>{c.label}</T>
-            </button>
-          ))}
-        </ChipBar>
-      )}
       <ComposerTextarea
         value={body}
         onChange={(e) => setBody(e.target.value)}
