@@ -38,14 +38,14 @@ export function NotificationSettings() {
     listeners.forEach((l) => l())
   }
   return (
-    <section className="card divide-y divide-[#eee]">
+    <section className="card divide-y divide-n-eee">
       {OPTIONS.map((o) => {
         const on = prefs[o.id] ?? true
         return (
           <label key={o.id} className="p-4 flex items-center gap-3 min-h-[60px] cursor-pointer">
             <span className="min-w-0 flex-1">
-              <span className="block text-sm font-medium text-[#333]"><T>{o.label}</T></span>
-              <span className="block text-xs text-[#888]"><T>{o.hint}</T></span>
+              <span className="block text-sm font-medium text-n-333"><T>{o.label}</T></span>
+              <span className="block text-xs text-n-888"><T>{o.hint}</T></span>
             </span>
             <button
               type="button"

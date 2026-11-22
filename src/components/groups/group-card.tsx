@@ -7,7 +7,7 @@ import { getT } from '@/i18n/server'
 
 export function GroupPolicy({ g }: { g: Pick<Group, 'joinPolicy' | 'isHidden'> }) {
   return (
-    <span className="inline-flex items-center gap-2 text-[12px]" style={{ color: '#777' }}>
+    <span className="inline-flex items-center gap-2 text-[12px]" style={{ color: 'var(--n-777)' }}>
       <span className="inline-flex items-center gap-1">
         {g.joinPolicy === 'approval' ? <Lock className="w-3 h-3" /> : <Users className="w-3 h-3" />}
         {g.joinPolicy === 'approval' ? <T>승인 후 가입</T> : <T>누구나 가입</T>}
@@ -26,30 +26,30 @@ export async function GroupCard({ g }: { g: Group }) {
   const state =
     g.myStatus === 'active' ? (g.myRole && g.myRole !== 'member' ? ROLE_LABEL[g.myRole] : st('가입됨')) : g.myStatus === 'pending' ? st('가입 요청 중') : g.myStatus === 'invited' ? st('초대받음') : null
   return (
-    <Link href={`/groups/${g.slug}`} className="group-card card p-3.5 flex gap-3 hover:bg-[#fafafa]">
-      <span aria-hidden className="flex-shrink-0 flex items-center justify-center rounded-xl text-[22px]" style={{ width: 48, height: 48, background: '#f3f0ff' }}>
+    <Link href={`/groups/${g.slug}`} className="group-card card p-3.5 flex gap-3 hover:bg-n-fafafa">
+      <span aria-hidden className="flex-shrink-0 flex items-center justify-center rounded-xl text-[22px]" style={{ width: 48, height: 48, background: 'var(--c-f3f0ff)' }}>
         {g.emoji || '#'}
       </span>
       <span className="min-w-0 flex-1">
         <span className="flex items-center gap-2">
-          <span className="font-semibold text-[15px] truncate" style={{ color: '#111' }}>
+          <span className="font-semibold text-[15px] truncate" style={{ color: 'var(--n-111)' }}>
             {g.name}
           </span>
           {state && (
             <span
               className="flex-shrink-0 rounded-full px-2 text-[11.5px] font-semibold leading-[20px]"
-              style={g.myStatus === 'invited' ? { background: '#e8f5ee', color: '#1f7a4d' } : g.myStatus === 'pending' ? { background: '#fff4e5', color: '#9a5b00' } : { background: '#f2f2f2', color: '#444' }}
+              style={g.myStatus === 'invited' ? { background: 'var(--c-e8f5ee)', color: 'var(--c-1f7a4d)' } : g.myStatus === 'pending' ? { background: 'var(--c-fff4e5)', color: 'var(--c-9a5b00)' } : { background: 'var(--n-f2f2f2)', color: 'var(--n-444)' }}
             >
               {state}
             </span>
           )}
         </span>
         {g.description && (
-          <span className="block text-[13px] mt-0.5 line-clamp-2" style={{ color: '#555' }}>
+          <span className="block text-[13px] mt-0.5 line-clamp-2" style={{ color: 'var(--n-555)' }}>
             {g.description}
           </span>
         )}
-        <span className="flex flex-wrap items-center gap-x-3 mt-1 text-[12px]" style={{ color: '#888' }}>
+        <span className="flex flex-wrap items-center gap-x-3 mt-1 text-[12px]" style={{ color: 'var(--n-888)' }}>
           <span><T s="멤버 {memberCount}" vars={{ memberCount: g.memberCount }} /></span>
           <span><T s="글 {postCount}" vars={{ postCount: g.postCount }} /></span>
           <GroupPolicy g={g} />

@@ -58,22 +58,22 @@ export function MoimApplyPanel({ moim: m }: { moim: MoimDetail }) {
     return (
       <section className="card p-4 space-y-2" aria-label={tx('내 신청 현황')}>
         <div className="flex items-center justify-between gap-2">
-          <h2 className="text-[15px] font-bold" style={{ color: '#111' }}>
+          <h2 className="text-[15px] font-bold" style={{ color: 'var(--n-111)' }}>
             <T>내 신청 현황</T>
           </h2>
           <RsvpBadge status={r.status} position={r.position} />
         </div>
-        <p className="text-[13.5px]" style={{ color: '#444' }}>
+        <p className="text-[13.5px]" style={{ color: 'var(--n-444)' }}>
           {STATUS_COPY[r.status]}
           {r.status === 'waitlisted' && r.position ? tx(' 지금 대기 {position}번째예요.', { position: r.position }) : ''}
         </p>
         {m.questions.length > 0 && Object.keys(r.answers).length > 0 && (
-          <dl className="rounded-xl p-3 space-y-1.5 text-[13px]" style={{ background: '#fafafa' }}>
+          <dl className="rounded-xl p-3 space-y-1.5 text-[13px]" style={{ background: 'var(--n-fafafa)' }}>
             {m.questions.map((q) =>
               r.answers[q.id] ? (
                 <div key={q.id}>
-                  <dt className="text-[#777]"><T>{q.label}</T></dt>
-                  <dd style={{ color: '#111' }}>{r.answers[q.id]}</dd>
+                  <dt className="text-n-777"><T>{q.label}</T></dt>
+                  <dd style={{ color: 'var(--n-111)' }}>{r.answers[q.id]}</dd>
                 </div>
               ) : null
             )}
@@ -104,11 +104,11 @@ export function MoimApplyPanel({ moim: m }: { moim: MoimDetail }) {
 
   return (
     <section className="card p-4 space-y-3" aria-label={tx('신청')}>
-      <h2 className="text-[15px] font-bold" style={{ color: '#111' }}>
+      <h2 className="text-[15px] font-bold" style={{ color: 'var(--n-111)' }}>
         {r?.status === 'cancelled' ? <T>다시 신청하기</T> : <T>신청하기</T>}
       </h2>
       {blocked ? (
-        <p className="text-[13.5px]" style={{ color: '#666' }}>
+        <p className="text-[13.5px]" style={{ color: 'var(--n-666)' }}>
           {blocked}
         </p>
       ) : (
@@ -121,27 +121,27 @@ export function MoimApplyPanel({ moim: m }: { moim: MoimDetail }) {
         >
           {m.questions.map((q) => (
             <div key={q.id}>
-              <label htmlFor={`ans-${q.id}`} className="block text-[13px] font-semibold mb-1" style={{ color: '#111' }}>
-                {q.label} {q.required ? <span className="text-[#b42318]">*</span> : <span className="font-normal text-[#999]"><T>(선택)</T></span>}
+              <label htmlFor={`ans-${q.id}`} className="block text-[13px] font-semibold mb-1" style={{ color: 'var(--n-111)' }}>
+                {q.label} {q.required ? <span className="text-c-b42318">*</span> : <span className="font-normal text-n-999"><T>(선택)</T></span>}
               </label>
               <textarea
                 id={`ans-${q.id}`}
                 rows={2}
                 maxLength={500}
                 required={q.required}
-                className="w-full rounded-xl border border-[#ddd] px-3 py-2 text-[15px] focus:outline-none focus:border-[#111]"
+                className="w-full rounded-xl border border-n-ddd px-3 py-2 text-[15px] focus:outline-none focus:border-n-111"
                 value={answers[q.id] || ''}
                 onChange={(e) => setAnswers({ ...answers, [q.id]: e.target.value })}
               />
             </div>
           ))}
           <div>
-            <label htmlFor="ans-note" className="block text-[13px] font-semibold mb-1" style={{ color: '#111' }}>
-              <T>호스트에게 한마디</T> <span className="font-normal text-[#999]"><T>(선택)</T></span>
+            <label htmlFor="ans-note" className="block text-[13px] font-semibold mb-1" style={{ color: 'var(--n-111)' }}>
+              <T>호스트에게 한마디</T> <span className="font-normal text-n-999"><T>(선택)</T></span>
             </label>
-            <input id="ans-note" maxLength={300} className="w-full rounded-xl border border-[#ddd] px-3 py-2.5 text-[15px] focus:outline-none focus:border-[#111]" value={note} onChange={(e) => setNote(e.target.value)} />
+            <input id="ans-note" maxLength={300} className="w-full rounded-xl border border-n-ddd px-3 py-2.5 text-[15px] focus:outline-none focus:border-n-111" value={note} onChange={(e) => setNote(e.target.value)} />
           </div>
-          <p className="text-[12px] text-[#888]">{m.group ? <T>답변은 호스트와 그룹 운영진만 볼 수 있어요.</T> : <T>답변은 호스트만 볼 수 있어요.</T>}</p>
+          <p className="text-[12px] text-n-888">{m.group ? <T>답변은 호스트와 그룹 운영진만 볼 수 있어요.</T> : <T>답변은 호스트만 볼 수 있어요.</T>}</p>
           <button type="submit" disabled={busy} className="btn btn-primary w-full min-h-[48px] rounded-full text-[15px]">
             {busy ? <T>신청 중…</T> : m.requiresApproval ? <T>참가 신청 (호스트 승인)</T> : full ? <T>대기 신청</T> : <T>참석하기</T>}
           </button>

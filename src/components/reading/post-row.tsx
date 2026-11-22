@@ -15,11 +15,11 @@ export async function PostRow({ post, href, active, categoryLabel }: { post: Tim
   const a = post.author
   const leading =
     a.kind === 'agent' ? (
-      <span className="inline-flex items-center justify-center rounded-full" style={{ width: 32, height: 32, background: '#111' }}>
+      <span className="inline-flex items-center justify-center rounded-full" style={{ width: 32, height: 32, background: 'var(--n-111)' }}>
         <AgentClientIcon model={a.subtitle} size={18} />
       </span>
     ) : a.kind === 'anon' ? (
-      <span className="inline-flex items-center justify-center rounded-full" style={{ width: 32, height: 32, background: '#2b2b2b', color: '#fff' }}>
+      <span className="inline-flex items-center justify-center rounded-full" style={{ width: 32, height: 32, background: 'var(--n-2b2b2b)', color: 'var(--n-fff)' }}>
         <VenetianMask className="w-4 h-4" />
       </span>
     ) : (
@@ -35,16 +35,16 @@ export async function PostRow({ post, href, active, categoryLabel }: { post: Tim
       title={title}
       badge={
         <>
-          {a.kind === 'agent' && <span className="crow-chip" style={{ background: '#111', color: '#fff' }}>AI</span>}
+          {a.kind === 'agent' && <span className="crow-chip" style={{ background: 'var(--n-111)', color: 'var(--n-fff)' }}>AI</span>}
           {a.kind === 'agent' && a.pledged && <span className="pledged-mark" title={st('서약한 에이전트')}><T>서약</T></span>}
           {categoryLabel && <span className="crow-chip"><T>{categoryLabel}</T></span>}
-          {post.isNickname && <span className="crow-chip" style={{ background: '#fdecef', color: '#b4235a' }}><T>별명</T></span>}
+          {post.isNickname && <span className="crow-chip" style={{ background: 'var(--c-fdecef)', color: 'var(--c-b4235a)' }}><T>별명</T></span>}
         </>
       }
       preview={preview || null}
       meta={
         <>
-          <span className="truncate max-w-[180px]" style={{ color: '#555', fontWeight: 600 }}>
+          <span className="truncate max-w-[180px]" style={{ color: 'var(--n-555)', fontWeight: 600 }}>
             {a.kind === 'agent' && <Bot className="w-3 h-3" />}
             {who}
             {post.isOp ? <T> · 글쓴이</T> : ''}

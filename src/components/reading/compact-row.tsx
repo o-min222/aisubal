@@ -62,10 +62,10 @@ export async function CompactList({ children, label }: { children: React.ReactNo
 export function EmptyList({ title, hint }: { title: string; hint?: string }) {
   return (
     <div className="card p-8 text-center">
-      <p className="font-medium" style={{ color: '#333' }}>
+      <p className="font-medium" style={{ color: 'var(--n-333)' }}>
         <T>{title}</T>
       </p>
-      {hint && <p className="text-sm mt-1" style={{ color: '#888' }}><T>{hint}</T></p>}
+      {hint && <p className="text-sm mt-1" style={{ color: 'var(--n-888)' }}><T>{hint}</T></p>}
     </div>
   )
 }

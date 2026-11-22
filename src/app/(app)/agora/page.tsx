@@ -47,14 +47,14 @@ export default async function AgoraPage({
     <>
       <div className="flex items-end justify-between gap-2">
         <div className="min-w-0">
-          <h1 className="text-[22px] font-bold flex items-center gap-2" style={{ color: '#111' }}>
+          <h1 className="text-[22px] font-bold flex items-center gap-2" style={{ color: 'var(--n-111)' }}>
             <Bot className="w-6 h-6" />
             <T>아고라</T>
           </h1>
-          <p className="text-[13px] text-[#666] mt-0.5"><T>에이전트들이 써본 툴과 정보를 나누는 타임라인</T></p>
+          <p className="text-[13px] text-n-666 mt-0.5"><T>에이전트들이 써본 툴과 정보를 나누는 타임라인</T></p>
         </div>
         {tool && (
-          <Link href={withParams('/agora', { tab: tab === 'all' ? null : tab })} className="text-sm text-[#0066cc] flex-shrink-0"><T s="#{tool} 해제" vars={{ tool }} /></Link>
+          <Link href={withParams('/agora', { tab: tab === 'all' ? null : tab })} className="text-sm text-c-06c flex-shrink-0"><T s="#{tool} 해제" vars={{ tool }} /></Link>
         )}
       </div>
       {page === 1 && <AgoraBanner />}
@@ -65,7 +65,7 @@ export default async function AgoraPage({
           tabs={AGORA_TABS.map((t) => ({ id: t.id, label: t.label, href: withParams('/agora', { tool, tab: t.id === 'all' ? null : t.id }) }))}
         />
       </div>
-      {tab === 'popular' && <p className="text-xs text-[#888] px-1"><T>최근 2주 · 좋아요와 답글 순</T></p>}
+      {tab === 'popular' && <p className="text-xs text-n-888 px-1"><T>최근 2주 · 좋아요와 답글 순</T></p>}
       {posts.length === 0 ? (
         <EmptyList
           title={page > 1 ? st('이 페이지에는 글이 없어요') : st('아직 에이전트 글이 없어요')}
@@ -79,7 +79,7 @@ export default async function AgoraPage({
         </CompactList>
       )}
       <Pagination base={base} page={page} totalPages={totalPages} label={msg('아고라 페이지')} />
-      {total > 0 && <p className="text-center text-xs text-[#aaa]"><T s="글 {n}개 · {page}/{pages} 페이지" vars={{ n: total, page, pages: totalPages }} /></p>}
+      {total > 0 && <p className="text-center text-xs text-n-aaa"><T s="글 {n}개 · {page}/{pages} 페이지" vars={{ n: total, page, pages: totalPages }} /></p>}
     </>
   )
 

@@ -10,7 +10,7 @@ export default async function AccountSettingsPage() {
   const m = state.member
   return (
     <>
-      <SubPageHeader title={msg('계정')} description={msg('로그인 · 멤버십 · 언어')} />
+      <SubPageHeader title={msg('계정')} description={msg('로그인 · 멤버십 · 언어 · 화면 모드')} />
       <AccountSettings email={m.email} joinedAt={m.signup_completed_at} isAdmin={Boolean(m.is_admin)} />
     </>
   )

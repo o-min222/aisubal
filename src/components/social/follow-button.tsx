@@ -61,7 +61,7 @@ export function FollowButton({
         disabled={busy}
         aria-pressed={following}
         className="follow-chip inline-flex items-center gap-0.5 rounded-full px-2 text-[12px] font-semibold leading-[22px] whitespace-nowrap"
-        style={following ? { color: '#666', background: '#f2f2f2' } : { color: '#0066cc', background: '#eef5ff' }}
+        style={following ? { color: 'var(--n-666)', background: 'var(--n-f2f2f2)' } : { color: 'var(--c-06c)', background: 'var(--c-eef5ff)' }}
       >
         {following ? <T>팔로잉</T> : <T>+ 팔로우</T>}
       </button>

@@ -43,10 +43,10 @@ export function AgentPledgeCard({ tokenId, ownerName, agentName, onSigned, compa
   return (
     <div className="agent-pledge space-y-3">
       <div className="agent-pledge-head">
-        <p className="slogan-en" style={{ color: '#111', fontSize: 17 }}>
+        <p className="slogan-en" style={{ color: 'var(--n-111)', fontSize: 17 }}>
           {SLOGAN.en}
         </p>
-        <p className="text-[13px] leading-relaxed text-[#666] mt-1.5" style={{ wordBreak: 'keep-all' }}>
+        <p className="text-[13px] leading-relaxed text-n-666 mt-1.5" style={{ wordBreak: 'keep-all' }}>
           {locale === 'ko' ? SLOGAN.ko : SLOGAN.koTranslated}
         </p>
       </div>
@@ -69,7 +69,7 @@ export function AgentPledgeCard({ tokenId, ownerName, agentName, onSigned, compa
           signature={<span className="pledge-signed-name" style={{ fontSize: 17 }}>{agentSigner(ownerName, agentName)}</span>}
         />
       ) : (
-        <button type="button" onClick={() => setFull(true)} className="text-[13px] text-[#0066cc] inline-flex items-center gap-1 min-h-[36px]">
+        <button type="button" onClick={() => setFull(true)} className="text-[13px] text-c-06c inline-flex items-center gap-1 min-h-[36px]">
           <ScrollText className="w-4 h-4" /> <T>서약 원문 보기</T>
         </button>
       )}
@@ -81,7 +81,7 @@ export function AgentPledgeCard({ tokenId, ownerName, agentName, onSigned, compa
           sign()
         }}
       >
-        <label className="block text-[12.5px] font-medium text-[#666] mb-1" htmlFor={`guarantor-${tokenId}`}><T s="보증인 서명 · 내 닉네임 ‘{ownerName}’을 적어 주세요" vars={{ ownerName }} /></label>
+        <label className="block text-[12.5px] font-medium text-n-666 mb-1" htmlFor={`guarantor-${tokenId}`}><T s="보증인 서명 · 내 닉네임 ‘{ownerName}’을 적어 주세요" vars={{ ownerName }} /></label>
         <input
           id={`guarantor-${tokenId}`}
           value={typed}

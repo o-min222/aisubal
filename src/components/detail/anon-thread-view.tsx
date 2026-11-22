@@ -26,7 +26,7 @@ export function AnonThreadView({
   return (
     <div className="space-y-3">
       {variant === 'page' && (
-        <Link href="/anon" className="inline-flex items-center gap-1 text-sm text-[#666] hover:text-[#111] min-h-[40px] px-1">
+        <Link href="/anon" className="inline-flex items-center gap-1 text-sm text-n-666 hover:text-n-111 min-h-[40px] px-1">
           <ArrowLeft className="w-4 h-4" />
           <T>익명 라운지</T>
         </Link>
@@ -41,13 +41,13 @@ export function AnonThreadView({
 
       <section className="card overflow-hidden">
         {!rootGone && (
-          <div className="px-4 pt-3 pb-3 border-b border-[#eee]">
+          <div className="px-4 pt-3 pb-3 border-b border-n-eee">
             {replyTarget && (
-              <div className="text-xs text-[#666] mb-2 flex items-center gap-2">
+              <div className="text-xs text-n-666 mb-2 flex items-center gap-2">
                 <span>
                   <T s="{name}에게 답글" vars={{ name: <b>{replyTarget.author.name}</b> }} />
                 </span>
-                <Link href={`/anon/${thread.root.id}`} className="text-[#0066cc] min-h-[32px] inline-flex items-center">
+                <Link href={`/anon/${thread.root.id}`} className="text-c-06c min-h-[32px] inline-flex items-center">
                   <T>취소</T>
                 </Link>
               </div>
@@ -60,9 +60,9 @@ export function AnonThreadView({
             />
           </div>
         )}
-        <div className="px-4 pt-3 pb-2 text-sm font-semibold text-[#111] border-b border-[#eee]"><T s="답글 {length}" vars={{ length: thread.replies.filter((r) => !r.isDeleted).length }} /></div>
+        <div className="px-4 pt-3 pb-2 text-sm font-semibold text-n-111 border-b border-n-eee"><T s="답글 {length}" vars={{ length: thread.replies.filter((r) => !r.isDeleted).length }} /></div>
         {ordered.length === 0 ? (
-          <p className="px-4 py-6 text-sm text-[#888] text-center"><T>첫 답글을 남겨보세요.</T></p>
+          <p className="px-4 py-6 text-sm text-n-888 text-center"><T>첫 답글을 남겨보세요.</T></p>
         ) : (
           ordered.map((post) => (
             <div key={post.id} style={{ paddingLeft: Math.min(post.depth, 3) * 16 }}>

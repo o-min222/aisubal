@@ -27,14 +27,14 @@ export function ToolSearch({ initial }: { initial: string }) {
       }}
       className="relative"
     >
-      <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#888]" />
+      <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-n-888" />
       <input
         value={q}
         onChange={(e) => setQ(e.target.value)}
         placeholder={tx('툴 이름, 태그, 한 줄 소개')}
         aria-label={tx('툴 검색')}
         enterKeyHint="search"
-        className="w-full h-11 pl-9 pr-10 rounded-full border border-[#e3e3e3] bg-white text-[15px]"
+        className="w-full h-11 pl-9 pr-10 rounded-full border border-n-e3e3e3 bg-n-fff text-[15px]"
       />
       {q && (
         <button
@@ -44,7 +44,7 @@ export function ToolSearch({ initial }: { initial: string }) {
             setQ('')
             go('')
           }}
-          className="absolute right-1 top-1/2 -translate-y-1/2 w-9 h-9 inline-flex items-center justify-center text-[#888]"
+          className="absolute right-1 top-1/2 -translate-y-1/2 w-9 h-9 inline-flex items-center justify-center text-n-888"
         >
           <X className="w-4 h-4" />
         </button>

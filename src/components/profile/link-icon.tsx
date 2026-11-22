@@ -33,7 +33,7 @@ export function LinkIcon({ kind, size = 28 }: { kind: LinkKind; size?: number })
   if (kind === 'blog' || kind === 'website') {
     const I = kind === 'blog' ? PenLine : Globe
     return (
-      <span aria-hidden className="inline-flex items-center justify-center rounded-lg flex-shrink-0" style={{ width: size, height: size, background: '#eef0f3', color: '#333' }}>
+      <span aria-hidden className="inline-flex items-center justify-center rounded-lg flex-shrink-0" style={{ width: size, height: size, background: 'var(--n-eef0f3)', color: 'var(--n-333)' }}>
         <I style={{ width: size * 0.55, height: size * 0.55 }} />
       </span>
     )

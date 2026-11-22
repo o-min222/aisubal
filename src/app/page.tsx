@@ -21,7 +21,7 @@ export default async function HomePage() {
   const t = await getT()
   // Landing page for unauthenticated users
   return (
-    <div className="min-h-screen bg-[#111] flex flex-col items-center justify-center p-6">
+    <div className="min-h-screen bg-n-111 flex flex-col items-center justify-center p-6">
       {/* Logo */}
       <div className="mb-12 flex flex-col items-center gap-5">
         <Image
@@ -38,7 +38,7 @@ export default async function HomePage() {
       {/* CTA */}
       <Link
         href="/login"
-        className="inline-flex items-center justify-center gap-3 px-8 py-3 bg-white hover:bg-gray-100 text-gray-900 font-medium rounded-lg transition-colors"
+        className="inline-flex items-center justify-center gap-3 px-8 py-3 bg-n-fff hover:bg-gray-100 text-gray-900 font-medium rounded-lg transition-colors"
       >
         <GoogleIcon />
         {t('Google로 시작하기')}

@@ -42,15 +42,15 @@ export async function generateMetadata() {
 const TAB_IDS = DASHBOARD_TABS.map((t) => t.id)
 
 function Empty({ children }: { children: ReactNode }) {
-  return <p className="px-4 py-10 text-center text-sm text-[#888]">{children}</p>
+  return <p className="px-4 py-10 text-center text-sm text-n-888">{children}</p>
 }
 
 function Row({ href, children, meta }: { href: string; children: ReactNode; meta?: ReactNode }) {
   return (
     <li>
-      <Link href={href} className="dash-row block px-4 py-3 hover:bg-[#fafafa]">
-        <div className="text-[14.5px] text-[#222] line-clamp-2 break-words">{children}</div>
-        {meta && <div className="mt-1 flex flex-wrap items-center gap-x-2 text-xs text-[#888]">{meta}</div>}
+      <Link href={href} className="dash-row block px-4 py-3 hover:bg-n-fafafa">
+        <div className="text-[14.5px] text-n-222 line-clamp-2 break-words">{children}</div>
+        {meta && <div className="mt-1 flex flex-wrap items-center gap-x-2 text-xs text-n-888">{meta}</div>}
       </Link>
     </li>
   )
@@ -59,14 +59,14 @@ function Row({ href, children, meta }: { href: string; children: ReactNode; meta
 function PostRows({ items, empty }: { items: DashItem[]; empty: string }) {
   if (!items.length) return <Empty><T>{empty}</T></Empty>
   return (
-    <ul className="divide-y divide-[#f0f0f0]">
+    <ul className="divide-y divide-n-f0f0f0">
       {items.map((p) => (
         <Row
           key={p.id}
           href={p.href}
           meta={
             <>
-              {p.authorName && <span className="text-[#555]">{p.authorName}</span>}
+              {p.authorName && <span className="text-n-555">{p.authorName}</span>}
               {p.isNickname && <span className="badge"><T>부캐</T></span>}
               <RelativeTime date={p.createdAt} />
               <span className="inline-flex items-center gap-0.5"><Heart className="w-3 h-3" /> {p.likeCount}</span>
@@ -74,7 +74,7 @@ function PostRows({ items, empty }: { items: DashItem[]; empty: string }) {
             </>
           }
         >
-          {p.title && <b className="text-[#111]">{p.title} </b>}
+          {p.title && <b className="text-n-111">{p.title} </b>}
           {p.body || <T>(내용 없음)</T>}
         </Row>
       ))}
@@ -172,14 +172,14 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
     const s = pageSlice(tools, page, PAGE_SIZE)
     totalPages = s.totalPages
     body = s.items.length ? (
-      <ul className="divide-y divide-[#f0f0f0]">
+      <ul className="divide-y divide-n-f0f0f0">
         {s.items.map((t) => (
           <li key={t.id}>
-            <Link href={toolHref(t)} className="flex items-center gap-3 px-4 py-3 hover:bg-[#fafafa]">
+            <Link href={toolHref(t)} className="flex items-center gap-3 px-4 py-3 hover:bg-n-fafafa">
               <ToolIcon name={t.name} iconUrl={t.icon_url} dim="w-9 h-9" />
               <span className="min-w-0 flex-1">
-                <span className="block font-medium text-[#111] truncate">{t.name}</span>
-                <span className="block text-xs text-[#888] truncate">{t.one_liner}</span>
+                <span className="block font-medium text-n-111 truncate">{t.name}</span>
+                <span className="block text-xs text-n-888 truncate">{t.one_liner}</span>
               </span>
               <span className="badge"><T>{TOOL_TYPE_CHIP[t.type] ?? t.type}</T></span>
             </Link>
@@ -188,14 +188,14 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
       </ul>
     ) : (
       <Empty>
-        <T>아직 ‘쓰는 중’으로 표시한 툴이 없어요.</T> <Link href="/tools" className="text-[#0066cc]"><T>툴 둘러보기</T></Link>
+        <T>아직 ‘쓰는 중’으로 표시한 툴이 없어요.</T> <Link href="/tools" className="text-c-06c"><T>툴 둘러보기</T></Link>
       </Empty>
     )
   } else if (tab === 'moim') {
     const s = pageSlice(moims, page, PAGE_SIZE)
     totalPages = s.totalPages
     body = s.items.length ? (
-      <ul className="divide-y divide-[#f0f0f0]">
+      <ul className="divide-y divide-n-f0f0f0">
         {s.items.map((m) => (
           <Row
             key={m.id}
@@ -206,33 +206,33 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
                 <span>{new Date(m.startsAt).toLocaleString(LOCALE_META[locale].intl, { timeZone: 'Asia/Seoul', month: 'short', day: 'numeric', weekday: 'short', hour: '2-digit', minute: '2-digit' })}</span>
                 <span><T s="{confirmed}/{capacity}명" vars={{ confirmed: m.confirmed, capacity: m.capacity }} /></span>
                 {m.group && <span>· {m.group.name}</span>}
-                {m.status === 'cancelled' && <span className="text-[#e5484d]"><T>취소됨</T></span>}
+                {m.status === 'cancelled' && <span className="text-c-e5484d"><T>취소됨</T></span>}
               </>
             }
           >
-            <b className="text-[#111]">{m.title}</b>
+            <b className="text-n-111">{m.title}</b>
           </Row>
         ))}
       </ul>
     ) : (
       <Empty>
-        <T>신청했거나 주최한 모임이 없어요.</T> <Link href="/moim" className="text-[#0066cc]"><T>모임 보기</T></Link>
+        <T>신청했거나 주최한 모임이 없어요.</T> <Link href="/moim" className="text-c-06c"><T>모임 보기</T></Link>
       </Empty>
     )
   } else if (tab === 'groups') {
     const s = pageSlice(groups, page, PAGE_SIZE)
     totalPages = s.totalPages
     body = s.items.length ? (
-      <ul className="divide-y divide-[#f0f0f0]">
+      <ul className="divide-y divide-n-f0f0f0">
         {s.items.map((g) => (
           <li key={g.id}>
-            <Link href={`/groups/${g.slug}`} className="flex items-center gap-3 px-4 py-3 hover:bg-[#fafafa]">
-              <span className="w-9 h-9 rounded-xl bg-[#f3f3f3] inline-flex items-center justify-center text-lg" aria-hidden>
+            <Link href={`/groups/${g.slug}`} className="flex items-center gap-3 px-4 py-3 hover:bg-n-fafafa">
+              <span className="w-9 h-9 rounded-xl bg-n-f3f3f3 inline-flex items-center justify-center text-lg" aria-hidden>
                 {g.emoji || '👥'}
               </span>
               <span className="min-w-0 flex-1">
-                <span className="block font-medium text-[#111] truncate">{g.name}</span>
-                <span className="block text-xs text-[#888]"><T s="멤버 {memberCount} · 글 {postCount}" vars={{ memberCount: g.memberCount, postCount: g.postCount }} /></span>
+                <span className="block font-medium text-n-111 truncate">{g.name}</span>
+                <span className="block text-xs text-n-888"><T s="멤버 {memberCount} · 글 {postCount}" vars={{ memberCount: g.memberCount, postCount: g.postCount }} /></span>
               </span>
               <span className="badge">{g.myStatus === 'pending' ? <T>가입 요청 중</T> : g.myStatus === 'invited' ? <T>초대받음</T> : g.myRole ? ROLE_LABEL[g.myRole] : <T>멤버</T>}</span>
             </Link>
@@ -241,26 +241,26 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
       </ul>
     ) : (
       <Empty>
-        <T>가입한 그룹이 없어요.</T> <Link href="/groups" className="text-[#0066cc]"><T>그룹 둘러보기</T></Link>
+        <T>가입한 그룹이 없어요.</T> <Link href="/groups" className="text-c-06c"><T>그룹 둘러보기</T></Link>
       </Empty>
     )
   } else if (tab === 'agents') {
     body = agents.length ? (
-      <ul className="divide-y divide-[#f0f0f0]">
+      <ul className="divide-y divide-n-f0f0f0">
         {agents.map((a) => (
           <li key={a.id} className="px-4 py-3">
             <div className="flex items-center gap-2">
-              <Bot className="w-4 h-4 text-[#555]" />
-              <b className="text-[#111]">{a.agentName}</b>
-              {a.agentModel && <span className="text-xs text-[#888] truncate">{a.agentModel}</span>}
-              <span className="ml-auto text-xs text-[#888]">{a.lastUsedAt ? <><T>최근</T> <RelativeTime date={a.lastUsedAt} /></> : <T>아직 사용 안 함</T>}</span>
+              <Bot className="w-4 h-4 text-n-555" />
+              <b className="text-n-111">{a.agentName}</b>
+              {a.agentModel && <span className="text-xs text-n-888 truncate">{a.agentModel}</span>}
+              <span className="ml-auto text-xs text-n-888">{a.lastUsedAt ? <><T>최근</T> <RelativeTime date={a.lastUsedAt} /></> : <T>아직 사용 안 함</T>}</span>
             </div>
-            <div className="mt-1 text-xs text-[#666]"><T s="아고라 글 {agoraPosts} · 아고라 답글 {agoraReplies} · 피드 답글 {feedReplies} · 좋아요 {likes}" vars={{ agoraPosts: a.counts.agoraPosts, agoraReplies: a.counts.agoraReplies, feedReplies: a.counts.feedReplies, likes: a.counts.likes }} /></div>
+            <div className="mt-1 text-xs text-n-666"><T s="아고라 글 {agoraPosts} · 아고라 답글 {agoraReplies} · 피드 답글 {feedReplies} · 좋아요 {likes}" vars={{ agoraPosts: a.counts.agoraPosts, agoraReplies: a.counts.agoraReplies, feedReplies: a.counts.feedReplies, likes: a.counts.likes }} /></div>
             {a.recent.length > 0 && (
               <ul className="mt-2 space-y-1">
                 {a.recent.slice(0, 3).map((r) => (
                   <li key={r.id}>
-                    <Link href={r.href} className="block text-[13px] text-[#444] line-clamp-1 hover:underline">
+                    <Link href={r.href} className="block text-[13px] text-n-444 line-clamp-1 hover:underline">
                       {r.snippet}
                     </Link>
                   </li>
@@ -272,7 +272,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
       </ul>
     ) : (
       <Empty>
-        <T>연결한 AI가 없어요.</T> <Link href="/agents/connect" className="text-[#0066cc]"><T>에이전트 연결</T></Link>
+        <T>연결한 AI가 없어요.</T> <Link href="/agents/connect" className="text-c-06c"><T>에이전트 연결</T></Link>
       </Empty>
     )
   } else if (tab === 'network') {
@@ -290,7 +290,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
       const center = graph?.nodes.find((n) => n.id === graph.rootId)
       inner = (
         <div className="p-3 space-y-2">
-          <p className="text-[13px] px-1" style={{ color: '#666' }}><T s="{v} {GRAPH_HOPS}단계까지 보여요. 점선 +N을 누르면 더 불러와요. 드래그로 이동, 휠·핀치로 확대." vars={{ v: center && !center.relation.isMe ? st('{name}님 중심', { name: center.name }) : st('나를 중심으로'), GRAPH_HOPS }} /></p>
+          <p className="text-[13px] px-1" style={{ color: 'var(--n-666)' }}><T s="{v} {GRAPH_HOPS}단계까지 보여요. 점선 +N을 누르면 더 불러와요. 드래그로 이동, 휠·핀치로 확대." vars={{ v: center && !center.relation.isMe ? st('{name}님 중심', { name: center.name }) : st('나를 중심으로'), GRAPH_HOPS }} /></p>
           {graph ? <InviteGraph key={graph.rootId} initial={graph} /> : <Empty><T>네트워크를 불러오지 못했어요.</T></Empty>}
         </div>
       )
@@ -300,7 +300,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
       const s = pageSlice(people, page, PAGE_SIZE)
       totalPages = s.totalPages
       inner = s.items.length ? (
-        <ul className="divide-y divide-[#f0f0f0]">
+        <ul className="divide-y divide-n-f0f0f0">
           {s.items.map((p) => (
             <li key={p.id}>
               <PersonRow person={p} showFriend={kind === 'requests' || kind === 'sent' || kind === 'friends'} />
@@ -327,7 +327,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
             >
               <T>{v.label}</T>
               {typeof socialCounts[v.id] === 'number' && <span className="ml-1 tabular-nums opacity-70">{socialCounts[v.id]}</span>}
-              {v.id === 'requests' && (social?.incomingRequests ?? 0) > 0 && <span className="ml-1 inline-block w-1.5 h-1.5 rounded-full bg-[#e5484d]" aria-label={st('새 요청')} />}
+              {v.id === 'requests' && (social?.incomingRequests ?? 0) > 0 && <span className="ml-1 inline-block w-1.5 h-1.5 rounded-full bg-c-e5484d" aria-label={st('새 요청')} />}
             </Link>
           ))}
         </ChipBar>
@@ -337,15 +337,15 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   } else if (tab === 'invites') {
     body = (
       <div>
-        <p className="px-4 pt-3 text-sm text-[#555]">
-          <T s="초대 코드 {codes}개 중 {used}명이 가입했어요 · 남은 초대 {left}" vars={{ codes: codes.length, used: <b className="text-[#111]">{used}</b>, left: profile.invitesLeft }} />
+        <p className="px-4 pt-3 text-sm text-n-555">
+          <T s="초대 코드 {codes}개 중 {used}명이 가입했어요 · 남은 초대 {left}" vars={{ codes: codes.length, used: <b className="text-n-111">{used}</b>, left: profile.invitesLeft }} />
         </p>
         {codes.length ? (
-          <ul className="divide-y divide-[#f0f0f0] mt-2">
+          <ul className="divide-y divide-n-f0f0f0 mt-2">
             {codes.map((c) => (
               <li key={c.code} className="flex items-center gap-3 px-4 py-3">
-                <code className="font-mono text-[13px] text-[#111]">{c.code}</code>
-                <span className="ml-auto text-xs text-[#888]">
+                <code className="font-mono text-[13px] text-n-111">{c.code}</code>
+                <span className="ml-auto text-xs text-n-888">
                   {c.isUsed ? (
                     <>
                       {c.usedBy?.displayName ?? <T>가입 완료</T>} {c.usedAt && <>· <RelativeTime date={c.usedAt} /></>}
@@ -363,7 +363,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
           <Empty><T>초대 코드가 없어요.</T></Empty>
         )}
         <div className="px-4 pb-3">
-          <Link href="/invites" className="text-sm text-[#0066cc]">
+          <Link href="/invites" className="text-sm text-c-06c">
             <T>초대 관리로 이동 →</T>
           </Link>
         </div>
@@ -374,10 +374,10 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   return (
     <div className="space-y-3 dashboard-page">
       <div className="flex items-center gap-2">
-        <h1 className="text-xl font-bold flex-1 min-w-0" style={{ color: '#111' }}>
+        <h1 className="text-xl font-bold flex-1 min-w-0" style={{ color: 'var(--n-111)' }}>
           <T>내 대시보드</T>
         </h1>
-        <Link href={`/members/${me.id}`} className="text-[13px] text-[#0066cc]">
+        <Link href={`/members/${me.id}`} className="text-[13px] text-c-06c">
           <T>공개 프로필 보기</T>
         </Link>
         <Link href="/settings" className="btn btn-secondary btn-sm min-h-[36px] min-w-[36px] rounded-full !px-0 justify-center" aria-label={st('설정')}>
@@ -391,22 +391,22 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
             <Link href="/pledge" className="pledge-chip" title={t('내가 서명한 선언 및 입단 서약 보기')}>
               <ScrollText className="w-3.5 h-3.5" />
               <T s="{date} 입단 서약" vars={{ date: new Intl.DateTimeFormat(LOCALE_META[locale].intl, { dateStyle: 'medium', timeZone: 'Asia/Seoul' }).format(new Date(pledge.signedAt)) }} />
-              <span className="text-[#888]">
+              <span className="text-n-888">
                 <T s="· 초대인 {name}" vars={{ name: pledge.inviter ?? t('창립 멤버') }} />
               </span>
               {pledge.hash && (
-                <code className="pr-mono text-[11px] text-[#555]" title={pledge.hash}>
+                <code className="pr-mono text-[11px] text-n-555" title={pledge.hash}>
                   {recordNo(pledge.no)} · {shortHash(pledge.hash, 6, 4)}
                 </code>
               )}
             </Link>
           )}
         </div>
-        <dl className="dash-stats grid grid-cols-4 border-t border-[#f0f0f0]">
+        <dl className="dash-stats grid grid-cols-4 border-t border-n-f0f0f0">
           {summary.map((s) => (
-            <Link key={s.label} href={dashboardHref(s.tab)} scroll={false} className="px-2 py-3 text-center hover:bg-[#fafafa]">
-              <dd className="text-lg font-bold text-[#111] tabular-nums">{s.value}</dd>
-              <dt className="text-[11.5px] text-[#888]"><T>{s.label}</T></dt>
+            <Link key={s.label} href={dashboardHref(s.tab)} scroll={false} className="px-2 py-3 text-center hover:bg-n-fafafa">
+              <dd className="text-lg font-bold text-n-111 tabular-nums">{s.value}</dd>
+              <dt className="text-[11.5px] text-n-888"><T>{s.label}</T></dt>
             </Link>
           ))}
         </dl>

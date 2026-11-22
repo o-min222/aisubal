@@ -110,10 +110,10 @@ export function MoimHostPanel({ moim: m }: { moim: MoimDetail }) {
   return (
     <section className="moim-host card p-4 space-y-4" aria-label={tx('참석자 관리')}>
       <div className="flex items-center justify-between gap-2">
-        <h2 className="text-[15px] font-bold" style={{ color: '#111' }}>
+        <h2 className="text-[15px] font-bold" style={{ color: 'var(--n-111)' }}>
           <T>참석자 관리</T>
         </h2>
-        <span className="text-[12px] text-[#777]"><T s="{v} 전용" vars={{ v: m.isHost ? <T>호스트</T> : <T>그룹 운영진</T> }} /></span>
+        <span className="text-[12px] text-n-777"><T s="{v} 전용" vars={{ v: m.isHost ? <T>호스트</T> : <T>그룹 운영진</T> }} /></span>
       </div>
 
       {visible.map(({ s, label }) => {
@@ -122,36 +122,36 @@ export function MoimHostPanel({ moim: m }: { moim: MoimDetail }) {
         if (!list.length && !m.requiresApproval) return null
         return (
           <div key={s} className="space-y-2">
-            <h3 className="text-[13px] font-semibold" style={{ color: '#444' }}>
-              <T>{label}</T> <span className="tabular-nums text-[#999]">{list.length}</span>
+            <h3 className="text-[13px] font-semibold" style={{ color: 'var(--n-444)' }}>
+              <T>{label}</T> <span className="tabular-nums text-n-999">{list.length}</span>
             </h3>
-            {list.length === 0 && <p className="text-[12.5px] text-[#999]"><T>새 신청이 없어요.</T></p>}
+            {list.length === 0 && <p className="text-[12.5px] text-n-999"><T>새 신청이 없어요.</T></p>}
             {list.map((a) => (
-              <div key={a.id} className="applicant rounded-xl p-3 space-y-2" style={{ border: '1px solid #eee' }}>
+              <div key={a.id} className="applicant rounded-xl p-3 space-y-2" style={{ border: '1px solid var(--n-eee)' }}>
                 <div className="flex items-center gap-2 min-w-0">
                   <UserAvatar id={a.author.id} name={a.author.name} avatarUrl={a.author.avatarUrl} size="sm" />
                   <div className="min-w-0 flex-1">
-                    <p className="text-[14px] font-semibold truncate" style={{ color: '#111' }}>
+                    <p className="text-[14px] font-semibold truncate" style={{ color: 'var(--n-111)' }}>
                       {a.author.name}
                     </p>
-                    <p className="text-[11.5px] text-[#999]"><KstDate iso={a.createdAt} /> 신청</p>
+                    <p className="text-[11.5px] text-n-999"><KstDate iso={a.createdAt} /> 신청</p>
                   </div>
                   <RsvpBadge status={a.status} position={pos.get(a.id) ?? null} />
                 </div>
                 {(m.questions.some((q) => a.answers[q.id]) || a.note) && (
-                  <dl className="rounded-lg p-2.5 space-y-1 text-[13px]" style={{ background: '#fafafa' }}>
+                  <dl className="rounded-lg p-2.5 space-y-1 text-[13px]" style={{ background: 'var(--n-fafafa)' }}>
                     {m.questions.map((q) =>
                       a.answers[q.id] ? (
                         <div key={q.id}>
-                          <dt className="text-[#777] text-[12px]"><T>{q.label}</T></dt>
-                          <dd style={{ color: '#111' }}>{a.answers[q.id]}</dd>
+                          <dt className="text-n-777 text-[12px]"><T>{q.label}</T></dt>
+                          <dd style={{ color: 'var(--n-111)' }}>{a.answers[q.id]}</dd>
                         </div>
                       ) : null
                     )}
                     {a.note && (
                       <div>
-                        <dt className="text-[#777] text-[12px]"><T>한마디</T></dt>
-                        <dd style={{ color: '#111' }}>{a.note}</dd>
+                        <dt className="text-n-777 text-[12px]"><T>한마디</T></dt>
+                        <dd style={{ color: 'var(--n-111)' }}>{a.note}</dd>
                       </div>
                     )}
                   </dl>
@@ -176,25 +176,25 @@ export function MoimHostPanel({ moim: m }: { moim: MoimDetail }) {
         )
       })}
       {hiddenCount > 0 && (
-        <button onClick={() => setShowClosed(!showClosed)} className="text-[12.5px] underline text-[#666] min-h-[36px]">
+        <button onClick={() => setShowClosed(!showClosed)} className="text-[12.5px] underline text-n-666 min-h-[36px]">
           {showClosed ? tx('거절·취소 숨기기') : tx('거절·취소 {hiddenCount}명 보기', { hiddenCount })}
         </button>
       )}
 
-      <div className="grid gap-3 pt-3" style={{ borderTop: '1px solid #eee', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 240px), 1fr))' }}>
+      <div className="grid gap-3 pt-3" style={{ borderTop: '1px solid var(--n-eee)', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 240px), 1fr))' }}>
         <div>
-          <label htmlFor="cap" className="block text-[13px] font-semibold mb-1" style={{ color: '#111' }}>
-            <T>정원</T> <span className="font-normal text-[#888]"><T>(늘리면 대기자 자동 확정)</T></span>
+          <label htmlFor="cap" className="block text-[13px] font-semibold mb-1" style={{ color: 'var(--n-111)' }}>
+            <T>정원</T> <span className="font-normal text-n-888"><T>(늘리면 대기자 자동 확정)</T></span>
           </label>
           <div className="flex gap-2">
-            <input id="cap" type="number" min={Math.max(1, m.confirmed)} max={500} value={capacity} onChange={(e) => setCapacity(Number(e.target.value))} className="w-24 rounded-xl border border-[#ddd] px-3 py-2 text-[15px]" />
+            <input id="cap" type="number" min={Math.max(1, m.confirmed)} max={500} value={capacity} onChange={(e) => setCapacity(Number(e.target.value))} className="w-24 rounded-xl border border-n-ddd px-3 py-2 text-[15px]" />
             <button onClick={saveCapacity} disabled={busy !== null || capacity === m.capacity} className="btn btn-secondary btn-sm min-h-[40px] rounded-full">
               <T>저장</T>
             </button>
           </div>
         </div>
         <div>
-          <span className="block text-[13px] font-semibold mb-1" style={{ color: '#111' }}>
+          <span className="block text-[13px] font-semibold mb-1" style={{ color: 'var(--n-111)' }}>
             <T>신청 상태</T>
           </span>
           <div className="flex flex-wrap gap-1.5">
@@ -208,7 +208,7 @@ export function MoimHostPanel({ moim: m }: { moim: MoimDetail }) {
               </button>
             ) : null}
             {m.status !== 'cancelled' && (
-              <button onClick={() => setStatus('cancelled')} disabled={busy !== null} className="btn btn-sm min-h-[40px] rounded-full" style={{ color: '#b42318', border: '1px solid #f3c7c3' }}>
+              <button onClick={() => setStatus('cancelled')} disabled={busy !== null} className="btn btn-sm min-h-[40px] rounded-full" style={{ color: 'var(--c-b42318)', border: '1px solid var(--c-f3c7c3)' }}>
                 <T>모임 취소</T>
               </button>
             )}
@@ -218,17 +218,17 @@ export function MoimHostPanel({ moim: m }: { moim: MoimDetail }) {
 
       <form
         className="space-y-2 pt-3"
-        style={{ borderTop: '1px solid #eee' }}
+        style={{ borderTop: '1px solid var(--n-eee)' }}
         onSubmit={async (e) => {
           e.preventDefault()
           if (!notice.trim()) return
           if (await req('ann', `/api/moim/${m.id}/announcements`, 'POST', { body: notice.trim() }, tx('공지를 올렸어요'))) setNotice('')
         }}
       >
-        <label htmlFor="ann" className="block text-[13px] font-semibold" style={{ color: '#111' }}>
-          <T>참석자 공지</T> <span className="font-normal text-[#888]"><T>(이 페이지의 공지 칸에 보여요)</T></span>
+        <label htmlFor="ann" className="block text-[13px] font-semibold" style={{ color: 'var(--n-111)' }}>
+          <T>참석자 공지</T> <span className="font-normal text-n-888"><T>(이 페이지의 공지 칸에 보여요)</T></span>
         </label>
-        <textarea id="ann" rows={2} maxLength={1000} value={notice} onChange={(e) => setNotice(e.target.value)} className="w-full rounded-xl border border-[#ddd] px-3 py-2 text-[15px]" placeholder={tx('예) 2층 회의실로 오세요')} />
+        <textarea id="ann" rows={2} maxLength={1000} value={notice} onChange={(e) => setNotice(e.target.value)} className="w-full rounded-xl border border-n-ddd px-3 py-2 text-[15px]" placeholder={tx('예) 2층 회의실로 오세요')} />
         <button type="submit" disabled={busy !== null || !notice.trim()} className="btn btn-primary btn-sm min-h-[40px] rounded-full">
           <T>공지 올리기</T>
         </button>

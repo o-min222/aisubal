@@ -201,3 +201,47 @@ Product Hunt / Disquiet 스타일의 클린하고 밝은 UI
 
 ## Compact service chip (`ServiceChip`)
 One chip for AI stack, subscriptions, skills and tools everywhere (profile card, member peek, profile page, inline editor, tool users): ~24px tall, 12px text, 14px logo, tight padding, dense wrap, `+N` in the 6th slot. Logo order: catalog icon → known service logo (`src/lib/service-logos.ts`, served by `/api/icon/[key]` from a fixed allowlist, CDN-cached so browsers never contact third parties) → tiny colored letter mark.
+
+## Dark mode
+
+**Preference.** System / Light / Dark. The `theme` cookie is primary (works signed out). Members also save it to `members.theme` via `member_set_theme` (migration 0028), so a new device picks it up. Precedence: cookie → profile → `system`. It's set through `POST /api/theme` by `ThemeSwitch`:
+- `variant="row"`: the account menu, next to 언어.
+- `variant="block"`: 설정 › 계정 › 화면 모드.
+
+The switch applies instantly (no reload).
+
+**No flash.** The root layout renders `<html data-theme=… class="dark">` from the cookie. For `system`, an inline head script (`THEME_BOOT_SCRIPT` in `src/lib/theme.ts`) resolves `prefers-color-scheme` before first paint and keeps following the OS while the page is open. `theme-color` and `color-scheme` meta come from `generateViewport`: #f7f7f7 in light, #0f0f0f in dark.
+
+**Tokens.** Every neutral and status color is a CSS variable:
+- `--n-<hex>`: neutrals, named after their **light** value, e.g. `--n-111` or `--n-f2f2f2`.
+- `--c-<hex>`: status and tint colors (links, success, warning, danger, badges).
+
+`:root` holds the light values (the original palette, so light mode is pixel-identical). `.dark` remaps them:
+- Neutrals follow a lightness curve: text gets lighter, surfaces get darker.
+- Cards use `--n-fff` (#191919) and sit above the page `--bg-base` (#0f0f0f).
+- Status colors are hand-picked to pass WCAG AA on dark surfaces.
+
+Every token is also a Tailwind color, so you can write `text-n-666`, `bg-n-fff`, `border-n-eee` or `text-c-06c`.
+
+**Rules for new code:**
+- Never write a neutral hex such as `#111`, `#888` or `#f2f2f2`, or `bg-white`. Use the token.
+- White text on a *colored* surface (avatar letters, brand marks, `.svc-letter`, `.anon-banner`) stays literal `#fff`/`text-white`.
+- On an *inverted* surface (`bg-n-111`), use `text-n-fff` so the pair flips together.
+- Brand and hue colors (service logos, avatar hues, platform icons) stay literal.
+- OG images (`next/og`) can't read CSS variables. Keep literal colors there.
+- The black PNG wordmark gets `logo-ink`, which inverts it in dark.
+
+**Contrast in dark (card #191919):**
+- 111 → 14.9
+- 555 → 7.8
+- 777 → 5.8
+- 888 → 5.2
+- 999 → 4.7
+- link → 7.3
+- danger → 7.0
+
+`n-aaa` (3.7) is only for placeholders and decorations, as it is in light.
+
+**Checks.**
+- `npm run check:overflow -- --themes light,dark` runs every route × width in both themes.
+- `tests/theme.test.ts` asserts every token has a dark value and every used token is defined.

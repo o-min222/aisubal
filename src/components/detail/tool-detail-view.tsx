@@ -63,13 +63,13 @@ export async function ToolDetailView({ entry, member, variant = 'page' }: { entr
       variant={variant}
       provenanceSlot={
         prov ? (
-          <section className="card p-4 text-[13px] space-y-1" aria-label={st('등록 이력')} style={{ color: '#555' }}>
+          <section className="card p-4 text-[13px] space-y-1" aria-label={st('등록 이력')} style={{ color: 'var(--n-555)' }}>
             <p className="flex items-center gap-1.5">
-              <Bot className="w-3.5 h-3.5" /> <T>등록 요청</T> <b style={{ color: '#111' }}>{prov.submittedBy}</b> · <RelativeTime date={prov.submittedAt} />
+              <Bot className="w-3.5 h-3.5" /> <T>등록 요청</T> <b style={{ color: 'var(--n-111)' }}>{prov.submittedBy}</b> · <RelativeTime date={prov.submittedAt} />
             </p>
             {prov.approvedBy && prov.approvedAt && (
               <p className="flex items-center gap-1.5">
-                <ShieldCheck className="w-3.5 h-3.5" style={{ color: '#1f7a4d' }} /> <T>검토·승인</T> <b style={{ color: '#111' }}>{prov.approvedBy}</b> · <RelativeTime date={prov.approvedAt} />
+                <ShieldCheck className="w-3.5 h-3.5" style={{ color: 'var(--c-1f7a4d)' }} /> <T>검토·승인</T> <b style={{ color: 'var(--n-111)' }}>{prov.approvedBy}</b> · <RelativeTime date={prov.approvedAt} />
               </p>
             )}
           </section>

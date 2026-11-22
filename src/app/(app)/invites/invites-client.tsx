@@ -50,11 +50,11 @@ export function InvitesClient({ inviterName, codes, codesActive, loadFailed }: {
   return (
     <div className="max-w-2xl mx-auto space-y-4">
       <div>
-        <h1 className="text-2xl font-bold flex items-center gap-2" style={{ color: '#111' }}>
+        <h1 className="text-2xl font-bold flex items-center gap-2" style={{ color: 'var(--n-111)' }}>
           <Users className="w-6 h-6" /> <T>초대하기</T>
         </h1>
-        <p className="text-sm text-[#666] mt-1">
-          <T s="링크를 카카오톡으로 보내면 받은 분이 Google로 로그인하는 것만으로 가입돼요. 남은 초대 {n}장" vars={{ n: <b className="text-[#111]">{available}</b> }} />
+        <p className="text-sm text-n-666 mt-1">
+          <T s="링크를 카카오톡으로 보내면 받은 분이 Google로 로그인하는 것만으로 가입돼요. 남은 초대 {n}장" vars={{ n: <b className="text-n-111">{available}</b> }} />
         </p>
       </div>
 
@@ -69,15 +69,15 @@ export function InvitesClient({ inviterName, codes, codesActive, loadFailed }: {
       )}
 
       <div className="card overflow-hidden">
-        <div className="p-4 border-b border-[#e5e5e5]">
-          <h2 className="font-semibold" style={{ color: '#111' }}>
+        <div className="p-4 border-b border-n-e5e5e5">
+          <h2 className="font-semibold" style={{ color: 'var(--n-111)' }}>
             <T>내 초대 코드</T>
           </h2>
-          <p className="text-xs text-[#888] mt-0.5"><T>각 코드는 1회만 쓸 수 있어요</T></p>
+          <p className="text-xs text-n-888 mt-0.5"><T>각 코드는 1회만 쓸 수 있어요</T></p>
         </div>
-        {loadFailed && <p className="p-6 text-center text-sm text-[#888]"><T>초대 코드를 불러오지 못했어요. 잠시 후 다시 시도해 주세요.</T></p>}
-        {!loadFailed && codes.length === 0 && <p className="p-6 text-center text-sm text-[#888]"><T>아직 받은 초대 코드가 없어요.</T></p>}
-        <ul className="divide-y divide-[#eee]">
+        {loadFailed && <p className="p-6 text-center text-sm text-n-888"><T>초대 코드를 불러오지 못했어요. 잠시 후 다시 시도해 주세요.</T></p>}
+        {!loadFailed && codes.length === 0 && <p className="p-6 text-center text-sm text-n-888"><T>아직 받은 초대 코드가 없어요.</T></p>}
+        <ul className="divide-y divide-n-eee">
           {codes.map((c) => {
             const usable = !c.isUsed && codesActive
             const msg = inviteShareText(inviterName, c.code, origin, tx, locale)
@@ -85,7 +85,7 @@ export function InvitesClient({ inviterName, codes, codesActive, loadFailed }: {
               <li key={c.code} className="p-4">
                 <div className="flex items-center justify-between gap-3 flex-wrap">
                   <div className="flex items-center gap-3 min-w-0">
-                    <span className={`font-mono text-lg tracking-wider ${usable ? 'text-[#111]' : 'text-[#aaa]'}`}>{c.code}</span>
+                    <span className={`font-mono text-lg tracking-wider ${usable ? 'text-n-111' : 'text-n-aaa'}`}>{c.code}</span>
                     {c.isUsed ? (
                       <span className="badge bg-green-100 text-green-700"><T>사용됨</T></span>
                     ) : !codesActive ? (
@@ -107,17 +107,17 @@ export function InvitesClient({ inviterName, codes, codesActive, loadFailed }: {
                 </div>
                 {usable && (
                   <div className="mt-2">
-                    <button type="button" className="text-xs text-[#666] inline-flex items-center gap-1 min-h-[32px]" aria-expanded={open === c.code} onClick={() => setOpen(open === c.code ? null : c.code)}>
+                    <button type="button" className="text-xs text-n-666 inline-flex items-center gap-1 min-h-[32px]" aria-expanded={open === c.code} onClick={() => setOpen(open === c.code ? null : c.code)}>
                       <T>보낼 메시지 보기</T> <ChevronDown className={`w-3.5 h-3.5 transition-transform ${open === c.code ? 'rotate-180' : ''}`} />
                     </button>
                     {open === c.code && (
-                      <div className="mt-1 rounded-xl bg-[#f6f6f6] p-3 text-[13px] text-[#333] whitespace-pre-wrap break-all select-all">
+                      <div className="mt-1 rounded-xl bg-n-f6f6f6 p-3 text-[13px] text-n-333 whitespace-pre-wrap break-all select-all">
                         {msg}
                         <div className="mt-2 flex gap-3 text-xs">
-                          <button type="button" className="text-[#0066cc]" onClick={() => copy(inviteUrl(c.code, origin, locale), `link:${c.code}`, m('초대 링크만 복사했어요'))}>
+                          <button type="button" className="text-c-06c" onClick={() => copy(inviteUrl(c.code, origin, locale), `link:${c.code}`, m('초대 링크만 복사했어요'))}>
                             <T>링크만 복사</T>
                           </button>
-                          <button type="button" className="text-[#0066cc]" onClick={() => copy(c.code, `code:${c.code}`, m('초대 코드만 복사했어요'))}>
+                          <button type="button" className="text-c-06c" onClick={() => copy(c.code, `code:${c.code}`, m('초대 코드만 복사했어요'))}>
                             <T>코드만 복사</T>
                           </button>
                         </div>
@@ -126,7 +126,7 @@ export function InvitesClient({ inviterName, codes, codesActive, loadFailed }: {
                   </div>
                 )}
                 {c.isUsed && (
-                  <div className="flex items-center gap-2 mt-2 text-sm text-[#666]">
+                  <div className="flex items-center gap-2 mt-2 text-sm text-n-666">
                     <User className="w-4 h-4" />
                     <span>{c.usedBy?.displayName ?? <T>가입 완료</T>}</span>
                     {c.usedAt && (
@@ -145,8 +145,8 @@ export function InvitesClient({ inviterName, codes, codesActive, loadFailed }: {
         </ul>
       </div>
 
-      <div className="card p-4 space-y-2 text-sm text-[#555]">
-        <h2 className="font-semibold mb-1" style={{ color: '#111' }}>
+      <div className="card p-4 space-y-2 text-sm text-n-555">
+        <h2 className="font-semibold mb-1" style={{ color: 'var(--n-111)' }}>
           <T>초대는 이렇게 동작해요</T>
         </h2>
         <p><T>1. ‘복사’를 눌러 카카오톡에 붙여넣으면 링크 미리보기 카드와 함께 전송돼요.</T></p>

@@ -67,7 +67,7 @@ export default function WaitlistPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#f7f7f7] flex flex-col items-center justify-center p-6">
+    <div className="min-h-screen bg-n-f7f7f7 flex flex-col items-center justify-center p-6">
       {/* Logo */}
       <div className="mb-8">
         <Image
@@ -76,16 +76,16 @@ export default function WaitlistPage() {
           width={160}
           height={48}
           priority
-          className="h-10 w-auto"
+          className="logo-ink h-10 w-auto"
         />
       </div>
 
       {/* Card */}
-      <div className="w-full max-w-md bg-white border border-[#e5e5e5] rounded-xl p-8">
-        <h1 className="text-xl font-bold text-[#111] text-center mb-2">
+      <div className="w-full max-w-md bg-n-fff border border-n-e5e5e5 rounded-xl p-8">
+        <h1 className="text-xl font-bold text-n-111 text-center mb-2">
           <T>웨이트리스트에 등록되었습니다</T>
         </h1>
-        <p className="text-sm text-[#666] text-center mb-6">
+        <p className="text-sm text-n-666 text-center mb-6">
           <T>AI쓰발은 초대 전용 커뮤니티입니다.</T>
           <br />
           <T>초대 코드를 입력하면 가입이 완료됩니다.</T>
@@ -114,7 +114,7 @@ export default function WaitlistPage() {
           )}
 
           <div className="mb-4">
-            <label className="block text-sm font-medium text-[#333] mb-2">
+            <label className="block text-sm font-medium text-n-333 mb-2">
               <T>초대 코드</T>
             </label>
             <input
@@ -135,7 +135,7 @@ export default function WaitlistPage() {
           >
             {loading ? (
               <span className="flex items-center justify-center gap-2">
-                <span className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></span>
+                <span className="animate-spin rounded-full h-4 w-4 border-b-2 border-n-fff"></span>
                 <T>확인 중...</T>
               </span>
             ) : (
@@ -144,8 +144,8 @@ export default function WaitlistPage() {
           </button>
         </form>
 
-        <div className="mt-6 pt-6 border-t border-[#eee]">
-          <p className="text-xs text-[#888] text-center mb-3">
+        <div className="mt-6 pt-6 border-t border-n-eee">
+          <p className="text-xs text-n-888 text-center mb-3">
             <T>초대 코드가 없으신가요?</T>
             <br />
             <T>기존 멤버에게 초대를 요청해보세요.</T>

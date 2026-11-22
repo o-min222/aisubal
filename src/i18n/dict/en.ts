@@ -1585,6 +1585,11 @@ const en: Record<string, string> = {
   "연결 · 이름 · 권한 · 서약 · 프로필 표시": "Connect · name · permissions · pledge · profile display",
   "묶음 설정 따르기": "Same as group",
   "비공개 (닉네임만)": "Private (nickname only)",
+  "다크": "Dark",
+  "라이트": "Light",
+  "로그인 · 멤버십 · 언어 · 화면 모드": "Sign-in · membership · language · appearance",
+  "시스템을 고르면 기기 설정을 따라가요. 이 브라우저와 내 계정에 저장돼요.": "System follows your device setting. Saved in this browser and on your account.",
+  "화면 모드": "Appearance",
 }
 
 export default en

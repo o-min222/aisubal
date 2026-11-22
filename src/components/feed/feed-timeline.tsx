@@ -28,8 +28,8 @@ export function FeedTimeline({
   if (initial.length === 0)
     return (
       <div className="card p-10 text-center">
-        <p className="font-medium text-[#333]">{emptyTitle}</p>
-        <p className="text-sm text-[#888] mt-1">{emptyHint}</p>
+        <p className="font-medium text-n-333">{emptyTitle}</p>
+        <p className="text-sm text-n-888 mt-1">{emptyHint}</p>
       </div>
     )
   return (

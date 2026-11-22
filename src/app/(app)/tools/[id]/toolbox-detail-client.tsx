@@ -138,7 +138,7 @@ export function ToolboxDetailClient({ entry: initial, mentionPosts, member, aiRa
       {variant === 'page' && (
         <Link
           href={entry.product_id ? '/tools?category=launch' : '/tools'}
-          className="inline-flex items-center gap-2 text-sm text-[#666] hover:text-[#111]"
+          className="inline-flex items-center gap-2 text-sm text-n-666 hover:text-n-111"
         >
           <ArrowLeft className="w-4 h-4" />
           <T>툴 목록</T>
@@ -160,9 +160,9 @@ export function ToolboxDetailClient({ entry: initial, mentionPosts, member, aiRa
                 </span>
               ))}
             </div>
-            <h1 className="text-2xl font-bold text-[#111]">{entry.name}</h1>
-            <p className="text-[#666] mt-1">{entry.one_liner}</p>
-            <div className="flex flex-wrap gap-4 mt-3 text-sm text-[#666]">
+            <h1 className="text-2xl font-bold text-n-111">{entry.name}</h1>
+            <p className="text-n-666 mt-1">{entry.one_liner}</p>
+            <div className="flex flex-wrap gap-4 mt-3 text-sm text-n-666">
               <span className="inline-flex items-center gap-1">
                 <Star className="w-4 h-4 fill-[#f5a623] text-[#f5a623]" />
                 {entry.avg_rating.toFixed(1)} ({entry.rating_count})
@@ -178,7 +178,7 @@ export function ToolboxDetailClient({ entry: initial, mentionPosts, member, aiRa
                   href={entry.github_url}
                   target="_blank"
                   rel="noreferrer"
-                  className="text-[#0066cc] inline-flex items-center gap-1"
+                  className="text-c-06c inline-flex items-center gap-1"
                 >
                   GitHub <ExternalLink className="w-3.5 h-3.5" />
                 </a>
@@ -188,7 +188,7 @@ export function ToolboxDetailClient({ entry: initial, mentionPosts, member, aiRa
                   href={entry.homepage_url}
                   target="_blank"
                   rel="noreferrer"
-                  className="text-[#0066cc] inline-flex items-center gap-1"
+                  className="text-c-06c inline-flex items-center gap-1"
                 >
                   <T>홈페이지</T> <ExternalLink className="w-3.5 h-3.5" />
                 </a>
@@ -209,11 +209,11 @@ export function ToolboxDetailClient({ entry: initial, mentionPosts, member, aiRa
 
       {entry.type !== 'product' && (<>
       <section className="card p-4 border-amber-200 bg-amber-50/40">
-        <h2 className="font-semibold text-[#111] flex items-center gap-2 mb-2">
+        <h2 className="font-semibold text-n-111 flex items-center gap-2 mb-2">
           <ShieldAlert className="w-4 h-4 text-amber-700" />
           <T>설치 전 보안 확인</T>
         </h2>
-        <ul className="text-sm text-[#555] space-y-1">
+        <ul className="text-sm text-n-555 space-y-1">
           <li><T s="소스: {v}" vars={{ v: entry.source_repo || entry.canonical_url }} /></li>
           <li><T s="라이선스: {v}" vars={{ v: entry.license || tx('미확인') }} /></li>
           <li><T s="최근 커밋: {v}" vars={{ v: entry.last_commit_at
@@ -221,14 +221,14 @@ export function ToolboxDetailClient({ entry: initial, mentionPosts, member, aiRa
                   timeZone: 'Asia/Seoul',
                 })
               : tx('미확인') }} /></li>
-          <li className="text-[#888]">
+          <li className="text-n-888">
             <T>커뮤니티 디렉터리 항목이며 공식 보증이 아닙니다. 실행 전 레포를 검토하세요.</T>
           </li>
         </ul>
       </section>
 
       <section className="card p-6">
-        <h2 className="font-semibold text-[#111] mb-3 flex items-center gap-2">
+        <h2 className="font-semibold text-n-111 mb-3 flex items-center gap-2">
           <Download className="w-4 h-4" />
           <T>바로 적용</T>
         </h2>
@@ -251,7 +251,7 @@ export function ToolboxDetailClient({ entry: initial, mentionPosts, member, aiRa
             Generic
           </button>
         </div>
-        <pre className="bg-[#111] text-[#f5f5f5] text-xs p-4 rounded-lg overflow-x-auto whitespace-pre-wrap font-mono">
+        <pre className="bg-n-111 text-n-f5f5f5 text-xs p-4 rounded-lg overflow-x-auto whitespace-pre-wrap font-mono">
           {snippet}
         </pre>
         <div className="flex flex-wrap gap-2 mt-3">
@@ -274,7 +274,7 @@ export function ToolboxDetailClient({ entry: initial, mentionPosts, member, aiRa
             <T>설치함으로 표시</T>
           </button>
         </div>
-        <p className="text-xs text-[#888] mt-3">
+        <p className="text-xs text-n-888 mt-3">
           CLI: <code className="font-mono">aisubal tools install {entry.slug}</code>
           {' · '}
           로그인 사용자: {member.display_name}
@@ -282,17 +282,17 @@ export function ToolboxDetailClient({ entry: initial, mentionPosts, member, aiRa
       </section>
 
       <section className="card p-6">
-        <h2 className="font-semibold text-[#111] mb-3">Works with</h2>
+        <h2 className="font-semibold text-n-111 mb-3">Works with</h2>
         <div className="space-y-2">
           {ENVS.map((e) => {
             const c = entry.compat[e]
             return (
               <div
                 key={e}
-                className="flex items-center justify-between gap-3 text-sm border-b border-[#f0f0f0] py-2"
+                className="flex items-center justify-between gap-3 text-sm border-b border-n-f0f0f0 py-2"
               >
-                <span className="text-[#333]"><T>{TOOLBOX_ENV_LABEL[e]}</T></span>
-                <span className="text-[#888]">
+                <span className="text-n-333"><T>{TOOLBOX_ENV_LABEL[e]}</T></span>
+                <span className="text-n-888">
                   👍 {c.yes} · 👎 {c.no}
                 </span>
                 <div className="flex gap-1">
@@ -323,17 +323,17 @@ export function ToolboxDetailClient({ entry: initial, mentionPosts, member, aiRa
       </>)}
 
       <section className="card p-6">
-        <h2 className="font-semibold text-[#111] mb-3"><T s="언급된 게시물 ({length})" vars={{ length: mentionPosts.length }} /></h2>
+        <h2 className="font-semibold text-n-111 mb-3"><T s="언급된 게시물 ({length})" vars={{ length: mentionPosts.length }} /></h2>
         {mentionPosts.length === 0 ? (
-          <p className="text-sm text-[#888]"><T>아직 연결된 게시물이 없습니다.</T></p>
+          <p className="text-sm text-n-888"><T>아직 연결된 게시물이 없습니다.</T></p>
         ) : (
           <ul className="space-y-2">
             {mentionPosts.map((p) => (
               <li key={p.id}>
-                <Link href={`/posts/${p.id}`} className="text-[#0066cc] text-sm hover:underline">
+                <Link href={`/posts/${p.id}`} className="text-c-06c text-sm hover:underline">
                   {p.title}
                 </Link>
-                <span className="text-xs text-[#888] ml-2">
+                <span className="text-xs text-n-888 ml-2">
                   <RelativeTime date={p.created_at} />
                 </span>
               </li>
@@ -345,13 +345,13 @@ export function ToolboxDetailClient({ entry: initial, mentionPosts, member, aiRa
       <AiRatingSection summary={aiRating} toolName={entry.name} />
 
       <section className="card p-6">
-        <h2 className="font-semibold text-[#111] mb-3"><T>커뮤니티 리뷰</T></h2>
+        <h2 className="font-semibold text-n-111 mb-3"><T>커뮤니티 리뷰</T></h2>
         <div className="space-y-3 mb-6">
           {entry.reviews.length === 0 && (
-            <p className="text-sm text-[#888]"><T>첫 리뷰를 남겨 주세요.</T></p>
+            <p className="text-sm text-n-888"><T>첫 리뷰를 남겨 주세요.</T></p>
           )}
           {entry.reviews.map((r) => (
-            <div key={r.id} className="border-b border-[#f0f0f0] pb-3">
+            <div key={r.id} className="border-b border-n-f0f0f0 pb-3">
               <div className="flex items-center gap-2 text-sm">
                 <span className="inline-flex items-center gap-1 text-[#f5a623]">
                   <Star className="w-3.5 h-3.5 fill-current" />
@@ -359,7 +359,7 @@ export function ToolboxDetailClient({ entry: initial, mentionPosts, member, aiRa
                 </span>
                 <RelativeTime date={r.created_at} />
               </div>
-              {r.body && <p className="text-sm text-[#444] mt-1">{r.body}</p>}
+              {r.body && <p className="text-sm text-n-444 mt-1">{r.body}</p>}
             </div>
           ))}
         </div>
@@ -375,7 +375,7 @@ export function ToolboxDetailClient({ entry: initial, mentionPosts, member, aiRa
               >
                 <Star
                   className={`w-5 h-5 ${
-                    n <= rating ? 'fill-[#f5a623] text-[#f5a623]' : 'text-[#ddd]'
+                    n <= rating ? 'fill-[#f5a623] text-[#f5a623]' : 'text-n-ddd'
                   }`}
                 />
               </button>
@@ -385,7 +385,7 @@ export function ToolboxDetailClient({ entry: initial, mentionPosts, member, aiRa
             value={reviewBody}
             onChange={(e) => setReviewBody(e.target.value)}
             placeholder={tx('짧은 사용 후기 (선택)')}
-            className="w-full min-h-[80px] rounded-lg border border-[#e5e5e5] p-3 text-sm"
+            className="w-full min-h-[80px] rounded-lg border border-n-e5e5e5 p-3 text-sm"
           />
           <button
             type="button"

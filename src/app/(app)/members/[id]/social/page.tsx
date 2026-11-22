@@ -59,10 +59,10 @@ export default async function SocialListPage({
   return (
     <div className="space-y-3">
       <div className="flex items-center gap-1">
-        <Link href={`/members/${isMe ? 'me' : member.id}`} className="tap-target inline-flex items-center justify-center rounded-full hover:bg-[#f2f2f2]" aria-label={st('프로필로')}>
+        <Link href={`/members/${isMe ? 'me' : member.id}`} className="tap-target inline-flex items-center justify-center rounded-full hover:bg-n-f2f2f2" aria-label={st('프로필로')}>
           <ChevronLeft className="w-5 h-5" />
         </Link>
-        <h1 className="text-lg font-bold" style={{ color: '#111' }}>
+        <h1 className="text-lg font-bold" style={{ color: 'var(--n-111)' }}>
           {member.display_name}
         </h1>
       </div>
@@ -75,16 +75,16 @@ export default async function SocialListPage({
           />
         </div>
         {tab === 'friends' || tab === 'requests' ? (
-          <p className="text-xs px-4 pt-3" style={{ color: '#888' }}>
+          <p className="text-xs px-4 pt-3" style={{ color: 'var(--n-888)' }}>
             <T>친구는 서로 수락한 관계예요. 서로 팔로우하는 ‘맞팔’과는 따로예요.</T>
           </p>
         ) : null}
         {people.length === 0 ? (
-          <p className="p-8 text-center text-sm" style={{ color: '#888' }}>
+          <p className="p-8 text-center text-sm" style={{ color: 'var(--n-888)' }}>
             {EMPTY[tab]}
           </p>
         ) : (
-          <ul className="divide-y divide-[#f0f0f0]">
+          <ul className="divide-y divide-n-f0f0f0">
             {people.map((p) => (
               <li key={p.id}>
                 <PersonRow person={p} showFriend={tab === 'requests' || tab === 'sent' || tab === 'friends'} />

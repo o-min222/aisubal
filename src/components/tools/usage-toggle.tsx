@@ -69,15 +69,15 @@ export function UsageToggle({
           width: 16,
           height: 16,
           borderRadius: 4,
-          border: using ? '1.5px solid #fff' : '1.5px solid #9a9a9a',
-          background: using ? '#fff' : 'transparent',
+          border: using ? '1.5px solid var(--n-fff)' : '1.5px solid var(--n-9a9a9a)',
+          background: using ? 'var(--n-fff)' : 'transparent',
           display: 'inline-flex',
           alignItems: 'center',
           justifyContent: 'center',
           flexShrink: 0,
         }}
       >
-        {using && <Check className="w-3 h-3" strokeWidth={3.2} style={{ color: '#111' }} />}
+        {using && <Check className="w-3 h-3" strokeWidth={3.2} style={{ color: 'var(--n-111)' }} />}
       </span>
       <span><T>나도 써요</T></span>
       {showCount && <span className="tabular-nums opacity-70">· {count}</span>}

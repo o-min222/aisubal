@@ -21,14 +21,14 @@ export function TopBar({ me }: { me: ShellMember }) {
         <div className="flex items-center gap-1 min-w-0">
           <button
             type="button"
-            className="tap-target only-mobile inline-flex items-center justify-center rounded-full text-[#333]"
+            className="tap-target only-mobile inline-flex items-center justify-center rounded-full text-n-333"
             aria-label={t('메뉴 더보기')}
             onClick={() => setMoreOpen(true)}
           >
             <Menu className="w-5 h-5" />
           </button>
           <Link href="/feed" className="flex-shrink-0 only-desktop" aria-label={t('AI쓰발 홈')}>
-            <Image src="/images/logo-black.png" alt={tx('AI쓰발')} width={100} height={30} priority className="h-7 w-auto" />
+            <Image src="/images/logo-black.png" alt={tx('AI쓰발')} width={100} height={30} priority className="logo-ink h-7 w-auto" />
           </Link>
         </div>
 

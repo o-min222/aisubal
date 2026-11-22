@@ -49,7 +49,7 @@ export default async function PledgePage({ searchParams }: { searchParams: Promi
               </section>
             )}
             {locale !== 'ko' && <PledgeOriginal year={year} />}
-            <p className="text-[13px] text-[#8a8a8a]">{t('{date}에 서약했어요.', { date: fmt(status.signedAt, LOCALE_META[locale].intl) })}</p>
+            <p className="text-[13px] text-n-8a8a8a">{t('{date}에 서약했어요.', { date: fmt(status.signedAt, LOCALE_META[locale].intl) })}</p>
             <div>
               <Link href="/me" className="btn btn-secondary rounded-xl min-h-[44px] px-5">
                 {t('내 대시보드로')}

@@ -30,19 +30,19 @@ export function InviteLandingActions({ code, usable, signedIn }: { code: string 
 
   return (
     <div className="space-y-2">
-      <button type="button" onClick={go} disabled={busy} className="w-full flex items-center justify-center gap-3 px-6 min-h-[48px] bg-[#111] hover:bg-[#222] text-white font-medium rounded-xl disabled:opacity-60">
+      <button type="button" onClick={go} disabled={busy} className="w-full flex items-center justify-center gap-3 px-6 min-h-[48px] bg-n-111 hover:bg-n-222 text-n-fff font-medium rounded-xl disabled:opacity-60">
         {signedIn ? (
           t('이 코드로 가입 완료하기')
         ) : (
           <>
-            <span className="w-6 h-6 rounded-full bg-white inline-flex items-center justify-center" aria-hidden>
+            <span className="w-6 h-6 rounded-full bg-n-fff inline-flex items-center justify-center" aria-hidden>
               <GoogleIcon />
             </span>
             {usable ? t('Google로 가입하기') : t('Google로 로그인 (웨이트리스트)')}
           </>
         )}
       </button>
-      {!usable && <p className="text-xs text-[#888]">{t('로그인하면 웨이트리스트에 등록돼요. 다른 초대 코드를 받으면 그때 입력할 수 있어요.')}</p>}
+      {!usable && <p className="text-xs text-n-888">{t('로그인하면 웨이트리스트에 등록돼요. 다른 초대 코드를 받으면 그때 입력할 수 있어요.')}</p>}
     </div>
   )
 }

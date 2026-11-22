@@ -23,16 +23,16 @@ async function SocialUsers({ users, total }: { users: ToolSocialUser[]; total: n
       <span className="users-strip">
         <span className="avatars">
           {shown.map((u) => (
-            <span key={u.id} style={u.kind === 'friend' ? { boxShadow: '0 0 0 2px #fff, 0 0 0 3.5px #2f9e66', borderRadius: 999 } : undefined}>
+            <span key={u.id} style={u.kind === 'friend' ? { boxShadow: '0 0 0 2px var(--n-fff), 0 0 0 3.5px #2f9e66', borderRadius: 999 } : undefined}>
               <UserAvatar id={u.id} name={u.name} avatarUrl={u.avatarUrl} size="sm" />
             </span>
           ))}
         </span>
       </span>
-      <span className="truncate" style={{ color: friends.length ? '#1f7a4d' : '#555', fontWeight: 600 }}>
+      <span className="truncate" style={{ color: friends.length ? 'var(--c-1f7a4d)' : 'var(--n-555)', fontWeight: 600 }}>
         <T>{label}</T>
       </span>
-      {total > users.length && <span className="text-[#999] whitespace-nowrap"><T s="· 전체 {total}명" vars={{ total }} /></span>}
+      {total > users.length && <span className="text-n-999 whitespace-nowrap"><T s="· 전체 {total}명" vars={{ total }} /></span>}
     </span>
   )
 }
@@ -40,7 +40,7 @@ async function SocialUsers({ users, total }: { users: ToolSocialUser[]; total: n
 export function ToolIcon({ name, iconUrl, dim = 'w-11 h-11' }: { name: string; iconUrl?: string | null; dim?: string }) {
   if (iconUrl) {
     // eslint-disable-next-line @next/next/no-img-element
-    return <img src={iconUrl} alt="" className={`${dim} rounded-xl object-cover border border-[#eee] bg-white flex-shrink-0`} />
+    return <img src={iconUrl} alt="" className={`${dim} rounded-xl object-cover border border-n-eee bg-n-fff flex-shrink-0`} />
   }
   return (
     <div className={`product-icon ${dim} text-base flex-shrink-0`} aria-hidden>
@@ -59,12 +59,12 @@ export async function ToolCard({ tool, social = [] }: { tool: ToolListItem; soci
         <ToolIcon name={tool.name} iconUrl={tool.icon_url} />
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-1.5 flex-wrap">
-            <h3 className="font-semibold text-[15px] text-[#111] truncate max-w-full">{tool.name}</h3>
+            <h3 className="font-semibold text-[15px] text-n-111 truncate max-w-full">{tool.name}</h3>
             <span className="cat-chip"><T>{TOOL_TYPE_CHIP[tool.type]}</T></span>
             {isLaunch && <span className="launch-chip"><T>런치</T></span>}
             {tool.featured && <span className="badge badge-agent"><T>추천</T></span>}
           </div>
-          <p className="text-[13.5px] text-[#555] line-clamp-2 mt-0.5">{tool.one_liner}</p>
+          <p className="text-[13.5px] text-n-555 line-clamp-2 mt-0.5">{tool.one_liner}</p>
           {social.length > 0 && (
             <div className="mt-1.5 text-[12.5px]">
               <SocialUsers users={social} total={tool.user_count ?? 0} />

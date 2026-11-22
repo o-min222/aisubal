@@ -89,7 +89,7 @@ function AgentRow({ a, isMe }: { a: MemberAgent; isMe: boolean }) {
           )}
         </span>
       </span>
-      {!a.connected && a.url && <ExternalLink className="w-3.5 h-3.5 text-[#aaa] flex-shrink-0" aria-hidden />}
+      {!a.connected && a.url && <ExternalLink className="w-3.5 h-3.5 text-n-aaa flex-shrink-0" aria-hidden />}
     </>
   )
   if (a.connected) return <Link href={a.connected.href} className="mc-agent mc-agent-link">{inner}</Link>
@@ -133,7 +133,7 @@ export function MemberCard({ data, variant = 'side' }: { data: MemberCardData; v
       <div className="profile-card-cover" aria-hidden />
       <div className="px-3 pb-3 -mt-7">
         <div className="flex items-end justify-between gap-2">
-          <Link href={profileHref} className="inline-block rounded-full ring-4 ring-white" aria-label={tx('{displayName} 프로필', { displayName: data.displayName })}>
+          <Link href={profileHref} className="inline-block rounded-full ring-4 ring-n-fff" aria-label={tx('{displayName} 프로필', { displayName: data.displayName })}>
             <UserAvatar id={data.id} name={data.displayName} avatarUrl={data.avatarUrl} size="lg" />
           </Link>
           <div className="flex items-center gap-1.5 flex-wrap justify-end">
@@ -149,10 +149,10 @@ export function MemberCard({ data, variant = 'side' }: { data: MemberCardData; v
           </div>
         </div>
         <Link href={profileHref} className="block mt-2 min-w-0 group">
-          <span className="pc-name block font-semibold text-[#111] truncate group-hover:underline">{data.displayName}</span>
-          {data.handle && <span className="block text-xs text-[#888] truncate">@{data.handle}</span>}
+          <span className="pc-name block font-semibold text-n-111 truncate group-hover:underline">{data.displayName}</span>
+          {data.handle && <span className="block text-xs text-n-888 truncate">@{data.handle}</span>}
         </Link>
-        {data.bio && <p className="text-xs text-[#666] mt-1 line-clamp-2">{data.bio}</p>}
+        {data.bio && <p className="text-xs text-n-666 mt-1 line-clamp-2">{data.bio}</p>}
         {s && (
           <div className="mc-body">
             <StackChips group="ai" data={s.ai && { ...s.ai, visibility: null }} max={chipMax} />

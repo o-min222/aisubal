@@ -47,8 +47,8 @@ export function Picker({ onPick, suggestions, skillsOnly, placeholder, disabled 
   }
   return (
     <div ref={box} className="relative">
-      <div className="flex items-center gap-2 rounded-lg border border-[#ddd] px-2.5 min-h-[42px] bg-white">
-        <Search className="w-4 h-4 text-[#999] flex-shrink-0" />
+      <div className="flex items-center gap-2 rounded-lg border border-n-ddd px-2.5 min-h-[42px] bg-n-fff">
+        <Search className="w-4 h-4 text-n-999 flex-shrink-0" />
         <input
           value={q}
           disabled={disabled}
@@ -76,7 +76,7 @@ export function Picker({ onPick, suggestions, skillsOnly, placeholder, disabled 
               <button type="button" onClick={() => pick({ label: h.name, entryId: h.id, iconUrl: h.icon_url, slug: h.slug })}>
                 <ServiceIcon label={h.name} iconUrl={h.icon_url} />
                 <span className="truncate">{h.name}</span>
-                <span className="ml-auto text-[11px] text-[#999]"><T>툴</T></span>
+                <span className="ml-auto text-[11px] text-n-999"><T>툴</T></span>
               </button>
             </li>
           ))}
@@ -101,17 +101,17 @@ export function Picker({ onPick, suggestions, skillsOnly, placeholder, disabled 
 }
 
 function Chips({ items, onRemove }: { items: Item[]; onRemove: (i: number) => void }) {
-  if (!items.length) return <p className="text-[12.5px] text-[#999]"><T>아직 없어요.</T></p>
+  if (!items.length) return <p className="text-[12.5px] text-n-999"><T>아직 없어요.</T></p>
   return (
     <ul className="mc-chips">
       {items.map((it, i) => (
         <li key={`${it.label}-${i}`}>
           <span className="mc-chip pr-1">
-            <span className="mc-chip-icon" style={{ background: it.entryId ? '#111' : '#888' }} aria-hidden>
+            <span className="mc-chip-icon" style={{ background: it.entryId ? 'var(--n-111)' : 'var(--n-888)' }} aria-hidden>
               {it.label.charAt(0).toUpperCase()}
             </span>
             <span className="truncate"><T>{it.label}</T></span>
-            <button type="button" onClick={() => onRemove(i)} className="inline-flex items-center justify-center w-6 h-6 rounded-full hover:bg-[#eee]" aria-label={tx('{label} 빼기', { label: it.label })}>
+            <button type="button" onClick={() => onRemove(i)} className="inline-flex items-center justify-center w-6 h-6 rounded-full hover:bg-n-eee" aria-label={tx('{label} 빼기', { label: it.label })}>
               <X className="w-3.5 h-3.5" />
             </button>
           </span>
@@ -123,7 +123,7 @@ function Chips({ items, onRemove }: { items: Item[]; onRemove: (i: number) => vo
 
 function VisSelect({ value, onChange, label }: { value: LinkVisibility; onChange: (v: LinkVisibility) => void; label: string }) {
   return (
-    <select aria-label={tx('{label} 공개 범위', { label })} value={value} onChange={(e) => onChange(e.target.value as LinkVisibility)} className="rounded-lg border border-[#ddd] bg-white px-2 text-[13px] min-h-[36px]">
+    <select aria-label={tx('{label} 공개 범위', { label })} value={value} onChange={(e) => onChange(e.target.value as LinkVisibility)} className="rounded-lg border border-n-ddd bg-n-fff px-2 text-[13px] min-h-[36px]">
       {LINK_VISIBILITY.map((v) => (
         <option key={v.id} value={v.id}>
           <T>{v.label}</T>
@@ -190,10 +190,10 @@ export function StackEditor({ initial }: { initial: StackEditorInitial }) {
   const head = (g: StackGroup, hint: string) => (
     <div className="flex items-center gap-2 justify-between">
       <div className="min-w-0">
-        <h3 className="text-[14px] font-semibold" style={{ color: '#111' }}>
+        <h3 className="text-[14px] font-semibold" style={{ color: 'var(--n-111)' }}>
           <T>{STACK_GROUP_LABEL[g]}</T>
         </h3>
-        <p className="text-[12px] text-[#888]"><T>{hint}</T></p>
+        <p className="text-[12px] text-n-888"><T>{hint}</T></p>
       </div>
       <VisSelect value={vis[g]} onChange={(v) => setVis({ ...vis, [g]: v })} label={STACK_GROUP_LABEL[g]} />
     </div>
@@ -202,10 +202,10 @@ export function StackEditor({ initial }: { initial: StackEditorInitial }) {
   return (
     <section id="stack" className="card p-4 space-y-5 scroll-mt-20" aria-label={tx('AI 스택')}>
       <div>
-        <h2 className="text-[15px] font-bold" style={{ color: '#111' }}>
+        <h2 className="text-[15px] font-bold" style={{ color: 'var(--n-111)' }}>
           <T>AI 스택</T>
         </h2>
-        <p className="text-[12px] text-[#777]"><T>프로필 카드에 아이콘 칩으로 보여요. 묶음마다 공개 범위를 정할 수 있어요.</T></p>
+        <p className="text-[12px] text-n-777"><T>프로필 카드에 아이콘 칩으로 보여요. 묶음마다 공개 범위를 정할 수 있어요.</T></p>
       </div>
       <div className="space-y-2">
         {head('ai', 'Claude, ChatGPT, Gemini, Cursor…')}

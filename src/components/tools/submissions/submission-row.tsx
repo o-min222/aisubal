@@ -36,19 +36,19 @@ export function SubmissionRow({ s, mode, dups = [], log = [], open = false }: { 
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-1.5 flex-wrap min-w-0">
             <StatusChip status={s.status} />
-            <span className="font-semibold text-[15px] text-[#111] truncate max-w-full">{s.name}</span>
+            <span className="font-semibold text-[15px] text-n-111 truncate max-w-full">{s.name}</span>
             <span className="cat-chip">{typeLabel}</span>
           </div>
-          <p className="text-[13.5px] text-[#555] mt-1 break-words">{s.oneLiner}</p>
+          <p className="text-[13.5px] text-n-555 mt-1 break-words">{s.oneLiner}</p>
           <div className="crow-meta">
-            <a href={s.url} target="_blank" rel="noopener noreferrer nofollow ugc" className="text-[#0066cc]">
+            <a href={s.url} target="_blank" rel="noopener noreferrer nofollow ugc" className="text-c-06c">
               <ExternalLink className="w-3 h-3" /> {host(s.url)}
             </a>
             <span>{s.submittedBy}</span>
             <span>
               <RelativeTime date={s.createdAt} />
             </span>
-            {mode === 'admin' && s.status === 'pending' && isStale(s.snapshotAt) && <span className="text-[#9a5b00]"><T>스냅샷 없음/오래됨</T></span>}
+            {mode === 'admin' && s.status === 'pending' && isStale(s.snapshotAt) && <span className="text-c-9a5b00"><T>스냅샷 없음/오래됨</T></span>}
           </div>
         </div>
         {mode === 'mine' && s.status === 'pending' && <WithdrawButton id={s.id} name={s.name} />}
@@ -59,13 +59,13 @@ export function SubmissionRow({ s, mode, dups = [], log = [], open = false }: { 
         </p>
       )}
       {s.entry && s.status === 'approved' && (
-        <Link href={`/tools/${s.entry.slug}`} className="text-[13px] text-[#0066cc]">
+        <Link href={`/tools/${s.entry.slug}`} className="text-[13px] text-c-06c">
           <T>등록된 툴 보기 →</T>
         </Link>
       )}
       {s.duplicateOf && (
-        <p className="text-[12.5px] text-[#666]">
-          <T>중복:</T> <Link href={`/tools/${s.duplicateOf.slug}`} className="text-[#0066cc]">{s.duplicateOf.name}</Link>
+        <p className="text-[12.5px] text-n-666">
+          <T>중복:</T> <Link href={`/tools/${s.duplicateOf.slug}`} className="text-c-06c">{s.duplicateOf.name}</Link>
         </p>
       )}
       {mode === 'admin' && dups.length > 0 && (
@@ -74,7 +74,7 @@ export function SubmissionRow({ s, mode, dups = [], log = [], open = false }: { 
           <span><T s="중복 후보: {v}" vars={{ v: dups.map((d, i) => (
               <span key={d.id}>
                 {i > 0 && ', '}
-                <Link href={`/tools/${d.slug}`} className="text-[#0066cc]">{d.name}</Link> ({DUP_REASON_LABEL[d.reason] ?? d.reason})
+                <Link href={`/tools/${d.slug}`} className="text-c-06c">{d.name}</Link> ({DUP_REASON_LABEL[d.reason] ?? d.reason})
               </span>
             )) }} /></span>
         </p>
@@ -88,7 +88,7 @@ export function SubmissionRow({ s, mode, dups = [], log = [], open = false }: { 
               <b><T>써본 경험</T></b> {s.note}
             </p>
           )}
-          {s.tags.length > 0 && <p className="text-[#888]">{s.tags.map((t) => `#${t}`).join(' ')}</p>}
+          {s.tags.length > 0 && <p className="text-n-888">{s.tags.map((t) => `#${t}`).join(' ')}</p>}
           {log.length > 0 && (
             <ol className="sub-log">
               {log.map((l) => (

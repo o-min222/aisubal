@@ -15,12 +15,12 @@ export async function GroupRow({ g }: { g: Group }) {
       save={{ kind: 'group', refId: g.slug, hint: { title: g.name } }}
       href={`/groups/${g.slug}`}
       leading={
-        <span aria-hidden className="flex items-center justify-center rounded-xl text-[20px]" style={{ width: 42, height: 42, background: '#f3f0ff' }}>
+        <span aria-hidden className="flex items-center justify-center rounded-xl text-[20px]" style={{ width: 42, height: 42, background: 'var(--c-f3f0ff)' }}>
           {g.emoji || '#'}
         </span>
       }
       title={g.name}
-      badge={state ? <span className="crow-chip" style={g.myStatus === 'invited' ? { background: '#e8f5ee', color: '#1f7a4d' } : g.myStatus === 'pending' ? { background: '#fff4e5', color: '#9a5b00' } : undefined}>{state}</span> : null}
+      badge={state ? <span className="crow-chip" style={g.myStatus === 'invited' ? { background: 'var(--c-e8f5ee)', color: 'var(--c-1f7a4d)' } : g.myStatus === 'pending' ? { background: 'var(--c-fff4e5)', color: 'var(--c-9a5b00)' } : undefined}>{state}</span> : null}
       preview={g.description || undefined}
       meta={
         <>

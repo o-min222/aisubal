@@ -57,7 +57,7 @@ export default async function AnonBoardPage({
   const list = (
     <>
       <section className="anon-banner">
-        <span className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center flex-shrink-0">
+        <span className="w-10 h-10 rounded-full bg-n-fff/10 flex items-center justify-center flex-shrink-0">
           <VenetianMask className="w-5 h-5" />
         </span>
         <div className="min-w-0">
@@ -93,7 +93,7 @@ export default async function AnonBoardPage({
               <T>인기</T>
             </Link>
           </div>
-          {sort === 'popular' && <span className="text-xs text-[#888]"><T>최근 30일 · 좋아요와 답글 순</T></span>}
+          {sort === 'popular' && <span className="text-xs text-n-888"><T>최근 30일 · 좋아요와 답글 순</T></span>}
         </div>
       </div>
 

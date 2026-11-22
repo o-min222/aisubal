@@ -56,7 +56,7 @@ export function ArchiveItemView({ item, closeHref }: { item: ArchiveItem; closeH
   return (
     <article className="space-y-4 min-w-0">
       <header className="space-y-1.5">
-        <span className="flex items-center gap-1.5 text-[12px] font-semibold text-[#777] min-w-0">
+        <span className="flex items-center gap-1.5 text-[12px] font-semibold text-n-777 min-w-0">
           <Icon className="w-3.5 h-3.5" /> <T>{ARCHIVE_KIND_LABEL[item.kind]}</T>
           {item.authorKind === 'anon' ? <> · <T>익명</T></> : item.authorLabel && <> · {item.authorLabel}</>}
           {ref && (
@@ -65,34 +65,34 @@ export function ArchiveItemView({ item, closeHref }: { item: ArchiveItem; closeH
             </button>
           )}
         </span>
-        <h2 className="text-[19px] font-bold leading-snug break-words" style={{ color: '#111' }}>{item.title}</h2>
-        <p className="text-[12px] text-[#999]">
+        <h2 className="text-[19px] font-bold leading-snug break-words" style={{ color: 'var(--n-111)' }}>{item.title}</h2>
+        <p className="text-[12px] text-n-999">
           <T s="{date} 저장" vars={{ date: <KstDate iso={item.createdAt} /> }} />
         </p>
       </header>
 
       {item.imageUrl && (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={item.imageUrl} alt="" loading="lazy" referrerPolicy="no-referrer" className="rounded-xl border border-[#eee] max-h-[220px] w-full object-cover" />
+        <img src={item.imageUrl} alt="" loading="lazy" referrerPolicy="no-referrer" className="rounded-xl border border-n-eee max-h-[220px] w-full object-cover" />
       )}
 
       {item.excerpt && (
         <section className="archive-excerpt">
           <p className="archive-excerpt-label"><T>저장된 내용</T></p>
-          <p className="whitespace-pre-wrap break-words text-[14px] leading-relaxed text-[#333]">{item.excerpt}</p>
+          <p className="whitespace-pre-wrap break-words text-[14px] leading-relaxed text-n-333">{item.excerpt}</p>
         </section>
       )}
 
       <section className="space-y-2">
         <label className="block">
-          <span className="flex items-center justify-between text-xs text-[#777]">
+          <span className="flex items-center justify-between text-xs text-n-777">
             <T>내 메모</T>
-            <span className="text-[11px] text-[#aaa]" aria-live="polite">{saved === 'saving' ? <T>저장 중…</T> : saved === 'saved' ? <T>저장됨</T> : null}</span>
+            <span className="text-[11px] text-n-aaa" aria-live="polite">{saved === 'saving' ? <T>저장 중…</T> : saved === 'saved' ? <T>저장됨</T> : null}</span>
           </span>
           <textarea value={memo} maxLength={ARCHIVE_MEMO_MAX} rows={2} onChange={(e) => (setMemo(e.target.value), setSaved('idle'))} onBlur={() => void persist()} placeholder={tx('왜 담았는지 한 줄로')} className="archive-input mt-1" />
         </label>
         <label className="block">
-          <span className="text-xs text-[#777]"><T>태그</T></span>
+          <span className="text-xs text-n-777"><T>태그</T></span>
           <input value={tags} onChange={(e) => (setTags(e.target.value), setSaved('idle'))} onBlur={() => void persist()} onKeyDown={(e) => e.key === 'Enter' && (e.currentTarget as HTMLInputElement).blur()} placeholder="#mcp #나중에" className="archive-input mt-1" />
         </label>
       </section>
@@ -113,7 +113,7 @@ export function ArchiveItemView({ item, closeHref }: { item: ArchiveItem; closeH
               <ExternalLink className="w-4 h-4" /> <T>원문 열기</T>
             </Link>
           ))}
-        <button type="button" className="btn btn-ghost btn-sm inline-flex items-center gap-1.5 text-[#c0392b] ml-auto" onClick={() => void remove()}>
+        <button type="button" className="btn btn-ghost btn-sm inline-flex items-center gap-1.5 text-c-c0392b ml-auto" onClick={() => void remove()}>
           <Trash2 className="w-4 h-4" /> <T>빼기</T>
         </button>
       </div>

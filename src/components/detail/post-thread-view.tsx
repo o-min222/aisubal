@@ -40,12 +40,12 @@ export async function PostThreadView({
     <div className="space-y-3">
       {variant === 'page' &&
         (group ? (
-          <Link href={`/groups/${group.slug}`} className="inline-flex items-center gap-1.5 text-sm font-semibold min-h-[36px]" style={{ color: '#5b3fc4' }}>
+          <Link href={`/groups/${group.slug}`} className="inline-flex items-center gap-1.5 text-sm font-semibold min-h-[36px]" style={{ color: 'var(--c-5b3fc4)' }}>
             <ArrowLeft className="w-4 h-4" />
             <span aria-hidden>{group.emoji || '#'}</span> {group.name} 그룹
           </Link>
         ) : (
-          <Link href="/feed" className="hidden md:inline-flex items-center gap-1 text-sm text-[#666] hover:text-[#111] min-h-[36px]">
+          <Link href="/feed" className="hidden md:inline-flex items-center gap-1 text-sm text-n-666 hover:text-n-111 min-h-[36px]">
             <ArrowLeft className="w-4 h-4" />
             <T>피드</T>
           </Link>
@@ -57,7 +57,7 @@ export async function PostThreadView({
         <PostCard post={thread.root} likeEndpoint={`/api/feed/${thread.root.id}/like`} likersEndpoint={`/api/feed/${thread.root.id}/likers`} />
       )}
 
-      <div className="flex flex-wrap items-center gap-2 text-xs text-[#666] px-1">
+      <div className="flex flex-wrap items-center gap-2 text-xs text-n-666 px-1">
         {group ? (
           <span><T>그룹 멤버에게만 보이는 글 · 사람만 참여할 수 있어요</T></span>
         ) : thread.isMine ? (
@@ -74,13 +74,13 @@ export async function PostThreadView({
       </div>
 
       <section className="card overflow-hidden">
-        <div className="px-4 pt-3 pb-3 border-b border-[#eee]">
+        <div className="px-4 pt-3 pb-3 border-b border-n-eee">
           {replyTarget && (
-            <div className="text-xs text-[#666] mb-2 flex items-center gap-2">
+            <div className="text-xs text-n-666 mb-2 flex items-center gap-2">
               <span>
                 <T s="{name}님에게 답글" vars={{ name: <b>{replyTarget.author.name}</b> }} />
               </span>
-              <Link href={pageHref} className="text-[#0066cc]">
+              <Link href={pageHref} className="text-c-06c">
                 <T>취소</T>
               </Link>
             </div>
@@ -93,9 +93,9 @@ export async function PostThreadView({
             className="!p-0 !border-0 !shadow-none"
           />
         </div>
-        <h2 className="px-4 pt-3 pb-2 text-sm font-semibold text-[#111] border-b border-[#eee]"><T s="답글 {length}" vars={{ length: thread.replies.length }} /></h2>
+        <h2 className="px-4 pt-3 pb-2 text-sm font-semibold text-n-111 border-b border-n-eee"><T s="답글 {length}" vars={{ length: thread.replies.length }} /></h2>
         {ordered.length === 0 ? (
-          <p className="px-4 py-6 text-sm text-[#888] text-center"><T>첫 답글을 남겨보세요.</T></p>
+          <p className="px-4 py-6 text-sm text-n-888 text-center"><T>첫 답글을 남겨보세요.</T></p>
         ) : (
           ordered.map((post) => (
             <div key={post.id} style={{ paddingLeft: Math.min(post.depth, 3) * 16 }}>

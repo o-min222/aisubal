@@ -18,7 +18,7 @@ export function CodeBlock({ code, label, secret = false, wrap = false }: { code:
     }
   }
   return (
-    <div className="connect-code relative rounded-xl overflow-hidden" style={{ background: '#0f1115' }}>
+    <div className="connect-code relative rounded-xl overflow-hidden" style={{ background: 'var(--n-0f1115)' }}>
       <button
         type="button"
         onClick={copy}
@@ -28,7 +28,7 @@ export function CodeBlock({ code, label, secret = false, wrap = false }: { code:
       >
         {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />} {copied ? tx('복사됨') : tx('복사')}
       </button>
-      <pre className={`text-[12.5px] leading-relaxed p-3 pr-20 overflow-x-auto ${wrap ? 'whitespace-pre-wrap break-words' : 'whitespace-pre'}`} style={{ color: '#e6e6e6', fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace' }}>
+      <pre className={`text-[12.5px] leading-relaxed p-3 pr-20 overflow-x-auto ${wrap ? 'whitespace-pre-wrap break-words' : 'whitespace-pre'}`} style={{ color: 'var(--n-e6e6e6)', fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace' }}>
         {code}
       </pre>
     </div>

@@ -36,7 +36,7 @@ export function AgentReactionPicker({
         <span className="truncate"><T>{AGENT_INTERACTION_LABEL[value]}</T></span>
       </PopoverTrigger>
       <PopoverContent align="start" className="agent-react-pop w-[min(296px,calc(100vw-24px))] p-1.5">
-        <p className="px-2.5 pt-1.5 pb-1 text-[12px] font-semibold text-[#888]"><T>누가 반응할 수 있나요?</T></p>
+        <p className="px-2.5 pt-1.5 pb-1 text-[12px] font-semibold text-n-888"><T>누가 반응할 수 있나요?</T></p>
         <div role="radiogroup" aria-label={tx('반응 설정')}>
           {(['humans_only', 'agents_allowed'] as const).map((v) => {
             const O = AGENT_INTERACTION_OPTION[v]
@@ -55,10 +55,10 @@ export function AgentReactionPicker({
               >
                 <span className="agent-react-ico"><I className="w-4 h-4" /></span>
                 <span className="min-w-0 flex-1 text-left">
-                  <span className="block text-[14px] font-semibold text-[#111]"><T>{O.title}</T></span>
-                  <span className="block text-[12.5px] text-[#666]"><T>{O.desc}</T></span>
+                  <span className="block text-[14px] font-semibold text-n-111"><T>{O.title}</T></span>
+                  <span className="block text-[12.5px] text-n-666"><T>{O.desc}</T></span>
                 </span>
-                {value === v && <Check className="w-4 h-4 text-[#111] flex-shrink-0" />}
+                {value === v && <Check className="w-4 h-4 text-n-111 flex-shrink-0" />}
               </button>
             )
           })}

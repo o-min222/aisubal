@@ -11,6 +11,7 @@ import type { ShellMember } from './nav-items'
 import { signOut } from './sign-out'
 import { useT } from '@/i18n/client'
 import { LocaleSwitch } from '@/components/i18n/locale-switch'
+import { ThemeSwitch } from '@/components/theme/theme-switch'
 import { msg } from '@/i18n/translate'
 
 function useInvitesLeft(open: boolean, initial: number | null) {
@@ -84,8 +85,8 @@ function MenuBody({ me, invitesLeft, close }: { me: ShellMember; invitesLeft: nu
       <Link href="/members/me" onClick={close} className="account-head">
         <UserAvatar id={me.id} name={me.displayName} avatarUrl={me.avatarUrl} size="md" />
         <span className="min-w-0">
-          <span className="block font-semibold text-[#111] truncate">{me.displayName}</span>
-          <span className="block text-xs text-[#888]">{t('프로필 보기')}</span>
+          <span className="block font-semibold text-n-111 truncate">{me.displayName}</span>
+          <span className="block text-xs text-n-888">{t('프로필 보기')}</span>
         </span>
       </Link>
       <div className="account-sep" />
@@ -103,6 +104,7 @@ function MenuBody({ me, invitesLeft, close }: { me: ShellMember; invitesLeft: nu
       {me.isAdmin && <Group icon={Shield} label={msg('관리')} href="/admin" items={ADMIN_SECTIONS} onNavigate={close} />}
       <div className="account-sep" />
       <LocaleSwitch variant="row" />
+      <ThemeSwitch variant="row" />
       <button type="button" onClick={signOut} className="account-row w-full text-left">
         <LogOut className="w-[18px] h-[18px]" /> {t('로그아웃')}
       </button>

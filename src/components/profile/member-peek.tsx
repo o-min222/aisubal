@@ -27,20 +27,20 @@ function loadCard(id: string) {
 function PeekBody({ state, memberId }: { state: MemberCardData | null | 'loading'; memberId: string }) {
   if (state === 'loading')
     return (
-      <div className="p-6 text-center text-sm text-[#888]" role="status">
+      <div className="p-6 text-center text-sm text-n-888" role="status">
         <T>불러오는 중…</T>
       </div>
     )
   if (!state)
     return (
-      <div className="p-6 text-center text-sm text-[#888]">
-        <T>프로필을 불러오지 못했어요.</T> <Link href={`/members/${memberId}`} className="text-[#0066cc]"><T>프로필 열기</T></Link>
+      <div className="p-6 text-center text-sm text-n-888">
+        <T>프로필을 불러오지 못했어요.</T> <Link href={`/members/${memberId}`} className="text-c-06c"><T>프로필 열기</T></Link>
       </div>
     )
   return (
     <>
       <MemberCard data={state} variant="peek" />
-      <Link href={state.isMe ? '/me' : `/members/${state.id}`} className="block text-center text-[13px] text-[#0066cc] py-2.5 border-t border-[#eee]">
+      <Link href={state.isMe ? '/me' : `/members/${state.id}`} className="block text-center text-[13px] text-c-06c py-2.5 border-t border-n-eee">
         <T>프로필 전체 보기</T>
       </Link>
     </>

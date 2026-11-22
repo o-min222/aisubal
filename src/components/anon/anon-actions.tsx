@@ -76,7 +76,7 @@ export function AnonActions({ post, afterDelete }: { post: TimelinePost; afterDe
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="tap-target inline-flex items-center justify-center rounded-full text-[#777] hover:bg-[#f2f2f2] hover:text-[#111]"
+        className="tap-target inline-flex items-center justify-center rounded-full text-n-777 hover:bg-n-f2f2f2 hover:text-n-111"
         aria-label={tx('더보기')}
       >
         <MoreHorizontal className="w-[18px] h-[18px]" />
@@ -93,7 +93,7 @@ export function AnonActions({ post, afterDelete }: { post: TimelinePost; afterDe
                 type="button"
                 onClick={() => setStep('report')}
                 disabled={reported}
-                className="sheet-row text-red-600 disabled:text-[#999]"
+                className="sheet-row text-red-600 disabled:text-n-999"
               >
                 <Flag className="w-5 h-5" /> {reported ? <T>이미 신고한 글이에요</T> : <T>신고하기</T>}
               </button>
@@ -110,7 +110,7 @@ export function AnonActions({ post, afterDelete }: { post: TimelinePost; afterDe
                     value={r}
                     checked={reason === r}
                     onChange={() => setReason(r)}
-                    className="w-4 h-4 accent-[#111]"
+                    className="w-4 h-4 accent-n-111"
                   />
                   <T>{r}</T>
                 </label>
@@ -124,7 +124,7 @@ export function AnonActions({ post, afterDelete }: { post: TimelinePost; afterDe
               placeholder={tx('덧붙일 내용 (선택)')}
               className="input w-full text-sm"
             />
-            <p className="text-xs text-[#888]">
+            <p className="text-xs text-n-888">
               <T>신고는 익명으로 처리돼요. 여러 명이 신고하면 글이 자동으로 숨겨지고 운영자가 검토해요.</T>
             </p>
             <button type="button" onClick={report} disabled={!reason || busy} className="btn btn-primary w-full min-h-[44px]">

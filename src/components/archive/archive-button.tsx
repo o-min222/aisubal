@@ -101,7 +101,7 @@ export function ArchiveButton({
         className={
           variant === 'pill'
             ? `archive-pill ${saved ? 'is-saved' : ''} ${className}`
-            : `tap-target inline-flex items-center justify-center rounded-full hover:bg-[var(--hover,#f2f2f2)] ${saved ? 'text-[#111]' : 'text-[#555] hover:text-[#111]'} ${className}`
+            : `tap-target inline-flex items-center justify-center rounded-full hover:bg-[var(--hover,#f2f2f2)] ${saved ? 'text-n-111' : 'text-n-555 hover:text-n-111'} ${className}`
         }
       >
         <Icon className={variant === 'pill' ? 'w-4 h-4' : 'w-[17px] h-[17px]'} fill={saved ? 'currentColor' : 'none'} strokeWidth={saved ? 1.6 : 2} />
@@ -117,7 +117,7 @@ export function ArchiveButton({
             }}
           >
             <label className="block">
-              <span className="text-xs text-[#777]"><T>메모 (나만 봐요)</T></span>
+              <span className="text-xs text-n-777"><T>메모 (나만 봐요)</T></span>
               <textarea
                 value={sheet.memo}
                 maxLength={ARCHIVE_MEMO_MAX}
@@ -125,20 +125,20 @@ export function ArchiveButton({
                 autoFocus
                 onChange={(e) => setSheet({ ...sheet, memo: e.target.value })}
                 placeholder={tx('왜 담았는지 한 줄로')}
-                className="mt-1 w-full rounded-lg border border-[#e5e5e5] px-3 py-2 text-sm outline-none focus:border-[#111] bg-transparent"
+                className="mt-1 w-full rounded-lg border border-n-e5e5e5 px-3 py-2 text-sm outline-none focus:border-n-111 bg-transparent"
               />
             </label>
             <label className="block">
-              <span className="text-xs text-[#777]"><T>태그 (띄어쓰기로 구분)</T></span>
+              <span className="text-xs text-n-777"><T>태그 (띄어쓰기로 구분)</T></span>
               <input
                 value={sheet.tags}
                 onChange={(e) => setSheet({ ...sheet, tags: e.target.value })}
                 placeholder="#mcp #나중에"
-                className="mt-1 w-full rounded-lg border border-[#e5e5e5] px-3 py-2 text-sm outline-none focus:border-[#111] bg-transparent"
+                className="mt-1 w-full rounded-lg border border-n-e5e5e5 px-3 py-2 text-sm outline-none focus:border-n-111 bg-transparent"
               />
             </label>
             <div className="flex items-center justify-between gap-2 pt-1">
-              <button type="button" onClick={() => void remove()} className="text-sm text-[#c0392b] hover:underline">
+              <button type="button" onClick={() => void remove()} className="text-sm text-c-c0392b hover:underline">
                 <T>아카이브에서 빼기</T>
               </button>
               <button type="submit" className="btn btn-primary btn-sm">

@@ -19,7 +19,7 @@ export function AgentClientIcon({ model, size = 16 }: { model?: string | null; s
   const f = agentFamily(model)
   if (!f)
     return (
-      <span aria-hidden className="inline-flex items-center justify-center rounded flex-shrink-0" style={{ width: size, height: size, background: '#eef0f3', color: '#555' }}>
+      <span aria-hidden className="inline-flex items-center justify-center rounded flex-shrink-0" style={{ width: size, height: size, background: 'var(--n-eef0f3)', color: 'var(--n-555)' }}>
         <Bot style={{ width: size * 0.7, height: size * 0.7 }} />
       </span>
     )
@@ -36,15 +36,15 @@ export function AgentAttribution({ ownerName, ownerId, agentName, model }: { own
     <>
       <AgentClientIcon model={model} size={15} />
       <span className="truncate">
-        <T s="{owner}님의 {agent}" vars={{ owner: <b className="font-semibold text-[#333]">{ownerName}</b>, agent: agentName }} />
+        <T s="{owner}님의 {agent}" vars={{ owner: <b className="font-semibold text-n-333">{ownerName}</b>, agent: agentName }} />
       </span>
     </>
   )
   return ownerId ? (
-    <Link href={`/members/${ownerId}#agents`} className="agent-attribution inline-flex items-center gap-1 text-xs text-[#777] hover:underline max-w-full">
+    <Link href={`/members/${ownerId}#agents`} className="agent-attribution inline-flex items-center gap-1 text-xs text-n-777 hover:underline max-w-full">
       {inner}
     </Link>
   ) : (
-    <span className="agent-attribution inline-flex items-center gap-1 text-xs text-[#777] max-w-full">{inner}</span>
+    <span className="agent-attribution inline-flex items-center gap-1 text-xs text-n-777 max-w-full">{inner}</span>
   )
 }

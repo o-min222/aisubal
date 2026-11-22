@@ -28,9 +28,9 @@ export default async function AdminOverviewPage() {
       <SubPageHeader title={msg('대시보드')} description={msg('커뮤니티 현황을 한눈에 봐요.')} />
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {cards.map((c) => (
-          <Link key={c.label} href={c.href} className="card p-4 hover:border-[#cfcfcf]">
-            <div className="text-2xl font-bold text-[#111] tabular-nums">{c.value}</div>
-            <div className="text-sm text-[#666]"><T>{c.label}</T></div>
+          <Link key={c.label} href={c.href} className="card p-4 hover:border-n-cfcfcf">
+            <div className="text-2xl font-bold text-n-111 tabular-nums">{c.value}</div>
+            <div className="text-sm text-n-666"><T>{c.label}</T></div>
           </Link>
         ))}
       </div>

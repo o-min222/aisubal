@@ -100,8 +100,8 @@ export function AnonModeration() {
   return (
     <div className="space-y-3">
       <div className="card p-4">
-        <h2 className="text-lg font-bold" style={{ color: '#111' }}><T>익명 게시판 관리</T></h2>
-        <p className="mt-1 text-xs text-[#777] flex items-start gap-1.5">
+        <h2 className="text-lg font-bold" style={{ color: 'var(--n-111)' }}><T>익명 게시판 관리</T></h2>
+        <p className="mt-1 text-xs text-n-777 flex items-start gap-1.5">
           <ShieldAlert className="w-3.5 h-3.5 mt-px flex-shrink-0" />
           <T>작성자 조회는 신고된 악용 대응에만 쓰세요. 조회할 때마다 사유와 함께 운영 기록에 남아요.</T>
         </p>
@@ -116,7 +116,7 @@ export function AnonModeration() {
 
       <div className="space-y-2">
         {posts === null && <div className="card p-6"><span className="skeleton h-4 w-1/2 rounded block" /></div>}
-        {posts?.length === 0 && <div className="card p-8 text-center text-sm text-[#888]"><T>해당하는 글이 없어요.</T></div>}
+        {posts?.length === 0 && <div className="card p-8 text-center text-sm text-n-888"><T>해당하는 글이 없어요.</T></div>}
         {posts?.map((p) => (
           <article key={p.id} className="card p-4">
             <header className="flex flex-wrap items-center gap-1.5 text-sm">
@@ -125,9 +125,9 @@ export function AnonModeration() {
               {p.isHidden && <span className="badge badge-note">{p.hiddenReason === 'admin' ? <T>운영자 숨김</T> : <T>신고 누적 숨김</T>}</span>}
               {p.isDeleted && <span className="badge badge-note"><T>작성자 삭제</T></span>}
               {p.adminCleared && <span className="badge badge-note"><T>검토 완료</T></span>}
-              <span className="text-[#888] text-xs ml-auto"><RelativeTime date={p.createdAt} /></span>
+              <span className="text-n-888 text-xs ml-auto"><RelativeTime date={p.createdAt} /></span>
             </header>
-            <p className="mt-2 text-[14px] whitespace-pre-wrap break-words text-[#111]">{p.body || tx('(내용 없음)')}</p>
+            <p className="mt-2 text-[14px] whitespace-pre-wrap break-words text-n-111">{p.body || tx('(내용 없음)')}</p>
             {(p.reportCount ?? 0) > 0 && (
               <p className="mt-2 text-xs text-red-600"><T s="신고 {reportCount}건 · {v}" vars={{ reportCount: p.reportCount, v: (p.reportReasons || []).join(', ') }} /></p>
             )}
@@ -164,17 +164,17 @@ export function AnonModeration() {
       </div>
 
       <section className="card p-4">
-        <h2 className="text-sm font-semibold text-[#111]"><T>운영 기록</T></h2>
+        <h2 className="text-sm font-semibold text-n-111"><T>운영 기록</T></h2>
         {log.length === 0 ? (
-          <p className="mt-2 text-xs text-[#888]"><T>기록이 없어요.</T></p>
+          <p className="mt-2 text-xs text-n-888"><T>기록이 없어요.</T></p>
         ) : (
-          <ul className="mt-2 divide-y divide-[#eee]">
+          <ul className="mt-2 divide-y divide-n-eee">
             {log.slice(0, 30).map((l) => (
-              <li key={l.id} className="py-2 text-xs text-[#555] flex flex-wrap gap-x-2">
-                <b className="text-[#111]">{ACTION_LABEL[l.action] || l.action}</b>
+              <li key={l.id} className="py-2 text-xs text-n-555 flex flex-wrap gap-x-2">
+                <b className="text-n-111">{ACTION_LABEL[l.action] || l.action}</b>
                 <span>{l.admin || tx('시스템')}</span>
-                {l.reason && <span className="text-[#888]">· {l.reason}</span>}
-                <span className="ml-auto text-[#999]"><RelativeTime date={l.createdAt} /></span>
+                {l.reason && <span className="text-n-888">· {l.reason}</span>}
+                <span className="ml-auto text-n-999"><RelativeTime date={l.createdAt} /></span>
               </li>
             ))}
           </ul>
@@ -187,12 +187,12 @@ export function AnonModeration() {
             <p>
               <b>{trace.displayName}</b> {trace.isBanned && <span className="badge badge-note"><T>정지됨</T></span>}
             </p>
-            <p className="text-xs text-[#666]"><T s="최근 30일 익명 글·답글 {anonPostsLast30d}개 · 숨겨진 글 {hiddenPosts}개" vars={{ anonPostsLast30d: trace.anonPostsLast30d, hiddenPosts: trace.hiddenPosts }} /></p>
-            <p className="text-xs text-[#888]"><T>회원 정지는 관리 › 사용자 탭에서 할 수 있어요. 이 조회는 운영 기록에 남았어요.</T></p>
+            <p className="text-xs text-n-666"><T s="최근 30일 익명 글·답글 {anonPostsLast30d}개 · 숨겨진 글 {hiddenPosts}개" vars={{ anonPostsLast30d: trace.anonPostsLast30d, hiddenPosts: trace.hiddenPosts }} /></p>
+            <p className="text-xs text-n-888"><T>회원 정지는 관리 › 사용자 탭에서 할 수 있어요. 이 조회는 운영 기록에 남았어요.</T></p>
           </div>
         ) : (
           <div className="space-y-3 py-1">
-            <p className="text-xs text-[#666]"><T>조회 사유를 적어주세요. 사유와 조회자가 운영 기록에 남아요.</T></p>
+            <p className="text-xs text-n-666"><T>조회 사유를 적어주세요. 사유와 조회자가 운영 기록에 남아요.</T></p>
             <textarea
               value={traceReason}
               onChange={(e) => setTraceReason(e.target.value)}

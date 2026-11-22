@@ -61,31 +61,31 @@ export default async function GroupPage({ params, searchParams }: { params: Prom
   return (
     <div className="space-y-3">
       <div className="flex items-center gap-1">
-        <Link href="/groups" className="tap-target inline-flex items-center justify-center rounded-full hover:bg-[#f2f2f2]" aria-label={st('그룹 목록')}>
+        <Link href="/groups" className="tap-target inline-flex items-center justify-center rounded-full hover:bg-n-f2f2f2" aria-label={st('그룹 목록')}>
           <ChevronLeft className="w-5 h-5" />
         </Link>
-        <span className="text-sm text-[#666]"><T>그룹</T></span>
+        <span className="text-sm text-n-666"><T>그룹</T></span>
       </div>
 
       <header className="card p-4 flex flex-col md:flex-row md:items-center gap-3">
         <div className="flex gap-3 min-w-0 flex-1">
-          <span aria-hidden className="flex-shrink-0 flex items-center justify-center rounded-2xl text-[28px]" style={{ width: 60, height: 60, background: '#f3f0ff' }}>
+          <span aria-hidden className="flex-shrink-0 flex items-center justify-center rounded-2xl text-[28px]" style={{ width: 60, height: 60, background: 'var(--c-f3f0ff)' }}>
             {g.emoji || '#'}
           </span>
           <div className="min-w-0">
             <div className="flex items-start gap-2">
-              <h1 className="text-[20px] font-bold leading-tight min-w-0" style={{ color: '#111' }}>
+              <h1 className="text-[20px] font-bold leading-tight min-w-0" style={{ color: 'var(--n-111)' }}>
                 {g.name}
               </h1>
               <ArchiveButton kind="group" refId={g.slug} className="-mt-1.5" hint={{ title: g.name, excerpt: g.description ?? undefined, url: `/groups/${g.slug}` }} />
             </div>
-            <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-1 text-[12.5px]" style={{ color: '#777' }}>
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-1 text-[12.5px]" style={{ color: 'var(--n-777)' }}>
               <span><T s="멤버 {n}" vars={{ n: g.memberCount }} /></span>
               <GroupPolicy g={g} />
-              {g.myRole && <span className="font-semibold text-[#111]"><T s="내 역할: {role}" vars={{ role: <T>{ROLE_LABEL[g.myRole]}</T> }} /></span>}
+              {g.myRole && <span className="font-semibold text-n-111"><T s="내 역할: {role}" vars={{ role: <T>{ROLE_LABEL[g.myRole]}</T> }} /></span>}
             </div>
             {g.description && (
-              <p className="text-[13.5px] mt-1.5 whitespace-pre-wrap" style={{ color: '#444' }}>
+              <p className="text-[13.5px] mt-1.5 whitespace-pre-wrap" style={{ color: 'var(--n-444)' }}>
                 {g.description}
               </p>
             )}
@@ -105,16 +105,16 @@ export default async function GroupPage({ params, searchParams }: { params: Prom
           <GroupTimeline groupId={g.id} groupName={g.name} canPost={g.myStatus === 'active'} member={state.member} viewerId={me} page={page} base={base} />
         ) : (
           <div className="card p-8 text-center space-y-1">
-            <Lock className="w-5 h-5 mx-auto text-[#999]" />
-            <p className="text-[14px] font-semibold" style={{ color: '#111' }}>
+            <Lock className="w-5 h-5 mx-auto text-n-999" />
+            <p className="text-[14px] font-semibold" style={{ color: 'var(--n-111)' }}>
               <T>멤버만 볼 수 있는 타임라인이에요</T>
             </p>
-            <p className="text-[13px] text-[#777]">{g.myStatus === 'pending' ? <T>가입 요청을 보냈어요. 승인되면 보여요.</T> : <T>가입하면 그룹 글을 보고 쓸 수 있어요.</T>}</p>
+            <p className="text-[13px] text-n-777">{g.myStatus === 'pending' ? <T>가입 요청을 보냈어요. 승인되면 보여요.</T> : <T>가입하면 그룹 글을 보고 쓸 수 있어요.</T>}</p>
           </div>
         ))}
 
       {tab === 'members' && (
-        <section className="card divide-y divide-[#f0f0f0]" aria-label={st('멤버')}>
+        <section className="card divide-y divide-n-f0f0f0" aria-label={st('멤버')}>
           {active.map((m) => (
             <PersonRow
               key={m.id}
@@ -123,7 +123,7 @@ export default async function GroupPage({ params, searchParams }: { params: Prom
               extra={isMod ? <MemberControls groupId={g.id} member={m} myRole={g.myRole} isSelf={m.id === me} /> : undefined}
             />
           ))}
-          {active.length === 0 && <p className="p-6 text-center text-[13px] text-[#888]"><T>멤버가 없어요.</T></p>}
+          {active.length === 0 && <p className="p-6 text-center text-[13px] text-n-888"><T>멤버가 없어요.</T></p>}
         </section>
       )}
 
@@ -159,17 +159,17 @@ async function GroupMoim({ groupId, groupSlug, isMod, viewerId }: { groupId: str
   return (
     <div className="space-y-2">
       {isMod && (
-        <Link href={`/moim/new?group=${groupSlug}`} className="card p-3 flex items-center gap-2 text-[13.5px] font-semibold hover:bg-[#fafafa]" style={{ color: '#111' }}>
+        <Link href={`/moim/new?group=${groupSlug}`} className="card p-3 flex items-center gap-2 text-[13.5px] font-semibold hover:bg-n-fafafa" style={{ color: 'var(--n-111)' }}>
           <CalendarPlus className="w-4 h-4" /> <T>모임 페이지에서 이 그룹 이름으로 모임 열기</T>
         </Link>
       )}
-      {upcoming.length === 0 && past.length === 0 && <div className="card p-6 text-center text-[13px] text-[#888]"><T>이 그룹의 모임이 아직 없어요.</T></div>}
+      {upcoming.length === 0 && past.length === 0 && <div className="card p-6 text-center text-[13px] text-n-888"><T>이 그룹의 모임이 아직 없어요.</T></div>}
       {upcoming.map((m) => (
         <MoimCard key={m.id} moim={m} showGroup={false} />
       ))}
       {past.length > 0 && (
         <>
-          <h2 className="px-1 pt-2 text-[13px] font-semibold text-[#777]"><T>지난 모임</T></h2>
+          <h2 className="px-1 pt-2 text-[13px] font-semibold text-n-777"><T>지난 모임</T></h2>
           {past.map((m) => (
             <MoimCard key={m.id} moim={m} showGroup={false} />
           ))}

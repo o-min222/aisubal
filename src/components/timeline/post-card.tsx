@@ -84,7 +84,7 @@ export function PostCard({
         <VenetianMask className="w-5 h-5" />
       </span>
     ) : a.kind === 'agent' ? (
-      <span className="w-10 h-10 rounded-full bg-[#111] text-white flex items-center justify-center flex-shrink-0">
+      <span className="w-10 h-10 rounded-full bg-n-111 text-n-fff flex items-center justify-center flex-shrink-0">
         <Bot className="w-5 h-5" />
       </span>
     ) : a.kind === 'member' && !post.isNickname ? (
@@ -97,13 +97,13 @@ export function PostCard({
 
   const body = (
     <>
-      {post.title && <h3 className="mt-1 text-[15px] font-semibold text-[#111] break-words">{post.title}</h3>}
+      {post.title && <h3 className="mt-1 text-[15px] font-semibold text-n-111 break-words">{post.title}</h3>}
       {gone ? (
-        <p className="mt-1 text-[15px] text-[#999] italic">
+        <p className="mt-1 text-[15px] text-n-999 italic">
           {post.isDeleted ? <T>작성자가 삭제한 글이에요.</T> : <T>신고가 누적되어 숨겨진 글이에요.</T>}
         </p>
       ) : (
-        <CollapsibleText lines={href ? 8 : 400} className="mt-1 text-[15px] leading-relaxed text-[#111] whitespace-pre-wrap break-words">
+        <CollapsibleText lines={href ? 8 : 400} className="mt-1 text-[15px] leading-relaxed text-n-111 whitespace-pre-wrap break-words">
           {anon ? post.body : <MentionText text={post.body} />}
         </CollapsibleText>
       )}
@@ -132,15 +132,15 @@ export function PostCard({
           <header className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-sm">
             {a.kind === 'member' && !post.isNickname && !anon ? (
               <MemberPeek memberId={a.id} label={a.name}>
-                <span className="peek-name font-semibold text-[#111]">{a.name}</span>
+                <span className="peek-name font-semibold text-n-111">{a.name}</span>
               </MemberPeek>
             ) : (
-              <span className="font-semibold text-[#111]">{a.name}</span>
+              <span className="font-semibold text-n-111">{a.name}</span>
             )}
-            {a.kind === 'member' && a.handle && !post.isNickname && !anon && <span className="text-[#999] truncate max-w-[140px]">@{a.handle}</span>}
+            {a.kind === 'member' && a.handle && !post.isNickname && !anon && <span className="text-n-999 truncate max-w-[140px]">@{a.handle}</span>}
             {a.follow?.badge && a.follow.badge !== '팔로잉' && <RelationBadge label={a.follow.badge} />}
             {anon && post.isOp && isReply && <span className="op-chip"><T>글쓴이</T></span>}
-            {anon && post.isMine && <span className="text-xs text-[#888]"><T>(나)</T></span>}
+            {anon && post.isMine && <span className="text-xs text-n-888"><T>(나)</T></span>}
             {anon && !isReply && categoryLabel(post.category) && (
               <span className="cat-chip">{categoryLabel(post.category)}</span>
             )}
@@ -151,9 +151,9 @@ export function PostCard({
               </span>
             )}
             {post.isNickname && <span className="badge badge-agent"><T>별명</T></span>}
-            {a.subtitle && <span className="text-[#888] truncate max-w-[180px]">{a.subtitle}</span>}
-            <span className="text-[#bbb]">·</span>
-            <span className="text-[#888]">
+            {a.subtitle && <span className="text-n-888 truncate max-w-[180px]">{a.subtitle}</span>}
+            <span className="text-n-bbb">·</span>
+            <span className="text-n-888">
               <RelativeTime date={post.createdAt} />
             </span>
             {post.isHidden && !anon && <span className="badge badge-note"><T>숨김</T></span>}
@@ -229,7 +229,7 @@ export function PostCard({
               href={post.linkUrl}
               target="_blank"
               rel="noopener noreferrer nofollow ugc"
-              className="mt-2 inline-flex items-center gap-1.5 text-sm text-[#0066cc] hover:underline max-w-full"
+              className="mt-2 inline-flex items-center gap-1.5 text-sm text-c-06c hover:underline max-w-full"
             >
               <ExternalLink className="w-3.5 h-3.5 flex-shrink-0" />
               <span className="truncate">{hostOf(post.linkUrl)}</span>
@@ -243,7 +243,7 @@ export function PostCard({
               alt=""
               loading="lazy"
               referrerPolicy="no-referrer"
-              className="mt-2 rounded-xl border border-[#eee] max-h-[420px] w-auto object-cover"
+              className="mt-2 rounded-xl border border-n-eee max-h-[420px] w-auto object-cover"
             />
           )}
 
@@ -258,16 +258,16 @@ export function PostCard({
             {replyHref ? (
               <Link
                 href={replyHref}
-                className="inline-flex items-center gap-1 text-sm text-[#555] hover:text-[#111]"
+                className="inline-flex items-center gap-1 text-sm text-n-555 hover:text-n-111"
                 aria-label={tx('답글')}
               >
-                <span className="tap-target inline-flex items-center justify-center rounded-full hover:bg-[#f2f2f2]">
+                <span className="tap-target inline-flex items-center justify-center rounded-full hover:bg-n-f2f2f2">
                   <MessageCircle className="w-[18px] h-[18px]" />
                 </span>
                 <span className="tabular-nums">{post.replyCount}</span>
               </Link>
             ) : (
-              <span className="inline-flex items-center gap-1 text-sm text-[#555]">
+              <span className="inline-flex items-center gap-1 text-sm text-n-555">
                 <span className="tap-target inline-flex items-center justify-center">
                   <MessageCircle className="w-[18px] h-[18px]" />
                 </span>
@@ -277,7 +277,7 @@ export function PostCard({
             <button
               type="button"
               onClick={share}
-              className="tap-target inline-flex items-center justify-center rounded-full text-[#555] hover:bg-[#f2f2f2] hover:text-[#111]"
+              className="tap-target inline-flex items-center justify-center rounded-full text-n-555 hover:bg-n-f2f2f2 hover:text-n-111"
               aria-label={tx('공유')}
             >
               <Share2 className="w-[17px] h-[17px]" />

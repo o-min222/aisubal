@@ -56,21 +56,21 @@ export default async function ArchivePage({ searchParams }: { searchParams: Prom
     <>
       <div className="flex items-end justify-between gap-2">
         <div className="min-w-0">
-          <h1 className="text-[22px] font-bold flex items-center gap-2" style={{ color: '#111' }}>
+          <h1 className="text-[22px] font-bold flex items-center gap-2" style={{ color: 'var(--n-111)' }}>
             <Bookmark className="w-6 h-6" />
             <T>아카이브</T>
           </h1>
-          <p className="text-[13px] text-[#666] mt-0.5"><T>좋았던 것, 나중에 볼 것을 한곳에 모아 둬요.</T></p>
+          <p className="text-[13px] text-n-666 mt-0.5"><T>좋았던 것, 나중에 볼 것을 한곳에 모아 둬요.</T></p>
         </div>
         <ArchiveGuideButton hasAgent={hasAgent} exampleRef={exampleRef} exampleTag={exampleTag} />
       </div>
 
       <form action="/archive" className="archive-search" role="search">
-        <Search className="w-4 h-4 text-[#999] flex-shrink-0" aria-hidden />
+        <Search className="w-4 h-4 text-n-999 flex-shrink-0" aria-hidden />
         {kind && <input type="hidden" name="kind" value={kind} />}
         {tag && <input type="hidden" name="tag" value={tag} />}
         <input name="q" defaultValue={q ?? ''} placeholder={st('제목·내용·메모 검색 (#A12도 돼요)')} aria-label={st('아카이브 검색')} className="min-w-0 flex-1 bg-transparent outline-none text-[14px]" />
-        {q && <Link href={withParams('/archive', { kind, tag })} className="text-xs text-[#888] flex-shrink-0"><T>지우기</T></Link>}
+        {q && <Link href={withParams('/archive', { kind, tag })} className="text-xs text-n-888 flex-shrink-0"><T>지우기</T></Link>}
       </form>
 
       <ChipBar label={st('종류')}>
@@ -102,7 +102,7 @@ export default async function ArchivePage({ searchParams }: { searchParams: Prom
         <ArchiveList items={data.items} base={base} openId={openItem?.id ?? null} />
       )}
       <Pagination base={base} page={page} totalPages={data.pages} label={msg('아카이브 페이지')} />
-      {data.total > 0 && <p className="text-center text-xs text-[#aaa]"><T s="{n}개 · {page}/{pages} 페이지" vars={{ n: data.total, page, pages: data.pages }} /></p>}
+      {data.total > 0 && <p className="text-center text-xs text-n-aaa"><T s="{n}개 · {page}/{pages} 페이지" vars={{ n: data.total, page, pages: data.pages }} /></p>}
     </>
   )
 

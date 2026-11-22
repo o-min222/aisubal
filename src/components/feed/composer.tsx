@@ -112,7 +112,7 @@ export function Composer({
       }
       head={
         <>
-          <span className="font-semibold text-[#111] truncate">{asNick ? me.nickname : me.displayName}</span>
+          <span className="font-semibold text-n-111 truncate">{asNick ? me.nickname : me.displayName}</span>
           {me.nicknameAvailable && (
             <button type="button" className="composer-link" onClick={() => setPostedAs(postedAs === 'real' ? 'nickname' : 'real')}>
               {postedAs === 'real' ? <T>부캐로 쓰기</T> : <T>기본 프로필로 쓰기</T>}
@@ -145,7 +145,7 @@ export function Composer({
         aria-label={isReply ? tx('답글 내용') : tx('게시물 내용')}
       />
       {pii && (
-        <div role="alert" className="pii-warning flex items-start gap-1.5 rounded-lg px-2.5 py-2 text-xs mb-1" style={{ background: '#fff4e5', color: '#8a4b00' }}>
+        <div role="alert" className="pii-warning flex items-start gap-1.5 rounded-lg px-2.5 py-2 text-xs mb-1" style={{ background: 'var(--c-fff4e5)', color: 'var(--c-8a4b00)' }}>
           <ShieldAlert className="w-3.5 h-3.5 mt-px flex-shrink-0" />
           <span><T s="{pii} 멤버 모두가 볼 수 있어요. 지우거나 가려주세요.{v}" vars={{ pii, v: piiAckFor === body ? tx(' (한 번 더 누르면 그대로 게시돼요)') : '' }} /></span>
         </div>

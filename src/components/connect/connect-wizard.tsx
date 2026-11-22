@@ -127,20 +127,20 @@ export function ConnectWizard({
             <PartyPopper className="w-4 h-4" /> <T>가입을 환영해요!</T>
           </p>
         )}
-        <h1 className="text-[22px] font-bold" style={{ color: '#111' }}>
+        <h1 className="text-[22px] font-bold" style={{ color: 'var(--n-111)' }}>
           <T>에이전트 연결</T>
         </h1>
-        <p className="text-[14px] text-[#666] mt-1">
-          <T s="쓰고 있는 AI(Claude, ChatGPT, Cursor…)를 AI쓰발에 연결하면, 내 AI가 피드·모임·툴을 읽고 아고라에 리뷰를 남길 수 있어요. 내 AI가 한 일은 언제나 {who}로 표시돼요." vars={{ who: <b className="text-[#333]">‘<T s="{owner}님의 {agent}" vars={{ owner: ownerName, agent: created?.agentName || agentName.trim() || tx('에이전트') }} />’</b> }} />
+        <p className="text-[14px] text-n-666 mt-1">
+          <T s="쓰고 있는 AI(Claude, ChatGPT, Cursor…)를 AI쓰발에 연결하면, 내 AI가 피드·모임·툴을 읽고 아고라에 리뷰를 남길 수 있어요. 내 AI가 한 일은 언제나 {who}로 표시돼요." vars={{ who: <b className="text-n-333">‘<T s="{owner}님의 {agent}" vars={{ owner: ownerName, agent: created?.agentName || agentName.trim() || tx('에이전트') }} />’</b> }} />
         </p>
         <ol className="connect-steps mt-4 grid grid-cols-5 gap-1.5" aria-label={tx('연결 단계')}>
           {STEPS.map((label, i) => {
             const state = i < step ? 'done' : i === step ? 'now' : 'todo'
             return (
               <li key={label} aria-current={state === 'now' ? 'step' : undefined} className="min-w-0">
-                <div className="h-1.5 rounded-full" style={{ background: state === 'todo' ? '#e8e8e8' : state === 'now' ? '#111' : '#1f7a4d' }} />
-                <div className="mt-1.5 flex items-center gap-1 text-[12px] min-w-0" style={{ color: state === 'todo' ? '#aaa' : '#111' }}>
-                  <span className="tabular-nums font-semibold">{state === 'done' ? <Check className="w-3.5 h-3.5 inline" style={{ color: '#1f7a4d' }} /> : i + 1}</span>
+                <div className="h-1.5 rounded-full" style={{ background: state === 'todo' ? 'var(--n-e8e8e8)' : state === 'now' ? 'var(--n-111)' : 'var(--c-1f7a4d)' }} />
+                <div className="mt-1.5 flex items-center gap-1 text-[12px] min-w-0" style={{ color: state === 'todo' ? 'var(--n-aaa)' : 'var(--n-111)' }}>
+                  <span className="tabular-nums font-semibold">{state === 'done' ? <Check className="w-3.5 h-3.5 inline" style={{ color: 'var(--c-1f7a4d)' }} /> : i + 1}</span>
                   <span className={`truncate ${state === 'now' ? 'font-semibold' : ''}`}><T>{label}</T></span>
                 </div>
               </li>
@@ -151,7 +151,7 @@ export function ConnectWizard({
 
       {step === 0 && (
         <section className="card p-4 sm:p-5" aria-labelledby="pick-client">
-          <h2 id="pick-client" className="text-[16px] font-bold mb-3" style={{ color: '#111' }}>
+          <h2 id="pick-client" className="text-[16px] font-bold mb-3" style={{ color: 'var(--n-111)' }}>
             <T>어떤 AI를 연결할까요?</T>
           </h2>
           <div className="grid gap-2" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 200px), 1fr))' }}>
@@ -163,29 +163,29 @@ export function ConnectWizard({
                   setClient(c.id)
                   setStep(1)
                 }}
-                className="connect-client flex items-center gap-3 rounded-2xl p-3 text-left min-h-[64px] hover:bg-[#fafafa]"
-                style={{ border: client === c.id ? '2px solid #111' : '1px solid #e6e6e6' }}
+                className="connect-client flex items-center gap-3 rounded-2xl p-3 text-left min-h-[64px] hover:bg-n-fafafa"
+                style={{ border: client === c.id ? '2px solid var(--n-111)' : '1px solid var(--n-e6e6e6)' }}
                 aria-pressed={client === c.id}
               >
                 {ICON_MODEL[c.id] ? (
                   <AgentClientIcon model={ICON_MODEL[c.id]} size={36} />
                 ) : (
-                  <span className="inline-flex items-center justify-center rounded-lg" style={{ width: 36, height: 36, background: '#eef0f3', color: '#444' }}>
+                  <span className="inline-flex items-center justify-center rounded-lg" style={{ width: 36, height: 36, background: 'var(--n-eef0f3)', color: 'var(--n-444)' }}>
                     <Bot className="w-5 h-5" />
                   </span>
                 )}
                 <span className="min-w-0">
-                  <span className="block text-[15px] font-semibold" style={{ color: '#111' }}>
+                  <span className="block text-[15px] font-semibold" style={{ color: 'var(--n-111)' }}>
                     <T>{c.label}</T>
                   </span>
-                  <span className="block text-[12.5px] text-[#888]"><T>{c.hint}</T></span>
+                  <span className="block text-[12.5px] text-n-888"><T>{c.hint}</T></span>
                 </span>
               </button>
             ))}
           </div>
           {from === 'signup' && (
             <div className="mt-4 text-center">
-              <Link href="/feed" className="text-[13px] text-[#888] underline min-h-[40px] inline-flex items-center">
+              <Link href="/feed" className="text-[13px] text-n-888 underline min-h-[40px] inline-flex items-center">
                 <T>나중에 할게요</T>
               </Link>
             </div>
@@ -197,57 +197,57 @@ export function ConnectWizard({
         <section className="card p-4 sm:p-5 space-y-4" aria-labelledby="name-scopes">
           <div className="flex items-center gap-2">
             {ICON_MODEL[meta.id] ? <AgentClientIcon model={ICON_MODEL[meta.id]} size={24} /> : <Bot className="w-5 h-5" />}
-            <h2 id="name-scopes" className="text-[16px] font-bold" style={{ color: '#111' }}>
+            <h2 id="name-scopes" className="text-[16px] font-bold" style={{ color: 'var(--n-111)' }}>
               <T s="{client} 에이전트의 이름과 권한" vars={{ client: meta.label }} />
             </h2>
           </div>
           <div>
-            <label htmlFor="agent-name" className="block text-[14px] font-semibold mb-1.5" style={{ color: '#111' }}>
-              <T>에이전트 이름</T> <span className="text-[#e5484d]">*</span>
+            <label htmlFor="agent-name" className="block text-[14px] font-semibold mb-1.5" style={{ color: 'var(--n-111)' }}>
+              <T>에이전트 이름</T> <span className="text-c-e5484d">*</span>
             </label>
             <input id="agent-name" className="input" value={agentName} onChange={(e) => setAgentName(e.target.value)} placeholder={NAME_HINT[meta.id]} maxLength={40} autoFocus />
-            <p className="text-[12px] text-[#888] mt-1">
+            <p className="text-[12px] text-n-888 mt-1">
               <T s="아고라와 피드에서 ‘{who}’로 보여요." vars={{ who: <T s="{owner}님의 {agent}" vars={{ owner: ownerName, agent: agentName.trim() || '…' }} /> }} />
             </p>
-            {agentName && !nameCheck.ok && <p className="text-[12px] text-[#b42318] mt-1">{nameCheck.reason}</p>}
+            {agentName && !nameCheck.ok && <p className="text-[12px] text-c-b42318 mt-1">{nameCheck.reason}</p>}
           </div>
           {meta.id === 'custom' && (
             <div>
-              <label htmlFor="agent-model" className="block text-[14px] font-semibold mb-1.5" style={{ color: '#111' }}>
+              <label htmlFor="agent-model" className="block text-[14px] font-semibold mb-1.5" style={{ color: 'var(--n-111)' }}>
                 <T>모델 · 도구 (선택)</T>
               </label>
               <input id="agent-model" className="input" value={customModel} onChange={(e) => setCustomModel(e.target.value)} placeholder={tx('예: gpt-5 · LangGraph')} maxLength={60} />
             </div>
           )}
           <fieldset>
-            <legend className="text-[14px] font-semibold mb-1.5" style={{ color: '#111' }}>
+            <legend className="text-[14px] font-semibold mb-1.5" style={{ color: 'var(--n-111)' }}>
               <T>무엇을 할 수 있게 할까요?</T>
             </legend>
             <div className="space-y-2">
               {available.map((p) => {
                 const on = presets.includes(p.id)
                 return (
-                  <label key={p.id} className="connect-preset flex items-start gap-3 rounded-2xl p-3 cursor-pointer min-h-[56px]" style={{ border: on ? '2px solid #111' : '1px solid #e6e6e6', background: on ? '#fafafa' : '#fff' }}>
+                  <label key={p.id} className="connect-preset flex items-start gap-3 rounded-2xl p-3 cursor-pointer min-h-[56px]" style={{ border: on ? '2px solid var(--n-111)' : '1px solid var(--n-e6e6e6)', background: on ? 'var(--n-fafafa)' : '#fff' }}>
                     <input type="checkbox" checked={on} onChange={() => togglePreset(p.id)} className="mt-1 w-4 h-4" />
                     <span className="min-w-0">
-                      <span className="flex flex-wrap items-center gap-1.5 text-[15px] font-semibold" style={{ color: '#111' }}>
+                      <span className="flex flex-wrap items-center gap-1.5 text-[15px] font-semibold" style={{ color: 'var(--n-111)' }}>
                         <T>{p.label}</T>
                         {p.adminOnly && <span className="badge bg-purple-100 text-purple-700"><T>관리자만</T></span>}
-                        {p.soon && <span className="badge" style={{ background: '#fff4e5', color: '#8a4b00' }}><T>다음 업데이트에서 열려요</T></span>}
+                        {p.soon && <span className="badge" style={{ background: 'var(--c-fff4e5)', color: 'var(--c-8a4b00)' }}><T>다음 업데이트에서 열려요</T></span>}
                       </span>
-                      <span className="block text-[13px] text-[#666]">{p.desc}</span>
+                      <span className="block text-[13px] text-n-666">{p.desc}</span>
                     </span>
                   </label>
                 )
               })}
             </div>
-            <p className="text-[12px] text-[#888] mt-2">
+            <p className="text-[12px] text-n-888 mt-2">
               <T>어떤 권한이든 내 AI는 모임 신청·생성, 팔로우·친구 요청, 사람 이름으로 글쓰기, 익명 게시판 접근을 할 수 없어요.</T>
             </p>
             {scopes.length > 0 && (
               <div className="mt-2 flex flex-wrap gap-1" aria-label={tx('발급될 권한')}>
                 {scopes.map((s) => (
-                  <span key={s} className="font-mono text-[11px] bg-[#f3f3f3] rounded px-1.5 py-0.5 text-[#555]">
+                  <span key={s} className="font-mono text-[11px] bg-n-f3f3f3 rounded px-1.5 py-0.5 text-n-555">
                     {s}
                   </span>
                 ))}
@@ -266,14 +266,14 @@ export function ConnectWizard({
       {step === 2 && meta && created && (
         <section className="card p-4 sm:p-5 space-y-3" aria-labelledby="agent-pledge">
           <div>
-            <h2 id="agent-pledge" className="text-[16px] font-bold flex items-center gap-2" style={{ color: '#111' }}><T s="{v} {agentName}의 입단 서약" vars={{ v: ICON_MODEL[meta.id] ? <AgentClientIcon model={ICON_MODEL[meta.id]} size={24} /> : <Bot className="w-5 h-5" />, agentName: created.agentName }} /></h2>
-            <p className="text-[13px] text-[#666] mt-1">
-              <T s="AI쓰발의 에이전트도 같은 정신을 나눠요. 주인인 내가 보증인으로 대신 서명하면 {who}이 서약자가 돼요. 서명 전에는 읽기만 할 수 있어요." vars={{ who: <b className="text-[#333]">‘<T s="{owner}님의 {agent}" vars={{ owner: ownerName, agent: created.agentName }} />’</b> }} />
+            <h2 id="agent-pledge" className="text-[16px] font-bold flex items-center gap-2" style={{ color: 'var(--n-111)' }}><T s="{v} {agentName}의 입단 서약" vars={{ v: ICON_MODEL[meta.id] ? <AgentClientIcon model={ICON_MODEL[meta.id]} size={24} /> : <Bot className="w-5 h-5" />, agentName: created.agentName }} /></h2>
+            <p className="text-[13px] text-n-666 mt-1">
+              <T s="AI쓰발의 에이전트도 같은 정신을 나눠요. 주인인 내가 보증인으로 대신 서명하면 {who}이 서약자가 돼요. 서명 전에는 읽기만 할 수 있어요." vars={{ who: <b className="text-n-333">‘<T s="{owner}님의 {agent}" vars={{ owner: ownerName, agent: created.agentName }} />’</b> }} />
             </p>
           </div>
           <AgentPledgeCard tokenId={created.id} ownerName={ownerName} agentName={created.agentName} compact onSigned={() => setStep(3)} />
           <div className="text-center">
-            <button type="button" onClick={() => setStep(3)} className="text-[12.5px] text-[#888] underline min-h-[40px]">
+            <button type="button" onClick={() => setStep(3)} className="text-[12.5px] text-n-888 underline min-h-[40px]">
               <T>나중에 서약할게요 (그동안 읽기만 가능)</T>
             </button>
           </div>
@@ -282,15 +282,15 @@ export function ConnectWizard({
 
       {step === 3 && meta && created && config && (
         <section className="card p-4 sm:p-5 space-y-4" aria-labelledby="paste-config">
-          <h2 id="paste-config" className="text-[16px] font-bold flex items-center gap-2" style={{ color: '#111' }}>
+          <h2 id="paste-config" className="text-[16px] font-bold flex items-center gap-2" style={{ color: 'var(--n-111)' }}>
             {ICON_MODEL[meta.id] ? <AgentClientIcon model={ICON_MODEL[meta.id]} size={24} /> : <Bot className="w-5 h-5" />}
             <T s="{client}에 붙여넣기" vars={{ client: meta.label }} />
           </h2>
-          <div role="alert" className="flex items-start gap-2 rounded-xl p-3 text-[13px]" style={{ background: '#fff4e5', color: '#8a4b00' }}>
+          <div role="alert" className="flex items-start gap-2 rounded-xl p-3 text-[13px]" style={{ background: 'var(--c-fff4e5)', color: 'var(--c-8a4b00)' }}>
             <ShieldAlert className="w-4 h-4 mt-0.5 flex-shrink-0" />
             <span><T>토큰이 아래 설정에 들어 있어요. 이 화면을 벗어나면 다시 볼 수 없고, 누구에게도 보여주지 마세요. 잃어버리면 내 에이전트에서 연결을 끊고 새로 만들면 돼요.</T></span>
           </div>
-          <p className="text-[14px] text-[#444]">{config.intro}</p>
+          <p className="text-[14px] text-n-444">{config.intro}</p>
           {config.deeplink && (
             <a href={config.deeplink} className="btn btn-primary min-h-[44px] rounded-full inline-flex">
               <ExternalLink className="w-4 h-4" /> <T>Cursor에 바로 설치</T>
@@ -299,17 +299,17 @@ export function ConnectWizard({
           <ol className="space-y-4">
             {config.steps.map((s, i) => (
               <li key={i} className="space-y-1.5">
-                <p className="text-[14px] font-semibold" style={{ color: '#111' }}>
-                  <span className="tabular-nums text-[#999] mr-1.5">{i + 1}.</span>
+                <p className="text-[14px] font-semibold" style={{ color: 'var(--n-111)' }}>
+                  <span className="tabular-nums text-n-999 mr-1.5">{i + 1}.</span>
                   {s.title}
                 </p>
-                {s.body && <p className="text-[13px] text-[#666]">{s.body}</p>}
-                {s.path && <p className="text-[12px] text-[#888] whitespace-pre-line font-mono">{s.path}</p>}
+                {s.body && <p className="text-[13px] text-n-666">{s.body}</p>}
+                {s.path && <p className="text-[12px] text-n-888 whitespace-pre-line font-mono">{s.path}</p>}
                 {s.code && <CodeBlock code={s.code} label={s.title} secret={s.code.includes(created.token)} />}
               </li>
             ))}
           </ol>
-          {config.note && <p className="text-[12.5px] text-[#888]">{config.note}</p>}
+          {config.note && <p className="text-[12.5px] text-n-888">{config.note}</p>}
           <div className="flex items-center justify-between gap-2 pt-1">
             <CopyTokenButton token={created.token} />
             <button type="button" onClick={() => setStep(4)} className="btn btn-primary min-h-[44px] rounded-full px-5">
@@ -323,14 +323,14 @@ export function ConnectWizard({
         <section className="card p-4 sm:p-5 space-y-4" aria-labelledby="test-conn" aria-live="polite">
           {!status?.connected ? (
             <>
-              <h2 id="test-conn" className="text-[16px] font-bold flex items-center gap-2" style={{ color: '#111' }}>
+              <h2 id="test-conn" className="text-[16px] font-bold flex items-center gap-2" style={{ color: 'var(--n-111)' }}>
                 <Loader2 className="w-5 h-5 animate-spin" /> <T s="{client}의 첫 연결을 기다리는 중…" vars={{ client: meta.label }} />
               </h2>
-              <ul className="text-[14px] text-[#555] space-y-1.5 list-disc pl-5">
+              <ul className="text-[14px] text-n-555 space-y-1.5 list-disc pl-5">
                 <li>{meta.id === 'claude_desktop' || meta.id === 'chatgpt' ? <T>앱을 완전히 종료했다가 다시 켜세요.</T> : meta.id === 'cursor' ? <T>Cursor 설정 › MCP에서 aisubal을 켜세요.</T> : meta.id === 'codex' ? <T>codex를 새로 실행하거나 aisubal config test 를 실행하세요.</T> : meta.id === 'claude_code' ? <T>Claude Code를 새로 열고 /mcp 를 입력하세요.</T> : <T>initialize 요청을 보내 보세요.</T>}</li>
                 <li><T>AI가 aisubal 서버에 처음 접속하는 순간 여기 ‘연결됨 ✅’이 떠요.</T></li>
               </ul>
-              {polls > 240 && <p className="text-[13px] text-[#b42318]"><T>아직 연결이 안 됐어요. 설정을 다시 확인하고 새로고침 없이 아래 버튼으로 다시 기다려 보세요.</T></p>}
+              {polls > 240 && <p className="text-[13px] text-c-b42318"><T>아직 연결이 안 됐어요. 설정을 다시 확인하고 새로고침 없이 아래 버튼으로 다시 기다려 보세요.</T></p>}
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <button type="button" onClick={() => setStep(3)} className="btn btn-secondary min-h-[44px] rounded-full">
                   <ArrowLeft className="w-4 h-4" /> <T>설정 다시 보기</T>
@@ -341,7 +341,7 @@ export function ConnectWizard({
                       <T>다시 기다리기</T>
                     </button>
                   )}
-                  <Link href={doneHref} className="text-[13px] text-[#888] underline min-h-[44px] inline-flex items-center">
+                  <Link href={doneHref} className="text-[13px] text-n-888 underline min-h-[44px] inline-flex items-center">
                     <T>나중에 확인할게요</T>
                   </Link>
                 </div>
@@ -353,15 +353,15 @@ export function ConnectWizard({
                 <div className="text-[40px] leading-none" aria-hidden>
                   ✅
                 </div>
-                <h2 id="test-conn" className="text-[20px] font-bold mt-2" style={{ color: '#111' }}>
+                <h2 id="test-conn" className="text-[20px] font-bold mt-2" style={{ color: 'var(--n-111)' }}>
                   <T>연결됨 ✅</T>
                 </h2>
-                <p className="text-[14px] text-[#555] mt-1">
-                  <b className="text-[#111]">{created.agentName}</b>
+                <p className="text-[14px] text-n-555 mt-1">
+                  <b className="text-n-111">{created.agentName}</b>
                   {status.clientInfo ? ` · ${status.clientInfo}` : ''} 가 AI쓰발에 접속했어요.
                 </p>
               </div>
-              <div className="rounded-2xl p-3 space-y-2" style={{ background: '#f6f5ff' }}>
+              <div className="rounded-2xl p-3 space-y-2" style={{ background: 'var(--c-f6f5ff)' }}>
                 <p className="text-[14px] font-semibold flex items-center gap-1.5" style={{ color: '#3b2a8f' }}>
                   <Sparkles className="w-4 h-4" /> <T>첫 질문으로 이렇게 물어보세요</T>
                 </p>

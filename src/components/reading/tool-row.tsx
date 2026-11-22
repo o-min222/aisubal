@@ -21,14 +21,14 @@ export function ToolRow({ tool, href, active, social = [] }: { tool: ToolListIte
         <>
           <span className="cat-chip"><T>{TOOL_TYPE_CHIP[tool.type]}</T></span>
           {isLaunch && <span className="launch-chip"><T>런치</T></span>}
-          {tool.used_by_me && <span className="crow-chip" style={{ background: '#e8f5ee', color: '#1f7a4d' }}><T>사용 중</T></span>}
+          {tool.used_by_me && <span className="crow-chip" style={{ background: 'var(--c-e8f5ee)', color: 'var(--c-1f7a4d)' }}><T>사용 중</T></span>}
         </>
       }
       preview={tool.one_liner}
       meta={
         <>
           {friends + following > 0 ? (
-            <span style={{ color: friends ? '#1f7a4d' : '#555', fontWeight: 600 }}>
+            <span style={{ color: friends ? 'var(--c-1f7a4d)' : 'var(--n-555)', fontWeight: 600 }}>
               <Users className="w-3 h-3" /> {friends ? <T s="친구 {n}명이 써요" vars={{ n: friends }} /> : <T s="팔로잉 {n}명이 써요" vars={{ n: following }} />}
             </span>
           ) : (

@@ -18,7 +18,7 @@ import { T } from '@/i18n/t'
 import { tx, tn } from '@/i18n/client'
 
 type View = { x: number; y: number; k: number }
-const RING_COLOR = { me: '#111', friend: '#2f9e66', mutual: '#7c5cff', following: '#3b82f6', follower: '#c9a227', none: '#d4d4d4' } as const
+const RING_COLOR = { me: 'var(--n-111)', friend: '#2f9e66', mutual: '#7c5cff', following: '#3b82f6', follower: '#c9a227', none: 'var(--n-d4d4d4)' } as const
 
 function tone(r: Relation): keyof typeof RING_COLOR {
   if (r.isMe) return 'me'
@@ -165,7 +165,7 @@ export function InviteGraph({ initial }: { initial: GraphPayload }) {
   }, [nodes])
 
   return (
-    <div ref={wrap} className="invite-graph relative card overflow-hidden" style={{ height: 'max(440px, calc(100dvh - 210px))', padding: 0, background: '#fbfbfa' }}>
+    <div ref={wrap} className="invite-graph relative card overflow-hidden" style={{ height: 'max(440px, calc(100dvh - 210px))', padding: 0, background: 'var(--n-fbfbfa)' }}>
       <svg
         ref={svg}
         width="100%"
@@ -188,11 +188,11 @@ export function InviteGraph({ initial }: { initial: GraphPayload }) {
             if (p.more) {
               return (
                 <g key={p.id} data-node={p.id} transform={`translate(${p.x},${p.y})`} style={{ cursor: 'pointer' }}>
-                  <circle r={17} fill="#fff" stroke="#999" strokeDasharray="3 3" strokeWidth={1.5} />
-                  <text textAnchor="middle" dy={4} fontSize={11} fontWeight={700} fill="#555">
+                  <circle r={17} fill="var(--n-fff)" stroke="var(--n-999)" strokeDasharray="3 3" strokeWidth={1.5} />
+                  <text textAnchor="middle" dy={4} fontSize={11} fontWeight={700} fill="var(--n-555)">
                     {loading === p.more.parentId ? '…' : `+${p.more.remaining}`}
                   </text>
-                  <text textAnchor="middle" dy={34} fontSize={10.5} fill="#888">
+                  <text textAnchor="middle" dy={34} fontSize={10.5} fill="var(--n-888)">
                     <T>더 보기</T>
                   </text>
                 </g>
@@ -206,13 +206,13 @@ export function InviteGraph({ initial }: { initial: GraphPayload }) {
             const badge = relationBadge(n.relation)
             return (
               <g key={p.id} data-node={p.id} transform={`translate(${p.x},${p.y})`} style={{ cursor: 'pointer' }} opacity={p.depth < 0 ? 0.85 : 1}>
-                {selected === p.id && <circle r={r + 7} fill="none" stroke="#111" strokeOpacity={0.25} strokeWidth={6} />}
-                <circle r={r + 3} fill="#fff" stroke={RING_COLOR[t]} strokeWidth={t === 'none' ? 1.5 : 3} />
+                {selected === p.id && <circle r={r + 7} fill="none" stroke="var(--n-111)" strokeOpacity={0.25} strokeWidth={6} />}
+                <circle r={r + 3} fill="var(--n-fff)" stroke={RING_COLOR[t]} strokeWidth={t === 'none' ? 1.5 : 3} />
                 <circle r={r} fill={getAvatarColor(n.id, n.name)} />
                 <text textAnchor="middle" dy={isRoot ? 6 : 4.5} fontSize={isRoot ? 16 : 12.5} fontWeight={700} fill="#fff">
                   {n.name.charAt(0).toUpperCase()}
                 </text>
-                <text textAnchor="middle" dy={r + 17} fontSize={11.5} fontWeight={isRoot ? 700 : 500} fill="#222">
+                <text textAnchor="middle" dy={r + 17} fontSize={11.5} fontWeight={isRoot ? 700 : 500} fill="var(--n-222)">
                   {n.name.length > 8 ? `${n.name.slice(0, 7)}…` : n.name}
                   {n.relation.isMe ? <T> (나)</T> : ''}
                 </text>
@@ -235,51 +235,51 @@ export function InviteGraph({ initial }: { initial: GraphPayload }) {
             ['following', tx('팔로잉 {following}', { following: counts.following })],
           ] as const
         ).map(([k, label]) => (
-          <span key={k} className="inline-flex items-center gap-1 rounded-full bg-white/90 px-2 leading-[22px] shadow-sm" style={{ color: '#444' }}>
+          <span key={k} className="inline-flex items-center gap-1 rounded-full bg-n-fff/90 px-2 leading-[22px] shadow-sm" style={{ color: 'var(--n-444)' }}>
             <span style={{ width: 8, height: 8, borderRadius: 99, background: RING_COLOR[k] }} /> <T>{label}</T>
           </span>
         ))}
       </div>
 
       <div className="absolute top-2 right-2 flex flex-col gap-1.5">
-        <button type="button" onClick={() => zoomCenter(1.3)} aria-label={tx('확대')} title={tx('확대')} className="flex items-center justify-center rounded-full bg-white shadow" style={{ width: 40, height: 40, color: '#111' }}>
+        <button type="button" onClick={() => zoomCenter(1.3)} aria-label={tx('확대')} title={tx('확대')} className="flex items-center justify-center rounded-full bg-n-fff shadow" style={{ width: 40, height: 40, color: 'var(--n-111)' }}>
           <Plus className="w-4 h-4" />
         </button>
-        <button type="button" onClick={() => zoomCenter(1 / 1.3)} aria-label={tx('축소')} title={tx('축소')} className="flex items-center justify-center rounded-full bg-white shadow" style={{ width: 40, height: 40, color: '#111' }}>
+        <button type="button" onClick={() => zoomCenter(1 / 1.3)} aria-label={tx('축소')} title={tx('축소')} className="flex items-center justify-center rounded-full bg-n-fff shadow" style={{ width: 40, height: 40, color: 'var(--n-111)' }}>
           <Minus className="w-4 h-4" />
         </button>
-        <button type="button" onClick={fit} aria-label={tx('전체 보기')} title={tx('전체 보기')} className="flex items-center justify-center rounded-full bg-white shadow" style={{ width: 40, height: 40, color: '#111' }}>
+        <button type="button" onClick={fit} aria-label={tx('전체 보기')} title={tx('전체 보기')} className="flex items-center justify-center rounded-full bg-n-fff shadow" style={{ width: 40, height: 40, color: 'var(--n-111)' }}>
           <Maximize2 className="w-4 h-4" />
         </button>
         {!byId.get(rootId)?.relation.isMe && (
-          <button onClick={() => router.push(networkHref())} aria-label={tx('나를 중심으로')} title={tx('나를 중심으로')} className="flex items-center justify-center rounded-full bg-white shadow" style={{ width: 40, height: 40, color: '#111' }}>
+          <button onClick={() => router.push(networkHref())} aria-label={tx('나를 중심으로')} title={tx('나를 중심으로')} className="flex items-center justify-center rounded-full bg-n-fff shadow" style={{ width: 40, height: 40, color: 'var(--n-111)' }}>
             <Crosshair className="w-4 h-4" />
           </button>
         )}
       </div>
 
       {sel && (
-        <div className="graph-card absolute left-2 right-2 bottom-2 md:right-auto md:w-[340px] rounded-2xl bg-white p-3.5 shadow-lg" style={{ border: '1px solid #eee' }} role="dialog" aria-label={tx('{name} 미니 프로필', { name: sel.name })}>
-          <button onClick={() => setSelected(null)} className="absolute top-1.5 right-1.5 tap-target inline-flex items-center justify-center rounded-full hover:bg-[#f2f2f2]" aria-label={tx('닫기')}>
+        <div className="graph-card absolute left-2 right-2 bottom-2 md:right-auto md:w-[340px] rounded-2xl bg-n-fff p-3.5 shadow-lg" style={{ border: '1px solid var(--n-eee)' }} role="dialog" aria-label={tx('{name} 미니 프로필', { name: sel.name })}>
+          <button onClick={() => setSelected(null)} className="absolute top-1.5 right-1.5 tap-target inline-flex items-center justify-center rounded-full hover:bg-n-f2f2f2" aria-label={tx('닫기')}>
             <X className="w-4 h-4" />
           </button>
           <div className="flex items-center gap-3 pr-8">
             <UserAvatar id={sel.id} name={sel.name} avatarUrl={sel.avatarUrl} size="lg" />
             <div className="min-w-0">
               <p className="flex items-center gap-1.5 min-w-0">
-                <span className="font-bold text-[16px] truncate" style={{ color: '#111' }}>
+                <span className="font-bold text-[16px] truncate" style={{ color: 'var(--n-111)' }}>
                   {sel.name}
                 </span>
-                {sel.relation.isMe ? <span className="text-xs text-[#888]"><T>(나)</T></span> : <RelationBadge relation={sel.relation} />}
+                {sel.relation.isMe ? <span className="text-xs text-n-888"><T>(나)</T></span> : <RelationBadge relation={sel.relation} />}
               </p>
-              <p className="text-[12px] text-[#777]">
+              <p className="text-[12px] text-n-777">
                 {sel.parentId && byId.get(sel.parentId) ? tx('{name}님의 초대', { name: byId.get(sel.parentId)!.name }) : sel.depth != null && sel.depth < 0 ? tx('나를 초대한 줄기') : tx('초대 네트워크')}
                 {tx(' · 초대한 사람 {childCount}명', { childCount: sel.childCount })}
               </p>
             </div>
           </div>
           {sel.bio && (
-            <p className="text-[13px] mt-2 line-clamp-2" style={{ color: '#444' }}>
+            <p className="text-[13px] mt-2 line-clamp-2" style={{ color: 'var(--n-444)' }}>
               {sel.bio}
             </p>
           )}

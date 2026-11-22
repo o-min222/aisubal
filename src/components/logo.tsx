@@ -18,7 +18,7 @@ const sizes = {
 export async function Logo({ variant = 'dark', size = 'md', className }: LogoProps) {
   const st = await getT()
   const { width, height } = sizes[size]
-  const fill = variant === 'light' ? '#ffffff' : '#1a1a1a'
+  const fill = variant === 'light' ? '#ffffff' : 'var(--n-1a1a1a, #1a1a1a)'
   
   return (
     <svg 
@@ -53,7 +53,7 @@ export async function LogoMark({ variant = 'dark', size = 'md', className }: Log
   const st = await getT()
   const sizeMap = { sm: 24, md: 32, lg: 40, xl: 56 }
   const dimension = sizeMap[size]
-  const fill = variant === 'light' ? '#ffffff' : '#1a1a1a'
+  const fill = variant === 'light' ? '#ffffff' : 'var(--n-1a1a1a, #1a1a1a)'
   
   return (
     <svg 

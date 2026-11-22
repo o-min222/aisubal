@@ -31,19 +31,19 @@ export function UsersAdmin({ initial, meId }: { initial: U[]; meId: string }) {
   return (
     <div className="space-y-3">
       <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={tx('닉네임·핸들·실명·이메일 검색')} aria-label={tx('유저 검색')} className="input" />
-      <ul className="card divide-y divide-[#eee]">
+      <ul className="card divide-y divide-n-eee">
         {shown.map((u) => (
           <li key={u.id} className="p-3 flex items-center gap-3">
             <Link href={`/members/${u.id}`} className="flex items-center gap-3 min-w-0 flex-1">
               <UserAvatar id={u.id} name={u.name} size="sm" />
               <span className="min-w-0">
                 <span className="flex items-center gap-1.5">
-                  <span className="font-medium text-[#111] truncate">{u.name}</span>
+                  <span className="font-medium text-n-111 truncate">{u.name}</span>
                   {u.isAdmin && <span className="badge bg-purple-100 text-purple-700"><T>관리자</T></span>}
                   {u.isBanned && <span className="badge bg-red-100 text-red-700"><T>차단됨</T></span>}
                 </span>
-                <span className="block text-xs text-[#888] truncate"><T s="{v} · 게시물 {posts}" vars={{ v: u.handle ? `@${u.handle}` : tx('핸들 미설정'), posts: u.posts }} /></span>
-                <span className="block text-xs text-[#aaa] truncate" title={tx('관리자에게만 보여요')}>
+                <span className="block text-xs text-n-888 truncate"><T s="{v} · 게시물 {posts}" vars={{ v: u.handle ? `@${u.handle}` : tx('핸들 미설정'), posts: u.posts }} /></span>
+                <span className="block text-xs text-n-aaa truncate" title={tx('관리자에게만 보여요')}>
                   {[u.realName, u.email].filter(Boolean).join(' · ') || tx('비공개 정보 없음')}
                 </span>
               </span>
@@ -61,7 +61,7 @@ export function UsersAdmin({ initial, meId }: { initial: U[]; meId: string }) {
             )}
           </li>
         ))}
-        {shown.length === 0 && <li className="p-6 text-center text-sm text-[#888]"><T>해당하는 유저가 없어요.</T></li>}
+        {shown.length === 0 && <li className="p-6 text-center text-sm text-n-888"><T>해당하는 유저가 없어요.</T></li>}
       </ul>
     </div>
   )

@@ -26,15 +26,15 @@ export function PersonRow({
         <UserAvatar id={person.id} name={person.name} avatarUrl={person.avatarUrl} />
         <span className="min-w-0">
           <span className="flex items-center gap-1.5 min-w-0">
-            <span className="font-semibold text-[15px] truncate" style={{ color: '#111' }}>
+            <span className="font-semibold text-[15px] truncate" style={{ color: 'var(--n-111)' }}>
               {person.name}
             </span>
-            {r.isMe ? <span className="text-xs text-[#888]"><T>(나)</T></span> : <RelationBadge relation={r} />}
+            {r.isMe ? <span className="text-xs text-n-888"><T>(나)</T></span> : <RelationBadge relation={r} />}
           </span>
           {subtitle ? (
-            <span className="block text-[12.5px] text-[#777] truncate">{subtitle}</span>
+            <span className="block text-[12.5px] text-n-777 truncate">{subtitle}</span>
           ) : person.bio ? (
-            <span className="block text-[12.5px] text-[#777] truncate">{person.bio}</span>
+            <span className="block text-[12.5px] text-n-777 truncate">{person.bio}</span>
           ) : null}
         </span>
       </Link>

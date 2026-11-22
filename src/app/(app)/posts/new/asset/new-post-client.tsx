@@ -118,21 +118,21 @@ export function NewPostClient({
 
   return (
     <div className="max-w-2xl mx-auto">
-      <Link href="/posts/new" className="inline-flex items-center gap-2 text-sm text-[#666] hover:text-[#111] mb-4">
+      <Link href="/posts/new" className="inline-flex items-center gap-2 text-sm text-n-666 hover:text-n-111 mb-4">
         <ArrowLeft className="w-4 h-4" />
         <T>짧은 글로 돌아가기</T>
       </Link>
 
       <div className="card">
-        <div className="p-6 border-b border-[#e5e5e5]">
-          <h1 className="text-xl font-bold text-[#111]"><T>새 게시물</T></h1>
-          <p className="text-sm text-[#666] mt-1"><T>링크를 붙이고 코멘트를 남기세요. AI 에셋은 선택입니다.</T></p>
+        <div className="p-6 border-b border-n-e5e5e5">
+          <h1 className="text-xl font-bold text-n-111"><T>새 게시물</T></h1>
+          <p className="text-sm text-n-666 mt-1"><T>링크를 붙이고 코멘트를 남기세요. AI 에셋은 선택입니다.</T></p>
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
           {/* Profile switcher */}
           <div>
-            <label className="block text-sm font-medium text-[#333] mb-2"><T>게시 프로필</T></label>
+            <label className="block text-sm font-medium text-n-333 mb-2"><T>게시 프로필</T></label>
             <div className="flex flex-wrap gap-2">
               <button
                 type="button"
@@ -141,7 +141,7 @@ export function NewPostClient({
               >
                 <UserAvatar id={member.id} name={member.display_name} avatarUrl={member.avatar_url} size="sm" />
                 <span>{member.display_name}</span>
-                <span className="text-xs text-[#888]"><T>기본 프로필</T></span>
+                <span className="text-xs text-n-888"><T>기본 프로필</T></span>
               </button>
               {nicknameUnlocked && hasNick ? (
                 <button
@@ -156,11 +156,11 @@ export function NewPostClient({
                     size="sm"
                   />
                   <span>{member.nickname}</span>
-                  <span className="text-xs text-[#888]"><T>별명</T></span>
+                  <span className="text-xs text-n-888"><T>별명</T></span>
                 </button>
               ) : (
                 <div className="profile-switch opacity-60 cursor-not-allowed" title={tx('별명 프로필 잠김')}>
-                  <span className="text-sm text-[#888]">
+                  <span className="text-sm text-n-888">
                     {nicknameUnlocked
                       ? tx('설정에서 별명 프로필을 만드세요')
                       : tx('별명 잠김 · 멤버 {unlockThreshold}명부터 (현재 {activeMemberCount})', { unlockThreshold, activeMemberCount })}
@@ -172,7 +172,7 @@ export function NewPostClient({
 
           {/* URL first */}
           <div>
-            <label className="block text-sm font-medium text-[#333] mb-2">
+            <label className="block text-sm font-medium text-n-333 mb-2">
               <Link2 className="w-4 h-4 inline mr-1" />
               <T>공유 링크</T>
             </label>
@@ -198,7 +198,7 @@ export function NewPostClient({
                 <LinkCard link={preview} />
                 <button
                   type="button"
-                  className="text-xs text-[#888] mt-2 hover:text-[#111]"
+                  className="text-xs text-n-888 mt-2 hover:text-n-111"
                   onClick={() => {
                     setPreview(null)
                     setUrlInput('')
@@ -211,7 +211,7 @@ export function NewPostClient({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-[#333] mb-2"><T>제목</T></label>
+            <label className="block text-sm font-medium text-n-333 mb-2"><T>제목</T></label>
             <input
               type="text"
               value={title}
@@ -222,7 +222,7 @@ export function NewPostClient({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-[#333] mb-2">
+            <label className="block text-sm font-medium text-n-333 mb-2">
               <T>코멘트</T> <span className="text-red-500">*</span>
             </label>
             <textarea
@@ -240,8 +240,8 @@ export function NewPostClient({
           <div>
             <div className="flex items-center justify-between mb-3">
               <div>
-                <label className="block text-sm font-medium text-[#333]"><T>AI 에셋 (선택)</T></label>
-                <p className="text-xs text-[#888]"><T>SKILL / MCP / RULES / 프롬프트 첨부</T></p>
+                <label className="block text-sm font-medium text-n-333"><T>AI 에셋 (선택)</T></label>
+                <p className="text-xs text-n-888"><T>SKILL / MCP / RULES / 프롬프트 첨부</T></p>
               </div>
               <button type="button" onClick={addAsset} className="btn btn-secondary btn-sm">
                 <Plus className="w-4 h-4" />
@@ -249,7 +249,7 @@ export function NewPostClient({
               </button>
             </div>
             {assets.map((asset) => (
-              <div key={asset.id} className="border border-[#e5e5e5] rounded-lg bg-[#fafafa] mb-3 p-4 space-y-3">
+              <div key={asset.id} className="border border-n-e5e5e5 rounded-lg bg-n-fafafa mb-3 p-4 space-y-3">
                 <div className="flex gap-3">
                   <select
                     value={asset.type}
@@ -277,7 +277,7 @@ export function NewPostClient({
                   <button
                     type="button"
                     onClick={() => setAssets(assets.filter((a) => a.id !== asset.id))}
-                    className="p-2 text-[#888] hover:text-red-500"
+                    className="p-2 text-n-888 hover:text-red-500"
                   >
                     <X className="w-4 h-4" />
                   </button>
@@ -297,7 +297,7 @@ export function NewPostClient({
             ))}
           </div>
 
-          <div className="flex justify-end gap-3 pt-4 border-t border-[#eee]">
+          <div className="flex justify-end gap-3 pt-4 border-t border-n-eee">
             <Link href="/feed" className="btn btn-secondary"><T>취소</T></Link>
             <button type="submit" disabled={loading || !content.trim()} className="btn btn-primary disabled:opacity-50">
               {loading ? <T>게시 중...</T> : <T>게시하기</T>}

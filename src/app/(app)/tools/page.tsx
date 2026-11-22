@@ -76,8 +76,8 @@ export default async function ToolsPage({ searchParams }: { searchParams: Promis
     <>
       <header className="tools-head">
         <div className="min-w-0">
-          <h1 className="text-[22px] font-bold text-[#111]"><T>툴</T></h1>
-          <p className="text-[13px] text-[#666] mt-0.5"><T>MCP·스킬·프롬프트·CLI부터 멤버가 만든 프로덕트까지 한곳에서.</T></p>
+          <h1 className="text-[22px] font-bold text-n-111"><T>툴</T></h1>
+          <p className="text-[13px] text-n-666 mt-0.5"><T>MCP·스킬·프롬프트·CLI부터 멤버가 만든 프로덕트까지 한곳에서.</T></p>
         </div>
         <div className="flex gap-2 flex-shrink-0">
           <Link href="/tools/launch" className="btn btn-secondary btn-sm min-h-[40px]">
@@ -132,7 +132,7 @@ export default async function ToolsPage({ searchParams }: { searchParams: Promis
               </Link>
             ))}
           </div>
-          <span className="text-xs text-[#888] tabular-nums"><T s="{length}개" vars={{ length: all.length }} /></span>
+          <span className="text-xs text-n-888 tabular-nums"><T s="{length}개" vars={{ length: all.length }} /></span>
         </div>
       </div>
 

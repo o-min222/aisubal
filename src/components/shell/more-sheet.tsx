@@ -44,7 +44,7 @@ export function MoreSheet({
           )
         )}
       </div>
-      <p className="text-xs text-[#888] text-center mt-3">{t('프로필·초대·설정은 오른쪽 위 프로필 사진을 눌러 열어요.')}</p>
+      <p className="text-xs text-n-888 text-center mt-3">{t('프로필·초대·설정은 오른쪽 위 프로필 사진을 눌러 열어요.')}</p>
     </AdaptiveSheet>
   )
 }

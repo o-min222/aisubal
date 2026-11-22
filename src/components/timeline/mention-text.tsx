@@ -11,7 +11,7 @@ export function MentionText({ text }: { text: string }) {
     const start = (m.index ?? 0) + m[1].length
     parts.push(text.slice(last, start))
     parts.push(
-      <Link key={start} href={`/u/${m[2]}`} className="mention text-[#0066cc] hover:underline">
+      <Link key={start} href={`/u/${m[2]}`} className="mention text-c-06c hover:underline">
         @{m[2]}
       </Link>
     )

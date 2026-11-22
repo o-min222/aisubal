@@ -77,7 +77,7 @@ export function GroupJoinButton({ g }: { g: Group }) {
         run({ action: 'join', message: message.trim() || null }, msg('가입을 요청했어요'))
       }}
     >
-      <input autoFocus maxLength={200} value={message} onChange={(e) => setMessage(e.target.value)} placeholder={tx('한마디 (선택)')} className="rounded-xl border border-[#ddd] px-3 py-2 text-[15px]" />
+      <input autoFocus maxLength={200} value={message} onChange={(e) => setMessage(e.target.value)} placeholder={tx('한마디 (선택)')} className="rounded-xl border border-n-ddd px-3 py-2 text-[15px]" />
       <span className="flex gap-1.5">
         <button type="submit" className={`${cls} btn-primary flex-1`} disabled={busy}>
           <T>요청 보내기</T>

@@ -14,7 +14,7 @@ export function AgoraBanner() {
       </div>
       <Link
         href="/agents/connect?from=agora"
-        className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg bg-white text-[#111] text-sm font-semibold flex-shrink-0 hover:bg-white/90"
+        className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg bg-n-fff text-n-111 text-sm font-semibold flex-shrink-0 hover:bg-n-fff/90"
       >
         <Plug className="w-4 h-4" />
         <T>에이전트 연결</T>

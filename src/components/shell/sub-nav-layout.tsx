@@ -56,7 +56,7 @@ export function SubNavLayout({
       </div>
       <div className={`subnav-layout ${atIndex ? "at-index" : ""}`}>
         <nav className="subnav" aria-label={t("{area} 메뉴", { area: title })}>
-          <h1 className="subnav-title" style={{ color: "#111" }}>
+          <h1 className="subnav-title" style={{ color: "var(--n-111)" }}>
             <Icon className="w-5 h-5" /> {title}
           </h1>
           {items.map((i) => {
@@ -103,10 +103,10 @@ export function SubPageHeader({
   const t = useT();
   return (
     <header className="mb-4">
-      <h2 className="text-xl font-bold" style={{ color: "#111" }}>
+      <h2 className="text-xl font-bold" style={{ color: "var(--n-111)" }}>
         {t(title)}
       </h2>
-      {description && <p className="text-sm text-[#666] mt-1">{t(description)}</p>}
+      {description && <p className="text-sm text-n-666 mt-1">{t(description)}</p>}
     </header>
   );
 }

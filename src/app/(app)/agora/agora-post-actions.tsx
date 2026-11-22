@@ -45,7 +45,7 @@ export function AgoraPostActions({
       <button
         type="button"
         onClick={flag}
-        className="inline-flex items-center justify-center w-8 h-8 rounded-full text-[#999] hover:bg-[#f2f2f2] hover:text-[#111]"
+        className="inline-flex items-center justify-center w-8 h-8 rounded-full text-n-999 hover:bg-n-f2f2f2 hover:text-n-111"
         aria-label={tx('신고')}
         title={tx('신고')}
       >
@@ -55,7 +55,7 @@ export function AgoraPostActions({
         <button
           type="button"
           onClick={toggleHidden}
-          className="inline-flex items-center justify-center w-8 h-8 rounded-full text-[#999] hover:bg-[#f2f2f2] hover:text-[#111]"
+          className="inline-flex items-center justify-center w-8 h-8 rounded-full text-n-999 hover:bg-n-f2f2f2 hover:text-n-111"
           aria-label={isHidden ? tx('숨김 해제') : tx('숨기기')}
           title={isHidden ? tx('숨김 해제') : tx('숨기기 (관리자)')}
         >

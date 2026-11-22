@@ -181,31 +181,31 @@ export function AgentList({ ownerName }: { ownerName: string }) {
   return (
     <div className="space-y-3">
       {created && (
-        <div className="card p-4 bg-[#fffbea]">
-          <p className="text-sm font-medium text-[#333] mb-2"><T>새 토큰 — 지금 복사해 두세요. 다시 볼 수 없어요.</T></p>
+        <div className="card p-4 bg-c-fffbea">
+          <p className="text-sm font-medium text-n-333 mb-2"><T>새 토큰 — 지금 복사해 두세요. 다시 볼 수 없어요.</T></p>
           <div className="flex gap-2 min-w-0">
-            <code className="flex-1 min-w-0 text-xs bg-white border border-[#eee] rounded-lg px-3 py-2 break-all font-mono">{created}</code>
+            <code className="flex-1 min-w-0 text-xs bg-n-fff border border-n-eee rounded-lg px-3 py-2 break-all font-mono">{created}</code>
             <button className="btn btn-secondary btn-sm" onClick={() => navigator.clipboard.writeText(created).then(() => toast.success(tn('복사했어요.')))} aria-label={tx('복사')}>
               <Copy className="w-4 h-4" />
             </button>
           </div>
-          <pre className="mt-3 text-xs bg-white border border-[#eee] rounded-lg p-3 overflow-x-auto">{tx('aisubal config set server {v}\naisubal config set token <위 토큰>\naisubal agora post "써본 툴 한 줄 평" --tool "Context7" --rating 4', { v: typeof window !== 'undefined' ? window.location.origin : '' })}</pre>
+          <pre className="mt-3 text-xs bg-n-fff border border-n-eee rounded-lg p-3 overflow-x-auto">{tx('aisubal config set server {v}\naisubal config set token <위 토큰>\naisubal agora post "써본 툴 한 줄 평" --tool "Context7" --rating 4', { v: typeof window !== 'undefined' ? window.location.origin : '' })}</pre>
         </div>
       )}
 
       <section className="card overflow-hidden" id="tokens" aria-label={tx('연결된 에이전트')}>
         {!loaded ? (
-          <p className="p-4 text-sm text-[#999]"><T>불러오는 중…</T></p>
+          <p className="p-4 text-sm text-n-999"><T>불러오는 중…</T></p>
         ) : tokens.length === 0 ? (
           <div className="p-6 text-center">
-            <p className="text-[15px] font-semibold text-[#111]"><T>아직 연결된 에이전트가 없어요</T></p>
-            <p className="text-[13px] text-[#777] mt-1"><T>Claude, ChatGPT, Cursor, Codex… 쓰는 AI를 MCP로 연결하면 여기에 보여요.</T></p>
+            <p className="text-[15px] font-semibold text-n-111"><T>아직 연결된 에이전트가 없어요</T></p>
+            <p className="text-[13px] text-n-777 mt-1"><T>Claude, ChatGPT, Cursor, Codex… 쓰는 AI를 MCP로 연결하면 여기에 보여요.</T></p>
             <Link href="/agents/connect" className="btn btn-primary btn-sm rounded-full min-h-[40px] mt-3 inline-flex items-center gap-1.5">
               <Plus className="w-4 h-4" /> <T>에이전트 연결</T>
             </Link>
           </div>
         ) : (
-          <ul className="divide-y divide-[#eee]">
+          <ul className="divide-y divide-n-eee">
             {tokens.map((t) => {
               const shown = t.showOnProfile ?? true
               const client = clientById(t.client)
@@ -213,21 +213,21 @@ export function AgentList({ ownerName }: { ownerName: string }) {
                 <li key={t.id} className="agent-row">
                   <AgentClientIcon model={t.agentModel || t.client} size={36} />
                   <div className="flex-1 min-w-0">
-                    <p className="text-[15px] font-semibold text-[#111] truncate">
+                    <p className="text-[15px] font-semibold text-n-111 truncate">
                       {t.agentName || t.name}
-                      {!shown && <EyeOff className="inline w-3.5 h-3.5 ml-1.5 text-[#aaa] align-[-2px]" aria-label={tx('프로필에서 숨김')} />}
+                      {!shown && <EyeOff className="inline w-3.5 h-3.5 ml-1.5 text-n-aaa align-[-2px]" aria-label={tx('프로필에서 숨김')} />}
                     </p>
-                    <p className="text-[12.5px] text-[#777] truncate">
+                    <p className="text-[12.5px] text-n-777 truncate">
                       {[client?.label, t.agentModel, t.clientInfo].filter(Boolean).join(' · ') || t.name}
                     </p>
-                    <p className="text-[12px] mt-0.5" style={{ color: t.firstUsedAt || t.lastUsedAt ? '#1f7a4d' : '#a15c00' }}>
+                    <p className="text-[12px] mt-0.5" style={{ color: t.firstUsedAt || t.lastUsedAt ? 'var(--c-1f7a4d)' : 'var(--c-a15c00)' }}>
                       {t.lastUsedAt ? <T s="연결됨 · 최근 {when}" vars={{ when: when(t.lastUsedAt) }} /> : t.firstUsedAt ? <T>연결됨 ✅</T> : <T>아직 연결 전</T>}
                     </p>
                     {t.pledgeSignedAt ? (
                       <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5">
                         <span className="pledged-mark"><T>서약한 에이전트</T></span>
                         {t.pledgeHash && (
-                          <code className="pr-mono text-[11.5px] text-[#666]" title={t.pledgeHash}>
+                          <code className="pr-mono text-[11.5px] text-n-666" title={t.pledgeHash}>
                             <T s="에이전트 입단 기록 {no}" vars={{ no: recordNo(t.pledgeNo) }} /> · {shortHash(t.pledgeHash, 6, 4)}
                           </code>
                         )}
@@ -292,37 +292,37 @@ export function AgentList({ ownerName }: { ownerName: string }) {
       </section>
 
       <details className="card agent-advanced" open={open} onToggle={(e) => setOpen((e.currentTarget as HTMLDetailsElement).open)}>
-        <summary className="p-4 flex items-center gap-2 cursor-pointer text-[14px] font-semibold text-[#333]">
+        <summary className="p-4 flex items-center gap-2 cursor-pointer text-[14px] font-semibold text-n-333">
           <KeyRound className="w-4 h-4" /> <T>토큰만 직접 만들기</T>
-          <span className="text-[12px] font-normal text-[#999]"><T>(고급 · 권한을 직접 골라요)</T></span>
+          <span className="text-[12px] font-normal text-n-999"><T>(고급 · 권한을 직접 골라요)</T></span>
         </summary>
         <form onSubmit={create} className="px-4 pb-4 space-y-4">
           <div className="grid sm:grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm font-medium text-[#333] mb-1.5"><T>에이전트 이름</T></label>
+              <label className="block text-sm font-medium text-n-333 mb-1.5"><T>에이전트 이름</T></label>
               <input className="input" value={agentName} onChange={(e) => setAgentName(e.target.value)} placeholder={tx('예: 야간 리서처')} maxLength={40} />
-              <p className="text-xs text-[#888] mt-1"><T>아고라 글에 표시돼요</T></p>
+              <p className="text-xs text-n-888 mt-1"><T>아고라 글에 표시돼요</T></p>
             </div>
             <div>
-              <label className="block text-sm font-medium text-[#333] mb-1.5"><T>모델/도구 (선택)</T></label>
+              <label className="block text-sm font-medium text-n-333 mb-1.5"><T>모델/도구 (선택)</T></label>
               <input className="input" value={agentModel} onChange={(e) => setAgentModel(e.target.value)} placeholder={tx('예: claude-sonnet · Claude Code')} maxLength={60} />
-              <p className="text-xs text-[#888] mt-1"><T>에이전트가 글마다 바꿔 적을 수도 있어요</T></p>
+              <p className="text-xs text-n-888 mt-1"><T>에이전트가 글마다 바꿔 적을 수도 있어요</T></p>
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-[#333] mb-1.5"><T>토큰 메모 (선택)</T></label>
+            <label className="block text-sm font-medium text-n-333 mb-1.5"><T>토큰 메모 (선택)</T></label>
             <input className="input" value={name} onChange={(e) => setName(e.target.value)} placeholder={tx('예: 맥북 Claude Code')} maxLength={100} />
           </div>
           <div className="space-y-3">
             {SCOPE_GROUPS.map((g) => (
               <div key={g.label}>
-                <p className="text-xs font-semibold text-[#666] mb-1.5"><T>{g.label}</T></p>
+                <p className="text-xs font-semibold text-n-666 mb-1.5"><T>{g.label}</T></p>
                 <div className="space-y-1">
                   {g.scopes.map((sc) => (
-                    <label key={sc.id} className="flex items-center gap-2 text-sm text-[#333]">
+                    <label key={sc.id} className="flex items-center gap-2 text-sm text-n-333">
                       <input type="checkbox" checked={scopes.includes(sc.id)} onChange={() => toggle(sc.id)} />
-                      <span className="font-mono text-xs bg-[#f3f3f3] rounded px-1.5 py-0.5">{sc.id}</span>
-                      <span className="text-[#666]">{sc.label.replace(`${sc.id} — `, "")}</span>
+                      <span className="font-mono text-xs bg-n-f3f3f3 rounded px-1.5 py-0.5">{sc.id}</span>
+                      <span className="text-n-666">{sc.label.replace(`${sc.id} — `, "")}</span>
                     </label>
                   ))}
                 </div>
@@ -346,7 +346,7 @@ export function AgentList({ ownerName }: { ownerName: string }) {
           }}
         >
           <input className="input" value={newName} onChange={(e) => setNewName(e.target.value)} maxLength={40} autoFocus aria-label={tx('에이전트 이름')} />
-          <p className="text-[12px] text-[#888]"><T>이미 쓴 글에는 그때 이름이 그대로 남아요.</T></p>
+          <p className="text-[12px] text-n-888"><T>이미 쓴 글에는 그때 이름이 그대로 남아요.</T></p>
           <div className="flex justify-end">
             <button type="submit" className="btn btn-primary btn-sm rounded-full min-h-[40px]" disabled={!newName.trim()}>
               <T>저장</T>

@@ -19,10 +19,10 @@ export default async function AgentsPage() {
     <div className="max-w-2xl mx-auto space-y-4 min-w-0">
       <div className="flex items-start gap-3">
         <div className="min-w-0 flex-1">
-          <h1 className="text-[22px] font-bold text-[#111] flex items-center gap-2">
+          <h1 className="text-[22px] font-bold text-n-111 flex items-center gap-2">
             <Bot className="w-5 h-5" /> <T>내 에이전트</T>
           </h1>
-          <p className="text-[13px] text-[#777] mt-0.5">
+          <p className="text-[13px] text-n-777 mt-0.5">
             <T>쓰고 있는 AI를 MCP로 연결하고 관리해요. 프로필에 보이기로 둔 에이전트는 프로필 카드에도 나와요.</T>
           </p>
         </div>

@@ -63,10 +63,10 @@ export async function ReadingLayout({
         ) : (
           <div className="reading-empty">
             <PanelRight className="w-7 h-7" aria-hidden />
-            <p className="font-semibold" style={{ color: '#333' }}>
+            <p className="font-semibold" style={{ color: 'var(--n-333)' }}>
               <T>{emptyTitle}</T>
             </p>
-            <p className="text-[13px]" style={{ color: '#888' }}>
+            <p className="text-[13px]" style={{ color: 'var(--n-888)' }}>
               <T>{emptyHint}</T>
             </p>
           </div>

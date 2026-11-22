@@ -213,7 +213,7 @@ export function ProfileCardEditor({
                   <DropdownMenuTrigger className="mc-chip pe-chip" aria-label={tx('{label} 설정', { label: it.label })}>
                     <ServiceIcon label={it.label} iconUrl={it.iconUrl} />
                     <span className="svc-label">{it.label}</span>
-                    {locked && <Lock className="w-3 h-3 text-[#999] flex-shrink-0" aria-label={tx('잠금')} />}
+                    {locked && <Lock className="w-3 h-3 text-n-999 flex-shrink-0" aria-label={tx('잠금')} />}
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="start" className="min-w-[220px]">
                     <DropdownMenuLabel className="truncate">{it.label}</DropdownMenuLabel>
@@ -296,7 +296,7 @@ export function ProfileCardEditor({
               onKeyDown={(e) => e.key === 'Enter' && e.currentTarget.blur()}
             />
           </label>
-          {handleErr && <p className="text-[12px] text-[#b42318] mt-0.5">{handleErr}</p>}
+          {handleErr && <p className="text-[12px] text-c-b42318 mt-0.5">{handleErr}</p>}
           <textarea
             className="pe-inline pe-bio"
             value={bio}
@@ -307,7 +307,7 @@ export function ProfileCardEditor({
             onChange={(e) => setBio(e.target.value)}
             onBlur={() => void saveProfile()}
           />
-          {bioPii && <p role="alert" className="pii-warning text-[12px] rounded-lg px-2.5 py-1.5 mt-1" style={{ background: '#fff4e5', color: '#8a4b00' }}><T s="{pii} 멤버 모두가 볼 수 있어요. 지우거나 가려주세요." vars={{ pii: bioPii }} /></p>}
+          {bioPii && <p role="alert" className="pii-warning text-[12px] rounded-lg px-2.5 py-1.5 mt-1" style={{ background: 'var(--c-fff4e5)', color: 'var(--c-8a4b00)' }}><T s="{pii} 멤버 모두가 볼 수 있어요. 지우거나 가려주세요." vars={{ pii: bioPii }} /></p>}
 
           <div className="mc-body">
             {group('ai')}
@@ -321,7 +321,7 @@ export function ProfileCardEditor({
                     <button type="button" className="mc-chip pe-chip" onClick={() => setLinksOpen(true)}>
                       <LinkIcon kind={l.kind} size={16} />
                       <span className="truncate">{LINK_KINDS.find((k) => k.kind === l.kind)?.label ?? l.kind}</span>
-                      {l.visibility !== 'members' && <Lock className="w-3 h-3 text-[#999]" />}
+                      {l.visibility !== 'members' && <Lock className="w-3 h-3 text-n-999" />}
                     </button>
                   </li>
                 ))}
@@ -352,26 +352,26 @@ export function ProfileCardEditor({
       {settingsRows && (
         <section className="ios-rows" aria-label={tx('프로필 설정')}>
           <button type="button" className="ios-row" onClick={() => setRealOpen(true)}>
-            <Eye className="w-4 h-4 text-[#666]" />
+            <Eye className="w-4 h-4 text-n-666" />
             <span className="flex-1 min-w-0"><T>실명 공개</T></span>
             <span className="ios-row-val">{showReal ? <T>공개</T> : <T>비공개</T>}</span>
-            <ChevronRight className="w-4 h-4 text-[#bbb]" />
+            <ChevronRight className="w-4 h-4 text-n-bbb" />
           </button>
           <Link href="/settings/profile/nickname" className="ios-row">
-            <Ghost className="w-4 h-4 text-[#666]" />
+            <Ghost className="w-4 h-4 text-n-666" />
             <span className="flex-1 min-w-0"><T>부캐(별명) 프로필</T></span>
-            <ChevronRight className="w-4 h-4 text-[#bbb]" />
+            <ChevronRight className="w-4 h-4 text-n-bbb" />
           </Link>
           <Link href="/agents" className="ios-row">
-            <Bot className="w-4 h-4 text-[#666]" />
+            <Bot className="w-4 h-4 text-n-666" />
             <span className="flex-1 min-w-0"><T>내 에이전트</T></span>
             <span className="ios-row-val">{agents.length || ''}</span>
-            <ChevronRight className="w-4 h-4 text-[#bbb]" />
+            <ChevronRight className="w-4 h-4 text-n-bbb" />
           </Link>
           <Link href={`/members/${me.id}`} className="ios-row">
-            <Link2 className="w-4 h-4 text-[#666]" />
+            <Link2 className="w-4 h-4 text-n-666" />
             <span className="flex-1 min-w-0"><T>다른 사람에게 보이는 모습</T></span>
-            <ChevronRight className="w-4 h-4 text-[#bbb]" />
+            <ChevronRight className="w-4 h-4 text-n-bbb" />
           </Link>
         </section>
       )}
@@ -399,7 +399,7 @@ export function ProfileCardEditor({
                 setAdding(null)
               }}
             />
-            <p className="text-[12px] text-[#888] mt-2">{adding === 'skills' ? <T>툴에서 고르면 ‘사용 중’으로 바로 표시돼요. 목록에 없으면 직접 입력.</T> : <T>목록에 없으면 직접 입력하고 Enter.</T>}</p>
+            <p className="text-[12px] text-n-888 mt-2">{adding === 'skills' ? <T>툴에서 고르면 ‘사용 중’으로 바로 표시돼요. 목록에 없으면 직접 입력.</T> : <T>목록에 없으면 직접 입력하고 Enter.</T>}</p>
           </div>
         )}
       </AdaptiveSheet>
@@ -410,7 +410,7 @@ export function ProfileCardEditor({
 
       <AdaptiveSheet open={realOpen} onOpenChange={setRealOpen} title={tx('실명 공개')}>
         <div className="space-y-3 pb-1">
-          <p className="text-[13px] text-[#666]"><T>켜면 프로필에 실명이 함께 보여요. 기본은 비공개예요.</T></p>
+          <p className="text-[13px] text-n-666"><T>켜면 프로필에 실명이 함께 보여요. 기본은 비공개예요.</T></p>
           {[false, true].map((v) => (
             <button
               key={String(v)}

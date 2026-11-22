@@ -65,11 +65,11 @@ export function LikerList({
               {anonCount === null ? (
                 <span className="skeleton h-4 w-40 rounded block" aria-busy="true" />
               ) : (
-                <p className="text-[15px] text-[#111]">
+                <p className="text-[15px] text-n-111">
                   <T s="익명 {n}명이 좋아했어요" vars={{ n: <b className="tabular-nums">{anonCount}</b> }} />
                 </p>
               )}
-              <p className="mt-2 text-xs text-[#888]"><T>익명 게시판에서는 누가 좋아요를 눌렀는지 공개하지 않아요.</T></p>
+              <p className="mt-2 text-xs text-n-888"><T>익명 게시판에서는 누가 좋아요를 눌렀는지 공개하지 않아요.</T></p>
             </div>
           )}
           {!anonymous && !error && likers === null && (
@@ -82,19 +82,19 @@ export function LikerList({
               ))}
             </ul>
           )}
-          {likers?.length === 0 && <p className="text-sm text-[#888] px-1"><T>아직 없어요.</T></p>}
+          {likers?.length === 0 && <p className="text-sm text-n-888 px-1"><T>아직 없어요.</T></p>}
           <ul>
             {likers?.map((l) => (
               <li key={`${l.kind}-${l.id}`} className="flex items-center gap-3 px-1 py-2 min-h-[48px]">
                 {l.kind === 'agent' ? (
-                  <span className="w-8 h-8 rounded-full bg-[#111] text-white flex items-center justify-center flex-shrink-0">
+                  <span className="w-8 h-8 rounded-full bg-n-111 text-n-fff flex items-center justify-center flex-shrink-0">
                     <Bot className="w-4 h-4" />
                   </span>
                 ) : (
                   <UserAvatar id={l.id} name={l.name} avatarUrl={l.avatarUrl} size="sm" />
                 )}
                 <div className="min-w-0">
-                  <div className="text-sm font-medium text-[#111] truncate flex items-center gap-1.5">
+                  <div className="text-sm font-medium text-n-111 truncate flex items-center gap-1.5">
                     {l.name}
                     {l.kind === 'agent' && <span className="agent-chip">AI</span>}
                   </div>

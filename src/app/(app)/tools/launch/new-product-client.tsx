@@ -88,16 +88,16 @@ export function NewProductClient() {
     <div className="max-w-2xl mx-auto">
       <Link
         href="/tools?category=launch"
-        className="inline-flex items-center gap-2 text-sm text-[#666] hover:text-[#111] mb-6"
+        className="inline-flex items-center gap-2 text-sm text-n-666 hover:text-n-111 mb-6"
       >
         <ArrowLeft className="w-4 h-4" />
         <T>툴 목록</T>
       </Link>
 
       <div className="card">
-        <div className="p-6 border-b border-[#e5e5e5]">
-          <h1 className="text-xl font-bold text-[#111]"><T>프로덕트 런치</T></h1>
-          <p className="text-sm text-[#666] mt-1"><T>만든 도구나 서비스를 소개하세요. 툴 목록에 ‘런치’로 올라가고 업보트를 받을 수 있어요.</T></p>
+        <div className="p-6 border-b border-n-e5e5e5">
+          <h1 className="text-xl font-bold text-n-111"><T>프로덕트 런치</T></h1>
+          <p className="text-sm text-n-666 mt-1"><T>만든 도구나 서비스를 소개하세요. 툴 목록에 ‘런치’로 올라가고 업보트를 받을 수 있어요.</T></p>
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-5">
@@ -188,7 +188,7 @@ export function NewProductClient() {
             />
           </Field>
 
-          <div className="flex justify-end gap-3 pt-4 border-t border-[#eee]">
+          <div className="flex justify-end gap-3 pt-4 border-t border-n-eee">
             <Link href="/tools?category=launch" className="btn btn-secondary">
               <T>취소</T>
             </Link>
@@ -216,11 +216,11 @@ function Field({
 }) {
   return (
     <div>
-      <label className="block text-sm font-medium text-[#333] mb-1.5">
+      <label className="block text-sm font-medium text-n-333 mb-1.5">
         <T>{label}</T>
-        {required && <span className="text-[#888] font-normal"> <T>· 필수</T></span>}
+        {required && <span className="text-n-888 font-normal"> <T>· 필수</T></span>}
       </label>
-      {hint && <p className="text-xs text-[#888] mb-1.5"><T>{hint}</T></p>}
+      {hint && <p className="text-xs text-n-888 mb-1.5"><T>{hint}</T></p>}
       {children}
     </div>
   )

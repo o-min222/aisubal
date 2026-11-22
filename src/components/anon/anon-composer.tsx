@@ -70,11 +70,11 @@ export function AnonComposer({
     <ComposerFrame
       className={className}
       avatar={
-        <span className="w-10 h-10 rounded-full bg-[#222] text-white flex items-center justify-center" aria-hidden="true">
+        <span className="w-10 h-10 rounded-full bg-n-222 text-n-fff flex items-center justify-center" aria-hidden="true">
           <VenetianMask className="w-5 h-5" />
         </span>
       }
-      head={<span className="font-semibold text-[#111]"><T>익명</T></span>}
+      head={<span className="font-semibold text-n-111"><T>익명</T></span>}
       tools={
         <span className="composer-note" title={tx(ANON_NOTICE)}>
           <ShieldAlert className="w-3.5 h-3.5 flex-shrink-0" />
@@ -112,7 +112,7 @@ export function AnonComposer({
         aria-label={isReply ? tx('익명 답글 내용') : tx('익명 게시물 내용')}
       />
       {pii && (
-        <p role="alert" className="pii-warning flex items-start gap-1.5 rounded-lg px-2.5 py-2 text-xs mb-1" style={{ background: '#fff4e5', color: '#8a4b00' }}>
+        <p role="alert" className="pii-warning flex items-start gap-1.5 rounded-lg px-2.5 py-2 text-xs mb-1" style={{ background: 'var(--c-fff4e5)', color: 'var(--c-8a4b00)' }}>
           <ShieldAlert className="w-3.5 h-3.5 mt-px flex-shrink-0" />
           <span><T s="{pii} 익명 글이어도 신원이 드러날 수 있어요. 지우거나 가려주세요." vars={{ pii }} /></span>
         </p>

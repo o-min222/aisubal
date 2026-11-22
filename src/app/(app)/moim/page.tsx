@@ -58,10 +58,10 @@ export default async function MoimPage({ searchParams }: { searchParams: Promise
     <>
       <header className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <h1 className="text-[22px] font-bold" style={{ color: '#111' }}>
+          <h1 className="text-[22px] font-bold" style={{ color: 'var(--n-111)' }}>
             <T>모임</T>
           </h1>
-          <p className="text-[13px] mt-0.5" style={{ color: '#666' }}>
+          <p className="text-[13px] mt-0.5" style={{ color: 'var(--n-666)' }}>
             <T>온라인·오프라인 모임. 정확한 장소와 링크는 참석이 확정된 사람에게만 보여요.</T>
           </p>
         </div>

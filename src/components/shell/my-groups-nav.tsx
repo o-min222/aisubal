@@ -14,15 +14,15 @@ export function MyGroupsNav({ groups }: { groups: MyGroupLink[] }) {
   return (
     <section className="my-groups-nav" aria-label={t('내 그룹')} style={{ marginTop: 14 }}>
       <div className="flex items-center justify-between px-3 mb-1">
-        <h3 className="text-[12px] font-semibold" style={{ color: '#777' }}>
+        <h3 className="text-[12px] font-semibold" style={{ color: 'var(--n-777)' }}>
           {t('내 그룹')}
         </h3>
-        <Link href="/groups/new" className="text-[#888] hover:text-[#111] p-1 rounded" aria-label={t('그룹 만들기')} title={t('그룹 만들기')}>
+        <Link href="/groups/new" className="text-n-888 hover:text-n-111 p-1 rounded" aria-label={t('그룹 만들기')} title={t('그룹 만들기')}>
           <Plus className="w-3.5 h-3.5" />
         </Link>
       </div>
       {groups.length === 0 ? (
-        <Link href="/groups" className="side-nav-item text-[13px]" style={{ color: '#666' }}>
+        <Link href="/groups" className="side-nav-item text-[13px]" style={{ color: 'var(--n-666)' }}>
           {t('그룹 둘러보기')}
         </Link>
       ) : (
@@ -41,7 +41,7 @@ export function MyGroupsNav({ groups }: { groups: MyGroupLink[] }) {
           })}
           {groups.length > 8 && (
             <li>
-              <Link href="/groups" className="side-nav-item text-[13px]" style={{ color: '#666' }}>
+              <Link href="/groups" className="side-nav-item text-[13px]" style={{ color: 'var(--n-666)' }}>
                 {t('모두 보기 ({n})', { n: groups.length })}
               </Link>
             </li>

@@ -17,35 +17,35 @@ export async function Pagination({ base, page, totalPages, hasNext, label = msg(
   return (
     <nav className="pagination flex items-center justify-center gap-1 py-3 flex-wrap" aria-label={st(label)}>
       {page > 1 ? (
-        <Link href={pageHref(base, page - 1)} className={`${cell} hover:bg-[#f2f2f2]`} aria-label={st('이전 페이지')} rel="prev">
+        <Link href={pageHref(base, page - 1)} className={`${cell} hover:bg-n-f2f2f2`} aria-label={st('이전 페이지')} rel="prev">
           <ChevronLeft className="w-4 h-4" />
         </Link>
       ) : (
-        <span className={`${cell} text-[#ccc]`} aria-hidden>
+        <span className={`${cell} text-n-ccc`} aria-hidden>
           <ChevronLeft className="w-4 h-4" />
         </span>
       )}
       {nums.map((n, i) =>
         n === null ? (
-          <span key={`gap-${i}`} className={`${cell} text-[#aaa]`} aria-hidden>
+          <span key={`gap-${i}`} className={`${cell} text-n-aaa`} aria-hidden>
             …
           </span>
         ) : n === page ? (
-          <span key={n} className={`${cell} font-semibold`} style={{ background: '#111', color: '#fff' }} aria-current="page">
+          <span key={n} className={`${cell} font-semibold`} style={{ background: 'var(--n-111)', color: 'var(--n-fff)' }} aria-current="page">
             {n}
           </span>
         ) : (
-          <Link key={n} href={pageHref(base, n)} className={`${cell} hover:bg-[#f2f2f2]`} style={{ color: '#333' }} aria-label={st('{n}페이지', { n })}>
+          <Link key={n} href={pageHref(base, n)} className={`${cell} hover:bg-n-f2f2f2`} style={{ color: 'var(--n-333)' }} aria-label={st('{n}페이지', { n })}>
             {n}
           </Link>
         )
       )}
       {page < last ? (
-        <Link href={pageHref(base, page + 1)} className={`${cell} hover:bg-[#f2f2f2]`} aria-label={st('다음 페이지')} rel="next">
+        <Link href={pageHref(base, page + 1)} className={`${cell} hover:bg-n-f2f2f2`} aria-label={st('다음 페이지')} rel="next">
           <ChevronRight className="w-4 h-4" />
         </Link>
       ) : (
-        <span className={`${cell} text-[#ccc]`} aria-hidden>
+        <span className={`${cell} text-n-ccc`} aria-hidden>
           <ChevronRight className="w-4 h-4" />
         </span>
       )}

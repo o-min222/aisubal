@@ -23,7 +23,7 @@ export type ProfileFormMember = {
 }
 
 type HandleState = { status: 'idle' | 'checking' | 'ok' | 'bad'; reason?: string | null }
-const field = 'w-full rounded-xl border border-[#ddd] px-3 py-2.5 text-[15px] bg-white focus:outline-none focus:border-[#111]'
+const field = 'w-full rounded-xl border border-n-ddd px-3 py-2.5 text-[15px] bg-n-fff focus:outline-none focus:border-n-111'
 
 export function ProfileForm({ me, mode }: { me: ProfileFormMember; mode: 'onboarding' | 'settings' }) {
   const router = useRouter()
@@ -128,14 +128,14 @@ export function ProfileForm({ me, mode }: { me: ProfileFormMember; mode: 'onboar
           <div className="relative">
             <UserAvatar id={me.id} name={displayName || '?'} avatarUrl={preview} size="lg" />
             {uploading && (
-              <span className="absolute inset-0 flex items-center justify-center rounded-full bg-white/70">
+              <span className="absolute inset-0 flex items-center justify-center rounded-full bg-n-fff/70">
                 <Loader2 className="w-5 h-5 animate-spin" />
               </span>
             )}
           </div>
           <div className="min-w-0">
-            <p className="text-[14px] font-semibold" style={{ color: '#111' }}><T s="아바타 {v}" vars={{ v: mode === 'onboarding' && <span className="text-[#b42318]">*</span> }} /></p>
-            <p className="text-[12px] text-[#777]"><T>직접 고른 사진이나 기본 아바타가 프로필이 돼요. 구글 사진은 고르지 않으면 쓰지 않아요.</T></p>
+            <p className="text-[14px] font-semibold" style={{ color: 'var(--n-111)' }}><T s="아바타 {v}" vars={{ v: mode === 'onboarding' && <span className="text-c-b42318">*</span> }} /></p>
+            <p className="text-[12px] text-n-777"><T>직접 고른 사진이나 기본 아바타가 프로필이 돼요. 구글 사진은 고르지 않으면 쓰지 않아요.</T></p>
           </div>
         </div>
         <div className="flex flex-wrap gap-1.5">
@@ -146,7 +146,7 @@ export function ProfileForm({ me, mode }: { me: ProfileFormMember; mode: 'onboar
           <button
             type="button"
             className="btn btn-sm min-h-[40px] rounded-full"
-            style={avatarChosen && avatar === 'none' ? { border: '2px solid #111' } : { border: '1px solid #ddd' }}
+            style={avatarChosen && avatar === 'none' ? { border: '2px solid var(--n-111)' } : { border: '1px solid var(--n-ddd)' }}
             onClick={() => {
               setAvatar('none')
               setPreview(null)
@@ -159,7 +159,7 @@ export function ProfileForm({ me, mode }: { me: ProfileFormMember; mode: 'onboar
             <button
               type="button"
               className="btn btn-sm min-h-[40px] rounded-full"
-              style={avatar === 'google' ? { border: '2px solid #111' } : { border: '1px solid #ddd' }}
+              style={avatar === 'google' ? { border: '2px solid var(--n-111)' } : { border: '1px solid var(--n-ddd)' }}
               onClick={() => {
                 setAvatar('google')
                 setPreview(me.googleAvatarUrl)
@@ -174,8 +174,8 @@ export function ProfileForm({ me, mode }: { me: ProfileFormMember; mode: 'onboar
 
       <section className="card p-4 space-y-3" aria-label={tx('이름과 핸들')}>
         <div>
-          <label htmlFor="pf-name" className="block text-[13px] font-semibold mb-1" style={{ color: '#111' }}>
-            <T>닉네임</T> <span className="text-[#b42318]">*</span>
+          <label htmlFor="pf-name" className="block text-[13px] font-semibold mb-1" style={{ color: 'var(--n-111)' }}>
+            <T>닉네임</T> <span className="text-c-b42318">*</span>
           </label>
           <input
             id="pf-name"
@@ -189,9 +189,9 @@ export function ProfileForm({ me, mode }: { me: ProfileFormMember; mode: 'onboar
               if (!handleTouched) setHandle(suggestHandle(e.target.value))
             }}
           />
-          {displayName && !nameCheck.ok && <p className="text-[12px] text-[#b42318] mt-1">{nameCheck.reason}</p>}
+          {displayName && !nameCheck.ok && <p className="text-[12px] text-c-b42318 mt-1">{nameCheck.reason}</p>}
           {mode === 'onboarding' && me.privateRealName && (
-            <p className="text-[12px] text-[#888] mt-1">
+            <p className="text-[12px] text-n-888 mt-1">
               구글 이름은 공개되지 않아요.{' '}
               <button type="button" className="underline" onClick={() => setDisplayName(me.privateRealName || '')}>
                 <T>그래도 구글 이름을 닉네임으로 쓰기</T>
@@ -200,11 +200,11 @@ export function ProfileForm({ me, mode }: { me: ProfileFormMember; mode: 'onboar
           )}
         </div>
         <div>
-          <label htmlFor="pf-handle" className="block text-[13px] font-semibold mb-1" style={{ color: '#111' }}>
-            <T>핸들</T> <span className="text-[#b42318]">*</span> <span className="font-normal text-[#888]"><T>(@멘션·모임 명단에 쓰여요)</T></span>
+          <label htmlFor="pf-handle" className="block text-[13px] font-semibold mb-1" style={{ color: 'var(--n-111)' }}>
+            <T>핸들</T> <span className="text-c-b42318">*</span> <span className="font-normal text-n-888"><T>(@멘션·모임 명단에 쓰여요)</T></span>
           </label>
-          <div className="flex items-center gap-1 rounded-xl border border-[#ddd] bg-white px-3 focus-within:border-[#111]">
-            <span className="text-[15px] text-[#999]">@</span>
+          <div className="flex items-center gap-1 rounded-xl border border-n-ddd bg-n-fff px-3 focus-within:border-n-111">
+            <span className="text-[15px] text-n-999">@</span>
             <input
               id="pf-handle"
               className="flex-1 py-2.5 text-[15px] bg-transparent focus:outline-none"
@@ -221,17 +221,17 @@ export function ProfileForm({ me, mode }: { me: ProfileFormMember; mode: 'onboar
               aria-describedby="pf-handle-state"
             />
             <span id="pf-handle-state" aria-live="polite" className="flex-shrink-0">
-              {hs.status === 'checking' && <Loader2 className="w-4 h-4 animate-spin text-[#999]" />}
-              {hs.status === 'ok' && <Check className="w-4 h-4 text-[#1f7a4d]" aria-label={tx('사용 가능')} />}
-              {hs.status === 'bad' && <X className="w-4 h-4 text-[#b42318]" aria-label={tx('사용 불가')} />}
+              {hs.status === 'checking' && <Loader2 className="w-4 h-4 animate-spin text-n-999" />}
+              {hs.status === 'ok' && <Check className="w-4 h-4 text-c-1f7a4d" aria-label={tx('사용 가능')} />}
+              {hs.status === 'bad' && <X className="w-4 h-4 text-c-b42318" aria-label={tx('사용 불가')} />}
             </span>
           </div>
-          {hs.status === 'bad' && <p className="text-[12px] text-[#b42318] mt-1">{hs.reason}</p>}
-          {hs.status === 'ok' && handle && <p className="text-[12px] text-[#1f7a4d] mt-1"><T s="{handle} 사용할 수 있어요" vars={{ handle: '@' + normalizeHandle(handle) }} /></p>}
+          {hs.status === 'bad' && <p className="text-[12px] text-c-b42318 mt-1">{hs.reason}</p>}
+          {hs.status === 'ok' && handle && <p className="text-[12px] text-c-1f7a4d mt-1"><T s="{handle} 사용할 수 있어요" vars={{ handle: '@' + normalizeHandle(handle) }} /></p>}
         </div>
         <div>
-          <label htmlFor="pf-bio" className="block text-[13px] font-semibold mb-1" style={{ color: '#111' }}>
-            <T>소개</T> <span className="font-normal text-[#888]"><T>(선택, 160자)</T></span>
+          <label htmlFor="pf-bio" className="block text-[13px] font-semibold mb-1" style={{ color: 'var(--n-111)' }}>
+            <T>소개</T> <span className="font-normal text-n-888"><T>(선택, 160자)</T></span>
           </label>
           <textarea id="pf-bio" className={field} rows={2} maxLength={160} value={bio} onChange={(e) => setBio(e.target.value)} placeholder={tx('요즘 쓰는 AI, 만드는 것, 관심사')} />
         </div>
@@ -239,32 +239,32 @@ export function ProfileForm({ me, mode }: { me: ProfileFormMember; mode: 'onboar
 
       <section className="card p-4 space-y-2" aria-label={tx('실명 공개')}>
         <div className="flex items-start gap-3">
-          <EyeOff className="w-4 h-4 mt-0.5 flex-shrink-0 text-[#777]" />
+          <EyeOff className="w-4 h-4 mt-0.5 flex-shrink-0 text-n-777" />
           <div className="flex-1 min-w-0">
-            <p className="text-[14px] font-semibold" style={{ color: '#111' }}>
+            <p className="text-[14px] font-semibold" style={{ color: 'var(--n-111)' }}>
               <T>실명은 기본으로 비공개예요</T>
             </p>
-            <p className="text-[12px] text-[#777]">
+            <p className="text-[12px] text-n-777">
               <T>이메일과 구글 계정 정보는 다른 멤버·AI 에이전트에게 절대 보이지 않아요. 원하면 실명만 프로필에 함께 보여줄 수 있어요.</T>
             </p>
           </div>
         </div>
         {me.privateRealName ? (
-          <label className="flex items-center justify-between gap-3 rounded-xl px-3 min-h-[48px]" style={{ background: '#fafafa' }}>
-            <span className="text-[13.5px]" style={{ color: '#333' }}>
-              <T>프로필에 실명 표시</T> <span className="text-[#999]"><T s="({privateRealName} · 나만 보여요)" vars={{ privateRealName: me.privateRealName }} /></span>
+          <label className="flex items-center justify-between gap-3 rounded-xl px-3 min-h-[48px]" style={{ background: 'var(--n-fafafa)' }}>
+            <span className="text-[13.5px]" style={{ color: 'var(--n-333)' }}>
+              <T>프로필에 실명 표시</T> <span className="text-n-999"><T s="({privateRealName} · 나만 보여요)" vars={{ privateRealName: me.privateRealName }} /></span>
             </span>
             <input type="checkbox" role="switch" checked={showReal} onChange={(e) => setShowReal(e.target.checked)} className="w-5 h-5" />
           </label>
         ) : (
-          <p className="text-[12px] text-[#999]"><T>구글 계정에 이름이 없어 실명 표시를 켤 수 없어요.</T></p>
+          <p className="text-[12px] text-n-999"><T>구글 계정에 이름이 없어 실명 표시를 켤 수 없어요.</T></p>
         )}
       </section>
 
       <button type="submit" disabled={!canSubmit} className="btn btn-primary w-full min-h-[48px] rounded-full text-[15px]">
         {busy ? <T>저장 중…</T> : mode === 'onboarding' ? <T>이 프로필로 시작하기</T> : <T>프로필 저장</T>}
       </button>
-      {mode === 'onboarding' && !avatarChosen && <p className="text-center text-[12px] text-[#888]"><T>사진을 올리거나 기본 아바타를 골라주세요.</T></p>}
+      {mode === 'onboarding' && !avatarChosen && <p className="text-center text-[12px] text-n-888"><T>사진을 올리거나 기본 아바타를 골라주세요.</T></p>}
     </form>
   )
 }

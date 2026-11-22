@@ -42,24 +42,24 @@ export function LinksEditor({ initial }: { initial: ProfileLink[] }) {
   return (
     <section className="card p-4 space-y-3" aria-label={tx('SNS 링크')}>
       <div>
-        <h2 className="text-[15px] font-bold" style={{ color: '#111' }}>
+        <h2 className="text-[15px] font-bold" style={{ color: 'var(--n-111)' }}>
           <T>SNS · 링크</T>
         </h2>
-        <p className="text-[12px] text-[#777]"><T>링크마다 누구에게 보일지 정할 수 있어요. AI 에이전트에게는 보이지 않아요.</T></p>
+        <p className="text-[12px] text-n-777"><T>링크마다 누구에게 보일지 정할 수 있어요. AI 에이전트에게는 보이지 않아요.</T></p>
       </div>
-      {rows.length === 0 && <p className="text-[13px] text-[#888]"><T>아직 링크가 없어요.</T></p>}
+      {rows.length === 0 && <p className="text-[13px] text-n-888"><T>아직 링크가 없어요.</T></p>}
       {rows.map((r, i) => {
         const def = LINK_KINDS.find((k) => k.kind === r.kind)!
         const err = errors[i]
         return (
-          <div key={i} className="link-row rounded-xl p-2.5 space-y-2" style={{ border: '1px solid #eee' }}>
+          <div key={i} className="link-row rounded-xl p-2.5 space-y-2" style={{ border: '1px solid var(--n-eee)' }}>
             <div className="flex items-center gap-2">
               <LinkIcon kind={r.kind} />
               <select
                 aria-label={tx('링크 {v} 종류', { v: i + 1 })}
                 value={r.kind}
                 onChange={(e) => setRows(rows.map((x, j) => (j === i ? { ...x, kind: e.target.value as LinkKind } : x)))}
-                className="rounded-lg border border-[#ddd] bg-white px-2 text-[14px] min-h-[40px]"
+                className="rounded-lg border border-n-ddd bg-n-fff px-2 text-[14px] min-h-[40px]"
               >
                 {LINK_KINDS.map((k) => (
                   <option key={k.kind} value={k.kind}>
@@ -71,7 +71,7 @@ export function LinksEditor({ initial }: { initial: ProfileLink[] }) {
                 aria-label={tx('링크 {v} 공개 범위', { v: i + 1 })}
                 value={r.visibility}
                 onChange={(e) => setRows(rows.map((x, j) => (j === i ? { ...x, visibility: e.target.value as LinkVisibility } : x)))}
-                className="ml-auto rounded-lg border border-[#ddd] bg-white px-2 text-[13px] min-h-[40px]"
+                className="ml-auto rounded-lg border border-n-ddd bg-n-fff px-2 text-[13px] min-h-[40px]"
               >
                 {LINK_VISIBILITY.map((v) => (
                   <option key={v.id} value={v.id}>
@@ -79,7 +79,7 @@ export function LinksEditor({ initial }: { initial: ProfileLink[] }) {
                   </option>
                 ))}
               </select>
-              <button type="button" onClick={() => setRows(rows.filter((_, j) => j !== i))} className="tap-target inline-flex items-center justify-center rounded-full hover:bg-[#f2f2f2]" aria-label={tx('링크 {v} 삭제', { v: i + 1 })}>
+              <button type="button" onClick={() => setRows(rows.filter((_, j) => j !== i))} className="tap-target inline-flex items-center justify-center rounded-full hover:bg-n-f2f2f2" aria-label={tx('링크 {v} 삭제', { v: i + 1 })}>
                 <Trash2 className="w-4 h-4" />
               </button>
             </div>
@@ -91,9 +91,9 @@ export function LinksEditor({ initial }: { initial: ProfileLink[] }) {
               placeholder={def.placeholder}
               onChange={(e) => setRows(rows.map((x, j) => (j === i ? { ...x, url: e.target.value } : x)))}
               className="w-full rounded-lg border px-3 py-2 text-[14.5px]"
-              style={{ borderColor: err && !err.ok ? '#e5484d' : '#ddd' }}
+              style={{ borderColor: err && !err.ok ? 'var(--c-e5484d)' : 'var(--n-ddd)' }}
             />
-            {err && !err.ok && <p className="text-[12px] text-[#b42318]">{err.reason}</p>}
+            {err && !err.ok && <p className="text-[12px] text-c-b42318">{err.reason}</p>}
           </div>
         )
       })}

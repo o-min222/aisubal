@@ -77,7 +77,7 @@ export function FriendButton({
   }
   if (state === 'friends') {
     return (
-      <button type="button" disabled={busy} onClick={(e) => act('remove', e)} className={`btn btn-secondary btn-sm rounded-full ${size}`} title={tx('눌러서 친구 끊기')} style={{ color: '#1f7a4d' }}>
+      <button type="button" disabled={busy} onClick={(e) => act('remove', e)} className={`btn btn-secondary btn-sm rounded-full ${size}`} title={tx('눌러서 친구 끊기')} style={{ color: 'var(--c-1f7a4d)' }}>
         <HeartHandshake className="w-4 h-4" /> <T>친구</T>
       </button>
     )

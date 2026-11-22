@@ -58,12 +58,12 @@ export function PostDetailClient({ post }: PostDetailClientProps) {
               )}
             </div>
 
-            <h1 className="text-2xl font-bold text-[#111] mb-4">{post.title}</h1>
+            <h1 className="text-2xl font-bold text-n-111 mb-4">{post.title}</h1>
 
-            <div className="flex items-center gap-3 text-sm text-[#666]">
+            <div className="flex items-center gap-3 text-sm text-n-666">
               <div className="flex items-center gap-2">
                 <AuthorAvatar author={post.author} />
-                <span className="font-medium text-[#333]">{authorName}</span>
+                <span className="font-medium text-n-333">{authorName}</span>
               </div>
               <span>·</span>
               <span title={format(new Date(post.created_at), tx('yyyy년 M월 d일 HH:mm'), { locale: ko })}>
@@ -123,7 +123,7 @@ export function PostDetailClient({ post }: PostDetailClientProps) {
 
       {post.assets.length > 0 && (
         <div className="card">
-          <div className="border-b border-[#e5e5e5] px-4">
+          <div className="border-b border-n-e5e5e5 px-4">
             <div className="flex gap-1 -mb-px overflow-x-auto">
               {post.assets.map((asset) => {
                 const info = ASSET_TYPE_INFO[asset.type]
@@ -133,7 +133,7 @@ export function PostDetailClient({ post }: PostDetailClientProps) {
                     key={asset.id}
                     onClick={() => setActiveAssetId(asset.id)}
                     className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 whitespace-nowrap ${
-                      isActive ? 'border-[#111] text-[#111]' : 'border-transparent text-[#666]'
+                      isActive ? 'border-n-111 text-n-111' : 'border-transparent text-n-666'
                     }`}
                   >
                     {info?.icon}

@@ -19,7 +19,7 @@ export async function LinkTabs({
     <nav
       aria-label={st(label)}
       className={`link-tabs ${className}`}
-      style={{ display: 'flex', gap: 4, overflowX: 'auto', borderBottom: '1px solid #ececec', scrollbarWidth: 'none' }}
+      style={{ display: 'flex', gap: 4, overflowX: 'auto', borderBottom: '1px solid var(--n-ececec)', scrollbarWidth: 'none' }}
     >
       {tabs.map((t) => {
         const on = t.id === active
@@ -38,15 +38,15 @@ export async function LinkTabs({
               gap: 6,
               fontSize: 14.5,
               fontWeight: on ? 700 : 500,
-              color: on ? '#111' : '#777',
-              borderBottom: on ? '2px solid #111' : '2px solid transparent',
+              color: on ? 'var(--n-111)' : 'var(--n-777)',
+              borderBottom: on ? '2px solid var(--n-111)' : '2px solid transparent',
               marginBottom: -1,
               whiteSpace: 'nowrap',
             }}
           >
             <T>{t.label}</T>
-            {typeof t.count === 'number' && <span style={{ color: '#999', fontWeight: 500, fontVariantNumeric: 'tabular-nums' }}>{t.count}</span>}
-            {t.dot && <span aria-label={st('새 항목')} style={{ width: 6, height: 6, borderRadius: 99, background: '#e5484d', display: 'inline-block' }} />}
+            {typeof t.count === 'number' && <span style={{ color: 'var(--n-999)', fontWeight: 500, fontVariantNumeric: 'tabular-nums' }}>{t.count}</span>}
+            {t.dot && <span aria-label={st('새 항목')} style={{ width: 6, height: 6, borderRadius: 99, background: 'var(--c-e5484d)', display: 'inline-block' }} />}
           </Link>
         )
       })}

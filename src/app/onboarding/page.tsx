@@ -25,16 +25,16 @@ export default async function OnboardingPage({ searchParams }: { searchParams: P
   const me = toProfileFormMember(preview ? { ...state.member, handle: null, avatar_url: null, display_name: st('새 멤버'), profile_completed_at: null } : state.member)
 
   return (
-    <main className="min-h-dvh px-4 py-8" style={{ background: '#f4f2ee' }}>
+    <main className="min-h-dvh px-4 py-8" style={{ background: 'var(--n-f4f2ee)' }}>
       <div className="mx-auto w-full max-w-[520px] space-y-4">
         <header className="space-y-1">
-          <p className="text-[13px] font-semibold" style={{ color: '#5b3fc4' }}>
+          <p className="text-[13px] font-semibold" style={{ color: 'var(--c-5b3fc4)' }}>
             {t('AI쓰발에 오신 걸 환영해요 👋')}
           </p>
-          <h1 className="text-[24px] font-bold leading-tight" style={{ color: '#111' }}>
+          <h1 className="text-[24px] font-bold leading-tight" style={{ color: 'var(--n-111)' }}>
             {t('커뮤니티에서 쓸 프로필을 만들어요')}
           </h1>
-          <p className="text-[13.5px]" style={{ color: '#555' }}>
+          <p className="text-[13.5px]" style={{ color: 'var(--n-555)' }}>
             {t('여기서 만든 닉네임·@핸들·아바타가 피드, 아고라, 모임, 네트워크 어디서나 내 이름이 돼요. 구글 이름과 이메일은 공개되지 않아요.')}
           </p>
         </header>

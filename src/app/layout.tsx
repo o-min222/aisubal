@@ -10,6 +10,8 @@ import { I18nProvider } from "@/i18n/client";
 import { LOCALE_META } from "@/i18n/config";
 import { DICTS } from "@/i18n/dict";
 import { getLocale, getT } from "@/i18n/server";
+import { getTheme } from "@/lib/theme-server";
+import { THEME_BOOT_SCRIPT, THEME_COLOR } from "@/lib/theme";
 
 const mono = JetBrains_Mono({
   variable: "--font-mono",
@@ -48,20 +50,33 @@ export async function generateMetadata(): Promise<Metadata> {
 };
 }
 
-export const viewport: Viewport = {
-  width: "device-width",
-  initialScale: 1,
-  viewportFit: "cover",
-  themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
-    { media: "(prefers-color-scheme: dark)", color: "#ffffff" },
-  ],
-};
+export async function generateViewport(): Promise<Viewport> {
+  const theme = await getTheme();
+  return {
+    width: "device-width",
+    initialScale: 1,
+    viewportFit: "cover",
+    colorScheme: theme === "system" ? "light dark" : theme,
+    // explicit choice → one color (the boot script keeps it in sync for 'system')
+    themeColor: theme === "system" ? THEME_COLOR.light : THEME_COLOR[theme],
+  };
+}
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {
   const locale = await getLocale();
+  const theme = await getTheme();
   return (
-    <html lang={LOCALE_META[locale].htmlLang} className={`${mono.variable} ${serifTitle.variable}`}>
+    <html
+      lang={LOCALE_META[locale].htmlLang}
+      data-theme={theme}
+      className={`${mono.variable} ${serifTitle.variable}${theme === "dark" ? " dark" : ""}`}
+      style={{ colorScheme: theme === "dark" ? "dark" : "light" }}
+      suppressHydrationWarning
+    >
+      <head>
+        {/* resolve 'system' before first paint (no flash) */}
+        <script dangerouslySetInnerHTML={{ __html: THEME_BOOT_SCRIPT }} />
+      </head>
       <body className="min-h-screen antialiased">
         <I18nProvider locale={locale} dict={DICTS[locale]}>
         {children}
@@ -72,9 +87,9 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
           position="top-center"
           toastOptions={{
             style: {
-              background: '#ffffff',
-              border: '1px solid #e5e5e5',
-              color: '#111111',
+              background: 'var(--n-fff)',
+              border: '1px solid var(--n-e5e5e5)',
+              color: 'var(--n-111)',
               boxShadow: '0 4px 12px rgba(0, 0, 0, 0.08)',
             },
           }}

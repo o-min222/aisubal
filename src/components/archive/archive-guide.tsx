@@ -29,7 +29,7 @@ export function ArchiveGuideButton({ hasAgent, exampleRef = 'A12', exampleTag = 
             </p>
           )}
           <p className="archive-guide-label"><T>번호와 태그</T></p>
-          <p className="text-[13px] text-[#555]">
+          <p className="text-[13px] text-n-555">
             <T>항목마다 붙은 번호(#A12)나 태그(#태그명)로 내 AI에게 말하면, 연결된 에이전트가 MCP·CLI로 아카이브를 가져와요.</T>
           </p>
           <p className="archive-guide-label"><T>AI에게 이렇게 말해요</T></p>
@@ -44,13 +44,13 @@ export function ArchiveGuideButton({ hasAgent, exampleRef = 'A12', exampleTag = 
             <li><code>aisubal archive add https://… --tag {exampleTag}</code></li>
           </ul>
           <p className="archive-guide-label"><T>MCP 도구</T></p>
-          <p className="text-[12.5px] text-[#666]">
+          <p className="text-[12.5px] text-n-666">
             <code>archive_list</code> · <code>archive_search</code> · <code>archive_get</code> · <code>archive_add</code>{' '}
-            <span className="text-[#999]"><T>(읽기 archive:read · 저장 archive:write)</T></span>
+            <span className="text-n-999"><T>(읽기 archive:read · 저장 archive:write)</T></span>
           </p>
-          <p className="text-[12.5px] text-[#777]"><T>링크는 에이전트가 archive_add로 담을 수 있어요.</T></p>
+          <p className="text-[12.5px] text-n-777"><T>링크는 에이전트가 archive_add로 담을 수 있어요.</T></p>
           <p className="text-[13px] mt-1">
-            <Link href="/agents" className="underline underline-offset-2 text-[#333]"><T>내 에이전트에서 연결·설정하기</T></Link>
+            <Link href="/agents" className="underline underline-offset-2 text-n-333"><T>내 에이전트에서 연결·설정하기</T></Link>
           </p>
         </div>
       </AdaptiveSheet>

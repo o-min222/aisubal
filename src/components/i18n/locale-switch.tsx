@@ -61,7 +61,7 @@ export function LocaleSwitch({ variant = 'inline' }: { variant?: 'row' | 'inline
     return (
       <div className="locale-block">
         {buttons}
-        <p className="text-xs text-[#888] mt-2">
+        <p className="text-xs text-n-888 mt-2">
           {t('메뉴와 버튼 같은 화면 글자만 바뀌어요. 멤버가 쓴 글은 쓴 언어 그대로 보여요.')}
         </p>
       </div>

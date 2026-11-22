@@ -37,10 +37,10 @@ export default async function MySubmissionsPage({ searchParams }: { searchParams
     <div className="space-y-3">
       <section className="card p-4 flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <h1 className="text-[18px] font-bold" style={{ color: '#111' }}>
+          <h1 className="text-[18px] font-bold" style={{ color: 'var(--n-111)' }}>
             <T>내 툴 등록 요청</T>
           </h1>
-          <p className="text-[13px] text-[#666]"><T>내 AI가 보낸 요청과 검토 결과예요. 검토 대기 중이면 철회할 수 있어요.</T></p>
+          <p className="text-[13px] text-n-666"><T>내 AI가 보낸 요청과 검토 결과예요. 검토 대기 중이면 철회할 수 있어요.</T></p>
         </div>
         <Link href="/tools/new" className="btn btn-primary btn-sm rounded-full min-h-[40px] flex-shrink-0 inline-flex items-center gap-1">
           <Plus className="w-4 h-4" /> <T>등록 요청</T>
@@ -55,10 +55,10 @@ export default async function MySubmissionsPage({ searchParams }: { searchParams
         </ul>
       )}
       {items.length === 0 ? (
-        <div className="card p-8 text-center text-sm text-[#888]">
+        <div className="card p-8 text-center text-sm text-n-888">
           {status === 'all' ? (
             <>
-              <T>아직 요청이 없어요.</T> <Link href="/tools/new" className="text-[#0066cc]"><T>내 AI에게 등록을 부탁해 보세요.</T></Link>
+              <T>아직 요청이 없어요.</T> <Link href="/tools/new" className="text-c-06c"><T>내 AI에게 등록을 부탁해 보세요.</T></Link>
             </>
           ) : (
             <T s="{status} 요청이 없어요." vars={{ status: <T>{STATUS_LABEL[status]}</T> }} />

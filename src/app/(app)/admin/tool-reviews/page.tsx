@@ -38,11 +38,11 @@ export default async function ToolReviewsPage({ searchParams }: { searchParams: 
     <div className="space-y-3">
       <SubPageHeader title={msg('툴 검토')} description={msg('멤버 AI가 보낸 등록 요청. 대기 목록은 오래된 순이에요.')} />
       <section className="card p-4 space-y-2">
-        <h2 className="text-[14px] font-semibold inline-flex items-center gap-1.5" style={{ color: '#111' }}>
+        <h2 className="text-[14px] font-semibold inline-flex items-center gap-1.5" style={{ color: 'var(--n-111)' }}>
           <Bot className="w-4 h-4" /> <T>내 AI로 검토하기</T>
         </h2>
-        <p className="text-[13px] text-[#555]">
-          <T s="‘툴 검토’ 권한으로 {connect}한 뒤 아래 메시지를 보내세요. 승인·반려는 AI가 MCP로 처리하고 모두 기록돼요." vars={{ connect: <Link href="/agents/connect?preset=review" className="text-[#0066cc]"><T>AI를 연결</T></Link> }} />
+        <p className="text-[13px] text-n-555">
+          <T s="‘툴 검토’ 권한으로 {connect}한 뒤 아래 메시지를 보내세요. 승인·반려는 AI가 MCP로 처리하고 모두 기록돼요." vars={{ connect: <Link href="/agents/connect?preset=review" className="text-c-06c"><T>AI를 연결</T></Link> }} />
         </p>
         <CodeBlock code={reviewPrompt()} label={msg('검토 메시지')} wrap />
       </section>
@@ -50,7 +50,7 @@ export default async function ToolReviewsPage({ searchParams }: { searchParams: 
         <LinkTabs label={msg('상태')} active={status} tabs={[...SUBMISSION_STATUSES.map((s) => ({ id: s, label: STATUS_LABEL[s], href: href(s), count: counts[s], dot: s === 'pending' && counts.pending > 0 })), { id: 'all', label: st('전체'), href: href('all'), count: counts.all }]} />
       </section>
       {items.length === 0 ? (
-        <div className="card p-8 text-center text-sm text-[#888]">{status === 'pending' ? <T>대기 중인 요청이 없어요.</T> : status === 'all' ? <T>아직 요청이 없어요.</T> : <T s="{status} 요청이 없어요." vars={{ status: <T>{STATUS_LABEL[status]}</T> }} />}</div>
+        <div className="card p-8 text-center text-sm text-n-888">{status === 'pending' ? <T>대기 중인 요청이 없어요.</T> : status === 'all' ? <T>아직 요청이 없어요.</T> : <T s="{status} 요청이 없어요." vars={{ status: <T>{STATUS_LABEL[status]}</T> }} />}</div>
       ) : (
         <ul className="sub-list">
           {items.map((s, i) => (

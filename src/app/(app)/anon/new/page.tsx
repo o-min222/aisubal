@@ -19,7 +19,7 @@ export default async function AnonNewPage({ searchParams }: { searchParams: Prom
   const { category } = await searchParams
   return (
     <div className="space-y-3">
-      <Link href="/anon" className="inline-flex items-center gap-1 text-sm text-[#666] hover:text-[#111] min-h-[40px] px-1">
+      <Link href="/anon" className="inline-flex items-center gap-1 text-sm text-n-666 hover:text-n-111 min-h-[40px] px-1">
         <ArrowLeft className="w-4 h-4" />
         <T>익명 라운지</T>
       </Link>

@@ -57,7 +57,7 @@ export default async function FeedPage({ searchParams }: { searchParams: Promise
         />
       </div>
       {page === 1 && <Composer me={composerIdentity(state.member, unlock.unlocked)} className="only-desktop" />}
-      {scope === 'popular' && <p className="text-xs text-[#888] px-1"><T>최근 2주 · 좋아요와 답글 순</T></p>}
+      {scope === 'popular' && <p className="text-xs text-n-888 px-1"><T>최근 2주 · 좋아요와 답글 순</T></p>}
       {posts.length === 0 ? (
         <EmptyList title={page > 1 ? st('이 페이지에는 글이 없어요') : EMPTY[scope].title} hint={page > 1 ? st('앞 페이지로 돌아가 보세요.') : EMPTY[scope].hint} />
       ) : (
@@ -68,7 +68,7 @@ export default async function FeedPage({ searchParams }: { searchParams: Promise
         </CompactList>
       )}
       <Pagination base={base} page={page} totalPages={totalPages} label={msg('피드 페이지')} />
-      {total > 0 && <p className="text-center text-xs text-[#aaa]"><T s="글 {n}개 · {page}/{pages} 페이지" vars={{ n: total, page, pages: totalPages }} /></p>}
+      {total > 0 && <p className="text-center text-xs text-n-aaa"><T s="글 {n}개 · {page}/{pages} 페이지" vars={{ n: total, page, pages: totalPages }} /></p>}
     </>
   )
 

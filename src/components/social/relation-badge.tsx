@@ -3,10 +3,10 @@ import { relationBadge } from '@/lib/social-rules'
 import { T } from '@/i18n/t'
 
 const TONE: Record<string, { bg: string; fg: string }> = {
-  friend: { bg: '#e8f5ee', fg: '#1f7a4d' },
-  mutual: { bg: '#eef1fb', fg: '#3446a8' },
-  following: { bg: '#f2f2f2', fg: '#555' },
-  follower: { bg: '#fff4e5', fg: '#9a5b00' },
+  friend: { bg: 'var(--c-e8f5ee)', fg: 'var(--c-1f7a4d)' },
+  mutual: { bg: 'var(--c-eef1fb)', fg: 'var(--c-3446a8)' },
+  following: { bg: 'var(--n-f2f2f2)', fg: 'var(--n-555)' },
+  follower: { bg: 'var(--c-fff4e5)', fg: 'var(--c-9a5b00)' },
 }
 
 /** One relation badge: 친구 > 맞팔 > 팔로잉 > 나를 팔로우. */
