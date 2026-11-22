@@ -33,6 +33,8 @@ import type { ToolboxEntryDetails } from './types'
 
 export type { ToolboxEntryDetails } from './types'
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
 type CreateToolboxInput = {
   name: string
   one_liner: string
@@ -88,7 +90,7 @@ export async function getToolboxEntry(
   const { data: entry, error } = await supabase
     .from('toolbox_entries')
     .select('*')
-    .or(`id.eq.${idOrSlug},slug.eq.${idOrSlug}`)
+    .eq(UUID_RE.test(idOrSlug) ? 'id' : 'slug', idOrSlug)
     .maybeSingle()
   if (error) throw error
   if (!entry) return null

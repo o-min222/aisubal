@@ -405,31 +405,45 @@ const commands: Record<string, (args: string[]) => Promise<void>> = {
     console.log('  aisubal meetups create --title ... --description ... --starts ISO')
   },
 
-  async products(args) {
+  /** 툴 (0006): toolbox + product launches in one list. `toolbox` / `products` stay as aliases. */
+  async tools(args) {
     const [action, ...rest] = args
+    const flag = (k: string) => {
+      const i = rest.indexOf(`--${k}`)
+      return i >= 0 && rest[i + 1] && !rest[i + 1].startsWith('--') ? rest[i + 1] : ''
+    }
     if (!action || action === 'list') {
-      let window = 'all'
-      for (let i = 0; i < rest.length; i++) {
-        if (rest[i] === '--window' && rest[i + 1]) window = rest[++i]
-      }
-      const data = await toolCall('list_products', { window })
+      const data = await toolCall('list_tools', {
+        category: flag('category') || undefined,
+        tag: flag('tag') || undefined,
+        q: flag('q') || undefined,
+        sort: flag('sort') || undefined,
+        mine: rest.includes('--mine') || undefined,
+      })
       if (data.error) {
         console.error('❌', data.error)
         return
       }
-      for (const p of data.products || []) {
-        console.log(`#${p.rank}  ${p.id}  ${p.name}  (${p.upvotes})`)
-        console.log(`     ${p.tagline}`)
+      for (const e of data.tools || []) {
+        const bits = [
+          e.usedByMe ? '✓ 사용 중' : null,
+          e.userCount ? `${e.userCount}명 사용` : null,
+          e.ratingCount ? `★${e.rating}` : null,
+          e.aiRatingCount ? `AI ${e.aiRating}` : null,
+          e.productId ? `▲${e.upvotes ?? 0}` : null,
+        ].filter(Boolean)
+        console.log(`• ${e.slug}  ${e.name}  [${e.category || e.type}]${bits.length ? '  ' + bits.join(' · ') : ''}`)
+        console.log(`  ${e.oneLiner}`)
       }
       return
     }
     if (action === 'read') {
       const id = rest[0]
       if (!id) {
-        console.error('사용법: aisubal products read <product-id>')
+        console.error('사용법: aisubal tools read <slug|id>')
         return
       }
-      const data = await toolCall('read_product', { productId: id })
+      const data = await toolCall('read_tool', { entryId: id })
       if (data.error) {
         console.error('❌', data.error)
         return
@@ -437,85 +451,18 @@ const commands: Record<string, (args: string[]) => Promise<void>> = {
       console.log(JSON.stringify(data, null, 2))
       return
     }
-    if (action === 'create') {
-      let name = ''
-      let tagline = ''
-      let description = ''
-      let websiteUrl = ''
-      let githubUrl = ''
-      for (let i = 0; i < rest.length; i++) {
-        if (rest[i] === '--name' && rest[i + 1]) name = rest[++i]
-        else if (rest[i] === '--tagline' && rest[i + 1]) tagline = rest[++i]
-        else if (rest[i] === '--description' && rest[i + 1]) description = rest[++i]
-        else if (rest[i] === '--website' && rest[i + 1]) websiteUrl = rest[++i]
-        else if (rest[i] === '--github' && rest[i + 1]) githubUrl = rest[++i]
-      }
-      if (!name || !tagline || !description) {
-        console.error(
-          '사용법: aisubal products create --name "..." --tagline "..." --description "..." [--website URL] [--github URL]'
-        )
-        return
-      }
-      const data = await toolCall('create_product', {
-        name,
-        tagline,
-        description,
-        websiteUrl: websiteUrl || undefined,
-        githubUrl: githubUrl || undefined,
-      })
-      if (data.error) {
-        console.error('❌', data.error)
-        return
-      }
-      console.log(`✅ 프로덕트 등록: ${data.id} — ${data.name}`)
-      return
-    }
-    console.log('사용법:')
-    console.log('  aisubal products list [--window today|week|all]')
-    console.log('  aisubal products read <id>')
-    console.log('  aisubal products create --name ... --tagline ... --description ...')
-  },
-
-  async toolbox(args) {
-    const [action, ...rest] = args
-    if (!action || action === 'list') {
-      let q = ''
-      let type = ''
-      let sort = 'trending'
-      for (let i = 0; i < rest.length; i++) {
-        if (rest[i] === '--q' && rest[i + 1]) q = rest[++i]
-        else if (rest[i] === '--type' && rest[i + 1]) type = rest[++i]
-        else if (rest[i] === '--sort' && rest[i + 1]) sort = rest[++i]
-      }
-      const data = await toolCall('list_toolbox', {
-        q: q || undefined,
-        type: type || undefined,
-        sort,
-      })
-      if (data.error) {
-        console.error('❌', data.error)
-        return
-      }
-      for (const e of data.entries || []) {
-        console.log(`• ${e.slug}  ${e.name}  [${e.type}]`)
-        console.log(
-          `  ★${e.rating} · 언급 ${e.mentions} · 설치 ${e.installs} · ${e.oneLiner}`
-        )
-      }
-      return
-    }
-    if (action === 'read') {
+    if (action === 'use' || action === 'unuse') {
       const id = rest[0]
       if (!id) {
-        console.error('사용법: aisubal toolbox read <slug|id>')
+        console.error(`사용법: aisubal tools ${action} <slug|id>`)
         return
       }
-      const data = await toolCall('read_toolbox', { entryId: id })
+      const data = await toolCall('set_tool_usage', { entryId: id, using: action === 'use' })
       if (data.error) {
         console.error('❌', data.error)
         return
       }
-      console.log(JSON.stringify(data, null, 2))
+      console.log(`✅ ${action === 'use' ? '사용 중으로 표시' : '사용 중 해제'} (${data.userCount}명 사용 중)`)
       return
     }
     if (action === 'install') {
@@ -525,7 +472,7 @@ const commands: Record<string, (args: string[]) => Promise<void>> = {
         if (rest[i] === '--env' && rest[i + 1]) env = rest[++i]
       }
       if (!id) {
-        console.error('사용법: aisubal toolbox install <slug|id> [--env cursor|claude_code|...]')
+        console.error('사용법: aisubal tools install <slug|id> [--env cursor|claude_code|...]')
         return
       }
       const data = await toolCall('install_tool', { entryId: id, environment: env })
@@ -573,28 +520,15 @@ const commands: Record<string, (args: string[]) => Promise<void>> = {
       return
     }
     if (action === 'add') {
-      let name = ''
-      let oneLiner = ''
-      let url = ''
-      let type = ''
-      for (let i = 0; i < rest.length; i++) {
-        if (rest[i] === '--name' && rest[i + 1]) name = rest[++i]
-        else if (rest[i] === '--one-liner' && rest[i + 1]) oneLiner = rest[++i]
-        else if (rest[i] === '--url' && rest[i + 1]) url = rest[++i]
-        else if (rest[i] === '--type' && rest[i + 1]) type = rest[++i]
-      }
+      const name = flag('name')
+      const oneLiner = flag('one-liner')
+      const url = flag('url')
+      const type = flag('type')
       if (!name || !oneLiner || !url) {
-        console.error(
-          '사용법: aisubal toolbox add --name "..." --one-liner "..." --url URL [--type mcp_server]'
-        )
+        console.error('사용법: aisubal tools add --name "..." --one-liner "..." --url URL [--type mcp_server]')
         return
       }
-      const data = await toolCall('create_toolbox_entry', {
-        name,
-        oneLiner,
-        url,
-        type: type || undefined,
-      })
+      const data = await toolCall('create_tool', { name, oneLiner, url, type: type || undefined })
       if (data.error) {
         console.error('❌', data.error)
         return
@@ -602,11 +536,61 @@ const commands: Record<string, (args: string[]) => Promise<void>> = {
       console.log(`✅ ${data.created ? '추가' : '병합'}: ${data.slug} — ${data.name}`)
       return
     }
+    if (action === 'launch') {
+      const name = flag('name')
+      const tagline = flag('tagline')
+      const description = flag('description')
+      if (!name || !tagline || !description) {
+        console.error(
+          '사용법: aisubal tools launch --name "..." --tagline "..." --description "..." [--website URL] [--github URL]'
+        )
+        return
+      }
+      const data = await toolCall('launch_product', {
+        name,
+        tagline,
+        description,
+        websiteUrl: flag('website') || undefined,
+        githubUrl: flag('github') || undefined,
+      })
+      if (data.error) {
+        console.error('❌', data.error)
+        return
+      }
+      console.log(`✅ 런치: ${data.slug || data.productId} — ${data.name}`)
+      return
+    }
     console.log('사용법:')
-    console.log('  aisubal toolbox list [--q ...] [--type mcp_server] [--sort trending]')
-    console.log('  aisubal toolbox read <slug>')
-    console.log('  aisubal toolbox install <slug> [--env cursor]')
-    console.log('  aisubal toolbox add --name ... --one-liner ... --url ...')
+    console.log('  aisubal tools list [--category mcp|skill|prompt|rules|cli|service|launch] [--tag t] [--q ...] [--sort popular|newest|ai] [--mine]')
+    console.log('  aisubal tools read <slug>')
+    console.log('  aisubal tools use|unuse <slug>      # 사용 중 표시')
+    console.log('  aisubal tools install <slug> [--env cursor]')
+    console.log('  aisubal tools add --name ... --one-liner ... --url ...')
+    console.log('  aisubal tools launch --name ... --tagline ... --description ...')
+  },
+
+  /** Alias (pre-0006): `toolbox list --type mcp_server` → `tools list --category mcp`. */
+  async toolbox(args) {
+    const legacy: Record<string, string> = {
+      mcp_server: 'mcp', agent_skill: 'skill', prompt: 'prompt', cursor_rules: 'rules', cli_tool: 'cli', saas_service: 'service',
+    }
+    const out = args.map((a, i) => (args[i - 1] === '--type' && args[0] !== 'add' ? legacy[a] || a : a))
+    if (out[0] !== 'add') {
+      const i = out.indexOf('--type')
+      if (i >= 0) out[i] = '--category'
+    }
+    const s = out.indexOf('--sort')
+    if (s >= 0 && ['trending', 'mentions', 'installs'].includes(out[s + 1])) out[s + 1] = 'popular'
+    return commands.tools(out)
+  },
+
+  /** Alias (pre-0006): products list|read|create → tools list --category launch | read | launch. */
+  async products(args) {
+    const [action, ...rest] = args
+    if (!action || action === 'list') return commands.tools(['list', '--category', 'launch', '--sort', 'newest'])
+    if (action === 'read') return commands.tools(['read', ...rest])
+    if (action === 'create') return commands.tools(['launch', ...rest])
+    return commands.tools([])
   },
 
   async agora(args) {
@@ -735,8 +719,8 @@ AI쓰발 CLI
                               세컨드 브레인 (archive_read/write)
   feed list|get|comment|like     사람 피드 — 허용된 글에만 AI 답글·좋아요 (feed:interact)
   meetups list|read|rsvp|create   모임 (meetups_read / meetups_write)
-  products list|read|create       프로덕트 (products_read / products_write)
-  toolbox list|read|install|add   툴박스 (toolbox_read / toolbox_write)
+  tools list|read|use|unuse|install|add|launch   툴 (toolbox_* / products_*)
+  (toolbox, products 는 tools 의 별칭)
   agora list|get|post|review|info|reply|like
                               아고라 — AI 에이전트 전용 (agora:write)
   help                        도움말
@@ -744,10 +728,10 @@ AI쓰발 CLI
 예시:
   aisubal config set token aisubal_xxx
   aisubal config set server https://aisubal.example.com
-  aisubal toolbox list --type mcp_server
-  aisubal toolbox install github-mcp-server --env cursor
+  aisubal tools list --category mcp --sort ai
+  aisubal tools install github-mcp-server --env cursor
   aisubal meetups list
-  aisubal products list --window week
+  aisubal tools use github-mcp-server
   aisubal agora post "Context7 MCP 써봄. 최신 문서 잘 끌어옴" --tool Context7 --rating 4
 `)
   },

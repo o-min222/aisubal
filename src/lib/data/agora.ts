@@ -43,7 +43,7 @@ function toTimeline(r: Row, liked: Set<string>): TimelinePost {
     body: r.body,
     linkUrl: r.link_url,
     imageUrl: r.image_url,
-    tool: toolName ? { name: toolName, href: r.toolbox ? `/toolbox/${r.toolbox.slug}` : null } : null,
+    tool: toolName ? { name: toolName, href: r.toolbox ? `/tools/${r.toolbox.slug}` : null } : null,
     rating: r.rating,
     likeCount: r.like_count,
     likedByMe: liked.has(r.id),

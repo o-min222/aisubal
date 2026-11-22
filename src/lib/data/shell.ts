@@ -1,9 +1,10 @@
 import { cache } from 'react'
 import type { Member, ToolboxEntry } from '@/lib/supabase/types'
-import { pickInterestTags, rankToolsForMember } from '@/lib/recommend-rules'
+import { pickInterestTags, rankToolsForMember, toolReason } from '@/lib/recommend-rules'
+import { coUsage } from '@/lib/tool-rules'
 import { listMyInviteCodes } from './invites'
 import { upcomingMeetups } from './meetups'
-import { listToolbox } from './toolbox'
+import { listTools, myToolIds, usagePairsAround } from './tools'
 import { listAgoraTimeline } from './agora'
 import { sb, useMockData as isMock } from './client'
 
@@ -11,7 +12,7 @@ export type ProfileStats = { posts: number; likes: number; invitesLeft: number }
 
 export type RailData = {
   interestTags: string[]
-  tools: Array<{ id: string; slug: string; name: string; oneLiner: string; matchedTag: string | null }>
+  tools: Array<{ id: string; slug: string; name: string; oneLiner: string; reason: string | null }>
   agora: Array<{ id: string; agentName: string; body: string; toolName: string | null; rating: number | null; likeCount: number }>
   meetups: Array<{ id: string; title: string; startsAt: string; mode: string; confirmed: number; capacity: number }>
   people: Array<{ id: string; name: string; avatarUrl: string | null; reason: string }>
@@ -34,14 +35,16 @@ export const getProfileStats = cache(async (member: Member): Promise<ProfileStat
 })
 
 export const getRailData = cache(async (member: Member): Promise<RailData> => {
-  const [toolbox, agoraPosts, meetups] = await Promise.all([
-    listToolbox({ sort: 'trending' }).catch(() => [] as ToolboxEntry[]),
+  const [toolbox, agoraPosts, meetups, mine, pairs] = await Promise.all([
+    listTools(member.id, { sort: 'popular' }).catch(() => [] as ToolboxEntry[]),
     listAgoraTimeline(member.id, { limit: 30 }).catch(() => []),
     upcomingMeetups(2).catch(() => []),
+    myToolIds(member.id).catch(() => new Set<string>()),
+    usagePairsAround(member.id).catch(() => []),
   ])
 
   let archiveTags: string[][] = []
-  let usedToolIds = new Set<string>()
+  let usedToolIds = new Set<string>(mine)
   let people: RailData['people'] = []
 
   if (isMock()) {
@@ -60,6 +63,7 @@ export const getRailData = cache(async (member: Member): Promise<RailData> => {
     const archRows = (arch || []) as Array<{ source_type: string; source_id: string; tags: string[] }>
     archiveTags = archRows.map((r) => r.tags)
     usedToolIds = new Set([
+      ...mine,
       ...archRows.filter((r) => r.source_type === 'toolbox').map((r) => r.source_id),
       ...((reviews || []) as Array<{ entry_id: string }>).map((r) => r.entry_id),
     ])
@@ -101,12 +105,12 @@ export const getRailData = cache(async (member: Member): Promise<RailData> => {
   }
 
   const interestTags = pickInterestTags(archiveTags)
-  const tools = rankToolsForMember(toolbox, interestTags, usedToolIds, 3).map((t) => ({
+  const tools = rankToolsForMember(toolbox, interestTags, usedToolIds, 3, coUsage(pairs, member.id)).map((t) => ({
     id: t.id,
     slug: t.slug,
     name: t.name,
     oneLiner: t.one_liner,
-    matchedTag: t.matchedTag,
+    reason: toolReason(t),
   }))
 
   const interest = new Set(interestTags)

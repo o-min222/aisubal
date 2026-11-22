@@ -7,7 +7,7 @@ import { isActive } from './nav-items'
 
 const TABS = [
   { href: '/feed', label: '홈', icon: Home },
-  { href: '/toolbox', label: '툴박스', icon: Wrench },
+  { href: '/tools', label: '툴', icon: Wrench },
   { href: '/posts/new', label: '작성', icon: PlusSquare },
   { href: '/archive', label: '아카이브', icon: Archive },
   { href: '/members/me', label: '프로필', icon: UserRound },

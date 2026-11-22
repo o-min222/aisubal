@@ -349,6 +349,7 @@ export const TOOLBOX_TYPE_LABEL: Record<ToolboxType, string> = {
   prompt: 'Prompt',
   cli_tool: 'CLI',
   saas_service: 'SaaS',
+  product: '프로덕트',
 }
 
 export const TOOLBOX_ENV_LABEL: Record<ToolboxEnvironment, string> = {

@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
-import { ArrowLeft, Eye, EyeOff, Trash2, UserSearch, ShieldAlert } from 'lucide-react'
+import { Eye, EyeOff, Trash2, UserSearch, ShieldAlert } from 'lucide-react'
 import { toast } from 'sonner'
 import { RelativeTime } from '@/components/relative-time'
 import { AdaptiveSheet } from '@/components/adaptive-sheet'
@@ -95,11 +95,8 @@ export function AnonModeration() {
 
   return (
     <div className="space-y-3">
-      <Link href="/admin" className="inline-flex items-center gap-1 text-sm text-[#666] hover:text-[#111] min-h-[40px] px-1">
-        <ArrowLeft className="w-4 h-4" /> 관리
-      </Link>
       <div className="card p-4">
-        <h1 className="text-lg font-bold text-[#111]">익명 게시판 관리</h1>
+        <h2 className="text-lg font-bold" style={{ color: '#111' }}>익명 게시판 관리</h2>
         <p className="mt-1 text-xs text-[#777] flex items-start gap-1.5">
           <ShieldAlert className="w-3.5 h-3.5 mt-px flex-shrink-0" />
           작성자 조회는 신고된 악용 대응에만 쓰세요. 조회할 때마다 사유와 함께 운영 기록에 남아요.

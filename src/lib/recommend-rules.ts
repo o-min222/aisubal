@@ -24,25 +24,43 @@ export type RankableTool = {
   avg_rating: number
   rating_count: number
   featured: boolean
+  user_count?: number | null
 }
 
-/** Tag overlap dominates; popularity breaks ties; tools already used are skipped. */
+/**
+ * Members who share tools with me ("co-usage") and tag overlap dominate; popularity
+ * (incl. how many members use it) breaks ties; tools I already use are skipped.
+ */
 export function rankToolsForMember<T extends RankableTool>(
   entries: T[],
   interestTags: string[],
   exclude: Set<string>,
-  limit = 3
-): Array<T & { matchedTag: string | null }> {
+  limit = 3,
+  coUse: Map<string, number> = new Map()
+): Array<T & { matchedTag: string | null; coUsers: number }> {
   const interest = new Set(interestTags)
   return entries
     .filter((e) => !exclude.has(e.id))
     .map((e) => {
       const matched = e.tags.map((t) => t.toLowerCase()).filter((t) => interest.has(t))
+      const coUsers = coUse.get(e.id) ?? 0
       const popularity =
-        e.mention_count * 2 + e.install_count + Number(e.avg_rating) * e.rating_count + (e.featured ? 3 : 0)
-      return { e, score: matched.length * 1000 + popularity, matchedTag: matched[0] ?? null }
+        (e.user_count ?? 0) * 3 +
+        e.mention_count * 2 +
+        e.install_count +
+        Number(e.avg_rating) * e.rating_count +
+        (e.featured ? 3 : 0)
+      return { e, score: coUsers * 1500 + matched.length * 1000 + popularity, matchedTag: matched[0] ?? null, coUsers }
     })
     .sort((a, b) => b.score - a.score)
     .slice(0, limit)
-    .map(({ e, matchedTag }) => ({ ...e, matchedTag }))
+    .map(({ e, matchedTag, coUsers }) => ({ ...e, matchedTag, coUsers }))
+}
+
+/** One-line reason shown under a rail recommendation. */
+export function toolReason(t: { coUsers: number; matchedTag: string | null; user_count?: number | null }): string | null {
+  if (t.coUsers > 0) return `나와 같은 툴을 쓰는 ${t.coUsers}명이 사용 중`
+  if (t.matchedTag) return `#${t.matchedTag} 관심사 기반`
+  if ((t.user_count ?? 0) > 0) return `${t.user_count}명이 사용 중`
+  return null
 }

@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import {
-  ArrowLeft,
   ChevronUp,
   ExternalLink,
   Code2,
@@ -11,20 +10,16 @@ import {
   Loader2,
   MessageSquare,
   Megaphone,
+  Rocket,
 } from 'lucide-react'
 import type { ProductWithDetails } from '@/lib/data/types'
 import { AuthorAvatar } from '@/components/user-avatar'
-import { MarkdownBody } from '@/components/markdown-body'
 import { RelativeTime } from '@/components/relative-time'
-import { SaveToArchiveButton } from '@/components/save-to-archive-button'
 import { publicAuthorLabel } from '@/lib/profile'
 import { toast } from 'sonner'
 
-interface ProductDetailClientProps {
-  product: ProductWithDetails
-}
-
-export function ProductDetailClient({ product: initialProduct }: ProductDetailClientProps) {
+/** Launch details (upvotes, screenshots, makers, updates, comments) for a tool that came from 프로덕트 런치. */
+export function LaunchSection({ product: initialProduct }: { product: ProductWithDetails }) {
   const [product, setProduct] = useState(initialProduct)
   const [upvoting, setUpvoting] = useState(false)
 
@@ -48,84 +43,34 @@ export function ProductDetailClient({ product: initialProduct }: ProductDetailCl
   }
 
   return (
-    <div className="max-w-3xl mx-auto">
-      <Link
-        href="/products"
-        className="inline-flex items-center gap-2 text-sm text-[#666] hover:text-[#111] mb-6"
-      >
-        <ArrowLeft className="w-4 h-4" />
-        프로덕트 목록
-      </Link>
-
-      <article className="card p-6 mb-6">
-        <div className="flex gap-4 items-start">
-          {product.logo_url ? (
-            <img
-              src={product.logo_url}
-              alt=""
-              className="w-16 h-16 rounded-xl object-cover border border-[#e5e5e5] bg-white flex-shrink-0"
-            />
-          ) : (
-            <div className="product-icon w-16 h-16 text-xl flex-shrink-0">
-              {product.name.charAt(0).toUpperCase()}
+    <>
+      <section className="card p-5 launch-card" aria-label="프로덕트 런치">
+        <div className="flex items-start gap-4">
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2">
+              <Rocket className="w-4 h-4 text-[#c2581f]" />
+              <h2 className="font-semibold text-[#111]">프로덕트 런치</h2>
+              <span className="text-xs text-[#888]">
+                <RelativeTime date={product.created_at} />
+              </span>
             </div>
-          )}
-
-          <div className="flex-1 min-w-0">
-            <h1 className="text-2xl font-bold text-[#111] mb-1">{product.name}</h1>
-            <p className="text-[#666] mb-3">{product.tagline}</p>
-
-            {product.tags.length > 0 && (
-              <div className="flex flex-wrap gap-1.5 mb-3">
-                {product.tags.map((tag) => (
-                  <span key={tag} className="badge badge-note">
-                    {tag}
-                  </span>
-                ))}
-              </div>
-            )}
-
-            <div className="flex flex-wrap items-center gap-3 text-sm">
+            <p className="text-sm text-[#666] mt-1">{product.tagline}</p>
+            <div className="flex flex-wrap items-center gap-3 text-sm mt-3">
               {product.website_url && (
-                <a
-                  href={product.website_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 text-[#0066cc] hover:underline"
-                >
-                  <Globe className="w-4 h-4" />
-                  웹사이트
-                  <ExternalLink className="w-3 h-3 opacity-60" />
+                <a href={product.website_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-[#0066cc] hover:underline">
+                  <Globe className="w-4 h-4" /> 웹사이트 <ExternalLink className="w-3 h-3 opacity-60" />
                 </a>
               )}
               {product.app_store_url && (
-                <a
-                  href={product.app_store_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 text-[#0066cc] hover:underline"
-                >
-                  App Store
-                  <ExternalLink className="w-3 h-3 opacity-60" />
+                <a href={product.app_store_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-[#0066cc] hover:underline">
+                  App Store <ExternalLink className="w-3 h-3 opacity-60" />
                 </a>
               )}
               {product.github_url && (
-                <a
-                  href={product.github_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 text-[#0066cc] hover:underline"
-                >
-                  <Code2 className="w-4 h-4" />
-                  GitHub
-                  <ExternalLink className="w-3 h-3 opacity-60" />
+                <a href={product.github_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-[#0066cc] hover:underline">
+                  <Code2 className="w-4 h-4" /> GitHub <ExternalLink className="w-3 h-3 opacity-60" />
                 </a>
               )}
-              <SaveToArchiveButton
-                sourceType="product"
-                sourceId={product.id}
-                title={product.name}
-              />
               {product.launch_post_id && (
                 <Link href={`/posts/${product.launch_post_id}`} className="text-[#0066cc] hover:underline">
                   런치 게시물 보기
@@ -133,13 +78,13 @@ export function ProductDetailClient({ product: initialProduct }: ProductDetailCl
               )}
             </div>
           </div>
-
           <button
             type="button"
             disabled={upvoting}
             onClick={toggleUpvote}
             className={`upvote-btn flex-shrink-0 ${product.user_upvoted ? 'active' : ''}`}
             aria-pressed={product.user_upvoted}
+            aria-label={product.user_upvoted ? '업보트 취소' : '업보트'}
           >
             {upvoting ? <Loader2 className="w-4 h-4 animate-spin" /> : <ChevronUp />}
             <span>{product.upvote_count}</span>
@@ -147,40 +92,34 @@ export function ProductDetailClient({ product: initialProduct }: ProductDetailCl
         </div>
 
         {product.screenshots.length > 0 && (
-          <div className="mt-6 -mx-2">
+          <div className="mt-4 -mx-2">
             <div className="flex gap-3 overflow-x-auto pb-2 px-2 snap-x snap-mandatory">
               {product.screenshots.map((src, i) => (
+                // eslint-disable-next-line @next/next/no-img-element
                 <img
                   key={`${src}-${i}`}
                   src={src}
                   alt={`${product.name} 스크린샷 ${i + 1}`}
-                  className="h-48 sm:h-56 w-auto max-w-[min(100%,420px)] rounded-lg border border-[#e5e5e5] object-cover flex-shrink-0 snap-start bg-[#f7f7f7]"
+                  className="h-44 sm:h-52 w-auto max-w-[min(100%,420px)] rounded-lg border border-[#e5e5e5] object-cover flex-shrink-0 snap-start bg-[#f7f7f7]"
                 />
               ))}
             </div>
           </div>
         )}
 
-        <div className="mt-6 pt-6 border-t border-[#e5e5e5]">
-          <MarkdownBody content={product.description} />
-        </div>
-      </article>
-
-      <section className="card p-6 mb-6">
-        <h2 className="text-lg font-bold text-[#111] mb-4">메이커</h2>
-        <ul className="space-y-3">
-          {product.makers.map((maker) => (
-            <li key={maker.id} className="flex items-center gap-3">
-              <AuthorAvatar author={maker} />
-              <div>
-                <div className="font-medium text-[#111]">{publicAuthorLabel(maker)}</div>
-                {maker.kind === 'nickname' && (
-                  <span className="text-xs text-[#888]">별명 프로필</span>
-                )}
-              </div>
-            </li>
-          ))}
-        </ul>
+        {product.makers.length > 0 && (
+          <div className="mt-4 pt-4 border-t border-[#eee]">
+            <h3 className="text-sm font-semibold text-[#333] mb-2">메이커</h3>
+            <ul className="flex flex-wrap gap-3">
+              {product.makers.map((maker) => (
+                <li key={maker.id} className="flex items-center gap-2">
+                  <AuthorAvatar author={maker} size="sm" />
+                  <span className="text-sm font-medium text-[#111]">{publicAuthorLabel(maker)}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
       </section>
 
       {product.updates.length > 0 && (
@@ -233,6 +172,6 @@ export function ProductDetailClient({ product: initialProduct }: ProductDetailCl
           </ul>
         )}
       </section>
-    </div>
+    </>
   )
 }

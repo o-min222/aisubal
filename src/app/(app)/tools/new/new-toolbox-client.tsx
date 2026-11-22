@@ -8,7 +8,7 @@ import type { ToolboxType } from '@/lib/supabase/types'
 import { TOOLBOX_TYPE_LABEL } from '@/lib/toolbox-rules'
 import { toast } from 'sonner'
 
-const TYPES = Object.keys(TOOLBOX_TYPE_LABEL) as ToolboxType[]
+const TYPES = (Object.keys(TOOLBOX_TYPE_LABEL) as ToolboxType[]).filter((t) => t !== 'product') // launches use /tools/launch
 
 export function NewToolboxClient() {
   const router = useRouter()
@@ -47,7 +47,7 @@ export function NewToolboxClient() {
         return
       }
       toast.success(data.created ? '항목이 추가되었습니다.' : '기존 항목에 병합되었습니다.')
-      router.push(`/toolbox/${data.entry.slug || data.entry.id}`)
+      router.push(`/tools/${data.entry.slug || data.entry.id}`)
     } catch {
       toast.error('네트워크 오류')
     } finally {
@@ -58,15 +58,16 @@ export function NewToolboxClient() {
   return (
     <div className="max-w-xl mx-auto">
       <Link
-        href="/toolbox"
+        href="/tools"
         className="inline-flex items-center gap-2 text-sm text-[#666] hover:text-[#111] mb-6"
       >
         <ArrowLeft className="w-4 h-4" />
-        툴박스
+        툴
       </Link>
-      <h1 className="text-2xl font-bold text-[#111] mb-2">항목 추가</h1>
+      <h1 className="text-2xl font-bold text-[#111] mb-2">툴 추가</h1>
       <p className="text-sm text-[#666] mb-6">
-        canonical URL 기준으로 중복이 자동 병합됩니다.
+        canonical URL 기준으로 중복이 자동 병합됩니다. 직접 만든 서비스라면{' '}
+        <Link href="/tools/launch" className="text-[#0066cc] hover:underline">프로덕트 런치</Link>로 올려 업보트를 받아보세요.
       </p>
       <form onSubmit={submit} className="card p-6 space-y-4">
         <label className="block text-sm">

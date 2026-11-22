@@ -1,0 +1,11 @@
+import { SubPageHeader } from '@/components/shell/sub-nav-layout'
+import { NotificationSettings } from './notification-settings'
+
+export default function NotificationSettingsPage() {
+  return (
+    <>
+      <SubPageHeader title="알림" description="받고 싶은 알림을 골라두세요. 알림 발송은 곧 열려요 — 지금 고른 설정은 이 기기에 저장돼요." />
+      <NotificationSettings />
+    </>
+  )
+}

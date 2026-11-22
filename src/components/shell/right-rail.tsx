@@ -7,7 +7,7 @@ function fmtDate(iso: string) {
   return new Intl.DateTimeFormat('ko-KR', { month: 'short', day: 'numeric', weekday: 'short', hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Seoul' }).format(new Date(iso))
 }
 
-/** Personalized right column (archive tags · likes · toolbox usage). */
+/** Personalized right column (archive tags · likes · tools I use + co-usage). */
 export function RightRail({ data }: { data: RailData }) {
   return (
     <div className="space-y-3">
@@ -16,7 +16,7 @@ export function RightRail({ data }: { data: RailData }) {
           <h3 className="rail-title">내 관심사</h3>
           <div className="flex flex-wrap gap-1.5">
             {data.interestTags.slice(0, 6).map((t) => (
-              <Link key={t} href={`/toolbox?tag=${encodeURIComponent(t)}`} className="rail-tag">#{t}</Link>
+              <Link key={t} href={`/tools?tag=${encodeURIComponent(t)}`} className="rail-tag">#{t}</Link>
             ))}
           </div>
         </div>
@@ -48,17 +48,17 @@ export function RightRail({ data }: { data: RailData }) {
       </div>
 
       <div className="rail-card">
-        <h3 className="rail-title"><Wrench className="w-4 h-4" /> 추천 툴박스</h3>
+        <h3 className="rail-title"><Wrench className="w-4 h-4" /> 추천 툴</h3>
         {data.tools.length === 0 ? (
-          <p className="rail-empty">툴박스를 둘러보세요.</p>
+          <p className="rail-empty"><Link href="/tools" className="text-[#0066cc]">툴</Link>을 둘러보세요.</p>
         ) : (
           <ul className="space-y-2.5">
             {data.tools.map((t) => (
               <li key={t.id}>
-                <Link href={`/toolbox/${t.slug}`} className="block group">
+                <Link href={`/tools/${t.slug}`} className="block group">
                   <div className="text-sm font-medium text-[#111] group-hover:underline truncate">{t.name}</div>
                   <div className="text-xs text-[#777] line-clamp-1">{t.oneLiner}</div>
-                  {t.matchedTag && <div className="text-[11px] text-[#0066cc] mt-0.5">#{t.matchedTag} 관심사 기반</div>}
+                  {t.reason && <div className="text-[11px] text-[#0066cc] mt-0.5">{t.reason}</div>}
                 </Link>
               </li>
             ))}

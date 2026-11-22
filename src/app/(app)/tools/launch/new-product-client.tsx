@@ -70,9 +70,9 @@ export function NewProductClient() {
       toast.success('프로덕트가 등록되었습니다.')
       const id = data.product?.id
       if (id) {
-        router.push(`/products/${id}`)
+        router.push(`/products/${id}`) // → redirects to the launch's tool page
       } else {
-        router.push('/products')
+        router.push('/tools?category=launch')
       }
     } catch {
       toast.error('네트워크 오류')
@@ -84,17 +84,17 @@ export function NewProductClient() {
   return (
     <div className="max-w-2xl mx-auto">
       <Link
-        href="/products"
+        href="/tools?category=launch"
         className="inline-flex items-center gap-2 text-sm text-[#666] hover:text-[#111] mb-6"
       >
         <ArrowLeft className="w-4 h-4" />
-        프로덕트 목록
+        툴 목록
       </Link>
 
       <div className="card">
         <div className="p-6 border-b border-[#e5e5e5]">
-          <h1 className="text-xl font-bold text-[#111]">프로덕트 등록</h1>
-          <p className="text-sm text-[#666] mt-1">만든 도구나 서비스를 커뮤니티에 소개하세요.</p>
+          <h1 className="text-xl font-bold text-[#111]">프로덕트 런치</h1>
+          <p className="text-sm text-[#666] mt-1">만든 도구나 서비스를 소개하세요. 툴 목록에 &lsquo;런치&rsquo;로 올라가고 업보트를 받을 수 있어요.</p>
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-5">
@@ -186,7 +186,7 @@ export function NewProductClient() {
           </Field>
 
           <div className="flex justify-end gap-3 pt-4 border-t border-[#eee]">
-            <Link href="/products" className="btn btn-secondary">
+            <Link href="/tools?category=launch" className="btn btn-secondary">
               취소
             </Link>
             <button type="submit" disabled={loading} className="btn btn-primary disabled:opacity-50">

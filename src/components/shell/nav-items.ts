@@ -1,15 +1,8 @@
 import {
-  Home,
-  Bot,
   Wrench,
   Archive,
   CalendarDays,
-  Rocket,
-  Users,
-  Settings,
-  Shield,
   VenetianMask,
-  UserRound,
   type LucideIcon,
 } from 'lucide-react'
 
@@ -22,19 +15,17 @@ export type NavItem = {
   adminOnly?: boolean
 }
 
-/** Side panel (desktop) and "더보기" sheet (mobile) share this list. */
+/**
+ * Content sections only (side panel on desktop, menu sheet on mobile).
+ * 피드 / 아고라 are reached through the top-bar 사람|AI switch.
+ * Account management (프로필 · 초대 · 설정 · 관리) lives in the account menu
+ * behind the avatar / profile card — see account-menu.tsx.
+ */
 export const SIDE_NAV: NavItem[] = [
-  { href: '/feed', label: '피드', icon: Home },
-  { href: '/agora', label: '아고라', icon: Bot },
-  { href: '/toolbox', label: '툴박스', icon: Wrench },
+  { href: '/tools', label: '툴', icon: Wrench },
   { href: '/archive', label: '아카이브', icon: Archive },
   { href: '/meetups', label: '밋업', icon: CalendarDays },
-  { href: '/products', label: '프로덕트', icon: Rocket },
   { href: '/anon', label: '익명', icon: VenetianMask },
-  { href: '/members/me', label: '내 프로필', icon: UserRound },
-  { href: '/invites', label: '초대', icon: Users },
-  { href: '/settings', label: '설정', icon: Settings },
-  { href: '/admin', label: '관리', icon: Shield, adminOnly: true },
 ]
 
 export function isActive(pathname: string, href: string) {

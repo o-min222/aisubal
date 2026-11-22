@@ -1,26 +1,25 @@
 'use client'
 
 import { useState } from 'react'
-import { Settings, User, Lock, Plus, AlertTriangle, Ghost } from 'lucide-react'
+import { User, Lock, Plus, Ghost } from 'lucide-react'
 import type { Member } from '@/lib/supabase/types'
 import { UserAvatar } from '@/components/user-avatar'
 import { validateNickname, memberHasNicknameProfile } from '@/lib/profile'
 import { toast } from 'sonner'
-import { ApiTokensSection } from './api-tokens-section'
 
-interface SettingsClientProps {
+interface ProfileSettingsProps {
   member: Member
   nicknameUnlocked: boolean
   activeMemberCount: number
   unlockThreshold: number
 }
 
-export function SettingsClient({
+export function ProfileSettings({
   member,
   nicknameUnlocked,
   activeMemberCount,
   unlockThreshold,
-}: SettingsClientProps) {
+}: ProfileSettingsProps) {
   const [displayName, setDisplayName] = useState(member.display_name)
   const [bio, setBio] = useState(member.bio || '')
   const [nickname, setNickname] = useState(member.nickname || '')
@@ -28,15 +27,7 @@ export function SettingsClient({
   const hasNick = memberHasNicknameProfile(member)
 
   return (
-    <div className="max-w-2xl mx-auto">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-[#111] flex items-center gap-2">
-          <Settings className="w-6 h-6" />
-          설정
-        </h1>
-      </div>
-
-      <div className="space-y-6">
+    <div className="space-y-6">
         {/* Real-name profile (default) */}
         <section className="card">
           <div className="p-4 border-b border-[#e5e5e5]">
@@ -190,30 +181,6 @@ export function SettingsClient({
           )}
         </section>
 
-        <ApiTokensSection />
-
-        <section className="card border-red-200">
-          <div className="p-4 border-b border-red-200 bg-red-50/50">
-            <h2 className="font-semibold text-red-700 flex items-center gap-2">
-              <AlertTriangle className="w-4 h-4" />
-              위험 구역
-            </h2>
-          </div>
-          <div className="p-4 flex justify-between items-center">
-            <div>
-              <p className="font-medium text-[#333]">로그아웃</p>
-            </div>
-            <button
-              onClick={() => {
-                window.location.href = '/login'
-              }}
-              className="btn btn-secondary btn-sm"
-            >
-              로그아웃
-            </button>
-          </div>
-        </section>
-      </div>
     </div>
   )
 }

@@ -31,11 +31,14 @@ interface Props {
   mentionPosts: { id: string; title: string; created_at: string; url: string }[]
   member: Member
   aiRating: AiRatingSummary
+  /** Server-rendered 'N명이 사용 중' card and, for launches, the 프로덕트 런치 section. */
+  usersSlot?: React.ReactNode
+  launchSlot?: React.ReactNode
 }
 
 const ENVS = Object.keys(TOOLBOX_ENV_LABEL) as ToolboxEnvironment[]
 
-export function ToolboxDetailClient({ entry: initial, mentionPosts, member, aiRating }: Props) {
+export function ToolboxDetailClient({ entry: initial, mentionPosts, member, aiRating, usersSlot, launchSlot }: Props) {
   const [entry, setEntry] = useState(initial)
   const [env, setEnv] = useState<ToolboxEnvironment | 'generic'>('cursor')
   const [rating, setRating] = useState(5)
@@ -129,11 +132,11 @@ export function ToolboxDetailClient({ entry: initial, mentionPosts, member, aiRa
   return (
     <div className="max-w-3xl mx-auto space-y-4">
       <Link
-        href="/toolbox"
+        href={entry.product_id ? '/tools?category=launch' : '/tools'}
         className="inline-flex items-center gap-2 text-sm text-[#666] hover:text-[#111]"
       >
         <ArrowLeft className="w-4 h-4" />
-        툴박스 목록
+        툴 목록
       </Link>
 
       <article className="card p-6">
@@ -144,6 +147,7 @@ export function ToolboxDetailClient({ entry: initial, mentionPosts, member, aiRa
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap gap-2 mb-2">
               <span className="badge badge-mcp">{TOOLBOX_TYPE_LABEL[entry.type]}</span>
+              {entry.product_id && <span className="launch-chip">런치</span>}
               {entry.tags.map((t) => (
                 <span key={t} className="badge badge-note">
                   #{t}
@@ -157,8 +161,10 @@ export function ToolboxDetailClient({ entry: initial, mentionPosts, member, aiRa
                 <Star className="w-4 h-4 fill-[#f5a623] text-[#f5a623]" />
                 {entry.avg_rating.toFixed(1)} ({entry.rating_count})
               </span>
+              {(entry.ai_rating_count ?? 0) > 0 && <span>AI {Number(entry.ai_rating_avg).toFixed(1)}</span>}
+              {(entry.user_count ?? 0) > 0 && <span>{entry.user_count}명 사용 중</span>}
+              {entry.product_id ? <span>업보트 {entry.upvote_count ?? 0}</span> : <span>설치 {entry.install_count}</span>}
               <span>언급 {entry.mention_count}</span>
-              <span>설치 {entry.install_count}</span>
             </div>
             <div className="flex flex-wrap gap-3 mt-3 text-sm items-center">
               {entry.github_url && (
@@ -195,6 +201,10 @@ export function ToolboxDetailClient({ entry: initial, mentionPosts, member, aiRa
         </div>
       </article>
 
+      {usersSlot}
+      {launchSlot}
+
+      {entry.type !== 'product' && (<>
       <section className="card p-4 border-amber-200 bg-amber-50/40">
         <h2 className="font-semibold text-[#111] flex items-center gap-2 mb-2">
           <ShieldAlert className="w-4 h-4 text-amber-700" />
@@ -265,7 +275,7 @@ export function ToolboxDetailClient({ entry: initial, mentionPosts, member, aiRa
           </button>
         </div>
         <p className="text-xs text-[#888] mt-3">
-          CLI: <code className="font-mono">aisubal toolbox install {entry.slug}</code>
+          CLI: <code className="font-mono">aisubal tools install {entry.slug}</code>
           {' · '}
           로그인 사용자: {member.display_name}
         </p>
@@ -310,6 +320,7 @@ export function ToolboxDetailClient({ entry: initial, mentionPosts, member, aiRa
           })}
         </div>
       </section>
+      </>)}
 
       <section className="card p-6">
         <h2 className="font-semibold text-[#111] mb-3">

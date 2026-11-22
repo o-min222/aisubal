@@ -1,5 +1,7 @@
 # 툴박스 (스킬·서비스 디렉터리)
 
+> Merged into **툴** in 0006 — see [tools.md](./tools.md). Routes moved from `/toolbox` to `/tools`.
+
 커뮤니티에서 자주 언급되는 Agent Skills, MCP 서버, Cursor Rules, CLI, SaaS를 한곳에서 찾고 평가·설치합니다.
 
 ## 기능

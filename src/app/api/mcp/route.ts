@@ -8,10 +8,8 @@ import {
   getMeetupDetails,
   createMeetup,
   handleMeetupRsvp,
-  listProductsRanked,
   getProductDetails,
   createProduct,
-  listToolbox,
   getToolboxEntry,
   createToolboxEntry,
   recordToolboxInstall,
@@ -36,12 +34,13 @@ import {
   assertNoIdentityLeak,
 } from '@/lib/profile'
 import { TOOLBOX_ENV_LABEL } from '@/lib/toolbox-rules'
-import type { ToolboxSort } from '@/lib/toolbox-rules'
 import type { ArchiveSourceType, ToolboxEnvironment } from '@/lib/supabase/types'
 import { AGORA_TOOLS, handleAgoraTool, isAgoraTool } from '@/lib/agora-mcp'
 import { UNTRUSTED_NOTICE } from '@/lib/agora-rules'
 import { createAnonClient } from '@/lib/supabase/anon'
-import { FEED_TOOLS, FEED_TOOL_NAMES, HUMAN_UNTRUSTED_NOTICE, UNTRUSTED_READ_TOOLS, handleDataTool } from '@/lib/mcp-data'
+import { FEED_TOOLS, FEED_TOOL_NAMES, HUMAN_UNTRUSTED_NOTICE, UNTRUSTED_READ_TOOLS, handleDataTool, resolveToolAlias, withLegacyKey } from '@/lib/mcp-data'
+import { getMockLaunchEntry, getToolUsers, listTools, setToolUsage, toolSlugForProduct } from '@/lib/data/tools'
+import { categoryFromLegacyType, parseToolSort } from '@/lib/tool-rules'
 
 interface JsonRpcRequest {
   jsonrpc: '2.0'
@@ -188,28 +187,57 @@ const TOOLS = [
     },
   },
   {
-    name: 'list_products',
-    description: '프로덕트 랭킹 (window: today|week|all). Scope: products_read',
+    name: 'list_tools',
+    description:
+      "툴 목록 (MCP·스킬·프롬프트·룰·CLI·서비스·멤버 런치를 한 리스트로). category: mcp|skill|prompt|rules|cli|service|launch, sort: popular|newest|ai|rated|users|upvotes, mine=true면 내가 '사용 중'으로 표시한 툴만. Scope: toolbox_read 또는 products_read",
     inputSchema: {
       type: 'object',
       properties: {
-        window: { type: 'string', enum: ['today', 'week', 'all'] },
+        category: { type: 'string', enum: ['mcp', 'skill', 'prompt', 'rules', 'cli', 'service', 'launch'] },
+        tag: { type: 'string' },
+        q: { type: 'string' },
+        sort: { type: 'string', enum: ['popular', 'newest', 'ai', 'rated', 'users', 'upvotes'] },
+        mine: { type: 'boolean' },
         limit: { type: 'number' },
       },
     },
   },
   {
-    name: 'read_product',
-    description: '프로덕트 상세. Scope: products_read',
+    name: 'read_tool',
+    description: '툴 상세: 리뷰 평점, AI 평가, 사용 중인 멤버, 런치 정보(업보트·메이커). entryId는 UUID·slug·런치 productId. Scope: toolbox_read 또는 products_read',
     inputSchema: {
       type: 'object',
-      properties: { productId: { type: 'string' } },
-      required: ['productId'],
+      properties: { entryId: { type: 'string' } },
+      required: ['entryId'],
     },
   },
   {
-    name: 'create_product',
-    description: '프로덕트 등록. Scope: products_write',
+    name: 'set_tool_usage',
+    description: "토큰 주인의 '사용 중' 표시를 켜거나 끕니다(프로필 '내가 쓰는 툴'). Scope: toolbox_write",
+    inputSchema: {
+      type: 'object',
+      properties: { entryId: { type: 'string' }, using: { type: 'boolean' } },
+      required: ['entryId'],
+    },
+  },
+  {
+    name: 'create_tool',
+    description: '툴 추가(canonical URL 중복 병합). type: agent_skill|mcp_server|cursor_rules|prompt|cli_tool|saas_service. Scope: toolbox_write',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        name: { type: 'string' },
+        oneLiner: { type: 'string' },
+        url: { type: 'string' },
+        type: { type: 'string' },
+        tags: { type: 'array', items: { type: 'string' } },
+      },
+      required: ['name', 'oneLiner', 'url'],
+    },
+  },
+  {
+    name: 'launch_product',
+    description: '직접 만든 프로덕트 런치. 툴 목록에 런치로 올라가고 업보트를 받습니다. Scope: products_write',
     inputSchema: {
       type: 'object',
       properties: {
@@ -221,47 +249,6 @@ const TOOLS = [
         tags: { type: 'array', items: { type: 'string' } },
       },
       required: ['name', 'tagline', 'description'],
-    },
-  },
-  {
-    name: 'list_toolbox',
-    description: '스킬·MCP·CLI 디렉터리 목록. Scope: toolbox_read',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        type: { type: 'string' },
-        tag: { type: 'string' },
-        q: { type: 'string' },
-        sort: {
-          type: 'string',
-          enum: ['trending', 'rated', 'newest', 'mentions', 'installs'],
-        },
-        limit: { type: 'number' },
-      },
-    },
-  },
-  {
-    name: 'read_toolbox',
-    description: '툴박스 항목 상세. Scope: toolbox_read',
-    inputSchema: {
-      type: 'object',
-      properties: { entryId: { type: 'string' } },
-      required: ['entryId'],
-    },
-  },
-  {
-    name: 'create_toolbox_entry',
-    description: '툴박스 항목 추가(canonical URL 중복 병합). Scope: toolbox_write',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        name: { type: 'string' },
-        oneLiner: { type: 'string' },
-        url: { type: 'string' },
-        type: { type: 'string' },
-        tags: { type: 'array', items: { type: 'string' } },
-      },
-      required: ['name', 'oneLiner', 'url'],
     },
   },
   {
@@ -556,40 +543,84 @@ async function handleToolsCall(name: string, args: Record<string, unknown> = {})
     }
   }
 
-  if (name === 'list_products') {
-    const window = (args.window as 'today' | 'week' | 'all') || 'all'
-    const limit = Number(args.limit || 20)
-    const products = await listProductsRanked(window)
+  // ---- 툴 (DEV mock; mirrors lib/mcp-data.ts list_tools/read_tool/…)
+  if (name === 'list_tools') {
+    const member = await getMember()
+    if (!member) return { error: 'Unauthorized' }
+    const sort = String(args.sort || 'popular')
+    const tools = await listTools(member.id, {
+      category: categoryFromLegacyType(args.category ? String(args.category) : null),
+      tag: args.tag ? String(args.tag) : null,
+      q: args.q ? String(args.q) : null,
+      sort: parseToolSort(sort === 'upvotes' || sort === 'users' || sort === 'rated' ? 'popular' : sort),
+      mine: args.mine === true,
+    })
+    const ordered =
+      sort === 'upvotes' ? [...tools].sort((x, y) => (y.upvote_count ?? 0) - (x.upvote_count ?? 0)) : tools
     return {
-      window,
-      products: products.slice(0, limit).map((p, i) => ({
-        rank: i + 1,
-        id: p.id,
-        name: p.name,
-        tagline: p.tagline,
-        upvotes: p.upvote_count,
-        tags: p.tags,
+      category: args.category ?? 'all',
+      sort,
+      tools: ordered.slice(0, Number(args.limit || 30)).map((e) => ({
+        id: e.id,
+        slug: e.slug,
+        name: e.name,
+        type: e.type,
+        oneLiner: e.one_liner,
+        tags: e.tags,
+        rating: e.avg_rating,
+        aiRating: e.ai_rating_avg,
+        userCount: e.user_count ?? 0,
+        upvotes: e.product_id ? e.upvote_count : undefined,
+        productId: e.product_id ?? null,
+        usedByMe: e.used_by_me,
+        page: `/tools/${e.slug}`,
       })),
     }
   }
 
-  if (name === 'read_product') {
-    const product = await getProductDetails(String(args.productId))
-    if (!product) return { error: '프로덕트를 찾을 수 없습니다.' }
+  if (name === 'read_tool') {
+    const member = await getMember()
+    if (!member) return { error: 'Unauthorized' }
+    const key = String(args.entryId || '')
+    const bySlug = (await getToolboxEntry(key)) ?? (await getMockLaunchEntry(key))
+    const slugFromProduct = bySlug ? null : await toolSlugForProduct(key)
+    const entry = bySlug ?? (slugFromProduct ? await getMockLaunchEntry(slugFromProduct) : null)
+    if (!entry) return { error: '툴을 찾을 수 없습니다.' }
+    const [users, launch] = await Promise.all([
+      getToolUsers(entry.id, member.id),
+      entry.product_id ? getProductDetails(entry.product_id, member.id) : Promise.resolve(null),
+    ])
     return {
-      id: product.id,
-      name: product.name,
-      tagline: product.tagline,
-      description: product.description,
-      upvotes: product.upvote_count,
-      tags: product.tags,
-      makers: product.makers.map(publicAuthorLabel),
-      websiteUrl: product.website_url,
-      githubUrl: product.github_url,
+      id: entry.id,
+      slug: entry.slug,
+      name: entry.name,
+      type: entry.type,
+      oneLiner: entry.one_liner,
+      description: entry.description,
+      tags: entry.tags,
+      rating: entry.avg_rating,
+      userCount: users.count,
+      usedByMe: users.usedByMe,
+      users: users.users.map(publicAuthorLabel),
+      launch: launch
+        ? { productId: launch.id, tagline: launch.tagline, upvotes: launch.upvote_count, makers: launch.makers.map(publicAuthorLabel) }
+        : null,
+      page: `/tools/${entry.slug}`,
     }
   }
 
-  if (name === 'create_product') {
+  if (name === 'set_tool_usage') {
+    const member = await getMember()
+    if (!member) return { error: 'Unauthorized' }
+    const key = String(args.entryId || '')
+    const entry = (await getToolboxEntry(key)) ?? (await getMockLaunchEntry(key))
+    if (!entry) return { error: '툴을 찾을 수 없습니다.' }
+    const using = args.using === undefined ? true : args.using === true
+    const userCount = await setToolUsage(entry.id, member.id, using)
+    return { entryId: entry.id, using, userCount }
+  }
+
+  if (name === 'launch_product') {
     const member = await getMember()
     if (!member) return { error: 'Unauthorized' }
     const product = await createProduct(member, {
@@ -600,56 +631,14 @@ async function handleToolsCall(name: string, args: Record<string, unknown> = {})
       github_url: (args.githubUrl as string) || null,
       tags: Array.isArray(args.tags) ? (args.tags as string[]) : [],
     })
-    return { id: product.id, name: product.name, tagline: product.tagline }
+    const slug = await toolSlugForProduct(product.id)
+    return { productId: product.id, slug, name: product.name, tagline: product.tagline, url: slug ? `/tools/${slug}` : null }
   }
 
-  if (name === 'list_toolbox') {
-    const entries = await listToolbox({
-      type: args.type ? String(args.type) : undefined,
-      tag: args.tag ? String(args.tag) : undefined,
-      q: args.q ? String(args.q) : undefined,
-      sort: (args.sort as ToolboxSort) || 'trending',
-    })
-    const limit = Number(args.limit || 30)
-    return {
-      entries: entries.slice(0, limit).map((e) => ({
-        id: e.id,
-        slug: e.slug,
-        name: e.name,
-        type: e.type,
-        oneLiner: e.one_liner,
-        rating: e.avg_rating,
-        mentions: e.mention_count,
-        installs: e.install_count,
-        url: e.canonical_url,
-      })),
-    }
-  }
-
-  if (name === 'read_toolbox') {
-    const entry = await getToolboxEntry(String(args.entryId))
-    if (!entry) return { error: '항목을 찾을 수 없습니다.' }
-    return {
-      id: entry.id,
-      slug: entry.slug,
-      name: entry.name,
-      type: entry.type,
-      oneLiner: entry.one_liner,
-      description: entry.description,
-      tags: entry.tags,
-      rating: entry.avg_rating,
-      mentions: entry.mention_count,
-      installs: entry.install_count,
-      url: entry.canonical_url,
-      license: entry.license,
-      lastCommitAt: entry.last_commit_at,
-      compat: entry.compat,
-    }
-  }
-
-  if (name === 'create_toolbox_entry') {
+  if (name === 'create_tool') {
     const member = await getMember()
     if (!member) return { error: 'Unauthorized' }
+    if (args.type === 'product') return { error: '프로덕트는 launch_product로 등록하세요.' }
     const result = await createToolboxEntry(member, {
       name: String(args.name || ''),
       one_liner: String(args.oneLiner || ''),
@@ -664,6 +653,7 @@ async function handleToolsCall(name: string, args: Record<string, unknown> = {})
       slug: result.entry.slug,
       created: result.created,
       name: result.entry.name,
+      url: `/tools/${result.entry.slug}`,
     }
   }
 
@@ -698,7 +688,7 @@ async function handleToolsCall(name: string, args: Record<string, unknown> = {})
         githubUrl: entry.github_url,
         note: '설치 전 소스·라이선스·최근 커밋을 확인하세요.',
       },
-      cliHint: `aisubal toolbox install ${entry.slug} --env ${environment}`,
+      cliHint: `aisubal tools install ${entry.slug} --env ${environment}`,
     }
   }
 
@@ -839,8 +829,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(jsonRpcError(id, -32602, 'Unknown resource URI'))
     }
     if (method === 'tools/call') {
-      const name = String(params?.name || '')
-      const args = (params?.arguments || {}) as Record<string, unknown>
+      // Pre-0006 names (list_toolbox, list_products, read_product, …) resolve to the unified 툴 tools.
+      const alias = resolveToolAlias(String(params?.name || ''), (params?.arguments || {}) as Record<string, unknown>)
+      const name = alias.name
+      const args = alias.args
       if (isAgoraTool(name)) {
         // Agent-only space: auth is the bearer token, verified inside the DB RPC.
         const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7).trim() : null
@@ -862,7 +854,7 @@ export async function POST(request: NextRequest) {
       }
       if (FEED_TOOL_NAMES.has(name) || !isDevMode()) {
         // Production: every tool goes through token-verified SECURITY DEFINER RPCs.
-        const result = await handleDataTool(name, args, bearer, anonRpc)
+        const result = withLegacyKey(await handleDataTool(name, args, bearer, anonRpc), alias.legacyKey)
         const failed = 'error' in result
         return NextResponse.json(
           jsonRpcSuccess(id, {
@@ -874,7 +866,7 @@ export async function POST(request: NextRequest) {
           })
         )
       }
-      const result = await handleToolsCall(name, args)
+      const result = withLegacyKey(await handleToolsCall(name, args), alias.legacyKey)
       return NextResponse.json(
         jsonRpcSuccess(id, {
           content: [{ type: 'text', text: JSON.stringify(result, null, 2) }],

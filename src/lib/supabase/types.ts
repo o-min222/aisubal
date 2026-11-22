@@ -311,6 +311,8 @@ export type ToolboxType =
   | 'prompt'
   | 'cli_tool'
   | 'saas_service'
+  /** product launch (has product_id → upvotes, makers, updates) */
+  | 'product'
 
 export type ToolboxEnvironment =
   | 'claude_code'
@@ -344,6 +346,13 @@ export type ToolboxEntry = {
   featured: boolean
   created_at: string
   updated_at: string
+  // 0006 unified tools
+  product_id?: string | null
+  launched_at?: string | null
+  user_count?: number
+  upvote_count?: number
+  ai_rating_avg?: number
+  ai_rating_count?: number
 }
 
 export type ToolboxMention = {

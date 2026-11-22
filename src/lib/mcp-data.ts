@@ -147,6 +147,81 @@ const authorLabel = (a: RpcAuthor | null | undefined) => a?.name ?? '멤버'
 /** Tools whose results include human-written text → prepend the untrusted notice. */
 export const UNTRUSTED_READ_TOOLS = new Set(['feed_list', 'feed_get', 'search_posts', 'read_post'])
 
+/** Sorts accepted by mcp_tools_list. */
+export const MCP_TOOL_SORTS = ['popular', 'newest', 'ai', 'rated', 'users', 'upvotes']
+
+/**
+ * Pre-0006 tool names keep working: they are resolved to the unified '툴' tools
+ * before dispatch (not advertised in tools/list). `legacyKey` re-exposes the old
+ * top-level result key so existing agents don't break.
+ */
+export const TOOL_ALIASES: Record<string, { to: string; legacyKey?: string; args?: (a: Record<string, unknown>) => Record<string, unknown> }> = {
+  list_toolbox: {
+    to: 'list_tools',
+    legacyKey: 'entries',
+    args: (a) => ({
+      ...a,
+      category: a.category ?? legacyCategory(a.type),
+      sort: a.sort === 'trending' || a.sort === 'mentions' || a.sort === 'installs' ? 'popular' : a.sort,
+    }),
+  },
+  list_products: { to: 'list_tools', legacyKey: 'products', args: (a) => ({ ...a, category: 'launch', sort: a.sort ?? 'upvotes' }) },
+  read_toolbox: { to: 'read_tool' },
+  read_product: { to: 'read_tool', args: (a) => ({ ...a, entryId: a.entryId ?? a.productId }) },
+  create_toolbox_entry: { to: 'create_tool' },
+  create_product: { to: 'launch_product' },
+}
+
+function legacyCategory(type: unknown): string | undefined {
+  const t = typeof type === 'string' ? type : ''
+  const map: Record<string, string> = {
+    mcp_server: 'mcp',
+    agent_skill: 'skill',
+    prompt: 'prompt',
+    cursor_rules: 'rules',
+    cli_tool: 'cli',
+    saas_service: 'service',
+    product: 'launch',
+  }
+  return map[t] ?? (t || undefined)
+}
+
+export function resolveToolAlias(name: string, args: Record<string, unknown>) {
+  const alias = TOOL_ALIASES[name]
+  if (!alias) return { name, args, legacyKey: undefined as string | undefined }
+  return { name: alias.to, args: alias.args ? alias.args(args) : args, legacyKey: alias.legacyKey }
+}
+
+/** Copies the unified list under the legacy key (entries / products) for alias callers. */
+export function withLegacyKey(result: Record<string, unknown>, legacyKey: string | undefined) {
+  if (!legacyKey || !Array.isArray(result.tools)) return result
+  return { ...result, [legacyKey]: result.tools }
+}
+
+function toolSummary(e: Record<string, unknown>) {
+  return {
+    id: e.id,
+    slug: e.slug,
+    name: e.name,
+    type: e.type,
+    category: legacyCategory(e.type),
+    oneLiner: e.one_liner,
+    tags: e.tags,
+    rating: e.avg_rating,
+    ratingCount: e.rating_count,
+    aiRating: e.ai_rating_avg,
+    aiRatingCount: e.ai_rating_count,
+    userCount: typeof e.user_count === 'number' ? e.user_count : 0,
+    upvotes: e.product_id ? e.upvote_count : undefined,
+    mentions: e.mention_count,
+    installs: e.install_count,
+    productId: e.product_id ?? null,
+    usedByMe: e.used_by_me === true,
+    url: e.canonical_url,
+    page: `/tools/${e.slug}`,
+  }
+}
+
 export async function handleDataTool(
   name: string,
   args: Record<string, unknown>,
@@ -351,38 +426,53 @@ export async function handleDataTool(
         })) as Record<string, unknown>
       }
 
-      // ------------------------------------------------------------ products
-      case 'list_products': {
-        const window = args.window === 'today' || args.window === 'week' ? args.window : 'all'
-        const rows = (await call('mcp_products', { p_window: window, p_limit: num(args.limit, 20, 50) })) as Array<Record<string, unknown>>
+      // ------------------------------------------------------------ 툴 (toolbox + launches, 0006)
+      case 'list_tools': {
+        const sort = MCP_TOOL_SORTS.includes(String(args.sort)) ? String(args.sort) : 'popular'
+        const rows = (await call('mcp_tools_list', {
+          p_category: str(args.category),
+          p_tag: str(args.tag),
+          p_query: str(args.q) ?? str(args.query),
+          p_sort: sort,
+          p_mine: args.mine === true || args.mine === 'true',
+          p_limit: num(args.limit, 30, 100),
+        })) as Array<Record<string, unknown>>
+        return { category: str(args.category) ?? 'all', sort, tools: (rows || []).map(toolSummary) }
+      }
+      case 'read_tool': {
+        const key = str(args.entryId) ?? str(args.slug) ?? str(args.productId)
+        if (!key) return { error: 'entryId (UUID, slug, or launch productId) required' }
+        const e = (await call('mcp_toolbox_get', { p_entry: key, p_record_install: false })) as Record<string, unknown> & {
+          users?: RpcAuthor[]
+          launch?: (Record<string, unknown> & { makers?: RpcAuthor[] }) | null
+        }
         return {
-          window,
-          products: (rows || []).map((p, i) => ({
-            rank: i + 1,
-            id: p.id,
-            name: p.name,
-            tagline: p.tagline,
-            upvotes: p.upvotes,
-            tags: p.tags,
-          })),
+          ...toolSummary(e),
+          description: e.description,
+          license: e.license,
+          lastCommitAt: e.last_commit_at,
+          githubUrl: e.github_url,
+          users: (e.users || []).map(authorLabel),
+          launch: e.launch
+            ? {
+                productId: e.launch.id,
+                tagline: e.launch.tagline,
+                upvotes: e.launch.upvotes,
+                makers: (e.launch.makers || []).map(authorLabel),
+                websiteUrl: e.launch.website_url,
+                githubUrl: e.launch.github_url,
+                launchedAt: e.launch.launched_at,
+              }
+            : null,
         }
       }
-      case 'read_product': {
-        if (!isUuid(args.productId)) return { error: 'productId must be a UUID' }
-        const p = (await call('mcp_product_get', { p_product_id: args.productId })) as Record<string, unknown> & { makers: RpcAuthor[] }
-        return {
-          id: p.id,
-          name: p.name,
-          tagline: p.tagline,
-          description: p.description,
-          upvotes: p.upvotes,
-          tags: p.tags,
-          makers: (p.makers || []).map(authorLabel),
-          websiteUrl: p.website_url,
-          githubUrl: p.github_url,
-        }
+      case 'set_tool_usage': {
+        const key = str(args.entryId) ?? str(args.slug)
+        if (!key) return { error: 'entryId (UUID or slug) required' }
+        const using = args.using === undefined ? true : args.using === true || args.using === 'true'
+        return (await call('mcp_tool_usage', { p_entry: key, p_using: using })) as Record<string, unknown>
       }
-      case 'create_product': {
+      case 'launch_product': {
         const p = (await call('mcp_product_create', {
           p_payload: {
             name: args.name,
@@ -393,54 +483,20 @@ export async function handleDataTool(
             tags: Array.isArray(args.tags) ? args.tags : [],
           },
         })) as Record<string, unknown>
-        return { id: p.id, name: p.name, tagline: p.tagline, url: `/products/${p.id}` }
-      }
-
-      // ------------------------------------------------------------ toolbox
-      case 'list_toolbox': {
-        const sort = ['trending', 'rated', 'newest', 'mentions', 'installs'].includes(String(args.sort)) ? String(args.sort) : 'trending'
-        const rows = (await call('mcp_toolbox_list', {
-          p_type: str(args.type),
-          p_tag: str(args.tag),
-          p_query: str(args.q),
-          p_sort: sort,
-          p_limit: num(args.limit, 30, 100),
-        })) as Array<Record<string, unknown>>
+        // products_sync_tool (0006) creates / links the 툴 entry for this launch.
+        const e = (await call('mcp_toolbox_get', { p_entry: String(p.id), p_record_install: false }).catch(() => null)) as
+          | Record<string, unknown>
+          | null
         return {
-          entries: (rows || []).map((e) => ({
-            id: e.id,
-            slug: e.slug,
-            name: e.name,
-            type: e.type,
-            oneLiner: e.one_liner,
-            rating: e.avg_rating,
-            mentions: e.mention_count,
-            installs: e.install_count,
-            url: e.canonical_url,
-          })),
+          productId: p.id,
+          entryId: e?.id ?? null,
+          slug: e?.slug ?? null,
+          name: p.name,
+          tagline: p.tagline,
+          url: e?.slug ? `/tools/${e.slug}` : `/products/${p.id}`,
         }
       }
-      case 'read_toolbox': {
-        const key = str(args.entryId)
-        if (!key) return { error: 'entryId (UUID or slug) required' }
-        const e = (await call('mcp_toolbox_get', { p_entry: key, p_record_install: false })) as Record<string, unknown>
-        return {
-          id: e.id,
-          slug: e.slug,
-          name: e.name,
-          type: e.type,
-          oneLiner: e.one_liner,
-          description: e.description,
-          tags: e.tags,
-          rating: e.avg_rating,
-          mentions: e.mention_count,
-          installs: e.install_count,
-          url: e.canonical_url,
-          license: e.license,
-          lastCommitAt: e.last_commit_at,
-        }
-      }
-      case 'create_toolbox_entry': {
+      case 'create_tool': {
         const rawUrl = str(args.url)
         const nm = str(args.name)
         if (!rawUrl || !nm) return { error: 'name, oneLiner, url required' }
@@ -451,7 +507,9 @@ export async function handleDataTool(
           return { error: 'url이 올바르지 않습니다.' }
         }
         const repo = extractGithubOwnerRepo(url)
-        const type = (str(args.type) as ToolboxType | null) || inferToolboxType(url, nm)
+        const requested = str(args.type) as ToolboxType | null
+        if (requested === 'product') return { error: '프로덕트는 launch_product로 등록하세요.' }
+        const type = requested || inferToolboxType(url, nm)
         const sourceRepo = repo ? `${repo.owner}/${repo.repo}` : null
         const slug = (repo ? `${repo.owner}-${repo.repo}` : nm).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
         const r = (await call('mcp_toolbox_create', {
@@ -467,7 +525,7 @@ export async function handleDataTool(
             install_snippets: defaultInstallSnippets({ name: nm, type, source_repo: sourceRepo, github_url: repo ? url : null, canonical_url: url }),
           },
         })) as { entry: Record<string, unknown>; created: boolean }
-        return { id: r.entry.id, slug: r.entry.slug, created: r.created, name: r.entry.name }
+        return { id: r.entry.id, slug: r.entry.slug, created: r.created, name: r.entry.name, url: `/tools/${r.entry.slug}` }
       }
       case 'get_install_instructions':
       case 'install_tool': {
@@ -501,7 +559,7 @@ export async function handleDataTool(
             githubUrl: e.github_url,
             note: '설치 전 소스·라이선스·최근 커밋을 확인하세요.',
           },
-          cliHint: `aisubal toolbox install ${e.slug} --env ${environment}`,
+          cliHint: `aisubal tools install ${e.slug} --env ${environment}`,
         }
       }
     }
