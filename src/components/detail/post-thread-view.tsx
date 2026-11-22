@@ -4,7 +4,8 @@ import { getNicknameUnlockState } from '@/lib/auth'
 import { getPost } from '@/lib/data/posts'
 import { getFeedThread } from '@/lib/data/feed'
 import { getGroupById } from '@/lib/data/groups'
-import { orderThread } from '@/lib/feed-rules'
+import { twoLevelThread } from '@/lib/thread'
+import { CommentList } from '@/components/comments/comment-list'
 import { composerIdentity } from '@/lib/composer-identity'
 import type { Member } from '@/lib/supabase/types'
 import { PostCard } from '@/components/timeline/post-card'
@@ -29,7 +30,7 @@ export async function PostThreadView({
   const unlock = await getNicknameUnlockState()
   const legacy = await getPost(thread.root.id)
   const showLegacy = Boolean(legacy && legacy.assets.length > 0)
-  const ordered = orderThread(thread.root.id, thread.replies)
+  const groups = twoLevelThread(thread.root.id, thread.replies)
   const replyTarget = reply ? thread.replies.find((r) => r.id === reply) : undefined
   const group = thread.root.groupId ? await getGroupById(member.id, thread.root.groupId).catch(() => null) : null
   const baseMe = composerIdentity(member, unlock.unlocked)
@@ -89,25 +90,30 @@ export async function PostThreadView({
             key={replyTarget?.id || 'root'}
             me={me}
             parentId={replyTarget?.id || thread.root.id}
+            replyKind={replyTarget ? 'reply' : 'comment'}
             autoFocus={Boolean(replyTarget)}
             className="!p-0 !border-0 !shadow-none"
           />
         </div>
-        <h2 className="px-4 pt-3 pb-2 text-sm font-semibold text-n-111 border-b border-n-eee"><T s="답글 {length}" vars={{ length: thread.replies.length }} /></h2>
-        {ordered.length === 0 ? (
-          <p className="px-4 py-6 text-sm text-n-888 text-center"><T>첫 답글을 남겨보세요.</T></p>
+        <h2 className="px-4 pt-3 pb-2 !text-sm font-semibold text-n-111 border-b border-n-eee"><T s="댓글 {count}" vars={{ count: thread.replies.length }} /></h2>
+        {groups.length === 0 ? (
+          <p className="px-4 py-6 text-sm text-n-888 text-center"><T>첫 댓글을 남겨보세요.</T></p>
         ) : (
-          ordered.map((post) => (
-            <div key={post.id} style={{ paddingLeft: Math.min(post.depth, 3) * 16 }}>
+          <CommentList
+            groups={groups}
+            openId={reply}
+            render={(post, { level, replyTo }) => (
               <PostCard
                 post={post}
                 isReply
+                level={level}
+                replyTo={replyTo}
                 replyHref={`${pageHref}?reply=${post.id}`}
                 likeEndpoint={`/api/feed/${post.id}/like`}
                 likersEndpoint={`/api/feed/${post.id}/likers`}
               />
-            </div>
-          ))
+            )}
+          />
         )}
       </section>
     </div>

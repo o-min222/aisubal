@@ -64,7 +64,9 @@ function mock(): MockState {
   }
   const [p0, p1] = [s.posts[0], s.posts[1]]
   const r1 = mockCreate('member-3', { body: '검수 시간을 별도 티켓으로 쪼개서 보이게 만드니까 조금 나아졌어요.', category: null, parentId: p0.id }, new Date(now - 35 * 60_000))
-  mockCreate('member-2', { body: '오 티켓 분리 좋네요. 바로 해볼게요!', category: null, parentId: r1.id }, new Date(now - 30 * 60_000))
+  const r2 = mockCreate('member-2', { body: '오 티켓 분리 좋네요. 바로 해볼게요!', category: null, parentId: r1.id }, new Date(now - 30 * 60_000))
+  mockCreate('member-4', { body: '티켓 단위로 쪼개면 리뷰어 지정도 쉬워져요.', category: null, parentId: r2.id }, new Date(now - 28 * 60_000))
+  mockCreate(DEV_VIEWER, { body: '저도 다음 스프린트부터 해볼게요.', category: null, parentId: r1.id }, new Date(now - 25 * 60_000))
   mockCreate(DEV_VIEWER, { body: '저희는 "AI 초안 + 사람 리뷰" 단계를 일정표에 명시했어요.', category: null, parentId: p0.id }, new Date(now - 20 * 60_000))
   mockCreate('member-4', { body: '로컬은 Qwen 계열로 버티는 중… 그래도 리뷰 보조로는 쓸만해요.', category: null, parentId: p1.id }, new Date(now - 60 * 60_000))
   for (const [pid, who] of [[p0.id, DEV_VIEWER], [p0.id, 'member-4'], [p0.id, 'member-3'], [p1.id, 'member-2'], [r1.id, 'member-2']]) {
@@ -99,9 +101,12 @@ function mockCreate(author: string, input: { body: string; category: AnonCategor
     alias = pickAlias(threadAliases.values())
     threadAliases.set(author, alias)
   }
+  // same two-level rule as the DB trigger (0029): a reply to a reply joins its comment
+  const parentIsReply = Boolean(parent && parent.parentId && parent.parentId !== rootId)
   const post: MockPost = {
     id,
-    parentId: parent ? parent.id : null,
+    parentId: parent ? (parentIsReply ? parent.parentId : parent.id) : null,
+    replyToId: parent && parent.parentId ? parent.id : null,
     rootId: parent ? rootId : null,
     category: root ? root.category : input.category!,
     body: input.body.slice(0, ANON_MAX_CHARS),
@@ -119,8 +124,9 @@ function mockCreate(author: string, input: { body: string; category: AnonCategor
   }
   s.posts.push(post)
   if (parent) {
-    parent.replyCount++
-    if (root && root.id !== parent.id) root.replyCount++
+    const comment = parentIsReply ? s.posts.find((p) => p.id === post.parentId) : parent
+    if (comment) comment.replyCount++
+    if (root && root.id !== comment?.id) root.replyCount++
   }
   return post
 }

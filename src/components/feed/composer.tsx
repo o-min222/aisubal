@@ -30,6 +30,7 @@ export type ComposerIdentity = {
 export function Composer({
   me,
   parentId,
+  replyKind = 'reply',
   placeholder,
   autoFocus,
   onPosted,
@@ -40,6 +41,8 @@ export function Composer({
 }: {
   me: ComposerIdentity
   parentId?: string
+  /** under a thread: 'comment' answers the post (댓글), 'reply' answers a comment (대댓글) */
+  replyKind?: 'comment' | 'reply'
   /** posting into a group timeline (always humans-only) */
   groupId?: string
   groupName?: string
@@ -133,13 +136,13 @@ export function Composer({
       onSubmit={submit}
       canSubmit={Boolean(body.trim())}
       busy={busy}
-      submitLabel={busy ? <T>게시 중…</T> : piiAckFor === body && pii ? <T>그래도 게시</T> : isReply ? <T>답글</T> : <T>게시</T>}
+      submitLabel={busy ? <T>게시 중…</T> : piiAckFor === body && pii ? <T>그래도 게시</T> : isReply ? (replyKind === 'comment' ? <T>댓글</T> : <T>답글</T>) : <T>게시</T>}
     >
       <ComposerTextarea
         value={body}
         onChange={(e) => setBody(e.target.value)}
         onSubmitShortcut={submit}
-        placeholder={placeholder ? tr(placeholder) : isReply ? tr('답글 남기기…') : tr('무슨 생각을 하고 있나요? 링크를 붙이면 미리보기가 생겨요.')}
+        placeholder={placeholder ? tr(placeholder) : isReply ? (replyKind === 'comment' ? tr('댓글 남기기…') : tr('답글 남기기…')) : tr('무슨 생각을 하고 있나요? 링크를 붙이면 미리보기가 생겨요.')}
         autoFocus={autoFocus}
         rows={isReply ? 2 : 3}
         aria-label={isReply ? tx('답글 내용') : tx('게시물 내용')}

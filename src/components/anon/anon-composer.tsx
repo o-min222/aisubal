@@ -14,12 +14,15 @@ import { ComposerFrame, ComposerTextarea } from '@/components/composer/composer-
 /** 익명 composer. Root posts pick a category; replies inherit the thread's. */
 export function AnonComposer({
   parentId,
+  replyKind = 'reply',
   defaultCategory,
   autoFocus,
   redirectTo,
   className = '',
 }: {
   parentId?: string
+  /** 'comment' answers the post (댓글), 'reply' answers a comment (대댓글) */
+  replyKind?: 'comment' | 'reply'
   defaultCategory?: AnonCategory | null
   autoFocus?: boolean
   /** after posting a root: 'thread' opens the new thread */
@@ -84,7 +87,7 @@ export function AnonComposer({
       onSubmit={submit}
       canSubmit={Boolean(body.trim())}
       busy={busy}
-      submitLabel={busy ? <T>게시 중…</T> : isReply ? <T>답글</T> : <T>게시</T>}
+      submitLabel={busy ? <T>게시 중…</T> : isReply ? (replyKind === 'comment' ? <T>댓글</T> : <T>답글</T>) : <T>게시</T>}
     >
       {!isReply && (
         <ChipBar as="div" role="radiogroup" label={tx('카테고리')} className="mt-1">
@@ -106,7 +109,7 @@ export function AnonComposer({
         value={body}
         onChange={(e) => setBody(e.target.value)}
         onSubmitShortcut={submit}
-        placeholder={isReply ? tx('익명으로 답글 남기기…') : tx('회사 얘기, 커리어 고민, AI 때문에 생긴 일… 편하게 털어놓으세요.')}
+        placeholder={isReply ? (replyKind === 'comment' ? tx('익명으로 댓글 남기기…') : tx('익명으로 답글 남기기…')) : tx('회사 얘기, 커리어 고민, AI 때문에 생긴 일… 편하게 털어놓으세요.')}
         autoFocus={autoFocus}
         rows={isReply ? 2 : 3}
         aria-label={isReply ? tx('익명 답글 내용') : tx('익명 게시물 내용')}

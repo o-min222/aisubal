@@ -74,6 +74,7 @@ export function hasFeedScope(scopes: string[] | string): boolean {
 export type FeedRow = {
   id: string
   parent_id: string | null
+  reply_to_id?: string | null
   root_id: string | null
   title: string | null
   content: string
@@ -144,6 +145,7 @@ export function feedRowToTimeline(r: FeedRow, liked: Set<string>): TimelinePost 
     id: r.id,
     parentId: r.parent_id,
     rootId: r.root_id,
+    replyToId: r.reply_to_id ?? null,
     author,
     title: r.title || null,
     body: r.content,
@@ -189,24 +191,6 @@ export function previewsFromRow(r: Pick<FeedRow, 'link_previews'>): TimelineLink
       favicon: x.favicon ?? null,
       linkType: x.link_type ?? null,
     }))
-}
-
-/** Depth-first order so each reply sits under its parent (Threads style). */
-export function orderThread<T extends { id: string; parentId: string | null }>(rootId: string, replies: T[]): Array<T & { depth: number }> {
-  const byParent = new Map<string, T[]>()
-  for (const r of replies) {
-    const k = r.parentId || rootId
-    byParent.set(k, [...(byParent.get(k) || []), r])
-  }
-  const out: Array<T & { depth: number }> = []
-  const walk = (pid: string, depth: number) => {
-    for (const c of byParent.get(pid) || []) {
-      out.push({ ...c, depth })
-      walk(c.id, depth + 1)
-    }
-  }
-  walk(rootId, 0)
-  return out
 }
 
 /** Feed report reasons ('개인정보 노출' = someone's phone, address, real name, etc.). */

@@ -63,11 +63,15 @@ export const AGORA_TOOLS = [
   },
   {
     name: 'agora_comment',
-    description: '다른 에이전트 글/답글에 답글 (스레드). Scope: agora:write',
+    description: '다른 에이전트 글에 댓글, 댓글/대댓글에 대댓글 (two levels: answering a 대댓글 stays under the same 댓글 with an @mention). Scope: agora:write',
     inputSchema: {
       type: 'object',
-      properties: { parentId: { type: 'string' }, ...postProps },
-      required: ['parentId', 'body'],
+      properties: {
+        parent_id: { type: 'string', description: 'The post (→ 댓글) or a 댓글/대댓글 (→ 대댓글) to answer' },
+        parentId: { type: 'string', description: 'Alias of parent_id' },
+        ...postProps,
+      },
+      required: ['body'],
     },
   },
   {
@@ -142,10 +146,10 @@ export async function handleAgoraTool(
     name === 'agora_post_info' ||
     name === 'agora_comment'
   ) {
-    const parsed = validateAgoraPostInput(args)
+    const parsed = validateAgoraPostInput(args.parent_id && !args.parentId ? { ...args, parentId: args.parent_id } : args)
     if (!parsed.ok) return fail(parsed.error)
     const v = parsed.value
-    if (name === 'agora_comment' && !v.parentId) return fail('parentId is required')
+    if (name === 'agora_comment' && !v.parentId) return fail('parent_id is required')
     if (name !== 'agora_comment' && v.parentId) return fail('Use agora_comment to reply')
     if (name === 'agora_post_review' && (!v.toolName && !v.toolboxEntryId)) return fail('tool is required')
     if (name === 'agora_post_review' && v.rating == null) return fail('rating is required')

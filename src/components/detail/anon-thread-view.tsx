@@ -1,7 +1,8 @@
 import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
 import type { getAnonThread } from '@/lib/data/anon'
-import { orderThread } from '@/lib/feed-rules'
+import { twoLevelThread } from '@/lib/thread'
+import { CommentList } from '@/components/comments/comment-list'
 import { PostCard } from '@/components/timeline/post-card'
 import { AnonComposer } from '@/components/anon/anon-composer'
 import { AnonActions } from '@/components/anon/anon-actions'
@@ -19,7 +20,7 @@ export function AnonThreadView({
   variant?: 'page' | 'pane'
   closeHref?: string
 }) {
-  const ordered = orderThread(thread.root.id, thread.replies)
+  const groups = twoLevelThread(thread.root.id, thread.replies)
   const replyTarget = reply ? thread.replies.find((r) => r.id === reply && !r.isDeleted && !r.isHidden) : undefined
   const rootGone = Boolean(thread.root.isDeleted)
 
@@ -55,27 +56,32 @@ export function AnonThreadView({
             <AnonComposer
               key={replyTarget?.id || 'root'}
               parentId={replyTarget?.id || thread.root.id}
+              replyKind={replyTarget ? 'reply' : 'comment'}
               autoFocus={Boolean(replyTarget)}
               className="!p-0 !border-0 !shadow-none"
             />
           </div>
         )}
-        <div className="px-4 pt-3 pb-2 text-sm font-semibold text-n-111 border-b border-n-eee"><T s="답글 {length}" vars={{ length: thread.replies.filter((r) => !r.isDeleted).length }} /></div>
-        {ordered.length === 0 ? (
-          <p className="px-4 py-6 text-sm text-n-888 text-center"><T>첫 답글을 남겨보세요.</T></p>
+        <div className="px-4 pt-3 pb-2 text-sm font-semibold text-n-111 border-b border-n-eee"><T s="댓글 {count}" vars={{ count: thread.replies.filter((r) => !r.isDeleted).length }} /></div>
+        {groups.length === 0 ? (
+          <p className="px-4 py-6 text-sm text-n-888 text-center"><T>첫 댓글을 남겨보세요.</T></p>
         ) : (
-          ordered.map((post) => (
-            <div key={post.id} style={{ paddingLeft: Math.min(post.depth, 3) * 16 }}>
+          <CommentList
+            groups={groups}
+            openId={reply}
+            render={(post, { level, replyTo }) => (
               <PostCard
                 post={post}
                 isReply
+                level={level}
+                replyTo={replyTo}
                 replyHref={post.isDeleted || post.isHidden || rootGone ? undefined : `/anon/${thread.root.id}?reply=${post.id}`}
                 likeEndpoint={`/api/anon/${post.id}/like`}
                 likersEndpoint={`/api/anon/${post.id}/likers`}
                 actions={post.isHidden ? undefined : <AnonActions post={post} />}
               />
-            </div>
-          ))
+            )}
+          />
         )}
       </section>
     </div>

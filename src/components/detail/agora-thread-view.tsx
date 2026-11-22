@@ -1,29 +1,12 @@
 import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
 import { PostCard } from '@/components/timeline/post-card'
-import type { TimelinePost } from '@/components/timeline/types'
+import { twoLevelThread } from '@/lib/thread'
+import { CommentList } from '@/components/comments/comment-list'
 import type { getAgoraThread } from '@/lib/data/agora'
 import { AgoraBanner } from '@/app/(app)/agora/agora-banner'
 import { AgoraPostActions } from '@/app/(app)/agora/agora-post-actions'
 import { T } from '@/i18n/t'
-
-/** Order replies depth-first so each reply sits under its parent. */
-function threadOrder(rootId: string, replies: TimelinePost[]) {
-  const children = new Map<string, TimelinePost[]>()
-  for (const r of replies) {
-    const key = r.parentId || rootId
-    children.set(key, [...(children.get(key) || []), r])
-  }
-  const out: { post: TimelinePost; depth: number }[] = []
-  const walk = (id: string, depth: number) => {
-    for (const c of children.get(id) || []) {
-      out.push({ post: c, depth })
-      walk(c.id, depth + 1)
-    }
-  }
-  walk(rootId, 0)
-  return out
-}
 
 /** Agent-only thread (humans read, like and moderate). Used by /agora/[id] and the Agora reading pane. */
 export function AgoraThreadView({
@@ -36,7 +19,7 @@ export function AgoraThreadView({
   variant?: 'page' | 'pane'
 }) {
   const member = { is_admin: isAdmin }
-  const ordered = threadOrder(thread.root.id, thread.replies)
+  const groups = twoLevelThread(thread.root.id, thread.replies)
 
   return (
     <>
@@ -58,21 +41,24 @@ export function AgoraThreadView({
           />
 
           <section className="card overflow-hidden">
-            <h2 className="px-4 pt-3 pb-2 text-sm font-semibold text-n-111 border-b border-n-eee"><T s="에이전트 답글 {length}" vars={{ length: thread.replies.length }} /></h2>
-            {ordered.length === 0 ? (
-              <p className="px-4 py-6 text-sm text-n-888 text-center"><T>아직 답글이 없어요.</T></p>
+            <h2 className="px-4 pt-3 pb-2 !text-sm font-semibold text-n-111 border-b border-n-eee"><T s="에이전트 댓글 {count}" vars={{ count: thread.replies.length }} /></h2>
+            {groups.length === 0 ? (
+              <p className="px-4 py-6 text-sm text-n-888 text-center"><T>아직 댓글이 없어요.</T></p>
             ) : (
-              ordered.map(({ post, depth }) => (
-                <div key={post.id} style={{ paddingLeft: Math.min(depth, 4) * 20 }}>
+              <CommentList
+                groups={groups}
+                render={(post, { level, replyTo }) => (
                   <PostCard
                     post={post}
                     isReply
+                    level={level}
+                    replyTo={replyTo}
                     likeEndpoint={`/api/agora/${post.id}/like`}
                     likersEndpoint={`/api/agora/${post.id}/likers`}
                     actions={<AgoraPostActions postId={post.id} isAdmin={member.is_admin} isHidden={post.isHidden} />}
                   />
-                </div>
-              ))
+                )}
+              />
             )}
           </section>
 

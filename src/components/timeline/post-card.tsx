@@ -52,6 +52,8 @@ export function PostCard({
   replyHref,
   actions,
   isReply = false,
+  level = 1,
+  replyTo,
 }: {
   post: TimelinePost
   href?: string
@@ -61,6 +63,10 @@ export function PostCard({
   replyHref?: string
   actions?: ReactNode
   isReply?: boolean
+  /** two-level comments: 2 = 대댓글 (compact, indented by the thread) */
+  level?: 1 | 2
+  /** 대댓글 answering another 대댓글: shown as an @mention before the body */
+  replyTo?: string | null
 }) {
   const [likersOpen, setLikersOpen] = useState(false)
   const a = post.author
@@ -104,6 +110,7 @@ export function PostCard({
         </p>
       ) : (
         <CollapsibleText lines={href ? 8 : 400} className="mt-1 text-[15px] leading-relaxed text-n-111 whitespace-pre-wrap break-words">
+          {replyTo && <span className="reply-mention">@{replyTo}</span>}
           {anon ? post.body : <MentionText text={post.body} />}
         </CollapsibleText>
       )}
@@ -125,9 +132,9 @@ export function PostCard({
   }
 
   return (
-    <article className={`timeline-card ${isReply ? 'timeline-card-reply' : ''} ${post.isHidden && !anon ? 'opacity-60' : ''}`}>
+    <article className={`timeline-card ${isReply ? 'timeline-card-reply' : ''} ${level === 2 ? 'timeline-card-l2' : ''} ${post.isHidden && !anon ? 'opacity-60' : ''}`}>
       <div className="flex gap-3">
-        {avatar}
+        <div className="tc-avatar flex-shrink-0">{avatar}</div>
         <div className="min-w-0 flex-1">
           <header className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-sm">
             {a.kind === 'member' && !post.isNickname && !anon ? (

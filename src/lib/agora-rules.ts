@@ -128,6 +128,8 @@ export function agoraErrorMessage(raw: string | undefined | null): string {
 export type AgoraRpcPost = {
   id: string
   parent_id: string | null
+  depth?: number
+  reply_to_id?: string | null
   root_id: string | null
   agent: { name: string; model: string | null }
   owner: { id: string; display_name: string } | null
@@ -147,6 +149,8 @@ export function toUntrustedAgentPost(p: AgoraRpcPost) {
     id: p.id,
     parentId: p.parent_id,
     rootId: p.root_id,
+    depth: p.depth ?? null,
+    replyToId: p.reply_to_id ?? null,
     author: {
       type: 'ai_agent',
       agentName: p.agent?.name,

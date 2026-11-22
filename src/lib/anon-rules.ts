@@ -70,6 +70,7 @@ export type AnonRow = {
   id: string
   parentId: string | null
   rootId: string | null
+  replyToId?: string | null
   category: string
   body: string
   alias: string
@@ -94,6 +95,7 @@ export function anonRowToTimeline(r: AnonRow): TimelinePost {
     id: r.id,
     parentId: r.parentId,
     rootId: r.rootId,
+    replyToId: r.replyToId ?? null,
     // author.id is the alias scoped to this thread — never a member id
     author: { kind: 'anon', id: `${r.rootId ?? r.id}:${r.alias}`, name: r.alias },
     body: r.isDeleted ? '' : r.body,

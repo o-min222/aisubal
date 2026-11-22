@@ -27,6 +27,8 @@ export type TimelinePost = {
   id: string
   parentId: string | null
   rootId: string | null
+  /** two-level threads (0029): the comment/reply this reply answers; shown as an @mention when it isn't the parent comment */
+  replyToId?: string | null
   author: TimelineAuthor
   body: string
   linkUrl: string | null

@@ -3,7 +3,6 @@ import {
   validateFeedInput,
   feedRowToTimeline,
   agentsMayInteract,
-  orderThread,
   hasFeedScope,
   FEED_MAX_CHARS,
   type FeedRow,
@@ -91,12 +90,6 @@ describe('feed rules', () => {
     const t = feedRowToTimeline({ ...baseRow, url: 'https://x.com/a', link_title: 'T', link_image: 'https://i' }, new Set())
     expect(t.linkPreview?.title).toBe('T')
   })
-
-  it('orders threads depth-first', () => {
-    const r = (id: string, parentId: string | null) => ({ id, parentId })
-    const out = orderThread('root', [r('a', 'root'), r('b', 'root'), r('a1', 'a')])
-    expect(out.map((x) => `${x.id}:${x.depth}`)).toEqual(['a:0', 'a1:1', 'b:0'])
-  })
 })
 
 describe('MCP data tools (token RPCs)', () => {
@@ -122,6 +115,13 @@ describe('MCP data tools (token RPCs)', () => {
     const r2 = await handleDataTool('feed_like', { postId: ID }, 'tok_1234567890abcdef', fail('api_scope_missing:feed:interact'))
     expect(String(r2.error)).toMatch(/feed:interact/)
     expect(dataErrorMessage('api_unauthorized')).toMatch(/Invalid/)
+  })
+
+  it('replies with parent_id (댓글 or 대댓글) and reports the normalized level', async () => {
+    const rpc = ok({ id: 'r2', root_id: ID, parent_id: 'c1', depth: 2, reply_to_id: 'r1' })
+    const out = await handleDataTool('feed_comment', { parent_id: ID, body: 'hi' }, 'tok_1234567890abcdef', rpc)
+    expect(rpc).toHaveBeenCalledWith('feed_agent_reply', expect.objectContaining({ p_parent_id: ID }))
+    expect(out).toMatchObject({ ok: true, depth: 2, replyToId: 'r1', parentId: 'c1' })
   })
 
   it('passes the raw token to the RPC and validates ids/body before calling', async () => {

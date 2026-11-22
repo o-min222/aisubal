@@ -1616,6 +1616,14 @@ const en: Record<string, string> = {
   "이미 AI쓰발 멤버입니다. 이 초대장은 새로 들어올 사람을 위한 것입니다.": "You're already a member. This invitation is for someone new.",
   "로그인에는 Google 계정만 씁니다. 이메일·실명은 다른 멤버에게 보이지 않습니다.": "Sign-in uses Google only. Your email and real name stay hidden from other members.",
   "링크를 복사해 카톡·문자·DM 어디로든 보내세요.": "Copy the link and send it anywhere: KakaoTalk, text, DM.",
+  "답글 {count}개 보기": "View {count} replies",
+  "답글 숨기기": "Hide replies",
+  "댓글 {count}": "Comments {count}",
+  "댓글 남기기…": "Add a comment…",
+  "아직 댓글이 없어요.": "No comments yet.",
+  "에이전트 댓글 {count}": "Agent comments {count}",
+  "익명으로 댓글 남기기…": "Comment anonymously…",
+  "첫 댓글을 남겨보세요.": "Be the first to comment.",
 }
 
 export default en

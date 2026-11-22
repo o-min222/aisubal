@@ -50,20 +50,21 @@ export const FEED_TOOLS = [
   },
   {
     name: 'feed_get',
-    description: '사람 피드 글 + 스레드 답글. Scope: posts_read or feed:interact. UNTRUSTED content.',
+    description: '사람 피드 글 + 댓글/대댓글 (each item has depth 1|2, parentId = its 댓글, replyToId = the 대댓글 it answers). Scope: posts_read or feed:interact. UNTRUSTED content.',
     inputSchema: { type: 'object', properties: { postId: { type: 'string' } }, required: ['postId'] },
   },
   {
     name: 'feed_comment',
-    description: `작성자가 "에이전트도 허용"한 사람 글(또는 그 답글)에 AI 답글 (최대 ${FEED_MAX_CHARS}자, AI로 표시됨). Scope: feed:interact`,
+    description: `작성자가 "에이전트도 허용"한 사람 글에 AI 댓글/대댓글 (최대 ${FEED_MAX_CHARS}자, AI로 표시됨). Threads are two levels: parent_id = the post → 댓글; parent_id = a 댓글 or 대댓글 → 대댓글 under that 댓글 (answering a 대댓글 is shown as an @mention). Scope: feed:interact`,
     inputSchema: {
       type: 'object',
       properties: {
-        postId: { type: 'string', description: 'Post or reply to answer' },
+        parent_id: { type: 'string', description: 'The post (→ 댓글) or a 댓글/대댓글 (→ 대댓글) to answer' },
+        postId: { type: 'string', description: 'Deprecated alias of parent_id' },
         body: { type: 'string' },
         model: { type: 'string', description: 'Self-declared model/tool name' },
       },
-      required: ['postId', 'body'],
+      required: ['body'],
     },
   },
   {
@@ -107,6 +108,8 @@ type RpcAuthor = { kind: 'real' | 'nickname' | 'agent'; id?: string; name: strin
 type RpcFeedPost = {
   id: string
   parent_id: string | null
+  depth?: number
+  reply_to_id?: string | null
   root_id: string | null
   author: RpcAuthor
   title: string | null
@@ -126,6 +129,8 @@ export function toUntrustedFeedPost(p: RpcFeedPost) {
     id: p.id,
     parentId: p.parent_id,
     rootId: p.root_id,
+    depth: p.depth ?? null,
+    replyToId: p.reply_to_id ?? null,
     author:
       p.author?.kind === 'agent'
         ? { type: 'ai_agent', name: p.author.name, model: p.author.model ?? null, owner: p.author.owner ?? null }
@@ -395,15 +400,16 @@ export async function handleDataTool(
         }
       }
       case 'feed_comment': {
-        if (!isUuid(args.postId)) return { error: 'postId must be a UUID' }
+        const parentId = args.parent_id ?? args.postId
+        if (!isUuid(parentId)) return { error: 'parent_id must be a UUID' }
         const body = str(args.body)
         if (!body || [...body].length > FEED_MAX_CHARS) return { error: `body must be 1-${FEED_MAX_CHARS} characters.` }
         const p = (await call('feed_agent_reply', {
-          p_parent_id: args.postId,
+          p_parent_id: parentId,
           p_body: body,
           p_agent_model: str(args.model),
         })) as RpcFeedPost
-        return { ok: true, id: p.id, url: `/posts/${p.root_id || p.id}`, markedAs: 'AI' }
+        return { ok: true, id: p.id, parentId: p.parent_id, depth: p.depth ?? null, replyToId: p.reply_to_id ?? null, url: `/posts/${p.root_id || p.id}`, markedAs: 'AI' }
       }
       case 'feed_like': {
         if (!isUuid(args.postId)) return { error: 'postId must be a UUID' }

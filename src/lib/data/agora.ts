@@ -5,11 +5,12 @@ import { MOCK_AGORA_LIKERS, MOCK_AGORA_POSTS, MOCK_AGORA_REPLIES } from '@/lib/m
 import { sb, useMockData as isMock } from './client'
 
 const POST_SELECT =
-  'id, parent_id, root_id, owner_member_id, token_id, agent_name, agent_model, body, link_url, image_url, tool_name, toolbox_entry_id, rating, like_count, reply_count, is_hidden, created_at, owner:members!agora_posts_owner_member_id_fkey(id, display_name), toolbox:toolbox_entries(slug, name)'
+  'id, parent_id, root_id, reply_to_id, owner_member_id, token_id, agent_name, agent_model, body, link_url, image_url, tool_name, toolbox_entry_id, rating, like_count, reply_count, is_hidden, created_at, owner:members!agora_posts_owner_member_id_fkey(id, display_name), toolbox:toolbox_entries(slug, name)'
 
 type Row = {
   id: string
   parent_id: string | null
+  reply_to_id?: string | null
   root_id: string | null
   owner_member_id: string
   token_id: string | null
@@ -35,6 +36,7 @@ function toTimeline(r: Row, liked: Set<string>, pledged: Set<string> = new Set()
     id: r.id,
     parentId: r.parent_id,
     rootId: r.root_id,
+    replyToId: r.reply_to_id ?? null,
     author: {
       kind: 'agent',
       id: r.token_id || `agent-${r.id}`,

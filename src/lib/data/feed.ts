@@ -9,7 +9,7 @@ import { sb, useMockData as isMock } from './client'
 import { getRelations, socialAuthorIds } from './social'
 
 const FEED_SELECT =
-  'id, parent_id, root_id, title, content, url, link_title, link_description, link_image, link_site_name, link_favicon, link_type, link_previews, posted_as, author_kind, agent_name, agent_model, agent_token_id, agent_interaction, like_count, reply_count, is_hidden, created_at, group_id, author:members!posts_author_id_fkey(id, display_name, handle, avatar_url, nickname, nickname_avatar_url)'
+  'id, parent_id, root_id, reply_to_id, title, content, url, link_title, link_description, link_image, link_site_name, link_favicon, link_type, link_previews, posted_as, author_kind, agent_name, agent_model, agent_token_id, agent_interaction, like_count, reply_count, is_hidden, created_at, group_id, author:members!posts_author_id_fkey(id, display_name, handle, avatar_url, nickname, nickname_avatar_url)'
 
 // ---------------------------------------------------------------- mock (DEV)
 type MockState = { posts: TimelinePost[]; likers: Map<string, TimelineLiker[]> }
@@ -69,7 +69,7 @@ function mockState(): MockState {
           linkPreview: null,
           likeCount: 4,
           likedByMe: false,
-          replyCount: 1,
+          replyCount: 3,
           createdAt: '2026-11-21T09:02:00Z',
           agentsAllowed: false,
           isNickname: false,
@@ -87,6 +87,39 @@ function mockState(): MockState {
           likedByMe: false,
           replyCount: 0,
           createdAt: '2026-11-21T09:30:00Z',
+          agentsAllowed: false,
+          isNickname: false,
+        },
+        {
+          ...root,
+          id: 'reply-4',
+          parentId: 'reply-1',
+          replyToId: 'reply-2',
+          rootId: root.id,
+          author: { kind: 'member', id: 'member-4', name: 'signal_noise' },
+          body: '오 그 규칙 저도 써볼게요. 링크 공유 감사해요!',
+          linkUrl: null,
+          linkPreview: null,
+          likeCount: 0,
+          likedByMe: false,
+          replyCount: 0,
+          createdAt: '2026-11-21T09:41:00Z',
+          agentsAllowed: false,
+          isNickname: false,
+        },
+        {
+          ...root,
+          id: 'reply-5',
+          parentId: 'reply-1',
+          rootId: root.id,
+          author: { kind: 'member', id: 'dev-user-id', name: '개발자' },
+          body: '실패율 얼마나 줄었는지 숫자로도 궁금하네요.',
+          linkUrl: null,
+          linkPreview: null,
+          likeCount: 1,
+          likedByMe: false,
+          replyCount: 0,
+          createdAt: '2026-11-21T09:55:00Z',
           agentsAllowed: false,
           isNickname: false,
         },
@@ -148,6 +181,10 @@ function mockState(): MockState {
       groupId: 'grp-claude-code',
     },
   ]
+  // counts like the DB (0029): a post counts every comment + reply, a comment its replies
+  for (const p of [...posts, ...replies]) {
+    p.replyCount = p.parentId ? replies.filter((r) => r.parentId === p.id).length : replies.filter((r) => r.rootId === p.id).length || p.replyCount
+  }
   g.__aisubalFeed = { posts: [...posts, ...replies, ...groupPosts], likers }
   return g.__aisubalFeed
 }
