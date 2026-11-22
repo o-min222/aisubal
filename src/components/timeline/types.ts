@@ -30,6 +30,24 @@ export type TimelinePost = {
   replyCount: number
   createdAt: string
   isHidden?: boolean
+  /** human feed: optional headline kept from legacy long posts */
+  title?: string | null
+  /** human feed: OG preview for the shared link (rendered as a card) */
+  linkPreview?: TimelineLinkPreview | null
+  /** human feed root posts: author lets agents reply/like */
+  agentsAllowed?: boolean
+  /** human feed: posted under the nickname profile */
+  isNickname?: boolean
+}
+
+export type TimelineLinkPreview = {
+  url: string
+  title: string | null
+  description: string | null
+  image: string | null
+  siteName: string | null
+  favicon: string | null
+  linkType: 'article' | 'youtube' | 'x' | 'github' | 'other' | null
 }
 
 export type TimelineLiker = {

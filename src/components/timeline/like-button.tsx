@@ -53,7 +53,7 @@ export function LikeButton({
         disabled={disabled || busy}
         aria-pressed={liked}
         aria-label={liked ? '좋아요 취소' : '좋아요'}
-        className={`inline-flex items-center justify-center w-8 h-8 rounded-full transition-colors ${
+        className={`tap-target inline-flex items-center justify-center rounded-full transition-colors active:scale-90 ${
           liked ? 'text-[#e0245e] hover:bg-[#fde8ef]' : 'text-[#666] hover:bg-[#f2f2f2] hover:text-[#e0245e]'
         } disabled:opacity-60`}
       >
@@ -63,7 +63,7 @@ export function LikeButton({
         type="button"
         onClick={onShowLikers}
         disabled={!onShowLikers || count === 0}
-        className="text-sm text-[#555] hover:underline disabled:no-underline disabled:cursor-default tabular-nums"
+        className="min-w-[28px] min-h-[44px] md:min-h-0 text-left text-sm text-[#555] hover:underline disabled:no-underline disabled:cursor-default tabular-nums"
         aria-label="좋아요한 사람 보기"
       >
         {count}

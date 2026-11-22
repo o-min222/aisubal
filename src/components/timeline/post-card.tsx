@@ -2,7 +2,9 @@
 
 import { useState, type ReactNode } from 'react'
 import Link from 'next/link'
-import { Bot, MessageCircle, Star, Wrench, ExternalLink } from 'lucide-react'
+import { Bot, MessageCircle, Star, Wrench, ExternalLink, Share2 } from 'lucide-react'
+import { toast } from 'sonner'
+import { LinkCard } from '@/components/link-card'
 import { UserAvatar } from '@/components/user-avatar'
 import { RelativeTime } from '@/components/relative-time'
 import { LikeButton } from './like-button'
@@ -53,10 +55,27 @@ export function PostCard({
     )
 
   const body = (
-    <p className="mt-1 text-[15px] leading-relaxed text-[#111] whitespace-pre-wrap break-words">
-      {post.body}
-    </p>
+    <>
+      {post.title && <h3 className="mt-1 text-[15px] font-semibold text-[#111] break-words">{post.title}</h3>}
+      <p className="mt-1 text-[15px] leading-relaxed text-[#111] whitespace-pre-wrap break-words">
+        {post.body}
+      </p>
+    </>
   )
+
+  async function share() {
+    const url = href ? new URL(href, window.location.origin).toString() : window.location.href
+    try {
+      if (navigator.share) {
+        await navigator.share({ url, text: post.body.slice(0, 80) })
+      } else {
+        await navigator.clipboard.writeText(url)
+        toast.success('링크를 복사했어요')
+      }
+    } catch {
+      /* user cancelled */
+    }
+  }
 
   return (
     <article className={`timeline-card ${isReply ? 'timeline-card-reply' : ''} ${post.isHidden ? 'opacity-60' : ''}`}>
@@ -66,12 +85,19 @@ export function PostCard({
           <header className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-sm">
             <span className="font-semibold text-[#111]">{a.name}</span>
             {a.kind === 'agent' && <span className="agent-chip">AI</span>}
+            {post.isNickname && <span className="badge badge-agent">별명</span>}
             {a.subtitle && <span className="text-[#888] truncate max-w-[180px]">{a.subtitle}</span>}
             <span className="text-[#bbb]">·</span>
             <span className="text-[#888]">
               <RelativeTime date={post.createdAt} />
             </span>
             {post.isHidden && <span className="badge badge-note">숨김</span>}
+            {post.agentsAllowed && (
+              <span className="agents-ok-chip" title="작성자가 에이전트의 답글·좋아요를 허용했어요">
+                <Bot className="w-3 h-3" />
+                에이전트 허용
+              </span>
+            )}
           </header>
           {a.kind === 'agent' && a.ownerName && (
             <div className="text-xs text-[#888]">{a.ownerName}님의 에이전트</div>
@@ -108,7 +134,24 @@ export function PostCard({
             </div>
           )}
 
-          {post.linkUrl && (
+          {post.linkPreview && (
+            <div className="mt-2 max-w-full">
+              <LinkCard
+                compact
+                link={{
+                  url: post.linkPreview.url,
+                  title: post.linkPreview.title,
+                  description: post.linkPreview.description,
+                  image: post.linkPreview.image,
+                  site_name: post.linkPreview.siteName,
+                  favicon: post.linkPreview.favicon,
+                  link_type: post.linkPreview.linkType,
+                }}
+              />
+            </div>
+          )}
+
+          {post.linkUrl && !post.linkPreview && (
             <a
               href={post.linkUrl}
               target="_blank"
@@ -131,7 +174,7 @@ export function PostCard({
             />
           )}
 
-          <footer className="mt-1.5 -ml-2 flex items-center gap-4">
+          <footer className="mt-1 -ml-2.5 flex items-center gap-1 sm:gap-3">
             <LikeButton
               endpoint={likeEndpoint}
               initialLiked={post.likedByMe}
@@ -145,19 +188,27 @@ export function PostCard({
                 className="inline-flex items-center gap-1 text-sm text-[#555] hover:text-[#111]"
                 aria-label="답글"
               >
-                <span className="inline-flex items-center justify-center w-8 h-8 rounded-full hover:bg-[#f2f2f2]">
+                <span className="tap-target inline-flex items-center justify-center rounded-full hover:bg-[#f2f2f2]">
                   <MessageCircle className="w-[18px] h-[18px]" />
                 </span>
                 <span className="tabular-nums">{post.replyCount}</span>
               </Link>
             ) : (
               <span className="inline-flex items-center gap-1 text-sm text-[#555]">
-                <span className="inline-flex items-center justify-center w-8 h-8">
+                <span className="tap-target inline-flex items-center justify-center">
                   <MessageCircle className="w-[18px] h-[18px]" />
                 </span>
                 <span className="tabular-nums">{post.replyCount}</span>
               </span>
             )}
+            <button
+              type="button"
+              onClick={share}
+              className="tap-target inline-flex items-center justify-center rounded-full text-[#555] hover:bg-[#f2f2f2] hover:text-[#111]"
+              aria-label="공유"
+            >
+              <Share2 className="w-[17px] h-[17px]" />
+            </button>
             {actions && <div className="ml-auto flex items-center gap-1">{actions}</div>}
           </footer>
         </div>

@@ -20,13 +20,14 @@ const createTokenSchema = z.object({
         'toolbox_write',
         'agora:read',
         'agora:write',
+        'feed:interact',
       ])
     )
     .min(1),
   agentName: z.string().trim().max(40, '에이전트 이름은 40자 이내로 입력해주세요.').optional(),
   agentModel: z.string().trim().max(60).optional(),
-}).refine((d) => !d.scopes.includes('agora:write') || !!d.agentName, {
-  message: 'agora:write 토큰은 에이전트 이름이 필요합니다.',
+}).refine((d) => !(d.scopes.includes('agora:write') || d.scopes.includes('feed:interact')) || !!d.agentName, {
+  message: 'agora:write / feed:interact 토큰은 에이전트 이름이 필요합니다.',
 })
 
 export async function GET() {

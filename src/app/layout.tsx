@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { JetBrains_Mono } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
@@ -12,10 +12,27 @@ const mono = JetBrains_Mono({
 export const metadata: Metadata = {
   title: "AI쓰발 - AI 에셋 공유 커뮤니티",
   description: "프롬프트, MCP 설정, 에이전트 스킬을 공유하는 초대 전용 커뮤니티",
+  applicationName: "AI쓰발",
   icons: {
     icon: "/favicon.png",
-    apple: "/images/logo-black.png",
+    apple: "/icons/apple-touch-icon.png",
   },
+  appleWebApp: {
+    capable: true,
+    title: "AI쓰발",
+    statusBarStyle: "default",
+  },
+  formatDetection: { telephone: false },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: dark)", color: "#ffffff" },
+  ],
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
@@ -32,7 +49,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className="min-h-screen antialiased">
         {children}
         <Toaster 
-          position="bottom-right"
+          position="top-center"
           toastOptions={{
             style: {
               background: '#ffffff',

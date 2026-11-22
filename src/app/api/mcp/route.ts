@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getMember, isDevMode, getNicknameUnlockState } from '@/lib/auth'
+import { getMember, isDevMode } from '@/lib/auth'
 import {
   listPosts,
   getPost,
-  createPost,
   getPostAuthorMember,
   listMeetupsDetailed,
   getMeetupDetails,
@@ -32,18 +31,17 @@ import {
   collectionContextBundle,
 } from '@/lib/archive-brain-rules'
 import {
-  canPostAs,
   publicAuthorLabel,
   toPublicPost,
   assertNoIdentityLeak,
 } from '@/lib/profile'
-import { detectLinkType } from '@/lib/link-preview'
 import { TOOLBOX_ENV_LABEL } from '@/lib/toolbox-rules'
 import type { ToolboxSort } from '@/lib/toolbox-rules'
 import type { ArchiveSourceType, ToolboxEnvironment } from '@/lib/supabase/types'
 import { AGORA_TOOLS, handleAgoraTool, isAgoraTool } from '@/lib/agora-mcp'
 import { UNTRUSTED_NOTICE } from '@/lib/agora-rules'
 import { createAnonClient } from '@/lib/supabase/anon'
+import { FEED_TOOLS, FEED_TOOL_NAMES, HUMAN_UNTRUSTED_NOTICE, UNTRUSTED_READ_TOOLS, handleDataTool } from '@/lib/mcp-data'
 
 interface JsonRpcRequest {
   jsonrpc: '2.0'
@@ -79,21 +77,6 @@ const TOOLS = [
       type: 'object',
       properties: { postId: { type: 'string' } },
       required: ['postId'],
-    },
-  },
-  {
-    name: 'create_post',
-    description: '링크/코멘트 게시물 작성 (optional postedAs: real|nickname, url)',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        title: { type: 'string' },
-        content: { type: 'string' },
-        url: { type: 'string' },
-        postedAs: { type: 'string', enum: ['real', 'nickname'] },
-        sourceNote: { type: 'string' },
-      },
-      required: ['title', 'content'],
     },
   },
   {
@@ -331,10 +314,7 @@ function publicPostSummary(p: PostWithDetails) {
 }
 
 async function handleToolsCall(name: string, args: Record<string, unknown> = {}) {
-  if (!isDevMode()) {
-    return { error: 'Supabase MCP backend is not wired yet.' }
-  }
-
+  // DEV mock path only — production calls go through handleDataTool (lib/mcp-data.ts).
   if (name === 'search_posts') {
     const query = String(args.query || '').toLowerCase()
     const limit = Number(args.limit || 20)
@@ -364,38 +344,9 @@ async function handleToolsCall(name: string, args: Record<string, unknown> = {})
   }
 
   if (name === 'create_post') {
-    const member = await getMember()
-    if (!member) return { error: 'Unauthorized' }
-    const postedAs = (args.postedAs as 'real' | 'nickname') || 'real'
-    const unlock = await getNicknameUnlockState()
-    const check = canPostAs(member, postedAs, unlock.unlocked)
-    if (!check.ok) return { error: check.reason }
-
-    const url = typeof args.url === 'string' ? args.url : undefined
-    const { post: pub } = await createPost(member, {
-      title: String(args.title || ''),
-      content: String(args.content || ''),
-      sourceNote: (args.sourceNote as string) || undefined,
-      url,
-      postedAs,
-      linkPreview: url
-        ? {
-            url,
-            title: null,
-            description: null,
-            image: null,
-            site_name: null,
-            favicon: null,
-            link_type: detectLinkType(url),
-          }
-        : undefined,
-    })
     return {
-      id: pub.id,
-      title: pub.title,
-      url: pub.url,
-      postedAs: pub.posted_as,
-      author: publicAuthorLabel(pub.author),
+      error:
+        'Agents cannot create posts in the human feed. Use agora_post for the AI Agora, or feed_comment on posts whose author allows agents.',
     }
   }
 
@@ -773,8 +724,52 @@ export async function POST(request: NextRequest) {
         })
       )
     }
+    const bearer = authHeader?.startsWith('Bearer ') ? authHeader.slice(7).trim() : null
+    const anonRpc = async (fn: string, rpcArgs: Record<string, unknown>) => {
+      const { data, error } = await createAnonClient().rpc(fn, rpcArgs)
+      return { data, error: error ? { message: error.message } : null }
+    }
+
     if (method === 'tools/list') {
-      return NextResponse.json(jsonRpcSuccess(id, { tools: [...TOOLS, ...AGORA_TOOLS] }))
+      return NextResponse.json(jsonRpcSuccess(id, { tools: [...TOOLS, ...FEED_TOOLS, ...AGORA_TOOLS] }))
+    }
+    if (method === 'resources/list' && !isDevMode()) {
+      const [items, cols] = await Promise.all([
+        handleDataTool('list_archive', { limit: 50 }, bearer, anonRpc),
+        handleDataTool('list_collections', {}, bearer, anonRpc),
+      ])
+      const resources = [
+        ...((items.items as Array<{ id: string; title: string; summary: string | null; sourceType: string }>) || []).map((i) => ({
+          uri: `aisubal://archive/${i.id}`,
+          name: i.title,
+          description: i.summary || i.sourceType,
+          mimeType: 'text/markdown',
+        })),
+        ...((cols.collections as Array<{ id: string; name: string; description: string | null }>) || []).map((c) => ({
+          uri: `aisubal://collection/${c.id}`,
+          name: `Collection: ${c.name}`,
+          description: c.description || 'archive collection',
+          mimeType: 'text/markdown',
+        })),
+      ]
+      return NextResponse.json(jsonRpcSuccess(id, { resources }))
+    }
+    if (method === 'resources/read' && !isDevMode()) {
+      const uri = String(params?.uri || '')
+      const a = uri.match(/^aisubal:\/\/archive\/(.+)$/)
+      const c = uri.match(/^aisubal:\/\/collection\/(.+)$/)
+      const r = a
+        ? await handleDataTool('get_archive_item', { itemId: a[1] }, bearer, anonRpc)
+        : c
+          ? await handleDataTool('get_collection_context', { collectionId: c[1] }, bearer, anonRpc)
+          : null
+      if (!r) return NextResponse.json(jsonRpcError(id, -32602, 'Unknown resource URI'))
+      if ('error' in r) return NextResponse.json(jsonRpcError(id, -32002, String(r.error)))
+      return NextResponse.json(
+        jsonRpcSuccess(id, {
+          contents: [{ uri, mimeType: 'text/markdown', text: String(a ? r.llmContext : r.context) }],
+        })
+      )
     }
     if (method === 'resources/list') {
       const member = await getMember()
@@ -862,6 +857,20 @@ export async function POST(request: NextRequest) {
               { type: 'text', text: JSON.stringify(result, null, 2) },
             ],
             ...('error' in result ? { isError: true } : {}),
+          })
+        )
+      }
+      if (FEED_TOOL_NAMES.has(name) || !isDevMode()) {
+        // Production: every tool goes through token-verified SECURITY DEFINER RPCs.
+        const result = await handleDataTool(name, args, bearer, anonRpc)
+        const failed = 'error' in result
+        return NextResponse.json(
+          jsonRpcSuccess(id, {
+            content: [
+              ...(UNTRUSTED_READ_TOOLS.has(name) && !failed ? [{ type: 'text', text: HUMAN_UNTRUSTED_NOTICE }] : []),
+              { type: 'text', text: JSON.stringify(result, null, 2) },
+            ],
+            ...(failed ? { isError: true } : {}),
           })
         )
       }

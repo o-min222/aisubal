@@ -2,7 +2,6 @@ import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { Bot } from 'lucide-react'
 import { getUserState } from '@/lib/auth'
-import { Header } from '@/components/header'
 import { PostCard } from '@/components/timeline/post-card'
 import { listAgoraTimeline } from '@/lib/data/agora'
 import { AgoraBanner } from './agora-banner'
@@ -23,9 +22,7 @@ export default async function AgoraPage({
   const posts = await listAgoraTimeline(member.id, { tool })
 
   return (
-    <div className="min-h-screen bg-[#f7f7f7]">
-      <Header member={member} />
-      <main className="container-main page-main">
+    <>
         <div className="max-w-[640px] mx-auto space-y-4">
           <div className="flex items-end justify-between">
             <div>
@@ -68,7 +65,6 @@ export default async function AgoraPage({
             </div>
           )}
         </div>
-      </main>
-    </div>
+      </>
   )
 }

@@ -6,7 +6,8 @@ import {
 import { nicknameProfilePublicId, toPublicAuthor, toPublicPost, assertNoIdentityLeak } from '@/lib/profile'
 import { aggregateMentionsFromPosts } from '@/lib/data/toolbox'
 import { saveAnything } from '@/lib/data/archive'
-import type { Asset, LinkPreview, Member, Post, PostAs } from '@/lib/supabase/types'
+import type { AgentInteraction, Asset, LinkPreview, Member, Post, PostAs } from '@/lib/supabase/types'
+import { mockAppendFeedPost } from './feed'
 import { sb, useMockData } from './client'
 import { MEMBER_EMBED, MEMBER_PUBLIC_COLUMNS } from './member-columns'
 import type { PostWithDetails } from './types'
@@ -14,8 +15,11 @@ import type { PostWithDetails } from './types'
 export type { PostWithDetails } from './types'
 
 type CreatePostInput = {
-  title: string
+  title?: string
   content: string
+  /** reply target (any post in the thread). Replies skip archive auto-save. */
+  parentId?: string | null
+  agentInteraction?: AgentInteraction
   sourceNote?: string
   url?: string
   linkPreview?: LinkPreview
@@ -61,7 +65,9 @@ export async function listPosts(): Promise<PostWithDetails[]> {
     .from('posts')
     .select(`*, assets(*), author:members!posts_author_id_fkey(${MEMBER_EMBED})`)
     .eq('is_hidden', false)
+    .is('parent_id', null)
     .order('created_at', { ascending: false })
+    .limit(200)
 
   if (error) throw error
 
@@ -135,7 +141,7 @@ export async function createPost(
   if (useMockData()) {
     const post: Post = {
       id: `post-${Date.now()}`,
-      title: input.title,
+      title: input.title || '',
       content: input.content,
       source_note: input.sourceNote || null,
       url: input.url || lp?.url || null,
@@ -173,12 +179,33 @@ export async function createPost(
       assets,
       archive_count: 0,
     }
+    const parentId = input.parentId || null
+    mockAppendFeedPost({
+      id: post.id,
+      parentId,
+      rootId: parentId,
+      author: { kind: 'member', id: pub.author.id, name: pub.author.kind === 'nickname' ? pub.author.nickname : pub.author.display_name, avatarUrl: pub.author.avatar_url },
+      title: post.title || null,
+      body: post.content,
+      linkUrl: post.url,
+      imageUrl: null,
+      linkPreview: lp ? { url: lp.url, title: lp.title, description: lp.description, image: lp.image, siteName: lp.site_name, favicon: lp.favicon, linkType: lp.link_type } : null,
+      tool: null,
+      rating: null,
+      likeCount: 0,
+      likedByMe: false,
+      replyCount: 0,
+      createdAt: post.created_at,
+      agentsAllowed: !parentId && input.agentInteraction === 'agents_allowed',
+      isNickname: input.postedAs === 'nickname',
+    })
+    if (parentId) return { post: pub, details }
     MOCK_POSTS.unshift(details)
     await aggregateMentionsFromPosts([details])
     await saveAnything(member, {
       source_type: post.url ? 'link' : 'post',
       source_id: post.id,
-      title: post.title,
+      title: post.title || post.link_title || post.content.slice(0, 60),
       summary: post.link_description || post.content.slice(0, 140),
       content_text: post.content,
       source_url: post.url,
@@ -195,8 +222,10 @@ export async function createPost(
   const { data: inserted, error } = await supabase
     .from('posts')
     .insert({
-      title: input.title,
+      title: input.title || '',
       content: input.content,
+      parent_id: input.parentId || null,
+      agent_interaction: input.parentId ? 'humans_only' : input.agentInteraction || 'humans_only',
       source_note: input.sourceNote || null,
       url: input.url || lp?.url || null,
       link_title: lp?.title || null,
@@ -237,12 +266,13 @@ export async function createPost(
   const pub = toPublicPost(post, member)
   assertNoIdentityLeak(pub, [member.email])
   const details = await hydratePost(post, member, assets)
+  if (post.parent_id) return { post: pub, details }
 
   await aggregateMentionsFromPosts([details])
   await saveAnything(member, {
     source_type: post.url ? 'link' : 'post',
     source_id: post.id,
-    title: post.title,
+    title: post.title || post.link_title || post.content.slice(0, 60),
     summary: post.link_description || post.content.slice(0, 140),
     content_text: post.content,
     source_url: post.url,

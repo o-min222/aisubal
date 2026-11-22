@@ -13,7 +13,7 @@ const assetSchema = z.object({
 
 const createPostSchema = z.object({
   title: z.string().min(1).max(200),
-  content: z.string().min(1),
+  content: z.string().min(1).max(500, '코멘트는 500자 이하로 써 주세요.'),
   sourceNote: z.string().optional(),
   url: z.string().url().optional(),
   linkPreview: z

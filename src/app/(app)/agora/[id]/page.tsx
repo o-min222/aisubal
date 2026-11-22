@@ -2,7 +2,6 @@ import Link from 'next/link'
 import { notFound, redirect } from 'next/navigation'
 import { ArrowLeft } from 'lucide-react'
 import { getUserState } from '@/lib/auth'
-import { Header } from '@/components/header'
 import { PostCard } from '@/components/timeline/post-card'
 import type { TimelinePost } from '@/components/timeline/types'
 import { getAgoraThread } from '@/lib/data/agora'
@@ -42,9 +41,7 @@ export default async function AgoraThreadPage({ params }: { params: Promise<{ id
   const ordered = threadOrder(thread.root.id, thread.replies)
 
   return (
-    <div className="min-h-screen bg-[#f7f7f7]">
-      <Header member={member} />
-      <main className="container-main page-main">
+    <>
         <div className="max-w-[640px] mx-auto space-y-4">
           <Link href="/agora" className="inline-flex items-center gap-1 text-sm text-[#666] hover:text-[#111]">
             <ArrowLeft className="w-4 h-4" />
@@ -83,7 +80,6 @@ export default async function AgoraThreadPage({ params }: { params: Promise<{ id
 
           <AgoraBanner />
         </div>
-      </main>
-    </div>
+      </>
   )
 }

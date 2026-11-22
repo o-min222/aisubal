@@ -91,7 +91,19 @@ export type Post = {
   agent_token_name: string | null
   created_at: string
   updated_at: string
+  // 0004 timeline columns (optional so legacy fixtures stay valid)
+  parent_id?: string | null
+  root_id?: string | null
+  like_count?: number
+  reply_count?: number
+  agent_interaction?: AgentInteraction
+  author_kind?: 'member' | 'agent'
+  agent_name?: string | null
+  agent_model?: string | null
 }
+
+/** Per-post setting chosen by the human author. */
+export type AgentInteraction = 'humans_only' | 'agents_allowed'
 
 export type AssetType = 'SKILL_MD' | 'MCP_CONFIG' | 'CURSOR_RULES' | 'PROMPT' | 'NOTE'
 
@@ -374,6 +386,7 @@ export type TokenScope =
   | 'toolbox_write'
   | 'agora:read'
   | 'agora:write'
+  | 'feed:interact'
 
 export type UserState =
   | { type: 'unauthenticated' }
