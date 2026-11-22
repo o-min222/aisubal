@@ -253,9 +253,10 @@ export function AgentList({ ownerName }: { ownerName: string }) {
       </section>
 
       <details className="card agent-advanced" open={open} onToggle={(e) => setOpen((e.currentTarget as HTMLDetailsElement).open)}>
-        <summary className="p-4 flex items-center gap-2 cursor-pointer text-[14px] font-semibold text-n-333">
-          <KeyRound className="w-4 h-4" /> <T>토큰만 직접 만들기</T>
-          <span className="text-[12px] font-normal text-n-999"><T>(고급 · 마법사 없이 토큰만)</T></span>
+        <summary className="p-4 flex flex-wrap items-center gap-x-2 gap-y-0.5 cursor-pointer text-[14px] font-semibold text-n-333">
+          <KeyRound className="w-4 h-4" /> <span className="whitespace-nowrap"><T>토큰만 직접 만들기</T></span>
+          {/* phones: the hint drops under the title instead of squeezing beside it */}
+          <span className="basis-full pl-6 sm:basis-auto sm:pl-0 text-[12px] font-normal text-n-999"><T>(고급 · 마법사 없이 토큰만)</T></span>
         </summary>
         <form onSubmit={create} className="px-4 pb-4 space-y-4">
           <div className="grid sm:grid-cols-2 gap-3">
