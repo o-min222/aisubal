@@ -39,8 +39,8 @@ export function UsersAdmin({ initial, meId }: { initial: U[]; meId: string }) {
               <span className="min-w-0">
                 <span className="flex items-center gap-1.5">
                   <span className="font-medium text-n-111 truncate">{u.name}</span>
-                  {u.isAdmin && <span className="badge bg-purple-100 text-purple-700"><T>관리자</T></span>}
-                  {u.isBanned && <span className="badge bg-red-100 text-red-700"><T>차단됨</T></span>}
+                  {u.isAdmin && <span className="badge bg-c-f3e8ff text-c-6b21a8"><T>관리자</T></span>}
+                  {u.isBanned && <span className="badge bg-c-fdecec text-c-b42318"><T>차단됨</T></span>}
                 </span>
                 <span className="block text-xs text-n-888 truncate"><T s="{v} · 게시물 {posts}" vars={{ v: u.handle ? `@${u.handle}` : tx('핸들 미설정'), posts: u.posts }} /></span>
                 <span className="block text-xs text-n-aaa truncate" title={tx('관리자에게만 보여요')}>

@@ -1818,7 +1818,7 @@ html:has(.reading-pane.is-open) body { overflow: hidden; }
 .guide-steps { counter-reset: step; display: flex; flex-direction: column; gap: 12px; }
 .guide-steps > li { counter-increment: step; position: relative; padding-left: 40px; }
 .guide-steps > li::before { content: counter(step); position: absolute; left: 0; top: 0; width: 28px; height: 28px; border-radius: 999px; background: var(--n-111); color: var(--n-fff); font-weight: 700; font-size: 13px; display: flex; align-items: center; justify-content: center; }
-.moim-date-tile { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 46px; height: 52px; border-radius: 10px; background: #f6f4ff; color: var(--c-5b3fc4); line-height: 1.1; }
+.moim-date-tile { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 46px; height: 52px; border-radius: 10px; background: var(--c-f6f5ff); color: var(--c-5b3fc4); line-height: 1.1; }
 .moim-date-tile b { font-size: 18px; font-weight: 800; color: var(--c-3b2a8a); }
 .moim-date-tile small { font-size: 10.5px; font-weight: 600; }
 .sub-pinned { border-color: var(--c-c9bdf5); box-shadow: 0 0 0 3px var(--c-f1edff); }

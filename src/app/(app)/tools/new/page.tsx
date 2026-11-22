@@ -46,7 +46,7 @@ export default async function NewToolGuidePage({ searchParams }: { searchParams:
         <ol className="guide-steps">
           <li>
             <h2 className="text-[15px] font-semibold" style={{ color: 'var(--n-111)' }}>
-              <T>AI 연결하기</T> <span className="text-[12px] font-normal text-n-888"><T>· ‘툴 등록 요청’ 권한</T></span>
+              <T>AI 연결하기</T> <span className="text-[12px] font-normal text-n-888"><T>· ‘갤러리 등록 요청’ 권한</T></span>
             </h2>
             {canSubmit ? (
               <p className="text-[13px] text-c-1f7a4d mt-1 inline-flex items-center gap-1">

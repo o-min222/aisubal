@@ -66,11 +66,11 @@ export function InvitesClient({ inviterName, codes, codesActive, loadFailed }: {
       </div>
 
       {!codesActive && (
-        <div className="card p-4 border-l-4 border-l-amber-400 bg-amber-50/50 flex items-start gap-3">
+        <div className="card p-4 border-l-4 border-l-amber-400 bg-c-fff4e5/50 flex items-start gap-3">
           <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
           <div>
-            <p className="font-medium text-amber-800"><T>초대 코드가 아직 활성화되지 않았어요</T></p>
-            <p className="text-sm text-amber-700 mt-1"><T>가입을 완료하면 내 초대 코드가 활성화돼요.</T></p>
+            <p className="font-medium text-c-8a4b00"><T>초대 코드가 아직 활성화되지 않았어요</T></p>
+            <p className="text-sm text-c-8a4b00 mt-1"><T>가입을 완료하면 내 초대 코드가 활성화돼요.</T></p>
           </div>
         </div>
       )}
@@ -94,11 +94,11 @@ export function InvitesClient({ inviterName, codes, codesActive, loadFailed }: {
                   <div className="flex items-center gap-3 min-w-0">
                     <span className={`font-mono text-lg tracking-wider ${usable ? 'text-n-111' : 'text-n-aaa'}`}>{c.code}</span>
                     {c.isUsed ? (
-                      <span className="badge bg-green-100 text-green-700"><T>사용됨</T></span>
+                      <span className="badge bg-c-dcfce7 text-c-166534"><T>사용됨</T></span>
                     ) : !codesActive ? (
-                      <span className="badge bg-gray-100 text-gray-500"><T>비활성</T></span>
+                      <span className="badge bg-n-f3f3f3 text-n-666"><T>비활성</T></span>
                     ) : (
-                      <span className="badge bg-blue-100 text-blue-700"><T>사용 가능</T></span>
+                      <span className="badge bg-c-dbeafe text-c-1e40af"><T>사용 가능</T></span>
                     )}
                   </div>
                   {usable && (

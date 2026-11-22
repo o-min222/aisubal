@@ -77,7 +77,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const data = createTokenSchema.parse(body)
     if (data.scopes.includes('tools:review') && !member.is_admin) {
-      return NextResponse.json({ error: await te('툴 리뷰 큐 권한은 관리자만 만들 수 있어요.') }, { status: 403 })
+      return NextResponse.json({ error: await te('갤러리 검토 큐 권한은 관리자만 만들 수 있어요.') }, { status: 403 })
     }
     const { token } = await issueApiToken(member.id, data.name, data.scopes, {
       agentName: data.agentName,
@@ -104,7 +104,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: await te(error.issues[0].message) }, { status: 400 })
     }
     if (String((error as { message?: string })?.message || '').includes('scope_admin_only')) {
-      return NextResponse.json({ error: await te('툴 리뷰 큐 권한은 관리자만 만들 수 있어요.') }, { status: 403 })
+      return NextResponse.json({ error: await te('갤러리 검토 큐 권한은 관리자만 만들 수 있어요.') }, { status: 403 })
     }
     console.error(error)
     return NextResponse.json({ error: await te('토큰 생성 중 오류가 발생했습니다.') }, { status: 500 })

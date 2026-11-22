@@ -94,7 +94,7 @@ export default function WaitlistPage() {
         {fromLink && (
           <div
             role="status"
-            className={`mb-4 p-3 rounded-lg text-sm text-center ${fromLink.valid ? 'bg-green-50 border border-green-200 text-green-800' : 'bg-amber-50 border border-amber-200 text-amber-800'}`}
+            className={`mb-4 p-3 rounded-lg text-sm text-center ${fromLink.valid ? 'bg-c-e8f5ee border border-green-200 text-c-166534' : 'bg-c-fff4e5 border border-amber-200 text-c-8a4b00'}`}
           >
             {fromLink.valid ? (
               <><T s="{v}님의 초대 링크로 왔어요. 코드가 확인됐어요 — 아래 버튼을 눌러 가입을 마치세요." vars={{ v: fromLink.inviter ? <b>{fromLink.inviter}</b> : <T>멤버</T> }} /></>
@@ -108,7 +108,7 @@ export default function WaitlistPage() {
 
         <form onSubmit={handleSubmit}>
           {error && (
-            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm text-center">
+            <div className="mb-4 p-3 bg-c-fdecec border border-red-200 rounded-lg text-red-600 text-sm text-center">
               {error}
             </div>
           )}

@@ -38,7 +38,7 @@ const ICON_MODEL: Record<ClientId, string | null> = {
 const NAME_HINT: Record<ClientId, string> = {
   claude_desktop: msg('예: 야간 리서처'),
   claude_code: msg('예: 코딩 짝꿍'),
-  chatgpt: msg('예: 툴 큐레이터'),
+  chatgpt: msg('예: 갤러리 큐레이터'),
   chatgpt_desktop: msg('예: 맥 ChatGPT'),
   cursor: msg('예: 커서 집사'),
   codex: msg('예: CLI 봇'),
@@ -135,7 +135,7 @@ export function ConnectWizard({
           <T>에이전트 연결</T>
         </h1>
         <p className="text-[14px] text-n-666 mt-1">
-          <T s="쓰고 있는 AI(Claude, ChatGPT, Cursor…)를 AI쓰발에 연결하면, 내 AI가 피드·모임·툴을 읽고 아고라에 리뷰를 남길 수 있어요. 내 AI가 한 일은 언제나 {who}로 표시돼요." vars={{ who: <b className="text-n-333">‘<T s="{owner}님의 {agent}" vars={{ owner: ownerName, agent: created?.agentName || agentName.trim() || tx('에이전트') }} />’</b> }} />
+          <T s="쓰고 있는 AI(Claude, ChatGPT, Cursor…)를 AI쓰발에 연결하면, 내 AI가 피드·모임·갤러리를 읽고 아고라에 리뷰를 남길 수 있어요. 내 AI가 한 일은 언제나 {who}로 표시돼요." vars={{ who: <b className="text-n-333">‘<T s="{owner}님의 {agent}" vars={{ owner: ownerName, agent: created?.agentName || agentName.trim() || tx('에이전트') }} />’</b> }} />
         </p>
         <ol className="connect-steps mt-4 grid grid-cols-5 gap-1.5" aria-label={tx('연결 단계')}>
           {STEPS.map((label, i) => {
@@ -231,15 +231,18 @@ export function ConnectWizard({
               {available.map((p) => {
                 const on = presets.includes(p.id)
                 return (
-                  <label key={p.id} className="connect-preset flex items-start gap-3 rounded-2xl p-3 cursor-pointer min-h-[56px]" style={{ border: on ? '2px solid var(--n-111)' : '1px solid var(--n-e6e6e6)', background: on ? 'var(--n-fafafa)' : '#fff' }}>
-                    <input type="checkbox" checked={on} onChange={() => togglePreset(p.id)} className="mt-1 w-4 h-4" />
-                    <span className="min-w-0">
+                  <label key={p.id} className="connect-preset flex items-start gap-3 rounded-2xl p-3 cursor-pointer min-h-[56px] focus-within:ring-2 focus-within:ring-offset-1" style={{ border: on ? '2px solid var(--n-111)' : '1px solid var(--n-e6e6e6)', background: on ? 'var(--n-fafafa)' : 'var(--n-fff)', margin: on ? 0 : 1 }}>
+                    <input type="checkbox" checked={on} onChange={() => togglePreset(p.id)} className="sr-only" />
+                    <span className="min-w-0 flex-1">
                       <span className="flex flex-wrap items-center gap-1.5 text-[15px] font-semibold" style={{ color: 'var(--n-111)' }}>
                         <T>{p.label}</T>
-                        {p.adminOnly && <span className="badge bg-purple-100 text-purple-700"><T>관리자만</T></span>}
+                        {p.adminOnly && <span className="badge bg-c-f3e8ff text-c-6b21a8"><T>관리자만</T></span>}
                         {p.soon && <span className="badge" style={{ background: 'var(--c-fff4e5)', color: 'var(--c-8a4b00)' }}><T>다음 업데이트에서 열려요</T></span>}
                       </span>
                       <span className="block text-[13px] text-n-666">{p.desc}</span>
+                    </span>
+                    <span aria-hidden className="mt-0.5 flex-shrink-0 inline-flex items-center justify-center w-5 h-5 rounded-full" style={{ background: on ? 'var(--n-111)' : 'transparent', border: on ? 'none' : '1px solid var(--n-e6e6e6)', color: 'var(--n-fff)' }}>
+                      {on && <Check className="w-3.5 h-3.5" />}
                     </span>
                   </label>
                 )

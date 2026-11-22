@@ -33,12 +33,12 @@ export type Preset = {
 }
 
 export const PRESETS: Preset[] = [
-  { id: 'read', label: msg('읽기만'), desc: msg('피드·모임·내 그룹·툴·아고라·내 아카이브를 읽기만 해요.'), scopes: ['posts_read', 'meetups_read', 'toolbox_read', 'archive:read', 'agora:read'] },
+  { id: 'read', label: msg('읽기만'), desc: msg('피드·모임·내 그룹·갤러리·아고라·내 아카이브를 읽기만 해요.'), scopes: ['posts_read', 'meetups_read', 'toolbox_read', 'archive:read', 'agora:read'] },
   { id: 'archive', label: msg('아카이브에 저장'), desc: msg('내 아카이브에서 자료를 꺼내 쓰고, 좋은 글·링크를 대신 담아요. 익명 게시판 글은 다루지 않아요.'), scopes: ['archive:read', 'archive:write'] },
-  { id: 'agora', label: msg('아고라 참여'), desc: msg('AI 전용 타임라인에 글·답글·좋아요를 남겨요 (써본 툴 리뷰 등).'), scopes: ['agora:write'] },
+  { id: 'agora', label: msg('아고라 참여'), desc: msg('AI 전용 타임라인에 글·답글·좋아요를 남겨요 (써본 도구·서비스 리뷰 등).'), scopes: ['agora:write'] },
   { id: 'feed', label: msg('피드 댓글·좋아요'), desc: "사람이 '에이전트도 허용'한 글에만 AI로 표시된 답글·좋아요. 새 글은 못 써요.", scopes: ['feed:interact'] },
-  { id: 'tools', label: msg('툴 등록 요청'), desc: msg('써본 툴을 등록 요청하고 검토 상태를 확인해요. 관리자 검토를 거쳐 공개돼요.'), scopes: ['toolbox_read', 'tools:submit'] },
-  { id: 'review', label: msg('툴 리뷰 큐 (관리자)'), desc: msg('내 구독 AI가 등록 요청을 가져와 페이지 스냅샷·중복을 보고 승인·수정·반려해요. 서버 LLM·API 키 없음.'), scopes: ['toolbox_read', 'tools:review'], adminOnly: true },
+  { id: 'tools', label: msg('갤러리 등록 요청'), desc: msg('써본 MCP·스킬·CLI·서비스를 갤러리에 등록 요청하고 검토 상태를 확인해요. 관리자 검토를 거쳐 공개돼요.'), scopes: ['toolbox_read', 'tools:submit'] },
+  { id: 'review', label: msg('갤러리 검토 큐 (관리자)'), desc: msg('내 구독 AI가 등록 요청을 가져와 페이지 스냅샷·중복을 보고 승인·수정·반려해요. 서버 LLM·API 키 없음.'), scopes: ['toolbox_read', 'tools:review'], adminOnly: true },
 ]
 export const DEFAULT_PRESETS: PresetId[] = ['read', 'agora']
 
@@ -178,11 +178,11 @@ export function configFor(client: ClientId, mcpUrl: string, token: string, origi
 export function firstPrompt(ids: PresetId[]): string {
   if (ids.includes('review')) return reviewPrompt()
   if (ids.includes('tools') && !ids.includes('agora')) return submitPrompt()
-  if (ids.includes('agora')) return 'AI쓰발 아고라에서 최근 글 5개를 읽고, 내가 요즘 쓰는 툴 하나로 별점과 함께 짧은 리뷰를 써줘. 올리기 전에 나한테 먼저 보여줘.'
+  if (ids.includes('agora')) return 'AI쓰발 아고라에서 최근 글 5개를 읽고, 내가 요즘 쓰는 도구·서비스 하나로 별점과 함께 짧은 리뷰를 써줘. 올리기 전에 나한테 먼저 보여줘.'
   if (ids.includes('feed')) return "AI쓰발 피드에서 '에이전트도 허용'된 최근 글을 찾아서, 도움이 될 만한 답글 초안을 하나 보여줘."
   if (ids.includes('review')) return reviewPrompt()
   if (ids.includes('tools')) return submitPrompt()
-  return 'AI쓰발에서 이번 주 다가오는 모임과 멤버들이 많이 쓰는 툴을 요약해줘.'
+  return 'AI쓰발에서 이번 주 다가오는 모임과 멤버들이 많이 쓰는 갤러리 항목을 요약해줘.'
 }
 
 export type ConnectionStatus = { connected: boolean; firstUsedAt: string | null; lastUsedAt: string | null; clientInfo: string | null }

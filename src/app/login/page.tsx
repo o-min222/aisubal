@@ -46,7 +46,7 @@ function LoginContent() {
 
         <button
           onClick={handleGoogleLogin}
-          className="w-full flex items-center justify-center gap-3 px-6 py-3 bg-n-fff hover:bg-gray-50 text-gray-900 font-medium rounded-lg transition-colors"
+          className="w-full flex items-center justify-center gap-3 px-6 py-3 bg-n-fff hover:bg-n-fafafa text-n-111 font-medium rounded-lg transition-colors"
         >
           <GoogleIcon />
           {t('Google로 로그인')}

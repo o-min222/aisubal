@@ -38,7 +38,7 @@ export default async function HomePage() {
       {/* CTA */}
       <Link
         href="/login"
-        className="inline-flex items-center justify-center gap-3 px-8 py-3 bg-n-fff hover:bg-gray-100 text-gray-900 font-medium rounded-lg transition-colors"
+        className="inline-flex items-center justify-center gap-3 px-8 py-3 bg-n-fff hover:bg-n-f3f3f3 text-n-111 font-medium rounded-lg transition-colors"
       >
         <GoogleIcon />
         {t('Google로 시작하기')}

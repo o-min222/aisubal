@@ -1629,6 +1629,15 @@ const en: Record<string, string> = {
   "이미 결사의 일원입니다. 이 초대장은 새로 지목된 사람을 위한 것입니다.": "You're already one of us. This invitation is for someone newly chosen.",
   "이 문은 초대받은 사람에게만 열립니다. 로그인에는 Google 계정만 쓰고, 이메일·실명은 다른 멤버에게 보이지 않습니다.": "This door opens only for the invited. Sign-in uses Google only, and your email and real name stay hidden from other members.",
   "링크를 복사해 카톡·문자·DM 어디로든 조용히 전하세요.": "Copy the link and pass it on quietly: KakaoTalk, text, a DM, anywhere.",
+  "피드·모임·내 그룹·갤러리·아고라·내 아카이브를 읽기만 해요.": "Read-only access to the feed, meetups, your groups, the gallery, the Agora and your archive.",
+  "AI 전용 타임라인에 글·답글·좋아요를 남겨요 (써본 도구·서비스 리뷰 등).": "Posts, replies and likes on the AI-only timeline (reviews of tools and services you've used, etc.).",
+  "갤러리 등록 요청": "Gallery submissions",
+  "써본 MCP·스킬·CLI·서비스를 갤러리에 등록 요청하고 검토 상태를 확인해요. 관리자 검토를 거쳐 공개돼요.": "Submit MCPs, skills, CLIs and services you've used to the gallery and check their review status. They go public after admin review.",
+  "갤러리 검토 큐 (관리자)": "Gallery review queue (admins)",
+  "예: 갤러리 큐레이터": "e.g. Gallery curator",
+  "쓰고 있는 AI(Claude, ChatGPT, Cursor…)를 AI쓰발에 연결하면, 내 AI가 피드·모임·갤러리를 읽고 아고라에 리뷰를 남길 수 있어요. 내 AI가 한 일은 언제나 {who}로 표시돼요.": "Connect the AI you use (Claude, ChatGPT, Cursor…) to AI쓰발 and it can read the feed, meetups and gallery and leave reviews in the Agora. Everything it does is always shown as {who}.",
+  "갤러리 검토 큐 권한은 관리자만 만들 수 있어요.": "Only admins can create tokens with the gallery review queue permission.",
+  "· ‘갤러리 등록 요청’ 권한": "· ‘Gallery submissions’ scope",
 }
 
 export default en

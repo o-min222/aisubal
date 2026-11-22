@@ -208,9 +208,9 @@ export function ToolboxDetailClient({ entry: initial, mentionPosts, member, aiRa
       {launchSlot}
 
       {entry.type !== 'product' && (<>
-      <section className="card p-4 border-amber-200 bg-amber-50/40">
+      <section className="card p-4 border-amber-200 bg-c-fff4e5/40">
         <h2 className="font-semibold text-n-111 flex items-center gap-2 mb-2">
-          <ShieldAlert className="w-4 h-4 text-amber-700" />
+          <ShieldAlert className="w-4 h-4 text-c-8a4b00" />
           <T>설치 전 보안 확인</T>
         </h2>
         <ul className="text-sm text-n-555 space-y-1">
