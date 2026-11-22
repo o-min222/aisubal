@@ -65,16 +65,12 @@ export async function listPosts(): Promise<PostWithDetails[]> {
 
   if (error) throw error
 
-  const posts: PostWithDetails[] = []
-  for (const row of rows || []) {
-    const { assets, author, ...post } = row as Post & {
-      assets: Asset[]
-      author: Member
-    }
-    if (!author) continue
-    posts.push(await hydratePost(post, author, assets || []))
-  }
-  return posts
+  const typed = (rows || []) as Array<Post & { assets: Asset[]; author: Member }>
+  return Promise.all(
+    typed
+      .filter((row) => row.author)
+      .map(({ assets, author, ...post }) => hydratePost(post as Post, author, assets || []))
+  )
 }
 
 export async function getPost(id: string): Promise<PostWithDetails | null> {
@@ -296,9 +292,10 @@ export async function getPostAuthorMember(authorId: string): Promise<Member | nu
 
 export async function listPublicPosts() {
   const posts = await listPosts()
+  const authors = await Promise.all(posts.map((p) => getPostAuthorMember(p.author_id)))
   const result = []
-  for (const p of posts) {
-    const authorMember = await getPostAuthorMember(p.author_id)
+  for (const [i, p] of posts.entries()) {
+    const authorMember = authors[i]
     if (!authorMember) continue
     const pub = toPublicPost(p, authorMember, { archive_count: p.archive_count })
     assertNoIdentityLeak(pub, [authorMember.email])

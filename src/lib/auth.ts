@@ -1,3 +1,4 @@
+import { cache } from 'react'
 import { createClient } from '@/lib/supabase/server'
 import type { Member, WaitlistEntry, UserState } from '@/lib/supabase/types'
 import { useMockData } from '@/lib/data/client'
@@ -25,7 +26,9 @@ const DEV_MEMBER: Member = {
   updated_at: '2026-11-15T00:00:00Z',
 }
 
-export async function getUserState(): Promise<UserState> {
+// Deduped per request: layouts/pages/components can all call this without
+// repeating the Supabase auth + member round trips.
+export const getUserState = cache(async function getUserState(): Promise<UserState> {
   if (useMockData()) {
     return { type: 'member', member: DEV_MEMBER }
   }
@@ -102,7 +105,7 @@ export async function getUserState(): Promise<UserState> {
   }
 
   return { type: 'unauthenticated' }
-}
+})
 
 export async function getMember(): Promise<Member | null> {
   const state = await getUserState()

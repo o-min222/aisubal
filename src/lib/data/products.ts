@@ -146,13 +146,10 @@ export async function listProductsRanked(
     now
   )
 
-  const result: ProductWithDetails[] = []
-  for (const r of ranked) {
-    const product = (products || []).find((p: Product) => p.id === r.productId)
-    if (!product) continue
-    result.push(await hydrateProduct(product as Product, viewerId))
-  }
-  return result
+  const ordered = ranked
+    .map((r) => (products || []).find((p: Product) => p.id === r.productId))
+    .filter(Boolean) as Product[]
+  return Promise.all(ordered.map((p) => hydrateProduct(p, viewerId)))
 }
 
 export async function featuredProducts(
@@ -170,11 +167,7 @@ export async function featuredProducts(
     .limit(limit)
   if (error) throw error
 
-  const result: ProductWithDetails[] = []
-  for (const p of (data || []) as Product[]) {
-    result.push(await hydrateProduct(p, viewerId))
-  }
-  return result
+  return Promise.all(((data || []) as Product[]).map((p) => hydrateProduct(p, viewerId)))
 }
 
 export async function createProduct(

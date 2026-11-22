@@ -33,10 +33,16 @@ export async function middleware(request: NextRequest) {
     }
   )
 
+  const pathname = request.nextUrl.pathname
+
+  // API routes handle their own auth (session cookie or Bearer token), so skip
+  // the extra Supabase Auth round trip here.
+  if (pathname.startsWith('/api/')) {
+    return response
+  }
+
   // Refresh session
   const { data: { user } } = await supabase.auth.getUser()
-
-  const pathname = request.nextUrl.pathname
   
   // Public routes that don't require auth
   const publicRoutes = ['/', '/login', '/auth/callback', '/waitlist', '/api/auth', '/api/setup', '/api/mcp']
@@ -61,6 +67,6 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    '/((?!_next/static|_next/image|favicon.ico|images|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    '/((?!_next/static|_next/image|favicon.ico|favicon.png|images|robots.txt|sitemap.xml|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|css|js|woff2?)$).*)',
   ],
 }

@@ -152,10 +152,9 @@ export async function listMeetupsDetailed(): Promise<MeetupWithDetails[]> {
     ...((rsvps || []) as MeetupRsvp[]).map((r) => r.member_id),
   ])
 
-  const result: MeetupWithDetails[] = []
-  for (const meetup of meetups as Meetup[]) {
-    result.push(
-      await hydrateMeetup(
+  return Promise.all(
+    (meetups as Meetup[]).map((meetup) =>
+      hydrateMeetup(
         meetup,
         ((rsvps || []) as MeetupRsvp[]).filter((r) => r.meetup_id === meetup.id),
         ((announcements || []) as MeetupAnnouncement[]).filter(
@@ -164,8 +163,7 @@ export async function listMeetupsDetailed(): Promise<MeetupWithDetails[]> {
         members
       )
     )
-  }
-  return result
+  )
 }
 
 export async function upcomingMeetups(limit = 3): Promise<MeetupWithDetails[]> {

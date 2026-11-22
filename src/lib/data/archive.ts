@@ -74,10 +74,9 @@ export async function listBrainForOwner(
     .order('updated_at', { ascending: false })
   if (error) throw error
 
-  const items: BrainArchiveItem[] = []
-  for (const row of data || []) {
-    items.push(await hydrateBrainItem(row as BrainArchiveItem))
-  }
+  const items: BrainArchiveItem[] = await Promise.all(
+    (data || []).map((row) => hydrateBrainItem(row as BrainArchiveItem))
+  )
 
   return searchArchiveItems(items, { ownerId, ...opts })
 }
@@ -149,15 +148,15 @@ export async function listCollections(viewerId: string): Promise<
   if (error) throw error
 
   const collections = (data || []) as ArchiveCollection[]
-  const result: Array<ArchiveCollection & { item_count: number }> = []
-  for (const c of collections) {
-    const { count } = await supabase
-      .from('brain_archive_collection_items')
-      .select('item_id', { count: 'exact', head: true })
-      .eq('collection_id', c.id)
-    result.push({ ...c, item_count: count ?? 0 })
-  }
-  return result
+  return Promise.all(
+    collections.map(async (c) => {
+      const { count } = await supabase
+        .from('brain_archive_collection_items')
+        .select('item_id', { count: 'exact', head: true })
+        .eq('collection_id', c.id)
+      return { ...c, item_count: count ?? 0 }
+    })
+  )
 }
 
 export async function listHighlightsForItems(
@@ -441,10 +440,9 @@ export async function exportCollectionPack(collectionId: string, viewerId: strin
     .from('brain_archive_items')
     .select('*')
     .in('id', itemIds)
-  const hydrated: BrainArchiveItem[] = []
-  for (const row of items || []) {
-    hydrated.push(await hydrateBrainItem(row as BrainArchiveItem))
-  }
+  const hydrated: BrainArchiveItem[] = await Promise.all(
+    (items || []).map((row) => hydrateBrainItem(row as BrainArchiveItem))
+  )
   const highlights = await listHighlightsForItems(itemIds)
 
   const { collectionContextBundle, itemToLlmContext } = await import(
@@ -500,9 +498,11 @@ export async function getCollectionDetail(id: string, viewerId: string) {
   const items: BrainArchiveItem[] = []
   if (itemIds.length) {
     const { data } = await supabase.from('brain_archive_items').select('*').in('id', itemIds)
-    for (const row of data || []) {
-      items.push(await hydrateBrainItem(row as BrainArchiveItem))
-    }
+    items.push(
+      ...(await Promise.all(
+        (data || []).map((row) => hydrateBrainItem(row as BrainArchiveItem))
+      ))
+    )
   }
   const pack = await exportCollectionPack(id, viewerId)
   return {
