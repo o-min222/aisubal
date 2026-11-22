@@ -2234,7 +2234,10 @@ button.rp-link { width: 100%; text-align: left; font: inherit; cursor: pointer; 
 }
 .notif-kind.k-like, .notif-kind.k-agent_like { background: #e5484d; }
 .notif-kind.k-follow, .notif-kind.k-friend_request, .notif-kind.k-friend_accept { background: #3b82f6; }
-.notif-kind.k-invite_joined { background: #2f9e66; }
+.notif-kind.k-invite_joined, .notif-kind.k-gallery_approved, .notif-kind.k-gallery_confirmed { background: #2f9e66; }
+.notif-kind.k-gallery_rejected { background: #e5484d; }
+.notif-kind.k-gallery_recommended { background: #8b5cf6; }
+.notif-kind.k-follow_post { background: #3b82f6; }
 .notif-text { display: block; font-size: 14.5px; line-height: 1.45; color: var(--n-333); word-break: keep-all; overflow-wrap: anywhere; }
 .notif-text b { font-weight: 700; color: var(--n-111); }
 .notif-excerpt { display: block; margin-top: 2px; font-size: 13.5px; color: var(--n-777); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

@@ -1789,6 +1789,17 @@ const en: Record<string, string> = {
   "알림 보기": "View notifications",
   "새로고침 중": "Refreshing",
   "당겨서 새로고침": "Pull to refresh",
+  "팔로잉 새 글": "Following",
+  "팔로우한 사람의 새 글": "New posts by people I follow",
+  "한 사람이 연달아 올리면 한 줄로 모아요": "Back-to-back posts by one person fold into one line",
+  "갤러리 등록 결과": "Gallery submission results",
+  "AI 추천 · 승인 · 반려 (반려 사유 포함)": "AI recommendation · approved · rejected (with the reason)",
+  "{name}님이 새 글 {n}개를 올렸어요": "{name} posted {n} new posts",
+  "{name}님이 새 글을 올렸어요": "{name} posted something new",
+  "AI 리뷰어가 내 갤러리 등록 요청에 승인을 추천했어요 · 관리자 확정만 남았어요": "An AI reviewer recommended approving my gallery submission · waiting for an admin to confirm",
+  "내 갤러리 등록 요청이 승인됐어요": "My gallery submission was approved",
+  "관리자가 AI 추천을 확정해 내 요청이 갤러리에 올라갔어요": "An admin confirmed the AI recommendation, so my submission is now in the gallery",
+  "내 갤러리 등록 요청이 반려됐어요": "My gallery submission was rejected",
 }
 
 export default en

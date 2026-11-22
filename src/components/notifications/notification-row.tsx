@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { AtSign, Bot, Heart, MessageCircle, Ticket, UserPlus, Users, VenetianMask } from 'lucide-react'
+import { AtSign, Bot, Check, Heart, MessageCircle, PenLine, Sparkles, Ticket, UserPlus, Users, VenetianMask, Wrench, X } from 'lucide-react'
 import { UserAvatar } from '@/components/user-avatar'
 import { RelativeTime } from '@/components/relative-time'
 import { notificationSentence, type NotificationItem } from '@/lib/notifications'
@@ -15,14 +15,20 @@ const KIND_ICON = {
   friend_request: Users,
   friend_accept: Users,
   invite_joined: Ticket,
+  follow_post: PenLine,
+  gallery_recommended: Sparkles,
+  gallery_approved: Check,
+  gallery_confirmed: Check,
+  gallery_rejected: X,
 } as const
 
 function Avatar({ n }: { n: NotificationItem }) {
   const a = n.actor
   if (a?.kind === 'member' && a.id) return <UserAvatar id={a.id} name={a.name || '멤버'} avatarUrl={a.avatarUrl} size="md" />
-  const Icon = a?.kind === 'agent' ? Bot : a?.kind === 'anon' ? VenetianMask : Heart
+  const gallery = n.category === 'gallery' && a?.kind !== 'agent'
+  const Icon = gallery ? Wrench : a?.kind === 'agent' ? Bot : a?.kind === 'anon' ? VenetianMask : Heart
   return (
-    <span className={`notif-ava is-${a?.kind ?? 'someone'}`} aria-hidden>
+    <span className={`notif-ava is-${gallery ? 'gallery' : (a?.kind ?? 'someone')}`} aria-hidden>
       <Icon className="w-5 h-5" />
     </span>
   )
