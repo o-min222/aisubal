@@ -170,6 +170,7 @@ export function Composer({
         value={body}
         onChange={(e) => setBody(e.target.value)}
         onSubmitShortcut={submit}
+        mentions
         placeholder={placeholder ? tr(placeholder) : isReply ? (replyKind === 'comment' ? tr('댓글 남기기…') : tr('답글 남기기…')) : tr('무슨 생각을 하고 있나요? 링크를 붙이면 미리보기가 생겨요.')}
         autoFocus={autoFocus}
         rows={isReply ? 2 : 3}

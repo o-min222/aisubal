@@ -1,6 +1,7 @@
 'use client'
 
-import type { ReactNode } from 'react'
+import { useRef, type ReactNode } from 'react'
+import { useMentionSuggest } from './mention-suggest'
 
 /**
  * Shared composer layout (feed, group, anon, replies): avatar + body, text that
@@ -45,23 +46,42 @@ export function ComposerFrame({
   )
 }
 
-/** Auto-growing textarea for composers (no character counter). */
-export function ComposerTextarea(props: React.TextareaHTMLAttributes<HTMLTextAreaElement> & { onSubmitShortcut?: () => void }) {
-  const { onSubmitShortcut, className = '', onKeyDown, onInput, ...rest } = props
-  return (
+/** Auto-growing textarea for composers (no character counter). `mentions` adds @-autocomplete. */
+export function ComposerTextarea(props: React.TextareaHTMLAttributes<HTMLTextAreaElement> & { onSubmitShortcut?: () => void; mentions?: boolean }) {
+  const { onSubmitShortcut, mentions = false, className = '', onKeyDown, onInput, onBlur, ...rest } = props
+  const ref = useRef<HTMLTextAreaElement>(null)
+  const ms = useMentionSuggest(ref, mentions)
+  const textarea = (
     <textarea
       {...rest}
+      {...ms.inputProps}
+      ref={ref}
       className={`composer-input ${className}`}
       onKeyDown={(e) => {
+        if (ms.onKeyDown(e)) return
         if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) onSubmitShortcut?.()
         onKeyDown?.(e)
+      }}
+      onKeyUp={mentions ? ms.update : undefined}
+      onClick={mentions ? ms.update : undefined}
+      onBlur={(e) => {
+        if (mentions) ms.close()
+        onBlur?.(e)
       }}
       onInput={(e) => {
         const el = e.currentTarget
         el.style.height = 'auto'
         el.style.height = `${Math.min(el.scrollHeight, 480)}px`
+        if (mentions) ms.update()
         onInput?.(e)
       }}
     />
+  )
+  if (!mentions) return textarea
+  return (
+    <div className="composer-input-wrap">
+      {textarea}
+      {ms.popover}
+    </div>
   )
 }
