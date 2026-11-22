@@ -18,7 +18,9 @@ type NodeVars = Record<string, ReactNode>
 export function T({ children, s, vars }: { children?: string; s?: string; vars?: NodeVars }) {
   const t = useT()
   const key = s ?? children ?? ''
-  const hasNodes = vars && Object.values(vars).some((v) => isValidElement(v))
+  // any non-primitive var is a node (elements handed over from server components may not pass
+  // isValidElement during SSR; string-interpolating them would render '[object Object]')
+  const hasNodes = vars && Object.values(vars).some((v) => isValidElement(v) || (typeof v === 'object' && v !== null))
   if (!hasNodes) return t(key, vars as Vars | undefined)
   const translated = t(key)
   const parts = translated.split(/(\{\w+\})/)
