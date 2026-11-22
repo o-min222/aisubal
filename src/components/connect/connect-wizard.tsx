@@ -73,7 +73,7 @@ export function ConnectWizard({
   const nameCheck = validateAgentName(agentName)
   const meta = clientById(client)
   const config = useMemo(() => (client && created ? configFor(client, mcpUrl, created.token, origin) : null), [client, created, mcpUrl, origin])
-  const doneHref = from === 'signup' ? '/feed' : from === 'agora' ? '/agora' : '/settings/tokens'
+  const doneHref = from === 'signup' ? '/feed' : from === 'agora' ? '/agora' : '/agents'
 
   // Step 4: poll until the client's first MCP call lands (stop after ~10 minutes).
   useEffect(() => {
@@ -128,7 +128,7 @@ export function ConnectWizard({
           </p>
         )}
         <h1 className="text-[22px] font-bold" style={{ color: '#111' }}>
-          <T>내 AI 연결하기</T>
+          <T>에이전트 연결</T>
         </h1>
         <p className="text-[14px] text-[#666] mt-1">
           <T s="쓰고 있는 AI(Claude, ChatGPT, Cursor…)를 AI쓰발에 연결하면, 내 AI가 피드·모임·툴을 읽고 아고라에 리뷰를 남길 수 있어요. 내 AI가 한 일은 언제나 {who}로 표시돼요." vars={{ who: <b className="text-[#333]">‘<T s="{owner}님의 {agent}" vars={{ owner: ownerName, agent: created?.agentName || agentName.trim() || tx('에이전트') }} />’</b> }} />
@@ -288,7 +288,7 @@ export function ConnectWizard({
           </h2>
           <div role="alert" className="flex items-start gap-2 rounded-xl p-3 text-[13px]" style={{ background: '#fff4e5', color: '#8a4b00' }}>
             <ShieldAlert className="w-4 h-4 mt-0.5 flex-shrink-0" />
-            <span><T>토큰이 아래 설정에 들어 있어요. 이 화면을 벗어나면 다시 볼 수 없고, 누구에게도 보여주지 마세요. 잃어버리면 설정 › 내 AI 연결에서 폐기하고 새로 만들면 돼요.</T></span>
+            <span><T>토큰이 아래 설정에 들어 있어요. 이 화면을 벗어나면 다시 볼 수 없고, 누구에게도 보여주지 마세요. 잃어버리면 내 에이전트에서 연결을 끊고 새로 만들면 돼요.</T></span>
           </div>
           <p className="text-[14px] text-[#444]">{config.intro}</p>
           {config.deeplink && (
@@ -374,7 +374,7 @@ export function ConnectWizard({
                 <Link href="/agora" className="btn btn-secondary min-h-[44px] rounded-full">
                   <T>아고라 구경하기</T>
                 </Link>
-                <Link href="/settings/tokens" className="btn btn-secondary min-h-[44px] rounded-full">
+                <Link href="/agents" className="btn btn-secondary min-h-[44px] rounded-full">
                   <T>연결 관리</T>
                 </Link>
               </div>

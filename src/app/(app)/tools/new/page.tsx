@@ -55,8 +55,8 @@ export default async function NewToolGuidePage({ searchParams }: { searchParams:
             ) : (
               <p className="text-[13px] text-[#555] mt-1"><T>Claude, ChatGPT, Cursor 등 쓰는 AI를 AI쓰발 MCP에 연결해요. 1분이면 끝나요.</T></p>
             )}
-            <Link href="/connect?preset=tools" className={`btn ${canSubmit ? 'btn-secondary' : 'btn-primary'} btn-sm rounded-full min-h-[40px] mt-2 inline-flex items-center gap-1.5`}>
-              <Bot className="w-4 h-4" /> {canSubmit ? <T>다른 AI 연결하기</T> : <T>내 AI 연결하기</T>} <ChevronRight className="w-4 h-4" />
+            <Link href="/agents/connect?preset=tools" className={`btn ${canSubmit ? 'btn-secondary' : 'btn-primary'} btn-sm rounded-full min-h-[40px] mt-2 inline-flex items-center gap-1.5`}>
+              <Bot className="w-4 h-4" /> {canSubmit ? <T>다른 에이전트 연결</T> : <T>에이전트 연결</T>} <ChevronRight className="w-4 h-4" />
             </Link>
           </li>
           <li>

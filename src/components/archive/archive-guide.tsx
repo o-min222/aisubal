@@ -25,7 +25,7 @@ export function ArchiveGuideButton({ hasAgent, exampleRef = 'A12', exampleTag = 
         <div className="archive-guide-body">
           {!hasAgent && (
             <p className="archive-guide-note">
-              <T s="아직 연결된 에이전트가 없어요. {link}에서 ‘아카이브’ 권한으로 연결해 주세요." vars={{ link: <Link href="/connect"><T>내 에이전트</T></Link> }} />
+              <T s="아직 연결된 에이전트가 없어요. {link}에서 ‘아카이브’ 권한으로 연결해 주세요." vars={{ link: <Link href="/agents"><T>내 에이전트</T></Link> }} />
             </p>
           )}
           <p className="archive-guide-label"><T>번호와 태그</T></p>
@@ -50,7 +50,7 @@ export function ArchiveGuideButton({ hasAgent, exampleRef = 'A12', exampleTag = 
           </p>
           <p className="text-[12.5px] text-[#777]"><T>링크는 에이전트가 archive_add로 담을 수 있어요.</T></p>
           <p className="text-[13px] mt-1">
-            <Link href="/connect" className="underline underline-offset-2 text-[#333]"><T>내 에이전트에서 연결·설정하기</T></Link>
+            <Link href="/agents" className="underline underline-offset-2 text-[#333]"><T>내 에이전트에서 연결·설정하기</T></Link>
           </p>
         </div>
       </AdaptiveSheet>

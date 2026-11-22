@@ -3,7 +3,7 @@
 import { ArchiveButton } from '@/components/archive/archive-button'
 import Link from 'next/link'
 import { useState } from 'react'
-import { ExternalLink, Lock, Pencil, Users } from 'lucide-react'
+import { ExternalLink, Lock, Users } from 'lucide-react'
 import { UserAvatar } from '@/components/user-avatar'
 import { RelativeTime } from '@/components/relative-time'
 import { FollowButton } from '@/components/social/follow-button'
@@ -148,8 +148,6 @@ export function MemberCard({ data, variant = 'side' }: { data: MemberCardData; v
   const profileHref = data.isMe ? '/me' : `/members/${data.id}`
   const s = data.stack
   const chipMax = variant === 'side' ? 4 : 6
-  const hasStack = s && (['ai', 'subs', 'skills'] as const).some((g) => (s[g]?.items.length ?? 0) > 0)
-  const emptyOwn = data.isMe && !hasStack && !(s?.agents.length)
   return (
     <section className={`profile-card member-card member-card-${variant}`} aria-label={tx('{displayName} 프로필 카드', { displayName: data.displayName })}>
       <div className="profile-card-cover" aria-hidden />
@@ -159,11 +157,7 @@ export function MemberCard({ data, variant = 'side' }: { data: MemberCardData; v
             <UserAvatar id={data.id} name={data.displayName} avatarUrl={data.avatarUrl} size="lg" />
           </Link>
           <div className="flex items-center gap-1.5 flex-wrap justify-end">
-            {data.isMe ? (
-              <Link href="/settings/profile" className="btn btn-secondary btn-sm rounded-full min-h-[34px] inline-flex items-center gap-1">
-                <Pencil className="w-3.5 h-3.5" /> <T>프로필 편집</T>
-              </Link>
-            ) : (
+            {!data.isMe && (
               data.relation && (
                 <>
                   <ArchiveButton kind="member" refId={data.id} hint={{ title: data.displayName, excerpt: data.bio ?? undefined, url: `/members/${data.id}`, author: data.handle ? `@${data.handle}` : undefined }} />
@@ -178,20 +172,14 @@ export function MemberCard({ data, variant = 'side' }: { data: MemberCardData; v
           <span className="pc-name block font-semibold text-[#111] truncate group-hover:underline">{data.displayName}</span>
           {data.handle && <span className="block text-xs text-[#888] truncate">@{data.handle}</span>}
         </Link>
-        {data.isMe && data.nickname && <span className="block text-xs text-[#888] truncate"><T s="별명 @{nick} (나만 보여요)" vars={{ nick: data.nickname }} /></span>}
         {data.bio && <p className="text-xs text-[#666] mt-1 line-clamp-2">{data.bio}</p>}
         {s && (
           <div className="mc-body">
-            <StackChips group="ai" data={s.ai} max={chipMax} />
-            <StackChips group="subs" data={s.subs} max={chipMax} />
-            <StackChips group="skills" data={s.skills} max={chipMax} />
-            <AgentList agents={s.agents} isMe={data.isMe} max={variant === 'side' ? 2 : 3} title={data.isMe ? tx('내 에이전트') : tx('에이전트')} />
+            <StackChips group="ai" data={s.ai && { ...s.ai, visibility: null }} max={chipMax} />
+            <StackChips group="subs" data={s.subs && { ...s.subs, visibility: null }} max={chipMax} />
+            <StackChips group="skills" data={s.skills && { ...s.skills, visibility: null }} max={chipMax} />
+            <AgentList agents={s.agents} isMe={false} max={variant === 'side' ? 2 : 3} title={tx('에이전트')} />
           </div>
-        )}
-        {emptyOwn && (
-          <Link href="/settings/profile#stack" className="mc-empty">
-            <T>쓰는 AI·구독·에이전트를 추가해 보세요</T>
-          </Link>
         )}
       </div>
       <dl className="profile-stats">

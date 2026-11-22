@@ -1,0 +1,437 @@
+'use client'
+
+import Link from 'next/link'
+import { useRef, useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { Camera, Check, ChevronRight, Ghost, Link2, Loader2, Lock, Plus, Trash2, Users, Bot, Eye } from 'lucide-react'
+import { toast } from 'sonner'
+import { UserAvatar } from '@/components/user-avatar'
+import { AdaptiveSheet } from '@/components/adaptive-sheet'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
+import { LinksEditor } from '@/components/profile/links-editor'
+import { LinkIcon } from '@/components/profile/link-icon'
+import { Picker, type Item, type StackEditorInitial } from '@/components/profile/stack-editor'
+import type { ProfileFormMember } from '@/components/profile/profile-form'
+import { LINK_KINDS, LINK_VISIBILITY, normalizeHandle, validateDisplayName, validateHandle, type ProfileLink } from '@/lib/profile-rules'
+import { AI_SUGGESTIONS, STACK_GROUP_LABEL, STACK_LIMIT, SUB_SUGGESTIONS, type StackGroup } from '@/lib/profile-stack'
+import { piiWarning } from '@/lib/pii'
+import { T } from '@/i18n/t'
+import { tx, tn } from '@/i18n/client'
+
+type SaveState = 'idle' | 'saving' | 'saved' | 'error'
+const norm = (s: string) => s.toLowerCase().replace(/[\s_\-·.]+/g, '')
+const VIS_ICON = { members: Eye, friends: Users, private: Lock } as const
+
+export type ProfileEditorAgent = { id: string; name: string; client: string | null }
+
+/**
+ * WYSIWYG profile: the card others see, edited in place. Every field autosaves
+ * (name/handle/bio on blur, chips on change) with one small saved indicator.
+ * Chips: tap → menu (lock: who can see this chip · remove); '+' → picker sheet.
+ */
+export function ProfileCardEditor({
+  me,
+  stack,
+  links,
+  agents,
+  settingsRows = true,
+}: {
+  me: ProfileFormMember
+  stack: StackEditorInitial
+  links: ProfileLink[]
+  agents: ProfileEditorAgent[]
+  settingsRows?: boolean
+}) {
+  const router = useRouter()
+  const [save, setSave] = useState<SaveState>('idle')
+  const savedTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const mark = (s: SaveState) => {
+    setSave(s)
+    if (savedTimer.current) clearTimeout(savedTimer.current)
+    if (s === 'saved') savedTimer.current = setTimeout(() => setSave('idle'), 2200)
+  }
+
+  // ---- identity (POST /api/profile, whole record each time) ----
+  const [name, setName] = useState(me.isPlaceholderName ? '' : me.displayName)
+  const [handle, setHandle] = useState(me.handle ?? '')
+  const [bio, setBio] = useState(me.bio ?? '')
+  const [showReal, setShowReal] = useState(me.showRealName)
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(me.avatarUrl)
+  const [handleErr, setHandleErr] = useState<string | null>(null)
+  const last = useRef({ name, handle: normalizeHandle(handle), bio, showReal })
+
+  async function saveProfile(patch: Partial<{ name: string; handle: string; bio: string; showReal: boolean; avatar: string }> = {}) {
+    const next = { name, handle: normalizeHandle(handle), bio, showReal, ...patch }
+    if (next.handle) next.handle = normalizeHandle(next.handle)
+    const nameOk = validateDisplayName(next.name)
+    if (!nameOk.ok) return toast.error(nameOk.reason)
+    const h = validateHandle(next.handle)
+    if (!h.ok) return setHandleErr(h.reason ?? tx('핸들을 확인해 주세요.'))
+    if (!patch.avatar && next.name === last.current.name && next.handle === last.current.handle && next.bio === last.current.bio && next.showReal === last.current.showReal) return
+    mark('saving')
+    try {
+      const res = await fetch('/api/profile', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ handle: next.handle, displayName: next.name, bio: next.bio, avatar: patch.avatar ?? 'keep', showRealName: next.showReal }),
+      })
+      const d = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        if (d.field === 'handle') setHandleErr(d.error)
+        throw new Error(d.error || '저장하지 못했어요.')
+      }
+      last.current = { name: next.name, handle: next.handle, bio: next.bio, showReal: next.showReal }
+      setHandleErr(null)
+      mark('saved')
+      router.refresh()
+    } catch (e) {
+      mark('error')
+      toast.error(e instanceof Error ? e.message : tn('저장하지 못했어요.'))
+    }
+  }
+
+  // ---- avatar sheet ----
+  const [avatarOpen, setAvatarOpen] = useState(false)
+  const [uploading, setUploading] = useState(false)
+  const fileRef = useRef<HTMLInputElement>(null)
+  async function onFile(f: File | undefined) {
+    if (!f) return
+    setUploading(true)
+    try {
+      const fd = new FormData()
+      fd.append('file', f)
+      const res = await fetch('/api/profile/avatar', { method: 'POST', body: fd })
+      const d = await res.json()
+      if (!res.ok) throw new Error(d.error || '업로드하지 못했어요.')
+      setAvatarUrl(d.url)
+      setAvatarOpen(false)
+      await saveProfile({ avatar: d.url })
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : tn('업로드하지 못했어요.'))
+    } finally {
+      setUploading(false)
+      if (fileRef.current) fileRef.current.value = ''
+    }
+  }
+  async function pickAvatar(kind: 'none' | 'google') {
+    setAvatarUrl(kind === 'google' ? me.googleAvatarUrl : null)
+    setAvatarOpen(false)
+    await saveProfile({ avatar: kind })
+  }
+
+  // ---- stack chips (PUT /api/profile/stack on every change) ----
+  const [groups, setGroups] = useState<Record<'ai' | 'subs' | 'extras', Item[]>>({
+    ai: stack.ai,
+    subs: stack.subs,
+    extras: stack.skillExtras.map((label) => ({ label, entryId: null })),
+  })
+  const [used, setUsed] = useState<Item[]>(stack.usedSkills)
+  const [vis, setVis] = useState(stack.vis)
+  const [adding, setAdding] = useState<StackGroup | null>(null)
+
+  async function putStack(nextGroups = groups, nextVis = vis) {
+    mark('saving')
+    try {
+      const strip = (l: Item[]) => l.map(({ label, entryId, visibility }) => ({ label, entryId, visibility: visibility ?? null }))
+      const res = await fetch('/api/profile/stack', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ai: strip(nextGroups.ai), subs: strip(nextGroups.subs), skills: strip(nextGroups.extras), vis: nextVis }),
+      })
+      const d = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(d.error || '저장하지 못했어요.')
+      mark('saved')
+      router.refresh()
+    } catch (e) {
+      mark('error')
+      toast.error(e instanceof Error ? e.message : tn('저장하지 못했어요.'))
+    }
+  }
+  const keyOf = (g: StackGroup) => (g === 'skills' ? 'extras' : g)
+  function setGroup(g: StackGroup, items: Item[]) {
+    const next = { ...groups, [keyOf(g)]: items }
+    setGroups(next)
+    void putStack(next)
+  }
+  function addItem(g: StackGroup, i: Item) {
+    const list = groups[keyOf(g)]
+    if (list.length + (g === 'skills' ? used.length : 0) >= STACK_LIMIT) return toast.error(tn('{n}개까지 추가할 수 있어요.', { n: STACK_LIMIT }))
+    if (list.some((x) => (i.entryId && x.entryId === i.entryId) || norm(x.label) === norm(i.label))) return
+    setGroup(g, [...list, { ...i, visibility: null }])
+  }
+  async function toggleUsage(item: Item, using: boolean) {
+    if (!item.entryId) return
+    mark('saving')
+    const res = await fetch(`/api/tools/${item.entryId}/usage`, { method: using ? 'POST' : 'DELETE' })
+    if (!res.ok) {
+      mark('error')
+      return toast.error(tn('사용 중 표시를 바꾸지 못했어요.'))
+    }
+    setUsed(using ? [...used.filter((u) => u.entryId !== item.entryId), item] : used.filter((u) => u.entryId !== item.entryId))
+    mark('saved')
+    router.refresh()
+  }
+
+  const [linksOpen, setLinksOpen] = useState(false)
+  const [realOpen, setRealOpen] = useState(false)
+  const bioPii = piiWarning(bio)
+
+  const group = (g: StackGroup) => {
+    const own = groups[keyOf(g)]
+    const items: Array<{ it: Item; used: boolean; idx: number }> =
+      g === 'skills' ? [...used.map((it, idx) => ({ it, used: true, idx })), ...own.map((it, idx) => ({ it, used: false, idx }))] : own.map((it, idx) => ({ it, used: false, idx }))
+    const GIcon = VIS_ICON[vis[g]]
+    return (
+      <div className="mc-group">
+        <div className="mc-group-label">
+          <T>{STACK_GROUP_LABEL[g]}</T>
+          <DropdownMenu>
+            <DropdownMenuTrigger className="pe-vis" aria-label={tx('{label} 공개 범위', { label: tx(STACK_GROUP_LABEL[g]) })}>
+              <GIcon className="w-3 h-3" /> <T>{LINK_VISIBILITY.find((v) => v.id === vis[g])!.label}</T>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="min-w-[200px]">
+              <DropdownMenuLabel><T>이 묶음을 볼 수 있는 사람</T></DropdownMenuLabel>
+              {LINK_VISIBILITY.map((v) => {
+                const I = VIS_ICON[v.id]
+                return (
+                  <DropdownMenuItem key={v.id} onClick={() => { const nv = { ...vis, [g]: v.id }; setVis(nv); void putStack(groups, nv) }}>
+                    <I className="w-4 h-4" /> <T>{v.label}</T>
+                    {vis[g] === v.id && <Check className="w-4 h-4 ml-auto" />}
+                  </DropdownMenuItem>
+                )
+              })}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+        <ul className="mc-chips">
+          {items.map(({ it, used: isUsed, idx }) => {
+            const locked = it.visibility && it.visibility !== 'members'
+            return (
+              <li key={`${isUsed ? 'u' : 'o'}-${it.label}-${idx}`}>
+                <DropdownMenu>
+                  <DropdownMenuTrigger className="mc-chip pe-chip" aria-label={tx('{label} 설정', { label: it.label })}>
+                    {it.iconUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={it.iconUrl} alt="" className="mc-chip-icon" style={{ objectFit: 'cover' }} />
+                    ) : (
+                      <span className="mc-chip-icon" style={{ background: it.entryId ? '#111' : '#888' }} aria-hidden>{it.label.charAt(0).toUpperCase()}</span>
+                    )}
+                    <span className="truncate">{it.label}</span>
+                    {locked && <Lock className="w-3 h-3 text-[#999] flex-shrink-0" aria-label={tx('잠금')} />}
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start" className="min-w-[220px]">
+                    <DropdownMenuLabel className="truncate">{it.label}</DropdownMenuLabel>
+                    {!isUsed && (
+                      <>
+                        {LINK_VISIBILITY.map((v) => {
+                          const I = VIS_ICON[v.id]
+                          const cur = (it.visibility ?? 'members') === v.id
+                          return (
+                            <DropdownMenuItem key={v.id} onClick={() => setGroup(g, own.map((x, j) => (j === idx ? { ...x, visibility: v.id === 'members' ? null : v.id } : x)))}>
+                              <I className="w-4 h-4" /> <T>{v.id === 'members' ? '묶음 설정 따르기' : v.label}</T>
+                              {cur && <Check className="w-4 h-4 ml-auto" />}
+                            </DropdownMenuItem>
+                          )
+                        })}
+                        <DropdownMenuSeparator />
+                      </>
+                    )}
+                    {isUsed && it.slug && (
+                      <DropdownMenuItem render={<Link href={`/tools/${it.slug}`} />}>
+                        <ChevronRight className="w-4 h-4" /> <T>툴 페이지 보기</T>
+                      </DropdownMenuItem>
+                    )}
+                    <DropdownMenuItem variant="destructive" onClick={() => (isUsed ? void toggleUsage(it, false) : setGroup(g, own.filter((_, j) => j !== idx)))}>
+                      <Trash2 className="w-4 h-4" /> {isUsed ? <T>사용 중 표시 빼기</T> : <T>빼기</T>}
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </li>
+            )
+          })}
+          <li>
+            <button type="button" className="mc-chip pe-add" onClick={() => setAdding(g)} aria-label={tx('{label} 추가', { label: tx(STACK_GROUP_LABEL[g]) })}>
+              <Plus className="w-3.5 h-3.5" /> <T>추가</T>
+            </button>
+          </li>
+        </ul>
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-3 min-w-0">
+      <section className="profile-card member-card pe-card" aria-label={tx('내 프로필 편집')}>
+        <div className="profile-card-cover" aria-hidden />
+        <div className="pe-status" role="status" aria-live="polite">
+          {save === 'saving' && <><Loader2 className="w-3.5 h-3.5 animate-spin" /> <T>저장 중…</T></>}
+          {save === 'saved' && <><Check className="w-3.5 h-3.5" /> <T>저장됨</T></>}
+          {save === 'error' && <T>저장 안 됨</T>}
+        </div>
+        <div className="px-4 pb-4 -mt-8">
+          <button type="button" className="pe-avatar" onClick={() => setAvatarOpen(true)} aria-label={tx('아바타 바꾸기')}>
+            <UserAvatar id={me.id} name={name || '?'} avatarUrl={avatarUrl} size="lg" />
+            <span className="pe-avatar-cam">{uploading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Camera className="w-3.5 h-3.5" />}</span>
+          </button>
+          <input
+            className="pe-inline pe-name"
+            value={name}
+            maxLength={24}
+            placeholder={tx('닉네임')}
+            aria-label={tx('닉네임')}
+            onChange={(e) => setName(e.target.value)}
+            onBlur={() => void saveProfile()}
+            onKeyDown={(e) => e.key === 'Enter' && e.currentTarget.blur()}
+          />
+          <label className="pe-handle">
+            <span aria-hidden>@</span>
+            <input
+              className="pe-inline"
+              value={handle}
+              maxLength={20}
+              placeholder="handle"
+              aria-label={tx('핸들')}
+              aria-invalid={Boolean(handleErr)}
+              onChange={(e) => {
+                setHandle(e.target.value.replace(/^@/, ''))
+                setHandleErr(null)
+              }}
+              onBlur={() => void saveProfile()}
+              onKeyDown={(e) => e.key === 'Enter' && e.currentTarget.blur()}
+            />
+          </label>
+          {handleErr && <p className="text-[12px] text-[#b42318] mt-0.5">{handleErr}</p>}
+          <textarea
+            className="pe-inline pe-bio"
+            value={bio}
+            maxLength={160}
+            rows={2}
+            placeholder={tx('한 줄 소개를 써 보세요')}
+            aria-label={tx('소개')}
+            onChange={(e) => setBio(e.target.value)}
+            onBlur={() => void saveProfile()}
+          />
+          {bioPii && <p role="alert" className="pii-warning text-[12px] rounded-lg px-2.5 py-1.5 mt-1" style={{ background: '#fff4e5', color: '#8a4b00' }}><T s="{pii} 멤버 모두가 볼 수 있어요. 지우거나 가려주세요." vars={{ pii: bioPii }} /></p>}
+
+          <div className="mc-body">
+            {group('ai')}
+            {group('subs')}
+            {group('skills')}
+            <div className="mc-group">
+              <div className="mc-group-label"><T>SNS 링크</T></div>
+              <ul className="mc-chips">
+                {links.map((l) => (
+                  <li key={l.kind}>
+                    <button type="button" className="mc-chip pe-chip" onClick={() => setLinksOpen(true)}>
+                      <LinkIcon kind={l.kind} size={16} />
+                      <span className="truncate">{LINK_KINDS.find((k) => k.kind === l.kind)?.label ?? l.kind}</span>
+                      {l.visibility !== 'members' && <Lock className="w-3 h-3 text-[#999]" />}
+                    </button>
+                  </li>
+                ))}
+                <li>
+                  <button type="button" className="mc-chip pe-add" onClick={() => setLinksOpen(true)}>
+                    <Plus className="w-3.5 h-3.5" /> <T>추가</T>
+                  </button>
+                </li>
+              </ul>
+            </div>
+            <div className="mc-group">
+              <div className="mc-group-label"><T>에이전트</T></div>
+              {agents.length ? (
+                <ul className="mc-chips">
+                  {agents.map((a) => (
+                    <li key={a.id}><span className="mc-chip"><Bot className="w-3.5 h-3.5" /> <span className="truncate">{a.name}</span></span></li>
+                  ))}
+                </ul>
+              ) : null}
+              <Link href="/agents" className="pe-agents-link">
+                {agents.length ? <T>내 에이전트에서 관리</T> : <T>연결한 에이전트 중 ‘프로필에 보이기’로 둔 것이 여기에 나와요</T>} <ChevronRight className="w-3.5 h-3.5" />
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {settingsRows && (
+        <section className="ios-rows" aria-label={tx('프로필 설정')}>
+          <button type="button" className="ios-row" onClick={() => setRealOpen(true)}>
+            <Eye className="w-4 h-4 text-[#666]" />
+            <span className="flex-1 min-w-0"><T>실명 공개</T></span>
+            <span className="ios-row-val">{showReal ? <T>공개</T> : <T>비공개</T>}</span>
+            <ChevronRight className="w-4 h-4 text-[#bbb]" />
+          </button>
+          <Link href="/settings/profile/nickname" className="ios-row">
+            <Ghost className="w-4 h-4 text-[#666]" />
+            <span className="flex-1 min-w-0"><T>부캐(별명) 프로필</T></span>
+            <ChevronRight className="w-4 h-4 text-[#bbb]" />
+          </Link>
+          <Link href="/agents" className="ios-row">
+            <Bot className="w-4 h-4 text-[#666]" />
+            <span className="flex-1 min-w-0"><T>내 에이전트</T></span>
+            <span className="ios-row-val">{agents.length || ''}</span>
+            <ChevronRight className="w-4 h-4 text-[#bbb]" />
+          </Link>
+          <Link href={`/members/${me.id}`} className="ios-row">
+            <Link2 className="w-4 h-4 text-[#666]" />
+            <span className="flex-1 min-w-0"><T>다른 사람에게 보이는 모습</T></span>
+            <ChevronRight className="w-4 h-4 text-[#bbb]" />
+          </Link>
+        </section>
+      )}
+
+      <AdaptiveSheet open={avatarOpen} onOpenChange={setAvatarOpen} title={tx('아바타')}>
+        <div className="flex flex-col gap-1 pb-1">
+          <input ref={fileRef} type="file" accept="image/png,image/jpeg,image/webp,image/gif" className="sr-only" id="pe-avatar-file" onChange={(e) => void onFile(e.target.files?.[0])} />
+          <label htmlFor="pe-avatar-file" className="sheet-row cursor-pointer"><Camera className="w-5 h-5" /> <T>사진 올리기</T></label>
+          {me.googleAvatarUrl && <button type="button" className="sheet-row" onClick={() => void pickAvatar('google')}><UserAvatar id={me.id} name={name} avatarUrl={me.googleAvatarUrl} size="sm" /> <T>구글 사진 쓰기</T></button>}
+          <button type="button" className="sheet-row" onClick={() => void pickAvatar('none')}><UserAvatar id={me.id} name={name || '?'} avatarUrl={null} size="sm" /> <T>기본 아바타</T></button>
+        </div>
+      </AdaptiveSheet>
+
+      <AdaptiveSheet open={adding !== null} onOpenChange={(o) => !o && setAdding(null)} title={adding ? tx('{label} 추가', { label: tx(STACK_GROUP_LABEL[adding]) }) : ''}>
+        {adding && (
+          <div className="pb-2 min-h-[280px]">
+            <Picker
+              key={adding}
+              skillsOnly={adding === 'skills'}
+              suggestions={adding === 'ai' ? AI_SUGGESTIONS : adding === 'subs' ? SUB_SUGGESTIONS : []}
+              placeholder={adding === 'skills' ? tx('스킬·플러그인·MCP 검색') : adding === 'ai' ? tx('AI 검색 또는 직접 입력') : tx('구독 서비스 검색 또는 직접 입력')}
+              onPick={(i) => {
+                if (adding === 'skills' && i.entryId) void toggleUsage(i, true)
+                else addItem(adding, i)
+                setAdding(null)
+              }}
+            />
+            <p className="text-[12px] text-[#888] mt-2">{adding === 'skills' ? <T>툴에서 고르면 ‘사용 중’으로 바로 표시돼요. 목록에 없으면 직접 입력.</T> : <T>목록에 없으면 직접 입력하고 Enter.</T>}</p>
+          </div>
+        )}
+      </AdaptiveSheet>
+
+      <AdaptiveSheet open={linksOpen} onOpenChange={setLinksOpen} title={tx('SNS 링크')} className="sm:!max-w-lg">
+        <LinksEditor initial={links} />
+      </AdaptiveSheet>
+
+      <AdaptiveSheet open={realOpen} onOpenChange={setRealOpen} title={tx('실명 공개')}>
+        <div className="space-y-3 pb-1">
+          <p className="text-[13px] text-[#666]"><T>켜면 프로필에 실명이 함께 보여요. 기본은 비공개예요.</T></p>
+          {[false, true].map((v) => (
+            <button
+              key={String(v)}
+              type="button"
+              className="sheet-row w-full"
+              onClick={() => {
+                setShowReal(v)
+                setRealOpen(false)
+                void saveProfile({ showReal: v })
+              }}
+            >
+              <span className="flex-1"><T>{v ? '실명 공개' : '비공개 (닉네임만)'}</T></span>
+              {showReal === v && <Check className="w-4 h-4" />}
+            </button>
+          ))}
+        </div>
+      </AdaptiveSheet>
+    </div>
+  )
+}

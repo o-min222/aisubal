@@ -21,7 +21,7 @@ export async function PUT(req: Request) {
   const body = (await req.json().catch(() => null)) as Record<string, unknown> | null
   if (!body || typeof body !== 'object') return NextResponse.json({ error: await te('형식이 올바르지 않아요.') }, { status: 400 })
   const visIn = (body.vis ?? {}) as Record<string, unknown>
-  const items = (g: StackGroup) => cleanStackItems(Array.isArray(body[g]) ? (body[g] as Array<{ label: string; entryId?: string | null }>) : [])
+  const items = (g: StackGroup) => cleanStackItems(Array.isArray(body[g]) ? (body[g] as Array<{ label: string; entryId?: string | null; visibility?: unknown }>) : [])
   const input = {
     ai: items('ai'),
     subs: items('subs'),

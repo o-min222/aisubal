@@ -9,13 +9,13 @@ import { AI_SUGGESTIONS, STACK_GROUP_LABEL, STACK_LIMIT, SUB_SUGGESTIONS, SKILL_
 import { T } from '@/i18n/t'
 import { tx, tn } from '@/i18n/client'
 
-type Item = { label: string; entryId: string | null; iconUrl?: string | null; slug?: string }
+export type Item = { label: string; entryId: string | null; iconUrl?: string | null; slug?: string; visibility?: LinkVisibility | null }
 type CatalogHit = { id: string; slug: string; name: string; icon_url: string | null; type: string }
 
 const norm = (s: string) => s.toLowerCase().replace(/\s+/g, '')
 
 /** Searchable picker: 툴 catalog hits + quick picks + free-text fallback. */
-function Picker({ onPick, suggestions, skillsOnly, placeholder, disabled }: { onPick: (i: Item) => void; suggestions: string[]; skillsOnly?: boolean; placeholder: string; disabled?: boolean }) {
+export function Picker({ onPick, suggestions, skillsOnly, placeholder, disabled }: { onPick: (i: Item) => void; suggestions: string[]; skillsOnly?: boolean; placeholder: string; disabled?: boolean }) {
   const [q, setQ] = useState('')
   const [hits, setHits] = useState<CatalogHit[]>([])
   const [open, setOpen] = useState(false)

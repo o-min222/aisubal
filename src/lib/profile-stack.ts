@@ -8,7 +8,7 @@ import { msg } from '@/i18n/translate'
 
 export type StackGroup = 'ai' | 'subs' | 'skills'
 export type StackEntryRef = { id: string; slug: string; name: string; iconUrl: string | null; type?: ToolboxType | string }
-export type StackItem = { label: string; entry: StackEntryRef | null }
+export type StackItem = { label: string; entry: StackEntryRef | null; /** owner only: per-chip lock (null = follow the group) */ visibility?: LinkVisibility | null }
 /** null = hidden from this viewer */
 export type StackGroupData = { visibility: LinkVisibility | null; items: StackItem[] } | null
 
@@ -29,13 +29,11 @@ export type AgentPlatform = (typeof AGENT_PLATFORMS)[number]['id']
 export const AGENT_PLATFORM_IDS = AGENT_PLATFORMS.map((p) => p.id) as AgentPlatform[]
 export const platformOf = (id: string | null | undefined) => AGENT_PLATFORMS.find((p) => p.id === id) ?? AGENT_PLATFORMS[AGENT_PLATFORMS.length - 1]
 
-export type MemberAgentInput = { name: string; platform: AgentPlatform; model: string; role: string; url: string; visibility: LinkVisibility }
 /** Connected (token) activity merged in for display; hour-rounded for others. */
 export type AgentConnection = { tokenId: string; lastActiveAt: string | null; activityCount: number; href: string }
-export type MemberAgent = Omit<MemberAgentInput, 'visibility'> & { id: string; visibility: LinkVisibility | null; connected: AgentConnection | null }
+export type MemberAgent = { id: string; name: string; platform: AgentPlatform; model: string; role: string; url: string; visibility: LinkVisibility | null; connected: AgentConnection | null }
 
 export const STACK_LIMIT = 20
-export const AGENT_LIMIT = 12
 
 /** Quick picks for the pickers (free text is always allowed too). */
 export const AI_SUGGESTIONS = ['Claude', 'ChatGPT', 'Gemini', 'Grok', 'Cursor', 'Perplexity', 'GitHub Copilot', 'Claude Code', 'Codex', 'Midjourney', 'NotebookLM', 'v0']
@@ -51,10 +49,13 @@ export const STACK_GROUP_LABEL: Record<StackGroup, string> = {
 
 const norm = (s: string) => s.toLowerCase().replace(/[\s_\-·.]+/g, '')
 
-/** Clean + de-duplicate one group's items (case/space-insensitive), cap at the limit. */
-export function cleanStackItems(items: Array<{ label: string; entryId?: string | null }>, limit = STACK_LIMIT): Array<{ label: string; entryId: string | null }> {
+/** Clean + de-duplicate one group's items (case/space-insensitive), cap at the limit; keeps a valid per-chip lock. */
+export function cleanStackItems(
+  items: Array<{ label: string; entryId?: string | null; visibility?: unknown }>,
+  limit = STACK_LIMIT,
+): Array<{ label: string; entryId: string | null; visibility: LinkVisibility | null }> {
   const seen = new Set<string>()
-  const out: Array<{ label: string; entryId: string | null }> = []
+  const out: Array<{ label: string; entryId: string | null; visibility: LinkVisibility | null }> = []
   for (const it of items) {
     const label = (it.label || '').replace(/\s+/g, ' ').trim().slice(0, 60)
     if (!label) continue
@@ -62,40 +63,55 @@ export function cleanStackItems(items: Array<{ label: string; entryId?: string |
     if (seen.has(key) || seen.has(`t:${norm(label)}`)) continue
     seen.add(key)
     seen.add(`t:${norm(label)}`)
-    out.push({ label, entryId: it.entryId || null })
+    const v = it.visibility
+    out.push({ label, entryId: it.entryId || null, visibility: v === 'members' || v === 'friends' || v === 'private' ? v : null })
     if (out.length >= limit) break
   }
   return out
 }
 
-export type AgentValidation = { ok: true; agents: MemberAgentInput[] } | { ok: false; error: string }
-export function validateAgents(raw: unknown): AgentValidation {
-  if (!Array.isArray(raw)) return { ok: false, error: '형식이 올바르지 않아요.' }
-  if (raw.length > AGENT_LIMIT) return { ok: false, error: `에이전트는 ${AGENT_LIMIT}개까지 등록할 수 있어요.` }
-  const agents: MemberAgentInput[] = []
-  for (const r of raw as Array<Record<string, unknown>>) {
-    const name = String(r?.name ?? '').trim().slice(0, 40)
-    if (!name) return { ok: false, error: '에이전트 이름을 입력해 주세요.' }
-    const platform = (AGENT_PLATFORM_IDS as string[]).includes(String(r?.platform)) ? (r.platform as AgentPlatform) : 'other'
-    const url = String(r?.url ?? '').trim()
-    if (url && (!/^https:\/\/[^\s]+$/.test(url) || url.length > 300)) return { ok: false, error: `'${name}' 링크는 https:// 주소여야 해요.` }
-    const vis = String(r?.visibility)
-    agents.push({
-      name,
-      platform,
-      model: String(r?.model ?? '').trim().slice(0, 60),
-      role: String(r?.role ?? '').trim().slice(0, 80),
-      url,
-      visibility: vis === 'friends' || vis === 'private' ? vis : 'members',
-    })
-  }
-  return { ok: true, agents }
+/** Connect-wizard client → the platform badge used on profile cards. */
+const CLIENT_PLATFORM: Record<string, AgentPlatform> = {
+  claude_desktop: 'claude',
+  claude_code: 'claude_code',
+  chatgpt: 'chatgpt',
+  cursor: 'cursor',
+  codex: 'codex',
+  custom: 'other',
 }
 
-/** Token-connected agents (profile_agents) a manual entry corresponds to, by name. */
-export function matchConnected<T extends { agentName: string }>(name: string, connected: T[]): T | null {
-  const n = norm(name)
-  return connected.find((c) => norm(c.agentName) === n) ?? null
+type ConnectedLike = {
+  id: string
+  agentName: string
+  agentModel: string | null
+  client: string | null
+  lastUsedAt: string | null
+  showOnProfile: boolean
+  counts: { agoraPosts: number; agoraReplies: number; feedReplies: number; likes: number }
+}
+
+/**
+ * Profile agents = connected agents only (내 에이전트 is the single place to manage
+ * them). Others see only agents shown on the profile, with hour-rounded activity.
+ */
+export function agentsFromConnected(memberId: string, connected: ConnectedLike[], own: boolean): MemberAgent[] {
+  return connected
+    .filter((c) => own || c.showOnProfile)
+    .map((c) => ({
+      id: c.id,
+      name: c.agentName,
+      platform: CLIENT_PLATFORM[c.client ?? ''] ?? 'other',
+      model: c.agentModel ?? '',
+      role: '',
+      url: '',
+      visibility: own ? (c.showOnProfile ? 'members' : 'private') : null,
+      connected: {
+        tokenId: c.id,
+        lastActiveAt: own ? c.lastUsedAt : hourRounded(c.lastUsedAt),
+        activityCount: c.counts.agoraPosts + c.counts.agoraReplies + c.counts.feedReplies + c.counts.likes,
+        href: `/members/${own ? 'me' : memberId}#agents`,
+      },
+    }))
 }
 
 /** Visible chips + how many are folded into '+N'. */

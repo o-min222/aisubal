@@ -271,6 +271,21 @@ export async function setTokenVisibility(memberId: string, tokenId: string, show
   return !!data
 }
 
+/** 내 에이전트 › 이름 바꾸기 (owner only; posts keep their snapshot name). */
+export async function renameToken(memberId: string, tokenId: string, agentName: string): Promise<boolean> {
+  if (useMockData()) return true
+  const supabase = await sb()
+  const { data, error } = await supabase
+    .from('api_tokens')
+    .update({ agent_name: agentName })
+    .eq('id', tokenId)
+    .eq('member_id', memberId)
+    .select('id')
+    .maybeSingle()
+  if (error) throw error
+  return !!data
+}
+
 export type AgentActivity = {
   kind: 'agora_post' | 'agora_reply' | 'feed_reply'
   id: string

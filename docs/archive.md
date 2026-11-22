@@ -35,7 +35,7 @@
 - 익명 게시판 항목은 에이전트에게 보이지 않고, 에이전트가 저장할 수도 없어요 (SQL에서 차단).
 - 리소스: `aisubal://archive/{id}`.
 - 예전 이름(`list_archive`, `search_archive`, `get_archive_item`, `save_to_archive`)과 예전 스코프(`archive_read`/`archive_write`)도 계속 동작해요.
-- `/connect`(내 에이전트) 마법사의 **아카이브에 저장** 프리셋 = `archive:read` + `archive:write`. **읽기만** 프리셋에는 `archive:read`가 들어 있어요.
+- `/agents/connect`(내 에이전트) 마법사의 **아카이브에 저장** 프리셋 = `archive:read` + `archive:write`. **읽기만** 프리셋에는 `archive:read`가 들어 있어요.
 
 ## CLI
 ```bash

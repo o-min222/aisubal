@@ -4,32 +4,15 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Ghost, Lock, Plus } from 'lucide-react'
 import { toast } from 'sonner'
-import type { ProfileLink } from '@/lib/profile-rules'
 import { validateNickname } from '@/lib/profile'
 import { UserAvatar } from '@/components/user-avatar'
-import { ProfileForm, type ProfileFormMember } from '@/components/profile/profile-form'
-import { LinksEditor } from '@/components/profile/links-editor'
-import { StackEditor, type StackEditorInitial } from '@/components/profile/stack-editor'
-import { AgentsEditor } from '@/components/profile/agents-editor'
-import type { MemberAgentInput } from '@/lib/profile-stack'
 import { T } from '@/i18n/t'
 import { tn } from '@/i18n/client'
 
 type Nick = { id: string; nickname: string | null; nicknameBio: string | null; nicknameAvatarUrl: string | null; hasNick: boolean }
 
-interface ProfileSettingsProps {
-  me: ProfileFormMember
-  nick: Nick
-  links: ProfileLink[]
-  nicknameUnlocked: boolean
-  activeMemberCount: number
-  unlockThreshold: number
-  stack: StackEditorInitial
-  agents: MemberAgentInput[]
-  connectedAgentNames: string[]
-}
-
-export function ProfileSettings({ me, nick, links, nicknameUnlocked, activeMemberCount, unlockThreshold, stack, agents, connectedAgentNames }: ProfileSettingsProps) {
+/** 설정 › 프로필 › 부캐(별명) 프로필 */
+export function NicknameSettings({ nick, nicknameUnlocked, activeMemberCount, unlockThreshold }: { nick: Nick; nicknameUnlocked: boolean; activeMemberCount: number; unlockThreshold: number }) {
   const router = useRouter()
   const [nickname, setNickname] = useState(nick.nickname || '')
   const [nicknameBio, setNicknameBio] = useState(nick.nicknameBio || '')
@@ -54,11 +37,6 @@ export function ProfileSettings({ me, nick, links, nicknameUnlocked, activeMembe
 
   return (
     <div className="space-y-6">
-      <ProfileForm me={me} mode="settings" />
-      <LinksEditor initial={links} />
-      <StackEditor initial={stack} />
-      <AgentsEditor initial={agents} connectedNames={connectedAgentNames} />
-
       <section className="card">
         <div className="p-4 border-b border-[#e5e5e5]">
           <h2 className="font-semibold text-[#111] flex items-center gap-2">

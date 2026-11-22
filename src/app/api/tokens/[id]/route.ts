@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { getMember } from '@/lib/auth'
-import { getTokenStatus, setTokenVisibility } from '@/lib/data/tokens'
+import { getTokenStatus, renameToken, setTokenVisibility } from '@/lib/data/tokens'
 import { te } from '@/i18n/server'
 
 /** Wizard step 4 polls this until the client's first MCP call lands. */
@@ -19,7 +19,10 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
   }
 }
 
-const patchSchema = z.object({ showOnProfile: z.boolean() })
+const patchSchema = z.union([
+  z.object({ showOnProfile: z.boolean() }),
+  z.object({ agentName: z.string().trim().min(1).max(40) }),
+])
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const member = await getMember()
@@ -28,7 +31,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   const parsed = patchSchema.safeParse(await req.json().catch(() => null))
   if (!parsed.success) return NextResponse.json({ error: await te('잘못된 요청이에요.') }, { status: 400 })
   try {
-    const ok = await setTokenVisibility(member.id, id, parsed.data.showOnProfile)
+    const ok = 'agentName' in parsed.data ? await renameToken(member.id, id, parsed.data.agentName) : await setTokenVisibility(member.id, id, parsed.data.showOnProfile)
     if (!ok) return NextResponse.json({ error: await te('토큰을 찾을 수 없어요.') }, { status: 404 })
     return NextResponse.json({ ok: true })
   } catch (e) {

@@ -25,3 +25,10 @@ X, Instagram, Threads, LinkedIn, GitHub, YouTube, 블로그/웹사이트 등. UR
 - `members.banned_reason` is column-revoked from `authenticated`. Members can no longer read other members' ban reasons; the owner sees their own via `get_my_member`, and admins see it via admin RPCs.
 - `api_tokens.token_hash` is not client-readable. Connection status fields are written only by `mcp_ping` / token-verify RPCs.
 - Profile agent lists hide agents the owner set to 숨김. Scopes and client details are owner-only, and last activity is shown to others only to the hour. See `docs/agents-connect.md`.
+
+## Profile editing (WYSIWYG, 0026)
+- 내 대시보드 and 설정 › 프로필 편집 show the same card others see, edited in place: tap the avatar (sheet: upload / Google photo / default), nickname, @handle and bio edit inline and autosave on blur ("저장됨" indicator). Bio keeps the PII warning.
+- AI / 구독 / 스킬 chips: tap a chip → menu with a per-chip lock (묶음 설정 따르기 · 친구만 · 비공개) and 빼기; the group label menu sets the group's visibility. A chip's own visibility can only narrow its group's (`member_stack_items.visibility`, enforced in `profile_stack`).
+- '+ 추가' opens a picker sheet (bottom sheet on phones). SNS links open the links editor in a sheet.
+- Settings rows: 실명 공개 (sheet), 부캐 프로필 (`/settings/profile/nickname`), 내 에이전트, 다른 사람에게 보이는 모습.
+- The left-sidebar card is exactly the card other members see (no owner-only buttons or notes); tapping it opens 내 대시보드.

@@ -4,8 +4,8 @@ import type { ShellMember } from './nav-items'
 import { getT } from '@/i18n/server'
 
 /**
- * Left '내 프로필 카드': the same MemberCard others see when they click you,
- * with the owner action (프로필 편집) instead of follow/friend.
+ * Left '내 프로필 카드': exactly the MemberCard others see (no owner-only
+ * buttons). Tapping it opens 내 대시보드, where the card is edited in place.
  */
 export async function ProfileCard({ me, card }: { me: ShellMember; card: MemberCardData | null }) {
   const st = await getT()

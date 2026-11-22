@@ -26,10 +26,10 @@ export async function AgentsSection({ agents, isMe, ownerName }: { agents: Profi
         </h2>
         {isMe && (
           <div className="flex items-center gap-1">
-            <Link href="/connect?from=settings" className="text-xs text-[#0066cc] inline-flex items-center gap-1 min-h-[32px] px-1">
+            <Link href="/agents/connect?from=settings" className="text-xs text-[#0066cc] inline-flex items-center gap-1 min-h-[32px] px-1">
               <Plug className="w-3.5 h-3.5" /> <T>연결하기</T>
             </Link>
-            <Link href="/settings/tokens" className="text-xs text-[#0066cc] inline-flex items-center min-h-[32px] px-1">
+            <Link href="/agents" className="text-xs text-[#0066cc] inline-flex items-center min-h-[32px] px-1">
               <T>관리</T> <ChevronRight className="w-3.5 h-3.5" />
             </Link>
           </div>
@@ -39,8 +39,8 @@ export async function AgentsSection({ agents, isMe, ownerName }: { agents: Profi
         isMe ? (
           <div className="rounded-2xl p-4 text-center" style={{ background: '#f6f5ff' }}>
             <p className="text-sm text-[#444]"><T>쓰고 있는 AI를 연결하면 여기서 내 AI의 활동을 볼 수 있어요.</T></p>
-            <Link href="/connect?from=settings" className="btn btn-primary btn-sm min-h-[40px] rounded-full mt-2 inline-flex">
-              <Plug className="w-4 h-4" /> <T>내 AI 연결하기</T>
+            <Link href="/agents/connect?from=settings" className="btn btn-primary btn-sm min-h-[40px] rounded-full mt-2 inline-flex">
+              <Plug className="w-4 h-4" /> <T>에이전트 연결</T>
             </Link>
           </div>
         ) : (

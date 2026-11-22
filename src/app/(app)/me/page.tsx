@@ -2,7 +2,9 @@ import Link from 'next/link'
 import { ChipBar } from '@/components/chip-bar'
 import { redirect } from 'next/navigation'
 import type { ReactNode } from 'react'
-import { Bot, Heart, MessageCircle, Pencil, ScrollText, Settings } from 'lucide-react'
+import { Bot, Heart, MessageCircle, ScrollText, Settings } from 'lucide-react'
+import { ProfileCardEditor } from '@/components/profile/profile-card-editor'
+import { loadProfileEditor } from '@/lib/data/profile-editor'
 import { getUserState } from '@/lib/auth'
 import { getProfileStats } from '@/lib/data/shell'
 import { getPledgeStatus } from '@/lib/data/pledge'
@@ -26,7 +28,6 @@ import { ROLE_LABEL } from '@/lib/group-rules'
 import { LinkTabs } from '@/components/link-tabs'
 import { Pagination } from '@/components/pagination'
 import { RelativeTime } from '@/components/relative-time'
-import { UserAvatar } from '@/components/user-avatar'
 import { ToolIcon } from '@/components/tools/tool-card'
 import { T } from '@/i18n/t'
 import { getLocale, getT } from '@/i18n/server'
@@ -94,6 +95,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   if (state.type === 'unauthenticated') redirect('/login')
   if (state.type === 'waitlist') redirect('/waitlist')
   const me = state.member
+  const editor = await loadProfileEditor(me)
   const sp = await searchParams
   const tab = parseDashboardTab(sp.tab)
   const page = parsePage(sp.page)
@@ -270,7 +272,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
       </ul>
     ) : (
       <Empty>
-        <T>연결한 AI가 없어요.</T> <Link href="/connect" className="text-[#0066cc]"><T>AI 연결하기</T></Link>
+        <T>연결한 AI가 없어요.</T> <Link href="/agents/connect" className="text-[#0066cc]"><T>에이전트 연결</T></Link>
       </Empty>
     )
   } else if (tab === 'network') {
@@ -371,34 +373,22 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
 
   return (
     <div className="space-y-3 dashboard-page">
+      <div className="flex items-center gap-2">
+        <h1 className="text-xl font-bold flex-1 min-w-0" style={{ color: '#111' }}>
+          <T>내 대시보드</T>
+        </h1>
+        <Link href={`/members/${me.id}`} className="text-[13px] text-[#0066cc]">
+          <T>공개 프로필 보기</T>
+        </Link>
+        <Link href="/settings" className="btn btn-secondary btn-sm min-h-[36px] min-w-[36px] rounded-full !px-0 justify-center" aria-label={st('설정')}>
+          <Settings className="w-[18px] h-[18px]" />
+        </Link>
+      </div>
+      <ProfileCardEditor {...editor} settingsRows={false} />
       <section className="card overflow-hidden">
-        <div className="profile-card-cover h-16" aria-hidden />
-        <div className="px-4 pb-4 -mt-7 flex items-end justify-between gap-3">
-          <span className="rounded-full ring-4 ring-white">
-            <UserAvatar id={me.id} name={me.display_name} avatarUrl={me.avatar_url} size="lg" />
-          </span>
-          <div className="flex items-center gap-2">
-            <Link href="/settings/profile" className="btn btn-secondary btn-sm min-h-[40px] rounded-full inline-flex items-center gap-1.5">
-              <Pencil className="w-3.5 h-3.5" /> <T>프로필 편집</T>
-            </Link>
-            <Link href="/settings" className="btn btn-secondary btn-sm min-h-[40px] min-w-[40px] rounded-full !px-0 justify-center" aria-label={st('설정')}>
-              <Settings className="w-[18px] h-[18px]" />
-            </Link>
-          </div>
-        </div>
-        <div className="px-4 pb-3">
-          <h1 className="text-xl font-bold" style={{ color: '#111' }}>
-            <T>내 대시보드</T>
-          </h1>
-          <div className="text-sm text-[#777]">
-            {me.display_name}
-            {me.handle && <> · @{me.handle}</>} ·{' '}
-            <Link href="/members/me" className="text-[#0066cc]">
-              <T>공개 프로필 보기</T>
-            </Link>
-          </div>
+        <div className="px-4 pt-3 pb-3 empty:hidden">
           {pledge?.signedAt && (
-            <Link href="/pledge" className="pledge-chip mt-2" title={t('내가 서명한 선언 및 입단 서약 보기')}>
+            <Link href="/pledge" className="pledge-chip" title={t('내가 서명한 선언 및 입단 서약 보기')}>
               <ScrollText className="w-3.5 h-3.5" />
               <T s="{date} 입단 서약" vars={{ date: new Intl.DateTimeFormat(LOCALE_META[locale].intl, { dateStyle: 'medium', timeZone: 'Asia/Seoul' }).format(new Date(pledge.signedAt)) }} />
               <span className="text-[#888]">
