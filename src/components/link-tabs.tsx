@@ -1,8 +1,9 @@
 import Link from 'next/link'
 import { T } from '@/i18n/t'
 import { getT } from '@/i18n/server'
+import { TabScroller } from '@/components/tab-scroller'
 
-/** Underlined link tabs (server-renderable). Scrolls horizontally on narrow screens. */
+/** Underlined link tabs (server-renderable). Scrolls horizontally when they don't fit, with a visible overflow cue. */
 export async function LinkTabs({
   tabs,
   active,
@@ -16,8 +17,8 @@ export async function LinkTabs({
 }) {
   const st = await getT()
   return (
-    <nav
-      aria-label={st(label)}
+    <TabScroller
+      label={st(label)}
       className={`link-tabs ${className}`}
       style={{ display: 'flex', gap: 4, overflowX: 'auto', borderBottom: '1px solid var(--n-ececec)', scrollbarWidth: 'none' }}
     >
@@ -50,6 +51,6 @@ export async function LinkTabs({
           </Link>
         )
       })}
-    </nav>
+    </TabScroller>
   )
 }

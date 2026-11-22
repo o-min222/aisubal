@@ -4,7 +4,7 @@ import { networkHref } from '@/lib/dashboard-tabs'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { Crosshair, Maximize2, Minus, Plus, X } from 'lucide-react'
+import { Crosshair, Maximize2, Minus, Plus, UserRound, X } from 'lucide-react'
 import { toast } from 'sonner'
 import type { ChildrenPage, GraphNode, GraphPayload } from '@/lib/data/graph'
 import { bounds, layoutGraph } from '@/lib/graph-layout'
@@ -41,6 +41,16 @@ export function InviteGraph({ initial }: { initial: GraphPayload }) {
   const pointers = useRef(new Map<number, { x: number; y: number }>())
   const gesture = useRef<{ startX: number; startY: number; moved: boolean; target: string | null; pinch: number | null }>({ startX: 0, startY: 0, moved: false, target: null, pinch: null })
   const rootId = initial.rootId
+  // viewport size, for drawing avatar images only where they're visible (many nodes stay cheap)
+  const [box, setBox] = useState({ w: 0, h: 0 })
+  const [broken, setBroken] = useState<ReadonlySet<string>>(new Set())
+  useEffect(() => {
+    const el = wrap.current
+    if (!el) return
+    const ro = new ResizeObserver(() => setBox({ w: el.clientWidth, h: el.clientHeight }))
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [])
 
   const { placed, edges } = useMemo(() => layoutGraph(nodes, rootId), [nodes, rootId])
   const at = useMemo(() => new Map(placed.map((p) => [p.id, p])), [placed])
@@ -178,6 +188,11 @@ export function InviteGraph({ initial }: { initial: GraphPayload }) {
         onPointerUp={onPointerUp}
         onPointerCancel={onPointerUp}
       >
+        <defs>
+          {/* node-local clip circles (the <image> sits in the node's translated group) */}
+          <clipPath id="ig-clip-18" clipPathUnits="userSpaceOnUse"><circle r={18} /></clipPath>
+          <clipPath id="ig-clip-26" clipPathUnits="userSpaceOnUse"><circle r={26} /></clipPath>
+        </defs>
         <g transform={`translate(${view.x},${view.y}) scale(${view.k})`}>
           {edges.map((e) => {
             const a = at.get(e.from), b = at.get(e.to)
@@ -209,9 +224,27 @@ export function InviteGraph({ initial }: { initial: GraphPayload }) {
                 {selected === p.id && <circle r={r + 7} fill="none" stroke="var(--n-111)" strokeOpacity={0.25} strokeWidth={6} />}
                 <circle r={r + 3} fill="var(--n-fff)" stroke={RING_COLOR[t]} strokeWidth={t === 'none' ? 1.5 : 3} />
                 <circle r={r} fill={getAvatarColor(n.id, n.name)} />
-                <text textAnchor="middle" dy={isRoot ? 6 : 4.5} fontSize={isRoot ? 16 : 12.5} fontWeight={700} fill="#fff">
-                  {n.name.charAt(0).toUpperCase()}
-                </text>
+                {(() => {
+                  // photo only when on screen and big enough to read; otherwise (and on error) the initial
+                  const sx = p.x * view.k + view.x, sy = p.y * view.k + view.y, pad = (r + 4) * view.k
+                  const onScreen = box.w > 0 && sx > -pad && sy > -pad && sx < box.w + pad && sy < box.h + pad
+                  return n.avatarUrl && !broken.has(n.id) && onScreen && r * view.k >= 6 ? (
+                    <image
+                      href={n.avatarUrl}
+                      x={-r}
+                      y={-r}
+                      width={r * 2}
+                      height={r * 2}
+                      preserveAspectRatio="xMidYMid slice"
+                      clipPath={`url(#ig-clip-${r})`}
+                      onError={() => setBroken((b) => new Set(b).add(n.id))}
+                    />
+                  ) : (
+                    <text textAnchor="middle" dy={isRoot ? 6 : 4.5} fontSize={isRoot ? 16 : 12.5} fontWeight={700} fill="#fff">
+                      {n.name.charAt(0).toUpperCase()}
+                    </text>
+                  )
+                })()}
                 <text textAnchor="middle" dy={r + 17} fontSize={11.5} fontWeight={isRoot ? 700 : 500} fill="var(--n-222)">
                   {n.name.length > 8 ? `${n.name.slice(0, 7)}…` : n.name}
                   {n.relation.isMe ? <T> (나)</T> : ''}
@@ -283,19 +316,21 @@ export function InviteGraph({ initial }: { initial: GraphPayload }) {
               {sel.bio}
             </p>
           )}
-          <div className="flex flex-wrap items-center gap-1.5 mt-3">
+          {/* one compact row: relation actions as buttons, profile / 중심으로 as icon buttons (never wraps at 390) */}
+          <div className="graph-card-actions">
             {!sel.relation.isMe && (
               <>
                 <FollowButton key={`f-${sel.id}`} memberId={sel.id} initialFollowing={sel.relation.iFollow} refresh={false} onChange={(following) => setRelation(sel.id, { iFollow: following })} />
                 <FriendButton key={`fr-${sel.id}`} memberId={sel.id} initialState={sel.relation.friend} compact onChange={(friend) => setRelation(sel.id, { friend })} />
               </>
             )}
-            <Link href={`/members/${sel.id}`} className="btn btn-secondary btn-sm min-h-[40px] rounded-full">
-              <T>프로필</T>
+            <span className="ml-auto" />
+            <Link href={`/members/${sel.id}`} className="graph-icon-btn" aria-label={tx('프로필 보기')} title={tx('프로필 보기')}>
+              <UserRound className="w-4 h-4" />
             </Link>
             {sel.id !== rootId && (
-              <Link href={networkHref({ root: sel.id })} className="btn btn-secondary btn-sm min-h-[40px] rounded-full">
-                <T>중심으로</T>
+              <Link href={networkHref({ root: sel.id })} className="graph-icon-btn" aria-label={tx('이 사람을 중심으로 보기')} title={tx('이 사람을 중심으로 보기')}>
+                <Crosshair className="w-4 h-4" />
               </Link>
             )}
           </div>

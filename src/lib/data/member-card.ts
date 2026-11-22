@@ -1,3 +1,4 @@
+import { networkHref } from '@/lib/dashboard-tabs'
 import type { Member } from '@/lib/supabase/types'
 import type { Relation } from '@/lib/social-rules'
 import { getMemberById } from './members'
@@ -9,7 +10,8 @@ import { getProfileStack, type ProfileStack } from './profile-stack'
  * Data for the unified MemberCard (left '내 프로필 카드' and other members'
  * popover). Real-name identity only: never the 부캐 nickname of others.
  */
-export type MemberCardStat = { label: string; value: number | null; href?: string }
+/** sub: a small second link under the number (e.g. 남은 초대 → 초대 그래프) */
+export type MemberCardStat = { label: string; value: number | null; href?: string; sub?: { label: string; href: string } }
 export type MemberCardData = {
   id: string
   displayName: string
@@ -38,7 +40,7 @@ export async function getMemberCard(viewer: Member, memberId: string): Promise<M
     ? [
         { label: '게시물', value: own?.posts ?? null, href: '/me' },
         { label: '받은 좋아요', value: own?.likes ?? null },
-        { label: '남은 초대', value: own?.invitesLeft ?? null, href: '/invites' },
+        { label: '남은 초대', value: own?.invitesLeft ?? null, href: '/invites', sub: { label: '초대 그래프', href: networkHref() } },
       ]
     : [
         { label: '팔로워', value: social?.followers ?? null, href: `${base}followers` },

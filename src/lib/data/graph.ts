@@ -42,12 +42,21 @@ function nodeFromRow(r: Record<string, unknown>): GraphNode {
 function mockChildren(id: string) {
   return MOCK_PEOPLE.filter((p) => p.invitedBy === id).sort((a, b) => a.joinedAt.localeCompare(b.joinedAt) || a.id.localeCompare(b.id))
 }
+/** DEV mock: every other person has a photo-like avatar so the graph's image path is exercised. */
+function mockAvatar(id: string): string | null {
+  let h = 0
+  for (const c of id) h = (h * 31 + c.charCodeAt(0)) >>> 0
+  if (h % 2) return null
+  const hue = h % 360
+  const svg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' fill='hsl(${hue},45%,62%)'/><circle cx='32' cy='25' r='12' fill='hsl(${hue},30%,92%)'/><ellipse cx='32' cy='60' rx='22' ry='17' fill='hsl(${hue},30%,92%)'/></svg>`
+  return `data:image/svg+xml,${encodeURIComponent(svg)}`
+}
 function mockNode(viewer: string, id: string, depth: number | null): GraphNode {
   const p = mockPerson(id)
   return {
     id,
     name: p.name,
-    avatarUrl: null,
+    avatarUrl: mockAvatar(id),
     bio: p.bio,
     parentId: p.invitedBy,
     depth,

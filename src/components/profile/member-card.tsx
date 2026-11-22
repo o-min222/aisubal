@@ -170,6 +170,15 @@ export function MemberCard({ data, variant = 'side' }: { data: MemberCardData; v
               <dd>{st.value ?? '–'}</dd>
             </>
           )
+          if (st.href && st.sub)
+            return (
+              <div key={st.label} className="profile-stat-cell">
+                <Link href={st.href}>{body}</Link>
+                <Link href={st.sub.href} className="profile-stat-sub">
+                  <T>{st.sub.label}</T> ›
+                </Link>
+              </div>
+            )
           return st.href ? (
             <Link key={st.label} href={st.href}>
               {body}

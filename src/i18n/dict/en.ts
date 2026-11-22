@@ -1703,6 +1703,10 @@ const en: Record<string, string> = {
   "Safari 아래쪽(iPad는 위쪽) 막대에서 공유 버튼을 눌러요.": "Tap the Share button in Safari's bottom bar (top bar on iPad).",
   "목록을 내려 ‘홈 화면에 추가’를 골라요.": "Scroll down and choose ‘Add to Home Screen’.",
   "오른쪽 위 ‘추가’를 누르면 끝이에요.": "Tap ‘Add’ in the top-right corner. That's it.",
+  "이전 탭 더 보기": "Show previous tabs",
+  "다음 탭 더 보기": "Show more tabs",
+  "초대 그래프 보기": "View invite graph",
+  "이 사람을 중심으로 보기": "Center the graph on this person",
 }
 
 export default en

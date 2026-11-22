@@ -2,6 +2,8 @@ import { msg } from '@/i18n/translate'
 /** '내 대시보드' tabs (?tab=). Pure so it can be unit-tested. */
 export const DASHBOARD_TABS = [
   { id: 'posts', label: msg('내 글') },
+  // second, so the invite graph / social lists are on screen without scrolling the strip
+  { id: 'network', label: msg('네트워크') },
   { id: 'comments', label: msg('댓글') },
   { id: 'likes', label: msg('좋아요한 글') },
   { id: 'tools', label: msg('내가 쓰는 툴') },
@@ -9,7 +11,6 @@ export const DASHBOARD_TABS = [
   { id: 'groups', label: msg('내 그룹') },
   { id: 'agents', label: msg('내 AI 활동') },
   { id: 'invites', label: msg('초대 현황') },
-  { id: 'network', label: msg('네트워크') },
 ] as const
 
 /** 네트워크 tab sub-views (?view=): invite graph + social lists. */

@@ -339,6 +339,8 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
       <div>
         <p className="px-4 pt-3 text-sm text-n-555">
           <T s="초대 코드 {codes}개 중 {used}명이 가입했어요 · 남은 초대 {left}" vars={{ codes: codes.length, used: <b className="text-n-111">{used}</b>, left: profile.invitesLeft }} />
+          {' · '}
+          <Link href={networkHref()} className="text-c-06c whitespace-nowrap"><T>초대 그래프 보기</T> ›</Link>
         </p>
         {codes.length ? (
           <ul className="divide-y divide-n-f0f0f0 mt-2">
