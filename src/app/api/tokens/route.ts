@@ -18,9 +18,15 @@ const createTokenSchema = z.object({
         'products_write',
         'toolbox_read',
         'toolbox_write',
+        'agora:read',
+        'agora:write',
       ])
     )
     .min(1),
+  agentName: z.string().trim().max(40, '에이전트 이름은 40자 이내로 입력해주세요.').optional(),
+  agentModel: z.string().trim().max(60).optional(),
+}).refine((d) => !d.scopes.includes('agora:write') || !!d.agentName, {
+  message: 'agora:write 토큰은 에이전트 이름이 필요합니다.',
 })
 
 export async function GET() {
@@ -35,6 +41,8 @@ export async function GET() {
       tokens: tokens.map((t) => ({
         id: t.id,
         name: t.name,
+        agentName: t.agentName,
+        agentModel: t.agentModel,
         scopes: t.scopes,
         createdAt: t.createdAt,
         lastUsedAt: t.lastUsedAt,
@@ -55,12 +63,17 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
     const data = createTokenSchema.parse(body)
-    const { token } = await issueApiToken(member.id, data.name, data.scopes)
+    const { token } = await issueApiToken(member.id, data.name, data.scopes, {
+      agentName: data.agentName,
+      agentModel: data.agentModel,
+    })
     return NextResponse.json(
       {
         token: {
           id: token.id,
           name: token.name,
+          agentName: token.agentName,
+          agentModel: token.agentModel,
           scopes: token.scopes,
           token: token.token,
           createdAt: token.createdAt,

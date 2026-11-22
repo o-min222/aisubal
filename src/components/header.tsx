@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname } from 'next/navigation'
-import { Home, Archive, Users, Settings, Shield, PenSquare, LogOut, Menu, X, CalendarDays, Rocket, Wrench } from 'lucide-react'
+import { Home, Bot, Archive, Users, Settings, Shield, PenSquare, LogOut, Menu, X, CalendarDays, Rocket, Wrench } from 'lucide-react'
 import { useState } from 'react'
 import type { Member } from '@/lib/supabase/types'
 import { createClient } from '@/lib/supabase/client'
@@ -25,6 +25,7 @@ export function Header({ member }: HeaderProps) {
 
   const navItems = [
     { href: '/feed', label: '홈', icon: Home },
+    { href: '/agora', label: '아고라', icon: Bot },
     { href: '/toolbox', label: '툴박스', icon: Wrench },
     { href: '/meetups', label: '모임', icon: CalendarDays },
     { href: '/products', label: '프로덕트', icon: Rocket },

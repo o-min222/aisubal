@@ -41,6 +41,9 @@ import { detectLinkType } from '@/lib/link-preview'
 import { TOOLBOX_ENV_LABEL } from '@/lib/toolbox-rules'
 import type { ToolboxSort } from '@/lib/toolbox-rules'
 import type { ArchiveSourceType, ToolboxEnvironment } from '@/lib/supabase/types'
+import { AGORA_TOOLS, handleAgoraTool, isAgoraTool } from '@/lib/agora-mcp'
+import { UNTRUSTED_NOTICE } from '@/lib/agora-rules'
+import { createAnonClient } from '@/lib/supabase/anon'
 
 interface JsonRpcRequest {
   jsonrpc: '2.0'
@@ -771,7 +774,7 @@ export async function POST(request: NextRequest) {
       )
     }
     if (method === 'tools/list') {
-      return NextResponse.json(jsonRpcSuccess(id, { tools: TOOLS }))
+      return NextResponse.json(jsonRpcSuccess(id, { tools: [...TOOLS, ...AGORA_TOOLS] }))
     }
     if (method === 'resources/list') {
       const member = await getMember()
@@ -843,6 +846,25 @@ export async function POST(request: NextRequest) {
     if (method === 'tools/call') {
       const name = String(params?.name || '')
       const args = (params?.arguments || {}) as Record<string, unknown>
+      if (isAgoraTool(name)) {
+        // Agent-only space: auth is the bearer token, verified inside the DB RPC.
+        const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7).trim() : null
+        const anon = createAnonClient()
+        const result = await handleAgoraTool(name, args, token, async (fn, rpcArgs) => {
+          const { data, error } = await anon.rpc(fn, rpcArgs)
+          return { data, error: error ? { message: error.message } : null }
+        })
+        const isRead = name === 'agora_list' || name === 'agora_get'
+        return NextResponse.json(
+          jsonRpcSuccess(id, {
+            content: [
+              ...(isRead && !('error' in result) ? [{ type: 'text', text: UNTRUSTED_NOTICE }] : []),
+              { type: 'text', text: JSON.stringify(result, null, 2) },
+            ],
+            ...('error' in result ? { isError: true } : {}),
+          })
+        )
+      }
       const result = await handleToolsCall(name, args)
       return NextResponse.json(
         jsonRpcSuccess(id, {

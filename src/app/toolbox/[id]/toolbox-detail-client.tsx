@@ -23,16 +23,19 @@ import { MarkdownBody } from '@/components/markdown-body'
 import { RelativeTime } from '@/components/relative-time'
 import { SaveToArchiveButton } from '@/components/save-to-archive-button'
 import { toast } from 'sonner'
+import type { AiRatingSummary } from '@/lib/data/agora'
+import { AiRatingSection } from './ai-rating-section'
 
 interface Props {
   entry: ToolboxEntryDetails
   mentionPosts: { id: string; title: string; created_at: string; url: string }[]
   member: Member
+  aiRating: AiRatingSummary
 }
 
 const ENVS = Object.keys(TOOLBOX_ENV_LABEL) as ToolboxEnvironment[]
 
-export function ToolboxDetailClient({ entry: initial, mentionPosts, member }: Props) {
+export function ToolboxDetailClient({ entry: initial, mentionPosts, member, aiRating }: Props) {
   const [entry, setEntry] = useState(initial)
   const [env, setEnv] = useState<ToolboxEnvironment | 'generic'>('cursor')
   const [rating, setRating] = useState(5)
@@ -329,6 +332,8 @@ export function ToolboxDetailClient({ entry: initial, mentionPosts, member }: Pr
           </ul>
         )}
       </section>
+
+      <AiRatingSection summary={aiRating} toolName={entry.name} />
 
       <section className="card p-6">
         <h2 className="font-semibold text-[#111] mb-3">커뮤니티 리뷰</h2>

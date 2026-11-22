@@ -5,6 +5,8 @@ import { sb, useMockData } from './client'
 export type PublicToken = {
   id: string
   name: string
+  agentName: string | null
+  agentModel: string | null
   scopes: string[]
   tokenPrefix: string
   createdAt: string
@@ -29,6 +31,8 @@ export async function listApiTokens(memberId: string): Promise<PublicToken[]> {
       {
         id: 'token-1',
         name: '개인 맥북',
+        agentName: '야간 리서처',
+        agentModel: 'claude-sonnet · Claude Code',
         scopes: ['archive_read', 'archive_write', 'posts_read'],
         tokenPrefix: 'aisubal_',
         createdAt: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString(),
@@ -38,6 +42,8 @@ export async function listApiTokens(memberId: string): Promise<PublicToken[]> {
       {
         id: 'token-2',
         name: 'CLI 테스트',
+        agentName: null,
+        agentModel: null,
         scopes: ['archive_read'],
         tokenPrefix: 'aisubal_',
         createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
@@ -50,7 +56,7 @@ export async function listApiTokens(memberId: string): Promise<PublicToken[]> {
   const supabase = await sb()
   const { data, error } = await supabase
     .from('api_tokens')
-    .select('id, name, scopes, token_prefix, created_at, last_used_at, expires_at, is_revoked')
+    .select('id, name, agent_name, agent_model, scopes, token_prefix, created_at, last_used_at, expires_at, is_revoked')
     .eq('member_id', memberId)
     .eq('is_revoked', false)
     .order('created_at', { ascending: false })
@@ -60,6 +66,8 @@ export async function listApiTokens(memberId: string): Promise<PublicToken[]> {
   return (data || []).map((t) => ({
     id: t.id,
     name: t.name,
+    agentName: t.agent_name ?? null,
+    agentModel: t.agent_model ?? null,
     scopes: parseScopes(t.scopes),
     tokenPrefix: t.token_prefix,
     createdAt: t.created_at,
@@ -71,8 +79,11 @@ export async function listApiTokens(memberId: string): Promise<PublicToken[]> {
 export async function issueApiToken(
   memberId: string,
   name: string,
-  scopes: TokenScope[]
+  scopes: TokenScope[],
+  agent: { agentName?: string | null; agentModel?: string | null } = {}
 ): Promise<{ token: PublicToken & { token: string } }> {
+  const agentName = agent.agentName?.trim() || null
+  const agentModel = agent.agentModel?.trim() || null
   const raw = `aisubal_${randomBytes(24).toString('hex')}`
   const tokenHash = hashToken(raw)
   const tokenPrefix = raw.slice(0, 12)
@@ -82,6 +93,8 @@ export async function issueApiToken(
       token: {
         id: `token-${Date.now()}`,
         name,
+        agentName,
+        agentModel,
         scopes,
         tokenPrefix,
         token: raw,
@@ -101,8 +114,10 @@ export async function issueApiToken(
       token_hash: tokenHash,
       token_prefix: tokenPrefix,
       scopes: scopes.join(','),
+      agent_name: agentName,
+      agent_model: agentModel,
     })
-    .select('id, name, scopes, token_prefix, created_at, last_used_at, expires_at')
+    .select('id, name, agent_name, agent_model, scopes, token_prefix, created_at, last_used_at, expires_at')
     .single()
 
   if (error) throw error
@@ -111,6 +126,8 @@ export async function issueApiToken(
     token: {
       id: data.id,
       name: data.name,
+      agentName: data.agent_name ?? null,
+      agentModel: data.agent_model ?? null,
       scopes: parseScopes(data.scopes),
       tokenPrefix: data.token_prefix,
       token: raw,

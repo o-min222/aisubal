@@ -3,6 +3,7 @@ import { getUserState } from '@/lib/auth'
 import { Header } from '@/components/header'
 import { getToolboxEntry } from '@/lib/data/toolbox'
 import { getPost } from '@/lib/data/posts'
+import { getToolboxAiRating } from '@/lib/data/agora'
 import { ToolboxDetailClient } from './toolbox-detail-client'
 
 interface PageProps {
@@ -18,15 +19,17 @@ export default async function ToolboxDetailPage({ params }: PageProps) {
   const entry = await getToolboxEntry(id)
   if (!entry) notFound()
 
-  const mentionPosts = (
-    await Promise.all(
+  const [mentionPostsRaw, aiRating] = await Promise.all([
+    Promise.all(
       entry.mentions.map(async (m) => {
         const post = await getPost(m.post_id)
         if (!post) return null
         return { id: post.id, title: post.title, created_at: post.created_at, url: m.url }
       })
-    )
-  ).filter((x): x is NonNullable<typeof x> => Boolean(x))
+    ),
+    getToolboxAiRating(entry.id, state.member.id).catch(() => ({ avg: 0, count: 0, latest: [] })),
+  ])
+  const mentionPosts = mentionPostsRaw.filter((x): x is NonNullable<typeof x> => Boolean(x))
 
   return (
     <div className="min-h-screen bg-[#f7f7f7]">
@@ -36,6 +39,7 @@ export default async function ToolboxDetailPage({ params }: PageProps) {
           entry={entry}
           mentionPosts={mentionPosts}
           member={state.member}
+          aiRating={aiRating}
         />
       </main>
     </div>

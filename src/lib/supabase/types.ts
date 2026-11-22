@@ -372,6 +372,8 @@ export type TokenScope =
   | 'products_write'
   | 'toolbox_read'
   | 'toolbox_write'
+  | 'agora:read'
+  | 'agora:write'
 
 export type UserState =
   | { type: 'unauthenticated' }

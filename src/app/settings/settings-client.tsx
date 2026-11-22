@@ -1,11 +1,12 @@
 'use client'
 
 import { useState } from 'react'
-import { Settings, User, Key, Lock, Plus, AlertTriangle, Ghost } from 'lucide-react'
+import { Settings, User, Lock, Plus, AlertTriangle, Ghost } from 'lucide-react'
 import type { Member } from '@/lib/supabase/types'
 import { UserAvatar } from '@/components/user-avatar'
 import { validateNickname, memberHasNicknameProfile } from '@/lib/profile'
 import { toast } from 'sonner'
+import { ApiTokensSection } from './api-tokens-section'
 
 interface SettingsClientProps {
   member: Member
@@ -189,23 +190,7 @@ export function SettingsClient({
           )}
         </section>
 
-        {/* API tokens */}
-        <section className="card">
-          <div className="p-4 border-b border-[#e5e5e5] flex items-center justify-between">
-            <div>
-              <h2 className="font-semibold text-[#111] flex items-center gap-2">
-                <Key className="w-4 h-4" />
-                API 토큰
-              </h2>
-              <p className="text-xs text-[#888] mt-0.5">MCP / CLI용</p>
-            </div>
-            <button className="btn btn-secondary btn-sm">
-              <Plus className="w-4 h-4" />
-              새 토큰
-            </button>
-          </div>
-          <div className="p-4 text-sm text-[#666]">토큰은 본인에게만 표시됩니다.</div>
-        </section>
+        <ApiTokensSection />
 
         <section className="card border-red-200">
           <div className="p-4 border-b border-red-200 bg-red-50/50">
