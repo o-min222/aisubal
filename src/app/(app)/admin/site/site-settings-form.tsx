@@ -3,7 +3,8 @@
 import { useState } from 'react'
 import { toast } from 'sonner'
 import { T } from '@/i18n/t'
-import { tn } from '@/i18n/client'
+import { tn, tx } from '@/i18n/client'
+import { ToggleSwitch } from '@/components/ui/toggle-switch'
 
 type S = {
   siteName: string
@@ -55,10 +56,10 @@ export function SiteSettingsForm({ initial }: { initial: S }) {
           <input type="number" min={1} className="input" value={s.nicknameUnlockThreshold} onChange={(e) => setS({ ...s, nicknameUnlockThreshold: Number(e.target.value) })} />
         </label>
       </div>
-      <label className="flex items-center gap-3 min-h-[44px]">
-        <input type="checkbox" className="w-5 h-5" checked={s.inviteRequired} onChange={(e) => setS({ ...s, inviteRequired: e.target.checked })} />
+      <div className="flex items-center justify-between gap-3 min-h-[44px]">
         <span className="text-sm text-n-333"><T>가입에 초대 코드 필요</T></span>
-      </label>
+        <ToggleSwitch checked={s.inviteRequired} onChange={(v) => setS({ ...s, inviteRequired: v })} label={tx('가입에 초대 코드 필요')} />
+      </div>
       <div className="flex justify-end">
         <button type="submit" disabled={busy} className="btn btn-primary min-h-[44px]">
           <T>저장</T>

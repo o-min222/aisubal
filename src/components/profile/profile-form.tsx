@@ -8,6 +8,7 @@ import { UserAvatar } from '@/components/user-avatar'
 import { normalizeHandle, suggestHandle, validateDisplayName, validateHandle } from '@/lib/profile-rules'
 import { T } from '@/i18n/t'
 import { tx, tn } from '@/i18n/client'
+import { ToggleSwitch } from '@/components/ui/toggle-switch'
 
 export type ProfileFormMember = {
   id: string
@@ -250,12 +251,12 @@ export function ProfileForm({ me, mode }: { me: ProfileFormMember; mode: 'onboar
           </div>
         </div>
         {me.privateRealName ? (
-          <label className="flex items-center justify-between gap-3 rounded-xl px-3 min-h-[48px]" style={{ background: 'var(--n-fafafa)' }}>
+          <div className="flex items-center justify-between gap-3 rounded-xl px-3 min-h-[48px]" style={{ background: 'var(--n-fafafa)' }}>
             <span className="text-[13.5px]" style={{ color: 'var(--n-333)' }}>
               <T>프로필에 실명 표시</T> <span className="text-n-999"><T s="({privateRealName} · 나만 보여요)" vars={{ privateRealName: me.privateRealName }} /></span>
             </span>
-            <input type="checkbox" role="switch" checked={showReal} onChange={(e) => setShowReal(e.target.checked)} className="w-5 h-5" />
-          </label>
+            <ToggleSwitch checked={showReal} onChange={setShowReal} label={tx('프로필에 실명 표시')} />
+          </div>
         ) : (
           <p className="text-[12px] text-n-999"><T>구글 계정에 이름이 없어 실명 표시를 켤 수 없어요.</T></p>
         )}

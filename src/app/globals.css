@@ -2447,3 +2447,10 @@ a.notif-pop-all:hover { background: var(--n-fafafa); }
   .feed-scope-tabs { gap: 0 !important; }
   .feed-scope-tabs > a { flex: 1 1 auto !important; justify-content: center; padding: 10px 6px !important; font-size: 14px !important; }
 }
+
+/* C-final: compact choice chips (moim host picker) and the per-question 필수 toggle chip */
+.host-chip { display: inline-flex; align-items: center; gap: 6px; height: 36px; max-width: 100%; padding: 0 12px 0 8px; border-radius: 999px; border: 1px solid var(--n-ddd); background: var(--n-fff); color: var(--n-333); font-size: 13.5px; font-weight: 500; min-width: 0; }
+.host-chip:hover { background: var(--n-fafafa); }
+.host-chip.on { border-color: var(--n-111); background: var(--n-111); color: var(--n-fff); }
+.req-chip { flex: 0 0 auto; height: 30px; padding: 0 10px; border-radius: 999px; border: 1px solid var(--n-ddd); font-size: 12.5px; color: var(--n-777); background: var(--n-fff); }
+.req-chip.on { border-color: var(--n-111); background: var(--n-111); color: var(--n-fff); }

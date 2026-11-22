@@ -11,6 +11,7 @@ import { MAX_QUESTIONS } from '@/lib/moim-rules'
 import { T } from '@/i18n/t'
 import { tx, tn } from '@/i18n/client'
 import { GroupAvatar } from '@/components/groups/group-avatar'
+import { ToggleSwitch } from '@/components/ui/toggle-switch'
 
 type Q = { label: string; required: boolean }
 
@@ -108,7 +109,7 @@ export function MoimForm({
           {edit ? (
             <p className="text-sm text-n-555"><T s="{v} · 호스트는 바꿀 수 없어요" vars={{ v: edit.group ? tx('{name} 그룹', { name: edit.group.name }) : tx('개인 ({name})', { name: edit.host.name }) }} /></p>
           ) : (
-            <div className="host-picker grid gap-2" role="radiogroup" aria-label={tx('호스트')} style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 180px), 1fr))' }}>
+            <div className="host-picker flex flex-wrap gap-1.5" role="radiogroup" aria-label={tx('호스트')}>
               {hostOptions.map((o) => {
                 const on = groupId === o.id
                 return (
@@ -118,11 +119,10 @@ export function MoimForm({
                     role="radio"
                     aria-checked={on}
                     onClick={() => setGroupId(o.id)}
-                    className="flex items-center gap-2 rounded-xl px-3 text-left min-h-[48px]"
-                    style={{ border: on ? '2px solid var(--n-111)' : '1px solid var(--n-ddd)', background: on ? 'var(--n-fafafa)' : 'var(--n-fff)' }}
+                    className={`host-chip${on ? ' on' : ''}`}
                   >
-                    <span aria-hidden className="w-6 inline-flex justify-center">{o.id ? <GroupAvatar name={o.label} size={20} /> : <UserRound className="w-4 h-4 inline" />}</span>
-                    <span className="text-[14px] font-medium truncate" style={{ color: 'var(--n-111)' }}>
+                    <span aria-hidden className="inline-flex">{o.id ? <GroupAvatar name={o.label} size={18} /> : <UserRound className="w-4 h-4" />}</span>
+                    <span className="truncate">
                       <T>{o.label}</T>
                     </span>
                   </button>
@@ -134,10 +134,10 @@ export function MoimForm({
             <p className="text-[12px] text-n-888 mt-1.5"><T>내가 소유자·매니저인 그룹이 있으면 그룹 이름으로도 열 수 있어요.</T></p>
           )}
           {groupId && (
-            <label className="flex items-center gap-2 mt-2.5 text-sm min-h-[40px]" style={{ color: 'var(--n-333)' }}>
-              <input type="checkbox" checked={membersOnly} onChange={(e) => setMembersOnly(e.target.checked)} className="w-4 h-4" />
-              <Lock className="w-3.5 h-3.5" /> <T>그룹 멤버만 신청할 수 있게</T>
-            </label>
+            <div className="flex items-center justify-between gap-3 mt-2.5 text-sm min-h-[44px]" style={{ color: 'var(--n-333)' }}>
+              <span className="inline-flex items-center gap-1.5"><Lock className="w-3.5 h-3.5" /> <T>그룹 멤버만 신청할 수 있게</T></span>
+              <ToggleSwitch checked={membersOnly} onChange={setMembersOnly} label={tx('그룹 멤버만 신청할 수 있게')} />
+            </div>
           )}
         </div>
 
@@ -269,9 +269,14 @@ export function MoimForm({
                   placeholder={tx('예) 보여주고 싶은 워크플로가 있나요?')}
                   onChange={(e) => setQuestions(questions.map((x, j) => (j === i ? { ...x, label: e.target.value } : x)))}
                 />
-                <label className="flex items-center gap-1 text-[12.5px] whitespace-nowrap min-h-[40px]" style={{ color: 'var(--n-555)' }}>
-                  <input type="checkbox" checked={q.required} onChange={(e) => setQuestions(questions.map((x, j) => (j === i ? { ...x, required: e.target.checked } : x)))} /> <T>필수</T>
-                </label>
+                <button
+                  type="button"
+                  aria-pressed={q.required}
+                  onClick={() => setQuestions(questions.map((x, j) => (j === i ? { ...x, required: !x.required } : x)))}
+                  className={`req-chip${q.required ? ' on' : ''}`}
+                >
+                  <T>필수</T>
+                </button>
                 <button type="button" onClick={() => setQuestions(questions.filter((_, j) => j !== i))} className="tap-target inline-flex items-center justify-center rounded-full hover:bg-n-f2f2f2" aria-label={tx('질문 {v} 삭제', { v: i + 1 })}>
                   <Trash2 className="w-4 h-4" />
                 </button>
