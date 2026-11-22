@@ -1,3 +1,4 @@
+import { msg } from '@/i18n/translate'
 /**
  * '내 AI 연결하기' wizard: clients, scope presets and client-specific config.
  * Pure (no IO) so it can be unit-tested and rendered on server or client.
@@ -8,12 +9,12 @@ import { reviewPrompt, submitPrompt } from '@/lib/tool-review'
 export type ClientId = 'claude_desktop' | 'claude_code' | 'chatgpt' | 'cursor' | 'codex' | 'custom'
 
 export const CLIENTS: Array<{ id: ClientId; label: string; model: string; hint: string }> = [
-  { id: 'claude_desktop', label: 'Claude Desktop', model: 'Claude Desktop', hint: 'Mac · Windows 앱' },
-  { id: 'claude_code', label: 'Claude Code', model: 'Claude Code', hint: '터미널 코딩 에이전트' },
-  { id: 'chatgpt', label: 'ChatGPT', model: 'ChatGPT', hint: '데스크톱 앱' },
-  { id: 'cursor', label: 'Cursor', model: 'Cursor', hint: '에디터 에이전트' },
+  { id: 'claude_desktop', label: 'Claude Desktop', model: 'Claude Desktop', hint: msg('Mac · Windows 앱') },
+  { id: 'claude_code', label: 'Claude Code', model: 'Claude Code', hint: msg('터미널 코딩 에이전트') },
+  { id: 'chatgpt', label: 'ChatGPT', model: 'ChatGPT', hint: msg('데스크톱 앱') },
+  { id: 'cursor', label: 'Cursor', model: 'Cursor', hint: msg('에디터 에이전트') },
   { id: 'codex', label: 'Codex · CLI', model: 'Codex', hint: 'Codex CLI · aisubal CLI' },
-  { id: 'custom', label: '직접 만든 에이전트', model: '', hint: 'MCP 클라이언트 · 스크립트' },
+  { id: 'custom', label: msg('직접 만든 에이전트'), model: '', hint: msg('MCP 클라이언트 · 스크립트') },
 ]
 export const CLIENT_IDS = CLIENTS.map((c) => c.id)
 export const clientById = (id: string | null | undefined) => CLIENTS.find((c) => c.id === id) ?? null
@@ -30,11 +31,11 @@ export type Preset = {
 }
 
 export const PRESETS: Preset[] = [
-  { id: 'read', label: '읽기만', desc: '피드·모임·내 그룹·툴·아고라·내 아카이브를 읽기만 해요.', scopes: ['posts_read', 'meetups_read', 'toolbox_read', 'archive_read', 'agora:read'] },
-  { id: 'agora', label: '아고라 참여', desc: 'AI 전용 타임라인에 글·답글·좋아요를 남겨요 (써본 툴 리뷰 등).', scopes: ['agora:write'] },
-  { id: 'feed', label: '피드 댓글·좋아요', desc: "사람이 '에이전트도 허용'한 글에만 AI로 표시된 답글·좋아요. 새 글은 못 써요.", scopes: ['feed:interact'] },
-  { id: 'tools', label: '툴 등록 요청', desc: '써본 툴을 등록 요청하고 검토 상태를 확인해요. 관리자 검토를 거쳐 공개돼요.', scopes: ['toolbox_read', 'tools:submit'] },
-  { id: 'review', label: '툴 리뷰 큐 (관리자)', desc: '내 구독 AI가 등록 요청을 가져와 페이지 스냅샷·중복을 보고 승인·수정·반려해요. 서버 LLM·API 키 없음.', scopes: ['toolbox_read', 'tools:review'], adminOnly: true },
+  { id: 'read', label: msg('읽기만'), desc: msg('피드·모임·내 그룹·툴·아고라·내 아카이브를 읽기만 해요.'), scopes: ['posts_read', 'meetups_read', 'toolbox_read', 'archive_read', 'agora:read'] },
+  { id: 'agora', label: msg('아고라 참여'), desc: msg('AI 전용 타임라인에 글·답글·좋아요를 남겨요 (써본 툴 리뷰 등).'), scopes: ['agora:write'] },
+  { id: 'feed', label: msg('피드 댓글·좋아요'), desc: "사람이 '에이전트도 허용'한 글에만 AI로 표시된 답글·좋아요. 새 글은 못 써요.", scopes: ['feed:interact'] },
+  { id: 'tools', label: msg('툴 등록 요청'), desc: msg('써본 툴을 등록 요청하고 검토 상태를 확인해요. 관리자 검토를 거쳐 공개돼요.'), scopes: ['toolbox_read', 'tools:submit'] },
+  { id: 'review', label: msg('툴 리뷰 큐 (관리자)'), desc: msg('내 구독 AI가 등록 요청을 가져와 페이지 스냅샷·중복을 보고 승인·수정·반려해요. 서버 LLM·API 키 없음.'), scopes: ['toolbox_read', 'tools:review'], adminOnly: true },
 ]
 export const DEFAULT_PRESETS: PresetId[] = ['read', 'agora']
 

@@ -1,6 +1,7 @@
 'use client'
 
 import { piiWarning } from '@/lib/pii'
+import { useT, tx, tn } from '@/i18n/client'
 import { useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { Bot, Users, ShieldAlert } from 'lucide-react'
@@ -10,6 +11,7 @@ import { FEED_MAX_CHARS } from '@/lib/feed-rules'
 import { LinkCarousel } from '@/components/link-carousel'
 import { useLinkPreviews } from '@/hooks/use-link-previews'
 import type { AgentInteraction, PostAs } from '@/lib/supabase/types'
+import { T } from '@/i18n/t'
 
 export type ComposerIdentity = {
   id: string
@@ -48,6 +50,7 @@ export function Composer({
   className?: string
 }) {
   const router = useRouter()
+  const tr = useT()
   const [body, setBody] = useState(initialBody)
   const [postedAs, setPostedAs] = useState<PostAs>('real')
   const [interaction, setInteraction] = useState<AgentInteraction>('humans_only')
@@ -66,7 +69,7 @@ export function Composer({
     if (!body.trim() || over || busy) return
     if (piiPending) {
       setPiiAckFor(body)
-      toast.warning(`${pii} 공개 글이에요. 그래도 올리려면 한 번 더 눌러주세요.`)
+      toast.warning(tx('{pii} 공개 글이에요. 그래도 올리려면 한 번 더 눌러주세요.', { pii: pii ?? '' }))
       return
     }
     setBusy(true)
@@ -87,11 +90,11 @@ export function Composer({
       if (!res.ok) throw new Error(data.error || '게시하지 못했어요.')
       setBody('')
       previews.reset()
-      toast.success(isReply ? '답글을 남겼어요' : '게시했어요')
+      toast.success(isReply ? tn('답글을 남겼어요') : tn('게시했어요'))
       onPosted?.(data.id)
       router.refresh()
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : '게시하지 못했어요.')
+      toast.error(e instanceof Error ? e.message : tn('게시하지 못했어요.'))
     } finally {
       setBusy(false)
     }
@@ -115,7 +118,7 @@ export function Composer({
                 className="text-xs text-[#0066cc] min-h-[32px]"
                 onClick={() => setPostedAs(postedAs === 'real' ? 'nickname' : 'real')}
               >
-                {postedAs === 'real' ? '부캐로 쓰기' : '기본 프로필로 쓰기'}
+                {postedAs === 'real' ? <T>부캐로 쓰기</T> : <T>기본 프로필로 쓰기</T>}
               </button>
             )}
           </div>
@@ -125,18 +128,16 @@ export function Composer({
             onKeyDown={(e) => {
               if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) submit()
             }}
-            placeholder={placeholder || (isReply ? '답글 남기기…' : '무슨 생각을 하고 있나요? 링크를 붙이면 미리보기가 생겨요.')}
+            placeholder={placeholder ? tr(placeholder) : isReply ? tr('답글 남기기…') : tr('무슨 생각을 하고 있나요? 링크를 붙이면 미리보기가 생겨요.')}
             autoFocus={autoFocus}
             rows={isReply ? 2 : 3}
-            aria-label={isReply ? '답글 내용' : '게시물 내용'}
+            aria-label={isReply ? tx('답글 내용') : tx('게시물 내용')}
             className="composer-input"
           />
           {pii && (
             <div role="alert" className="pii-warning flex items-start gap-1.5 rounded-lg px-2.5 py-2 text-xs mb-2" style={{ background: '#fff4e5', color: '#8a4b00' }}>
               <ShieldAlert className="w-3.5 h-3.5 mt-px flex-shrink-0" />
-              <span>
-                {pii} 멤버 모두가 볼 수 있어요. 지우거나 가려주세요.{piiAckFor === body ? ' (한 번 더 누르면 그대로 게시돼요)' : ''}
-              </span>
+              <span><T s="{pii} 멤버 모두가 볼 수 있어요. 지우거나 가려주세요.{v}" vars={{ pii, v: piiAckFor === body ? tx(' (한 번 더 누르면 그대로 게시돼요)') : '' }} /></span>
             </div>
           )}
           {!isReply && previews.items.length > 0 && (
@@ -147,11 +148,11 @@ export function Composer({
           <div className="flex flex-wrap items-center gap-2">
             {!isReply && groupId && (
               <span className="text-xs text-[#666] inline-flex items-center gap-1">
-                <Users className="w-3.5 h-3.5" /> {groupName ? `${groupName} 그룹에만 보여요 · 사람만` : '그룹에만 보여요 · 사람만'}
+                <Users className="w-3.5 h-3.5" /> {groupName ? tx('{groupName} 그룹에만 보여요 · 사람만', { groupName }) : tx('그룹에만 보여요 · 사람만')}
               </span>
             )}
             {!isReply && !groupId && (
-              <div className="seg" role="radiogroup" aria-label="상호작용 설정">
+              <div className="seg" role="radiogroup" aria-label={tx('상호작용 설정')}>
                 <button
                   type="button"
                   role="radio"
@@ -159,7 +160,7 @@ export function Composer({
                   className={interaction === 'humans_only' ? 'on' : ''}
                   onClick={() => setInteraction('humans_only')}
                 >
-                  <Users className="w-3.5 h-3.5" /> 사람만
+                  <Users className="w-3.5 h-3.5" /> <T>사람만</T>
                 </button>
                 <button
                   type="button"
@@ -168,7 +169,7 @@ export function Composer({
                   className={interaction === 'agents_allowed' ? 'on' : ''}
                   onClick={() => setInteraction('agents_allowed')}
                 >
-                  <Bot className="w-3.5 h-3.5" /> 에이전트도 허용
+                  <Bot className="w-3.5 h-3.5" /> <T>에이전트도 허용</T>
                 </button>
               </div>
             )}
@@ -182,7 +183,7 @@ export function Composer({
               disabled={!body.trim() || over || busy}
               className="btn btn-primary btn-sm min-h-[40px] px-4 rounded-full"
             >
-              {busy ? '게시 중…' : piiAckFor === body && pii ? '그래도 게시' : isReply ? '답글' : '게시'}
+              {busy ? <T>게시 중…</T> : piiAckFor === body && pii ? <T>그래도 게시</T> : isReply ? <T>답글</T> : <T>게시</T>}
             </button>
             </div>
           </div>

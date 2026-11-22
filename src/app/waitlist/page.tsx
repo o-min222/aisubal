@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { createClient } from '@/lib/supabase/client'
+import { T } from '@/i18n/t'
+import { tx } from '@/i18n/client'
 
 export default function WaitlistPage() {
   const router = useRouter()
@@ -43,7 +45,7 @@ export default function WaitlistPage() {
       const data = await res.json()
 
       if (!res.ok) {
-        setError(data.error || '초대 코드가 유효하지 않습니다.')
+        setError(data.error || tx('초대 코드가 유효하지 않습니다.'))
         return
       }
 
@@ -51,7 +53,7 @@ export default function WaitlistPage() {
       router.push(data.needsProfile === false ? '/feed' : '/onboarding')
       router.refresh()
     } catch {
-      setError('네트워크 오류가 발생했습니다.')
+      setError(tx('네트워크 오류가 발생했습니다.'))
     } finally {
       setLoading(false)
     }
@@ -70,7 +72,7 @@ export default function WaitlistPage() {
       <div className="mb-8">
         <Image
           src="/images/logo-black.png"
-          alt="AI쓰발"
+          alt={tx('AI쓰발')}
           width={160}
           height={48}
           priority
@@ -81,12 +83,12 @@ export default function WaitlistPage() {
       {/* Card */}
       <div className="w-full max-w-md bg-white border border-[#e5e5e5] rounded-xl p-8">
         <h1 className="text-xl font-bold text-[#111] text-center mb-2">
-          웨이트리스트에 등록되었습니다
+          <T>웨이트리스트에 등록되었습니다</T>
         </h1>
         <p className="text-sm text-[#666] text-center mb-6">
-          AI쓰발은 초대 전용 커뮤니티입니다.
+          <T>AI쓰발은 초대 전용 커뮤니티입니다.</T>
           <br />
-          초대 코드를 입력하면 가입이 완료됩니다.
+          <T>초대 코드를 입력하면 가입이 완료됩니다.</T>
         </p>
 
         {fromLink && (
@@ -95,12 +97,10 @@ export default function WaitlistPage() {
             className={`mb-4 p-3 rounded-lg text-sm text-center ${fromLink.valid ? 'bg-green-50 border border-green-200 text-green-800' : 'bg-amber-50 border border-amber-200 text-amber-800'}`}
           >
             {fromLink.valid ? (
-              <>
-                {fromLink.inviter ? <b>{fromLink.inviter}</b> : '멤버'}님의 초대 링크로 왔어요. 코드가 확인됐어요 — 아래 버튼을 눌러 가입을 마치세요.
-              </>
+              <><T s="{v}님의 초대 링크로 왔어요. 코드가 확인됐어요 — 아래 버튼을 눌러 가입을 마치세요." vars={{ v: fromLink.inviter ? <b>{fromLink.inviter}</b> : <T>멤버</T> }} /></>
             ) : (
               <>
-                초대 링크의 코드 <span className="font-mono">{fromLink.code}</span>: {fromLink.message} 웨이트리스트에 등록돼 있으니, 다른 코드를 받으면 아래에 입력하세요.
+                <T>초대 링크의 코드</T> <span className="font-mono">{fromLink.code}</span>: {fromLink.message} 웨이트리스트에 등록돼 있으니, 다른 코드를 받으면 아래에 입력하세요.
               </>
             )}
           </div>
@@ -115,13 +115,13 @@ export default function WaitlistPage() {
 
           <div className="mb-4">
             <label className="block text-sm font-medium text-[#333] mb-2">
-              초대 코드
+              <T>초대 코드</T>
             </label>
             <input
               type="text"
               value={inviteCode}
               onChange={(e) => setInviteCode(e.target.value.toUpperCase())}
-              placeholder="8자리 코드 입력"
+              placeholder={tx('8자리 코드 입력')}
               className="input font-mono text-center tracking-widest uppercase"
               maxLength={8}
               required
@@ -136,25 +136,25 @@ export default function WaitlistPage() {
             {loading ? (
               <span className="flex items-center justify-center gap-2">
                 <span className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></span>
-                확인 중...
+                <T>확인 중...</T>
               </span>
             ) : (
-              '가입 완료하기'
+              tx('가입 완료하기')
             )}
           </button>
         </form>
 
         <div className="mt-6 pt-6 border-t border-[#eee]">
           <p className="text-xs text-[#888] text-center mb-3">
-            초대 코드가 없으신가요?
+            <T>초대 코드가 없으신가요?</T>
             <br />
-            기존 멤버에게 초대를 요청해보세요.
+            <T>기존 멤버에게 초대를 요청해보세요.</T>
           </p>
           <button
             onClick={handleLogout}
             className="btn btn-ghost w-full text-sm"
           >
-            로그아웃
+            <T>로그아웃</T>
           </button>
         </div>
       </div>

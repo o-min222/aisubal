@@ -4,6 +4,7 @@
  */
 import type { LinkVisibility } from '@/lib/profile-rules'
 import type { ToolboxType } from '@/lib/supabase/types'
+import { msg } from '@/i18n/translate'
 
 export type StackGroup = 'ai' | 'subs' | 'skills'
 export type StackEntryRef = { id: string; slug: string; name: string; iconUrl: string | null; type?: ToolboxType | string }
@@ -16,13 +17,13 @@ export const AGENT_PLATFORMS = [
   { id: 'claude_code', label: 'Claude Code', short: 'C', color: '#d97757' },
   { id: 'custom_gpt', label: 'Custom GPT', short: 'GPT', color: '#10a37f' },
   { id: 'n8n', label: 'n8n', short: 'n8n', color: '#ea4b71' },
-  { id: 'own_build', label: '직접 만든 에이전트', short: '⚙', color: '#555555' },
+  { id: 'own_build', label: msg('직접 만든 에이전트'), short: '⚙', color: '#555555' },
   { id: 'cursor', label: 'Cursor', short: 'Cu', color: '#222222' },
   { id: 'codex', label: 'Codex', short: 'Cx', color: '#0f766e' },
   { id: 'chatgpt', label: 'ChatGPT', short: 'GPT', color: '#10a37f' },
   { id: 'claude', label: 'Claude', short: 'C', color: '#d97757' },
   { id: 'gemini', label: 'Gemini', short: 'Ge', color: '#4f7cff' },
-  { id: 'other', label: '기타', short: '•', color: '#888888' },
+  { id: 'other', label: msg('기타'), short: '•', color: '#888888' },
 ] as const
 export type AgentPlatform = (typeof AGENT_PLATFORMS)[number]['id']
 export const AGENT_PLATFORM_IDS = AGENT_PLATFORMS.map((p) => p.id) as AgentPlatform[]
@@ -43,9 +44,9 @@ export const SUB_SUGGESTIONS = ['ChatGPT Plus', 'ChatGPT Pro', 'Claude Pro', 'Cl
 export const SKILL_TYPES: ReadonlyArray<string> = ['agent_skill', 'mcp_server', 'cli_tool', 'cursor_rules', 'prompt']
 
 export const STACK_GROUP_LABEL: Record<StackGroup, string> = {
-  ai: '활용하는 AI',
-  subs: '구독 중인 서비스',
-  skills: '스킬·플러그인·MCP',
+  ai: msg('활용하는 AI'),
+  subs: msg('구독 중인 서비스'),
+  skills: msg('스킬·플러그인·MCP'),
 }
 
 const norm = (s: string) => s.toLowerCase().replace(/[\s_\-·.]+/g, '')

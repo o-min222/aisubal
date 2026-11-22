@@ -4,15 +4,18 @@ import { TOOL_TYPE_CHIP, toolHref, type ToolListItem } from '@/lib/tool-rules'
 import { UsageToggle } from './usage-toggle'
 import { UserAvatar } from '@/components/user-avatar'
 import type { ToolSocialUser } from '@/lib/data/tools'
+import { T } from '@/i18n/t'
+import { getT } from '@/i18n/server'
 
 /** 'friends using' avatars first, then people I follow; plain count only when none. */
-function SocialUsers({ users, total }: { users: ToolSocialUser[]; total: number }) {
+async function SocialUsers({ users, total }: { users: ToolSocialUser[]; total: number }) {
+  const st = await getT()
   const friends = users.filter((u) => u.kind === 'friend')
   const following = users.filter((u) => u.kind === 'following')
   const shown = [...friends, ...following].slice(0, 4)
   const label = friends.length
-    ? `친구 ${friends.length}명${following.length ? ` · 팔로잉 ${following.length}명` : ''}이 써요`
-    : `팔로잉 ${following.length}명이 써요`
+    ? st('친구 {length}명{v}이 써요', { length: friends.length, v: following.length ? ` · 팔로잉 ${following.length}명` : '' })
+    : st('팔로잉 {length}명이 써요', { length: following.length })
   return (
     <span className="tool-social inline-flex items-center gap-1.5 min-w-0" title={shown.map((u) => u.name).join(', ')}>
       <span className="users-strip">
@@ -25,9 +28,9 @@ function SocialUsers({ users, total }: { users: ToolSocialUser[]; total: number 
         </span>
       </span>
       <span className="truncate" style={{ color: friends.length ? '#1f7a4d' : '#555', fontWeight: 600 }}>
-        {label}
+        <T>{label}</T>
       </span>
-      {total > users.length && <span className="text-[#999] whitespace-nowrap">· 전체 {total}명</span>}
+      {total > users.length && <span className="text-[#999] whitespace-nowrap"><T s="· 전체 {total}명" vars={{ total }} /></span>}
     </span>
   )
 }
@@ -45,7 +48,8 @@ export function ToolIcon({ name, iconUrl, dim = 'w-11 h-11' }: { name: string; i
 }
 
 /** One row of the unified 툴 list: stats relevant to the kind (launch → upvotes). */
-export function ToolCard({ tool, social = [] }: { tool: ToolListItem; social?: ToolSocialUser[] }) {
+export async function ToolCard({ tool, social = [] }: { tool: ToolListItem; social?: ToolSocialUser[] }) {
+  const st = await getT()
   const isLaunch = Boolean(tool.product_id)
   return (
     <article className="tool-card">
@@ -54,9 +58,9 @@ export function ToolCard({ tool, social = [] }: { tool: ToolListItem; social?: T
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-1.5 flex-wrap">
             <h3 className="font-semibold text-[15px] text-[#111] truncate max-w-full">{tool.name}</h3>
-            <span className="cat-chip">{TOOL_TYPE_CHIP[tool.type]}</span>
-            {isLaunch && <span className="launch-chip">런치</span>}
-            {tool.featured && <span className="badge badge-agent">추천</span>}
+            <span className="cat-chip"><T>{TOOL_TYPE_CHIP[tool.type]}</T></span>
+            {isLaunch && <span className="launch-chip"><T>런치</T></span>}
+            {tool.featured && <span className="badge badge-agent"><T>추천</T></span>}
           </div>
           <p className="text-[13.5px] text-[#555] line-clamp-2 mt-0.5">{tool.one_liner}</p>
           {social.length > 0 && (
@@ -66,27 +70,27 @@ export function ToolCard({ tool, social = [] }: { tool: ToolListItem; social?: T
           )}
           <div className="tool-stats">
             {social.length === 0 && (tool.user_count ?? 0) > 0 && (
-              <span title="나도 써요 표시한 멤버">
+              <span title={st('나도 써요 표시한 멤버')}>
                 <Users className="w-3.5 h-3.5" /> {tool.user_count}명이 써요
               </span>
             )}
             {tool.rating_count > 0 && (
-              <span title="멤버 리뷰">
+              <span title={st('멤버 리뷰')}>
                 <Star className="w-3.5 h-3.5 fill-[#f5a623] text-[#f5a623]" /> {Number(tool.avg_rating).toFixed(1)}
               </span>
             )}
             {(tool.ai_rating_count ?? 0) > 0 && (
-              <span title="Agora AI 평가">
+              <span title={st('Agora AI 평가')}>
                 <Bot className="w-3.5 h-3.5" /> AI {Number(tool.ai_rating_avg).toFixed(1)}
               </span>
             )}
             {isLaunch ? (
-              <span title="업보트">
+              <span title={st('업보트')}>
                 <ChevronUp className="w-3.5 h-3.5" /> {tool.upvote_count ?? 0}
               </span>
             ) : (
               tool.install_count > 0 && (
-                <span title="설치">
+                <span title={st('설치')}>
                   <Download className="w-3.5 h-3.5" /> {tool.install_count}
                 </span>
               )

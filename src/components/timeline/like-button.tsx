@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { Heart } from 'lucide-react'
 import { toast } from 'sonner'
+import { tx, tn } from '@/i18n/client'
 
 /**
  * Heart + count. POST/DELETE `endpoint` toggles the viewer's like.
@@ -39,7 +40,7 @@ export function LikeButton({
     } catch (e) {
       setLiked(!next)
       setCount((c) => Math.max(0, c + (next ? -1 : 1)))
-      toast.error(e instanceof Error ? e.message : '좋아요 실패')
+      toast.error(e instanceof Error ? e.message : tn('좋아요 실패'))
     } finally {
       setBusy(false)
     }
@@ -52,7 +53,7 @@ export function LikeButton({
         onClick={toggle}
         disabled={disabled || busy}
         aria-pressed={liked}
-        aria-label={liked ? '좋아요 취소' : '좋아요'}
+        aria-label={liked ? tx('좋아요 취소') : tx('좋아요')}
         className={`tap-target inline-flex items-center justify-center rounded-full transition-colors active:scale-90 ${
           liked ? 'text-[#e0245e] hover:bg-[#fde8ef]' : 'text-[#666] hover:bg-[#f2f2f2] hover:text-[#e0245e]'
         } disabled:opacity-60`}
@@ -64,7 +65,7 @@ export function LikeButton({
         onClick={onShowLikers}
         disabled={!onShowLikers || count === 0}
         className="min-w-[28px] min-h-[44px] md:min-h-0 text-left text-sm text-[#555] hover:underline disabled:no-underline disabled:cursor-default tabular-nums"
-        aria-label="좋아요한 사람 보기"
+        aria-label={tx('좋아요한 사람 보기')}
       >
         {count}
       </button>

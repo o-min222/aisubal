@@ -3,6 +3,7 @@
 import { PostCard } from '@/components/timeline/post-card'
 import type { TimelinePost } from '@/components/timeline/types'
 import { AnonActions } from '@/components/anon/anon-actions'
+import { tx } from '@/i18n/client'
 
 /**
  * One page of a timeline. No pull-to-refresh and no infinite loading:
@@ -14,8 +15,8 @@ export function FeedTimeline({
   basePath = '/posts',
   apiBase = '/api/feed',
   anonymous = false,
-  emptyTitle = '아직 글이 없어요',
-  emptyHint = '첫 글을 남겨보세요.',
+  emptyTitle = tx('아직 글이 없어요'),
+  emptyHint = tx('첫 글을 남겨보세요.'),
 }: {
   initial: TimelinePost[]
   basePath?: string

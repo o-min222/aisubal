@@ -3,6 +3,7 @@
 import { useCallback, useRef, useState } from 'react'
 import { ChevronLeft, ChevronRight, X } from 'lucide-react'
 import { LinkCard, type LinkCardData } from '@/components/link-card'
+import { tx } from '@/i18n/client'
 
 export type CarouselItem = LinkCardData | { url: string; loading: true }
 
@@ -13,7 +14,7 @@ const isLoading = (i: CarouselItem): i is { url: string; loading: true } => 'loa
  * carousel (scroll-snap) with dots, plus arrows on pointer devices.
  * Pass onRemove to show an X on each card (composer).
  */
-export function LinkCarousel({ items, onRemove, label = '링크 미리보기' }: { items: CarouselItem[]; onRemove?: (url: string) => void; label?: string }) {
+export function LinkCarousel({ items, onRemove, label = tx('링크 미리보기') }: { items: CarouselItem[]; onRemove?: (url: string) => void; label?: string }) {
   const track = useRef<HTMLDivElement>(null)
   const [active, setActive] = useState(0)
   const multi = items.length > 1
@@ -43,7 +44,7 @@ export function LinkCarousel({ items, onRemove, label = '링크 미리보기' }:
 
   const card = (it: CarouselItem) =>
     isLoading(it) ? (
-      <div className={`link-card link-card-skeleton ${multi ? 'link-card-tile' : 'link-card-compact'}`} aria-busy="true" aria-label="미리보기 불러오는 중">
+      <div className={`link-card link-card-skeleton ${multi ? 'link-card-tile' : 'link-card-compact'}`} aria-busy="true" aria-label={tx('미리보기 불러오는 중')}>
         <div className="link-card-media" />
         <div className="link-card-body">
           <span className="sk-line w-1/3" />
@@ -62,7 +63,7 @@ export function LinkCarousel({ items, onRemove, label = '링크 미리보기' }:
           <div key={it.url} className="link-carousel-slide" aria-roledescription={multi ? 'slide' : undefined} aria-label={multi ? `${i + 1} / ${items.length}` : undefined}>
             {card(it)}
             {onRemove && (
-              <button type="button" className="link-carousel-remove" aria-label="미리보기 삭제" onClick={() => onRemove(it.url)}>
+              <button type="button" className="link-carousel-remove" aria-label={tx('미리보기 삭제')} onClick={() => onRemove(it.url)}>
                 <X className="w-3.5 h-3.5" />
               </button>
             )}
@@ -71,15 +72,15 @@ export function LinkCarousel({ items, onRemove, label = '링크 미리보기' }:
       </div>
       {multi && (
         <>
-          <button type="button" className="link-carousel-arrow is-prev" aria-label="이전 미리보기" disabled={current === 0} onClick={() => go(current - 1)}>
+          <button type="button" className="link-carousel-arrow is-prev" aria-label={tx('이전 미리보기')} disabled={current === 0} onClick={() => go(current - 1)}>
             <ChevronLeft className="w-4 h-4" />
           </button>
-          <button type="button" className="link-carousel-arrow is-next" aria-label="다음 미리보기" disabled={current >= items.length - 1} onClick={() => go(current + 1)}>
+          <button type="button" className="link-carousel-arrow is-next" aria-label={tx('다음 미리보기')} disabled={current >= items.length - 1} onClick={() => go(current + 1)}>
             <ChevronRight className="w-4 h-4" />
           </button>
-          <div className="link-carousel-dots" role="tablist" aria-label="미리보기 선택">
+          <div className="link-carousel-dots" role="tablist" aria-label={tx('미리보기 선택')}>
             {items.map((it, i) => (
-              <button key={it.url} type="button" role="tab" aria-selected={i === current} aria-label={`${i + 1}번째 미리보기`} className={i === current ? 'on' : ''} onClick={() => go(i)} />
+              <button key={it.url} type="button" role="tab" aria-selected={i === current} aria-label={tx('{v}번째 미리보기', { v: i + 1 })} className={i === current ? 'on' : ''} onClick={() => go(i)} />
             ))}
           </div>
         </>

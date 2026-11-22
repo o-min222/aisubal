@@ -1,6 +1,8 @@
-export function TimelineSkeleton({ count = 4 }: { count?: number }) {
+import { getT } from '@/i18n/server'
+export async function TimelineSkeleton({ count = 4 }: { count?: number }) {
+  const st = await getT()
   return (
-    <div className="timeline-list" aria-busy="true" aria-label="불러오는 중">
+    <div className="timeline-list" aria-busy="true" aria-label={st('불러오는 중')}>
       {Array.from({ length: count }).map((_, i) => (
         <div key={i} className="timeline-card">
           <div className="flex gap-3">
@@ -17,9 +19,10 @@ export function TimelineSkeleton({ count = 4 }: { count?: number }) {
   )
 }
 
-export function PageSkeleton() {
+export async function PageSkeleton() {
+  const st = await getT()
   return (
-    <div className="space-y-3" aria-busy="true" aria-label="불러오는 중">
+    <div className="space-y-3" aria-busy="true" aria-label={st('불러오는 중')}>
       <span className="skeleton block h-7 w-40 rounded" />
       <span className="skeleton block h-24 w-full rounded-xl" />
       <span className="skeleton block h-24 w-full rounded-xl" />

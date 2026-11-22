@@ -18,6 +18,8 @@ export function inviteUrl(code: string, origin: string = SITE_ORIGIN): string {
   return `${origin.replace(/\/$/, '')}/i/${encodeURIComponent(code)}`
 }
 
+import { msg } from '@/i18n/translate'
+
 export const SITE_INTRO = 'AI쓰발은 프롬프트·MCP·에이전트 스킬과 AI 툴 사용기를 나누는 초대 전용 AI 커뮤니티예요.'
 
 /** Ready-to-paste KakaoTalk message (the link line alone gets the OG preview card). */
@@ -32,8 +34,8 @@ export function inviteShareText(inviterName: string, code: string, origin: strin
 }
 
 export const INVITE_STATUS_TEXT: Record<InviteStatus, string> = {
-  valid: '사용할 수 있는 초대 코드예요.',
-  used: '이미 사용된 초대 코드예요. 초대한 분께 새 링크를 요청해 주세요.',
-  inactive: '아직 활성화되지 않은 초대 코드예요.',
-  invalid: '존재하지 않는 초대 코드예요. 링크를 다시 확인해 주세요.',
+  valid: msg('사용할 수 있는 초대 코드예요.'),
+  used: msg('이미 사용된 초대 코드예요. 초대한 분께 새 링크를 요청해 주세요.'),
+  inactive: msg('아직 활성화되지 않은 초대 코드예요.'),
+  invalid: msg('존재하지 않는 초대 코드예요. 링크를 다시 확인해 주세요.'),
 }

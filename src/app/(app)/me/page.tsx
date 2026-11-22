@@ -26,8 +26,15 @@ import { Pagination } from '@/components/pagination'
 import { RelativeTime } from '@/components/relative-time'
 import { UserAvatar } from '@/components/user-avatar'
 import { ToolIcon } from '@/components/tools/tool-card'
+import { T } from '@/i18n/t'
+import { getLocale, getT } from '@/i18n/server'
+import { LOCALE_META } from '@/i18n/config'
+import { msg } from '@/i18n/translate'
 
-export const metadata = { title: '내 대시보드 · AI쓰발' }
+export async function generateMetadata() {
+  const t = await getT()
+  return { title: t('내 대시보드 · AI쓰발') }
+}
 
 const TAB_IDS = DASHBOARD_TABS.map((t) => t.id)
 
@@ -47,7 +54,7 @@ function Row({ href, children, meta }: { href: string; children: ReactNode; meta
 }
 
 function PostRows({ items, empty }: { items: DashItem[]; empty: string }) {
-  if (!items.length) return <Empty>{empty}</Empty>
+  if (!items.length) return <Empty><T>{empty}</T></Empty>
   return (
     <ul className="divide-y divide-[#f0f0f0]">
       {items.map((p) => (
@@ -57,7 +64,7 @@ function PostRows({ items, empty }: { items: DashItem[]; empty: string }) {
           meta={
             <>
               {p.authorName && <span className="text-[#555]">{p.authorName}</span>}
-              {p.isNickname && <span className="badge">부캐</span>}
+              {p.isNickname && <span className="badge"><T>부캐</T></span>}
               <RelativeTime date={p.createdAt} />
               <span className="inline-flex items-center gap-0.5"><Heart className="w-3 h-3" /> {p.likeCount}</span>
               {p.replyCount > 0 && <span className="inline-flex items-center gap-0.5"><MessageCircle className="w-3 h-3" /> {p.replyCount}</span>}
@@ -65,7 +72,7 @@ function PostRows({ items, empty }: { items: DashItem[]; empty: string }) {
           }
         >
           {p.title && <b className="text-[#111]">{p.title} </b>}
-          {p.body || '(내용 없음)'}
+          {p.body || <T>(내용 없음)</T>}
         </Row>
       ))}
     </ul>
@@ -73,11 +80,14 @@ function PostRows({ items, empty }: { items: DashItem[]; empty: string }) {
 }
 
 function moimRole(m: Moim): string {
-  if (m.isHost || m.canManage) return '주최'
-  return m.myRsvp ? RSVP_LABEL[m.myRsvp.status] : '신청'
+  if (m.isHost || m.canManage) return msg('주최')
+  return m.myRsvp ? RSVP_LABEL[m.myRsvp.status] : msg('신청')
 }
 
 export default async function DashboardPage({ searchParams }: { searchParams: Promise<{ tab?: string; page?: string; view?: string; root?: string }> }) {
+  const st = await getT()
+  const t = await getT()
+  const locale = await getLocale()
   const state = await getUserState()
   if (state.type === 'unauthenticated') redirect('/login')
   if (state.type === 'waitlist') redirect('/waitlist')
@@ -116,14 +126,14 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   }
 
   const summary: Array<{ label: string; value: number | string; tab: DashboardTab }> = [
-    { label: '게시물', value: stats.posts, tab: 'posts' },
-    { label: '댓글', value: stats.comments, tab: 'comments' },
-    { label: '받은 좋아요', value: stats.likesReceived, tab: 'posts' },
-    { label: '쓰는 툴', value: tools.length, tab: 'tools' },
-    { label: '모임', value: moims.length, tab: 'moim' },
-    { label: '그룹', value: groups.length, tab: 'groups' },
-    { label: 'AI 활동', value: agentActs, tab: 'agents' },
-    { label: '남은 초대', value: profile.invitesLeft, tab: 'invites' },
+    { label: st('게시물'), value: stats.posts, tab: 'posts' },
+    { label: st('댓글'), value: stats.comments, tab: 'comments' },
+    { label: st('받은 좋아요'), value: stats.likesReceived, tab: 'posts' },
+    { label: st('쓰는 툴'), value: tools.length, tab: 'tools' },
+    { label: st('모임'), value: moims.length, tab: 'moim' },
+    { label: st('그룹'), value: groups.length, tab: 'groups' },
+    { label: st('AI 활동'), value: agentActs, tab: 'agents' },
+    { label: st('남은 초대'), value: profile.invitesLeft, tab: 'invites' },
   ]
 
   let body: ReactNode = null
@@ -133,7 +143,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
     totalPages = r.totalPages
     body = (
       <PostRows
-        empty="아직 쓴 글이 없어요."
+        empty={t('아직 쓴 글이 없어요.')}
         items={r.posts.map((p) => ({
           id: p.id,
           href: `/posts/${p.id}`,
@@ -149,11 +159,11 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   } else if (tab === 'comments') {
     const r = await listMyComments(me.id, page).catch(() => ({ items: [], totalPages: 1 }))
     totalPages = r.totalPages
-    body = <PostRows items={r.items} empty="아직 남긴 댓글이 없어요." />
+    body = <PostRows items={r.items} empty={msg('아직 남긴 댓글이 없어요.')} />
   } else if (tab === 'likes') {
     const r = await listMyLikedPosts(me.id, page).catch(() => ({ items: [], totalPages: 1 }))
     totalPages = r.totalPages
-    body = <PostRows items={r.items} empty="아직 좋아요한 글이 없어요." />
+    body = <PostRows items={r.items} empty={msg('아직 좋아요한 글이 없어요.')} />
   } else if (tab === 'tools') {
     const s = pageSlice(tools, page, PAGE_SIZE)
     totalPages = s.totalPages
@@ -167,14 +177,14 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
                 <span className="block font-medium text-[#111] truncate">{t.name}</span>
                 <span className="block text-xs text-[#888] truncate">{t.one_liner}</span>
               </span>
-              <span className="badge">{TOOL_TYPE_CHIP[t.type] ?? t.type}</span>
+              <span className="badge"><T>{TOOL_TYPE_CHIP[t.type] ?? t.type}</T></span>
             </Link>
           </li>
         ))}
       </ul>
     ) : (
       <Empty>
-        아직 &lsquo;쓰는 중&rsquo;으로 표시한 툴이 없어요. <Link href="/tools" className="text-[#0066cc]">툴 둘러보기</Link>
+        <T>아직 ‘쓰는 중’으로 표시한 툴이 없어요.</T> <Link href="/tools" className="text-[#0066cc]"><T>툴 둘러보기</T></Link>
       </Empty>
     )
   } else if (tab === 'moim') {
@@ -189,12 +199,10 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
             meta={
               <>
                 <span className="badge">{moimRole(m)}</span>
-                <span>{new Date(m.startsAt).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul', month: 'short', day: 'numeric', weekday: 'short', hour: '2-digit', minute: '2-digit' })}</span>
-                <span>
-                  {m.confirmed}/{m.capacity}명
-                </span>
+                <span>{new Date(m.startsAt).toLocaleString(LOCALE_META[locale].intl, { timeZone: 'Asia/Seoul', month: 'short', day: 'numeric', weekday: 'short', hour: '2-digit', minute: '2-digit' })}</span>
+                <span><T s="{confirmed}/{capacity}명" vars={{ confirmed: m.confirmed, capacity: m.capacity }} /></span>
                 {m.group && <span>· {m.group.name}</span>}
-                {m.status === 'cancelled' && <span className="text-[#e5484d]">취소됨</span>}
+                {m.status === 'cancelled' && <span className="text-[#e5484d]"><T>취소됨</T></span>}
               </>
             }
           >
@@ -204,7 +212,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
       </ul>
     ) : (
       <Empty>
-        신청했거나 주최한 모임이 없어요. <Link href="/moim" className="text-[#0066cc]">모임 보기</Link>
+        <T>신청했거나 주최한 모임이 없어요.</T> <Link href="/moim" className="text-[#0066cc]"><T>모임 보기</T></Link>
       </Empty>
     )
   } else if (tab === 'groups') {
@@ -220,18 +228,16 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
               </span>
               <span className="min-w-0 flex-1">
                 <span className="block font-medium text-[#111] truncate">{g.name}</span>
-                <span className="block text-xs text-[#888]">
-                  멤버 {g.memberCount} · 글 {g.postCount}
-                </span>
+                <span className="block text-xs text-[#888]"><T s="멤버 {memberCount} · 글 {postCount}" vars={{ memberCount: g.memberCount, postCount: g.postCount }} /></span>
               </span>
-              <span className="badge">{g.myStatus === 'pending' ? '가입 요청 중' : g.myStatus === 'invited' ? '초대받음' : g.myRole ? ROLE_LABEL[g.myRole] : '멤버'}</span>
+              <span className="badge">{g.myStatus === 'pending' ? <T>가입 요청 중</T> : g.myStatus === 'invited' ? <T>초대받음</T> : g.myRole ? ROLE_LABEL[g.myRole] : <T>멤버</T>}</span>
             </Link>
           </li>
         ))}
       </ul>
     ) : (
       <Empty>
-        가입한 그룹이 없어요. <Link href="/groups" className="text-[#0066cc]">그룹 둘러보기</Link>
+        <T>가입한 그룹이 없어요.</T> <Link href="/groups" className="text-[#0066cc]"><T>그룹 둘러보기</T></Link>
       </Empty>
     )
   } else if (tab === 'agents') {
@@ -243,11 +249,9 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
               <Bot className="w-4 h-4 text-[#555]" />
               <b className="text-[#111]">{a.agentName}</b>
               {a.agentModel && <span className="text-xs text-[#888] truncate">{a.agentModel}</span>}
-              <span className="ml-auto text-xs text-[#888]">{a.lastUsedAt ? <>최근 <RelativeTime date={a.lastUsedAt} /></> : '아직 사용 안 함'}</span>
+              <span className="ml-auto text-xs text-[#888]">{a.lastUsedAt ? <><T>최근</T> <RelativeTime date={a.lastUsedAt} /></> : <T>아직 사용 안 함</T>}</span>
             </div>
-            <div className="mt-1 text-xs text-[#666]">
-              아고라 글 {a.counts.agoraPosts} · 아고라 답글 {a.counts.agoraReplies} · 피드 답글 {a.counts.feedReplies} · 좋아요 {a.counts.likes}
-            </div>
+            <div className="mt-1 text-xs text-[#666]"><T s="아고라 글 {agoraPosts} · 아고라 답글 {agoraReplies} · 피드 답글 {feedReplies} · 좋아요 {likes}" vars={{ agoraPosts: a.counts.agoraPosts, agoraReplies: a.counts.agoraReplies, feedReplies: a.counts.feedReplies, likes: a.counts.likes }} /></div>
             {a.recent.length > 0 && (
               <ul className="mt-2 space-y-1">
                 {a.recent.slice(0, 3).map((r) => (
@@ -264,7 +268,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
       </ul>
     ) : (
       <Empty>
-        연결한 AI가 없어요. <Link href="/connect" className="text-[#0066cc]">AI 연결하기</Link>
+        <T>연결한 AI가 없어요.</T> <Link href="/connect" className="text-[#0066cc]"><T>AI 연결하기</T></Link>
       </Empty>
     )
   } else if (tab === 'network') {
@@ -282,10 +286,8 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
       const center = graph?.nodes.find((n) => n.id === graph.rootId)
       inner = (
         <div className="p-3 space-y-2">
-          <p className="text-[13px] px-1" style={{ color: '#666' }}>
-            {center && !center.relation.isMe ? `${center.name}님 중심` : '나를 중심으로'} {GRAPH_HOPS}단계까지 보여요. 점선 +N을 누르면 더 불러와요. 드래그로 이동, 휠·핀치로 확대.
-          </p>
-          {graph ? <InviteGraph key={graph.rootId} initial={graph} /> : <Empty>네트워크를 불러오지 못했어요.</Empty>}
+          <p className="text-[13px] px-1" style={{ color: '#666' }}><T s="{v} {GRAPH_HOPS}단계까지 보여요. 점선 +N을 누르면 더 불러와요. 드래그로 이동, 휠·핀치로 확대." vars={{ v: center && !center.relation.isMe ? st('{name}님 중심', { name: center.name }) : st('나를 중심으로'), GRAPH_HOPS }} /></p>
+          {graph ? <InviteGraph key={graph.rootId} initial={graph} /> : <Empty><T>네트워크를 불러오지 못했어요.</T></Empty>}
         </div>
       )
     } else {
@@ -303,13 +305,13 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
         </ul>
       ) : (
         <Empty>
-          {{ followers: '아직 팔로워가 없어요.', following: '아직 팔로우한 사람이 없어요.', friends: '아직 친구가 없어요. 친구는 친구 신청 → 수락으로 생겨요 (맞팔과 별개).', requests: '받은 친구 요청이 없어요.', sent: '보낸 친구 요청이 없어요.' }[kind]}
+          {{ followers: st('아직 팔로워가 없어요.'), following: st('아직 팔로우한 사람이 없어요.'), friends: st('아직 친구가 없어요. 친구는 친구 신청 → 수락으로 생겨요 (맞팔과 별개).'), requests: st('받은 친구 요청이 없어요.'), sent: <T>보낸 친구 요청이 없어요.</T> }[kind]}
         </Empty>
       )
     }
     body = (
       <div>
-        <div className="flex gap-1.5 overflow-x-auto px-3 pt-3 pb-1" style={{ scrollbarWidth: 'none' }} role="tablist" aria-label="네트워크 보기">
+        <div className="flex gap-1.5 overflow-x-auto px-3 pt-3 pb-1" style={{ scrollbarWidth: 'none' }} role="tablist" aria-label={st('네트워크 보기')}>
           {NETWORK_VIEWS.map((v) => (
             <Link
               key={v.id}
@@ -319,9 +321,9 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
               aria-selected={v.id === view}
               className={`filter-chip whitespace-nowrap ${v.id === view ? 'on' : ''}`}
             >
-              {v.label}
+              <T>{v.label}</T>
               {typeof socialCounts[v.id] === 'number' && <span className="ml-1 tabular-nums opacity-70">{socialCounts[v.id]}</span>}
-              {v.id === 'requests' && (social?.incomingRequests ?? 0) > 0 && <span className="ml-1 inline-block w-1.5 h-1.5 rounded-full bg-[#e5484d]" aria-label="새 요청" />}
+              {v.id === 'requests' && (social?.incomingRequests ?? 0) > 0 && <span className="ml-1 inline-block w-1.5 h-1.5 rounded-full bg-[#e5484d]" aria-label={st('새 요청')} />}
             </Link>
           ))}
         </div>
@@ -332,7 +334,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
     body = (
       <div>
         <p className="px-4 pt-3 text-sm text-[#555]">
-          초대 코드 {codes.length}개 중 <b className="text-[#111]">{used}명</b>이 가입했어요 · 남은 초대 {profile.invitesLeft}
+          초대 코드 {codes.length}개 중 <b className="text-[#111]"><T s="{used}명" vars={{ used }} /></b>이 가입했어요 · 남은 초대 {profile.invitesLeft}
         </p>
         {codes.length ? (
           <ul className="divide-y divide-[#f0f0f0] mt-2">
@@ -342,23 +344,23 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
                 <span className="ml-auto text-xs text-[#888]">
                   {c.isUsed ? (
                     <>
-                      {c.usedBy?.displayName ?? '가입 완료'} {c.usedAt && <>· <RelativeTime date={c.usedAt} /></>}
+                      {c.usedBy?.displayName ?? <T>가입 완료</T>} {c.usedAt && <>· <RelativeTime date={c.usedAt} /></>}
                     </>
                   ) : c.isActive ? (
-                    '사용 가능'
+                    <T>사용 가능</T>
                   ) : (
-                    '비활성'
+                    <T>비활성</T>
                   )}
                 </span>
               </li>
             ))}
           </ul>
         ) : (
-          <Empty>초대 코드가 없어요.</Empty>
+          <Empty><T>초대 코드가 없어요.</T></Empty>
         )}
         <div className="px-4 pb-3">
           <Link href="/invites" className="text-sm text-[#0066cc]">
-            초대 관리로 이동 →
+            <T>초대 관리로 이동 →</T>
           </Link>
         </div>
       </div>
@@ -375,29 +377,31 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
           </span>
           <div className="flex items-center gap-2">
             <Link href="/settings/profile" className="btn btn-secondary btn-sm min-h-[40px] rounded-full inline-flex items-center gap-1.5">
-              <Pencil className="w-3.5 h-3.5" /> 프로필 편집
+              <Pencil className="w-3.5 h-3.5" /> <T>프로필 편집</T>
             </Link>
-            <Link href="/settings" className="btn btn-secondary btn-sm min-h-[40px] min-w-[40px] rounded-full !px-0 justify-center" aria-label="설정">
+            <Link href="/settings" className="btn btn-secondary btn-sm min-h-[40px] min-w-[40px] rounded-full !px-0 justify-center" aria-label={st('설정')}>
               <Settings className="w-[18px] h-[18px]" />
             </Link>
           </div>
         </div>
         <div className="px-4 pb-3">
           <h1 className="text-xl font-bold" style={{ color: '#111' }}>
-            내 대시보드
+            <T>내 대시보드</T>
           </h1>
           <div className="text-sm text-[#777]">
             {me.display_name}
             {me.handle && <> · @{me.handle}</>} ·{' '}
             <Link href="/members/me" className="text-[#0066cc]">
-              공개 프로필 보기
+              <T>공개 프로필 보기</T>
             </Link>
           </div>
           {pledge?.signedAt && (
-            <Link href="/pledge" className="pledge-chip mt-2" title="내가 서명한 선언 및 입단 서약 보기">
+            <Link href="/pledge" className="pledge-chip mt-2" title={t('내가 서명한 선언 및 입단 서약 보기')}>
               <ScrollText className="w-3.5 h-3.5" />
-              {new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium', timeZone: 'Asia/Seoul' }).format(new Date(pledge.signedAt))} 입단 서약
-              <span className="text-[#9a8a66]">· 초대인 {pledge.inviter ?? '창립 멤버'}</span>
+              <T s="{date} 입단 서약" vars={{ date: new Intl.DateTimeFormat(LOCALE_META[locale].intl, { dateStyle: 'medium', timeZone: 'Asia/Seoul' }).format(new Date(pledge.signedAt)) }} />
+              <span className="text-[#9a8a66]">
+                <T s="· 초대인 {name}" vars={{ name: pledge.inviter ?? t('창립 멤버') }} />
+              </span>
             </Link>
           )}
         </div>
@@ -405,14 +409,14 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
           {summary.map((s) => (
             <Link key={s.label} href={dashboardHref(s.tab)} scroll={false} className="px-2 py-3 text-center hover:bg-[#fafafa]">
               <dd className="text-lg font-bold text-[#111] tabular-nums">{s.value}</dd>
-              <dt className="text-[11.5px] text-[#888]">{s.label}</dt>
+              <dt className="text-[11.5px] text-[#888]"><T>{s.label}</T></dt>
             </Link>
           ))}
         </dl>
       </section>
 
       <section className="card overflow-hidden">
-        <LinkTabs label="대시보드 탭" active={tab} tabs={TAB_IDS.map((id) => ({ id, label: DASHBOARD_TABS.find((t) => t.id === id)!.label, href: dashboardHref(id), count: counts[id] }))} />
+        <LinkTabs label={msg('대시보드 탭')} active={tab} tabs={TAB_IDS.map((id) => ({ id, label: DASHBOARD_TABS.find((t) => t.id === id)!.label, href: dashboardHref(id), count: counts[id] }))} />
         {body}
         <Pagination base={tab === 'network' ? networkHref({ view: parseNetworkView(sp.view) }) : dashboardHref(tab)} page={page} totalPages={totalPages} />
       </section>

@@ -9,6 +9,9 @@ import { useMediaQuery } from '@/hooks/use-media-query'
 import { ADMIN_SECTIONS, SETTINGS_SECTIONS, type SubNavItem } from './account-nav'
 import type { ShellMember } from './nav-items'
 import { signOut } from './sign-out'
+import { useT } from '@/i18n/client'
+import { LocaleSwitch } from '@/components/i18n/locale-switch'
+import { msg } from '@/i18n/translate'
 
 function useInvitesLeft(open: boolean, initial: number | null) {
   const [left, setLeft] = useState<number | null>(initial)
@@ -42,17 +45,18 @@ function Group({
   onNavigate: () => void
 }) {
   const [expanded, setExpanded] = useState(false)
+  const t = useT()
   return (
     <div>
       <div className="account-row-wrap">
         <Link href={href} onClick={onNavigate} className="account-row flex-1">
-          <Icon className="w-[18px] h-[18px]" /> {label}
+          <Icon className="w-[18px] h-[18px]" /> {t(label)}
         </Link>
         <button
           type="button"
           className="account-expand"
           aria-expanded={expanded}
-          aria-label={`${label} 하위 메뉴 ${expanded ? '접기' : '펼치기'}`}
+          aria-label={expanded ? t('{label} 하위 메뉴 접기', { label: t(label) }) : t('{label} 하위 메뉴 펼치기', { label: t(label) })}
           onClick={() => setExpanded((v) => !v)}
         >
           <ChevronDown className={`w-4 h-4 transition-transform ${expanded ? 'rotate-180' : ''}`} />
@@ -63,7 +67,7 @@ function Group({
           {items.map((i) => (
             <li key={i.href}>
               <Link href={i.href} onClick={onNavigate} className="account-subrow">
-                <i.icon className="w-4 h-4" /> {i.label}
+                <i.icon className="w-4 h-4" /> {t(i.label)}
               </Link>
             </li>
           ))}
@@ -74,31 +78,33 @@ function Group({
 }
 
 function MenuBody({ me, invitesLeft, close }: { me: ShellMember; invitesLeft: number | null; close: () => void }) {
+  const t = useT()
   return (
-    <nav aria-label="계정 메뉴" className="account-menu-body">
+    <nav aria-label={t('계정 메뉴')} className="account-menu-body">
       <Link href="/members/me" onClick={close} className="account-head">
         <UserAvatar id={me.id} name={me.displayName} avatarUrl={me.avatarUrl} size="md" />
         <span className="min-w-0">
           <span className="block font-semibold text-[#111] truncate">{me.displayName}</span>
-          <span className="block text-xs text-[#888]">프로필 보기</span>
+          <span className="block text-xs text-[#888]">{t('프로필 보기')}</span>
         </span>
       </Link>
       <div className="account-sep" />
       <Link href="/me" onClick={close} className="account-row">
-        <LayoutDashboard className="w-[18px] h-[18px]" /> 내 대시보드
+        <LayoutDashboard className="w-[18px] h-[18px]" /> {t('내 대시보드')}
       </Link>
       <Link href="/members/me" onClick={close} className="account-row">
-        <UserRound className="w-[18px] h-[18px]" /> 내 프로필
+        <UserRound className="w-[18px] h-[18px]" /> {t('내 프로필')}
       </Link>
       <Link href="/invites" onClick={close} className="account-row">
-        <Ticket className="w-[18px] h-[18px]" /> 초대
-        {invitesLeft !== null && <span className="account-badge">{invitesLeft}장 남음</span>}
+        <Ticket className="w-[18px] h-[18px]" /> {t('초대')}
+        {invitesLeft !== null && <span className="account-badge">{t('{n}장 남음', { n: invitesLeft })}</span>}
       </Link>
-      <Group icon={Settings} label="설정" href="/settings" items={SETTINGS_SECTIONS} onNavigate={close} />
-      {me.isAdmin && <Group icon={Shield} label="관리" href="/admin" items={ADMIN_SECTIONS} onNavigate={close} />}
+      <Group icon={Settings} label={msg('설정')} href="/settings" items={SETTINGS_SECTIONS} onNavigate={close} />
+      {me.isAdmin && <Group icon={Shield} label={msg('관리')} href="/admin" items={ADMIN_SECTIONS} onNavigate={close} />}
       <div className="account-sep" />
+      <LocaleSwitch variant="row" />
       <button type="button" onClick={signOut} className="account-row w-full text-left">
-        <LogOut className="w-[18px] h-[18px]" /> 로그아웃
+        <LogOut className="w-[18px] h-[18px]" /> {t('로그아웃')}
       </button>
     </nav>
   )
@@ -113,7 +119,7 @@ export function AccountMenu({
   invitesLeft: initialInvites = null,
   align = 'right',
   triggerClassName = '',
-  triggerLabel = '내 계정 메뉴',
+  triggerLabel,
   children,
 }: {
   me: ShellMember
@@ -124,6 +130,7 @@ export function AccountMenu({
   children: ReactNode
 }) {
   const [open, setOpen] = useState(false)
+  const t = useT()
   const desktop = useMediaQuery('(min-width: 768px)')
   const invitesLeft = useInvitesLeft(open, initialInvites)
   const wrap = useRef<HTMLDivElement>(null)
@@ -148,7 +155,7 @@ export function AccountMenu({
       <button
         type="button"
         className={triggerClassName}
-        aria-label={triggerLabel}
+        aria-label={triggerLabel ? t(triggerLabel) : t('내 계정 메뉴')}
         aria-haspopup="menu"
         aria-expanded={open}
         onClick={() => setOpen((v) => !v)}
@@ -161,7 +168,7 @@ export function AccountMenu({
         </div>
       )}
       {!desktop && (
-        <AdaptiveSheet open={open} onOpenChange={setOpen} title="내 계정">
+        <AdaptiveSheet open={open} onOpenChange={setOpen} title={t('내 계정')}>
           <MenuBody me={me} invitesLeft={invitesLeft} close={close} />
         </AdaptiveSheet>
       )}

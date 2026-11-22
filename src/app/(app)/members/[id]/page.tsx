@@ -25,10 +25,17 @@ import { AgentsSection } from '@/components/profile/agents-section'
 import { listProfileAgents } from '@/lib/data/tokens'
 import { getProfileStack } from '@/lib/data/profile-stack'
 import { AgentList, StackChips } from '@/components/profile/member-card'
+import { T } from '@/i18n/t'
+import { getT } from '@/i18n/server'
+import { msg } from '@/i18n/translate'
 
-export const metadata = { title: '프로필 · AI쓰발' }
+export async function generateMetadata() {
+  const t = await getT()
+  return { title: t('프로필 · AI쓰발') }
+}
 
 export default async function MemberProfilePage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ page?: string }> }) {
+  const st = await getT()
   const state = await getUserState()
   if (state.type === 'unauthenticated') redirect('/login')
   if (state.type === 'waitlist') redirect('/waitlist')
@@ -73,9 +80,9 @@ export default async function MemberProfilePage({ params, searchParams }: { para
           {isMe && (
             <div className="flex items-center gap-2">
               <Link href="/settings/profile" className="btn btn-secondary btn-sm min-h-[40px] rounded-full">
-                프로필 편집
+                <T>프로필 편집</T>
               </Link>
-              <Link href="/settings" className="btn btn-secondary btn-sm min-h-[40px] min-w-[40px] rounded-full !px-0 justify-center" aria-label="설정">
+              <Link href="/settings" className="btn btn-secondary btn-sm min-h-[40px] min-w-[40px] rounded-full !px-0 justify-center" aria-label={st('설정')}>
                 <Settings className="w-[18px] h-[18px]" />
               </Link>
             </div>
@@ -88,21 +95,21 @@ export default async function MemberProfilePage({ params, searchParams }: { para
           </div>
           <div className="flex flex-wrap items-center gap-x-2 text-sm text-[#777]">
             {member.handle && <span className="font-medium">@{member.handle}</span>}
-            {member.show_real_name && member.public_real_name && <span>· 실명 {member.public_real_name}</span>}
-            {isMe && !member.show_real_name && <span className="text-[#aaa]">· 실명 비공개</span>}
+            {member.show_real_name && member.public_real_name && <span><T s="· 실명 {public_real_name}" vars={{ public_real_name: member.public_real_name }} /></span>}
+            {isMe && !member.show_real_name && <span className="text-[#aaa]"><T>· 실명 비공개</T></span>}
           </div>
-          {isMe && member.nickname && <div className="text-sm text-[#888]">부캐 {member.nickname} (나만 보여요)</div>}
+          {isMe && member.nickname && <div className="text-sm text-[#888]"><T s="부캐 {nickname} (나만 보여요)" vars={{ nickname: member.nickname }} /></div>}
           {member.bio && <p className="text-sm text-[#555] mt-2 whitespace-pre-wrap">{member.bio}</p>}
           {links.length > 0 && (
-            <ul className="profile-links flex flex-wrap gap-1.5 mt-3" aria-label="SNS 링크">
+            <ul className="profile-links flex flex-wrap gap-1.5 mt-3" aria-label={st('SNS 링크')}>
               {links.map((l, i) => {
                 const label = LINK_KINDS.find((k) => k.kind === l.kind)?.label ?? l.kind
                 return (
                   <li key={i}>
                     <a href={l.url} target="_blank" rel="noopener noreferrer nofollow me" className="inline-flex items-center gap-1.5 rounded-full pl-1 pr-3 min-h-[36px] text-[13px] hover:bg-[#f2f2f2]" style={{ border: '1px solid #eee', color: '#222' }} title={l.url}>
                       <LinkIcon kind={l.kind} size={26} />
-                      {label}
-                      {isMe && l.visibility !== 'members' && <span className="text-[11px] text-[#999]">· {LINK_VISIBILITY.find((v) => v.id === l.visibility)?.label}</span>}
+                      <T>{label}</T>
+                      {isMe && l.visibility !== 'members' && <span className="text-[11px] text-[#999]">· <T>{LINK_VISIBILITY.find((v) => v.id === l.visibility)?.label ?? ''}</T></span>}
                     </a>
                   </li>
                 )
@@ -112,29 +119,27 @@ export default async function MemberProfilePage({ params, searchParams }: { para
           {social && (
             <div className="profile-social flex flex-wrap gap-x-5 gap-y-1 mt-3 text-sm">
               <Link href={socialHref('followers')} className="min-h-[32px] inline-flex items-center gap-1">
-                <b className="text-[#111] tabular-nums">{social.followers}</b> <span className="text-[#777]">팔로워</span>
+                <b className="text-[#111] tabular-nums">{social.followers}</b> <span className="text-[#777]"><T>팔로워</T></span>
               </Link>
               <Link href={socialHref('following')} className="min-h-[32px] inline-flex items-center gap-1">
-                <b className="text-[#111] tabular-nums">{social.following}</b> <span className="text-[#777]">팔로잉</span>
+                <b className="text-[#111] tabular-nums">{social.following}</b> <span className="text-[#777]"><T>팔로잉</T></span>
               </Link>
               <Link href={socialHref('friends')} className="min-h-[32px] inline-flex items-center gap-1">
-                <b className="text-[#111] tabular-nums">{social.friends}</b> <span className="text-[#777]">친구</span>
+                <b className="text-[#111] tabular-nums">{social.friends}</b> <span className="text-[#777]"><T>친구</T></span>
               </Link>
               {isMe && (social.incomingRequests ?? 0) > 0 && (
-                <Link href={socialHref('requests')} className="min-h-[32px] inline-flex items-center gap-1 text-[#e5484d] font-medium">
-                  친구 요청 {social.incomingRequests}
-                </Link>
+                <Link href={socialHref('requests')} className="min-h-[32px] inline-flex items-center gap-1 text-[#e5484d] font-medium"><T s="친구 요청 {incomingRequests}" vars={{ incomingRequests: social.incomingRequests }} /></Link>
               )}
               <Link href={isMe ? networkHref() : networkHref({ root: member.id })} className="min-h-[32px] inline-flex items-center gap-1 text-[#0066cc]">
-                <Network className="w-3.5 h-3.5" /> 초대 네트워크
+                <Network className="w-3.5 h-3.5" /> <T>초대 네트워크</T>
               </Link>
             </div>
           )}
           {stats && (
             <div className="flex gap-5 mt-2 text-sm">
-              <span><b className="text-[#111]">{stats.posts}</b> <span className="text-[#777]">게시물</span></span>
-              <span><b className="text-[#111]">{stats.likes}</b> <span className="text-[#777]">받은 좋아요</span></span>
-              <Link href="/invites"><b className="text-[#111]">{stats.invitesLeft}</b> <span className="text-[#777]">남은 초대</span></Link>
+              <span><b className="text-[#111]">{stats.posts}</b> <span className="text-[#777]"><T>게시물</T></span></span>
+              <span><b className="text-[#111]">{stats.likes}</b> <span className="text-[#777]"><T>받은 좋아요</T></span></span>
+              <Link href="/invites"><b className="text-[#111]">{stats.invitesLeft}</b> <span className="text-[#777]"><T>남은 초대</T></span></Link>
             </div>
           )}
         </div>
@@ -144,11 +149,11 @@ export default async function MemberProfilePage({ params, searchParams }: { para
         <section id="stack" className="card p-4 scroll-mt-20" aria-labelledby="stack-title">
           <div className="flex items-center justify-between gap-2 mb-3">
             <h2 id="stack-title" className="text-sm font-semibold text-[#111]">
-              {isMe ? '내 AI 스택' : `${member.display_name}님의 AI 스택`}
+              {isMe ? <T>내 AI 스택</T> : <T s="{name}님의 AI 스택" vars={{ name: member.display_name }} />}
             </h2>
             {isMe && (
               <Link href="/settings/profile#stack" className="text-xs text-[#0066cc] inline-flex items-center min-h-[32px]">
-                편집 <ChevronRight className="w-3.5 h-3.5" />
+                <T>편집</T> <ChevronRight className="w-3.5 h-3.5" />
               </Link>
             )}
           </div>
@@ -157,11 +162,11 @@ export default async function MemberProfilePage({ params, searchParams }: { para
               <StackChips group="ai" data={stack.ai} max={40} />
               <StackChips group="subs" data={stack.subs} max={40} />
               <StackChips group="skills" data={stack.skills} max={40} />
-              <AgentList agents={stack.agents} isMe={isMe} max={40} title={isMe ? '내 에이전트' : '에이전트'} />
+              <AgentList agents={stack.agents} isMe={isMe} max={40} title={isMe ? st('내 에이전트') : st('에이전트')} />
             </div>
           ) : (
             <p className="text-sm text-[#888]">
-              쓰는 AI, 구독 중인 서비스, 에이전트를 <Link href="/settings/profile#stack" className="text-[#0066cc]">프로필 편집</Link>에서 추가해 보세요.
+              <T>쓰는 AI, 구독 중인 서비스, 에이전트를</T> <Link href="/settings/profile#stack" className="text-[#0066cc]"><T>프로필 편집</T></Link><T>에서 추가해 보세요.</T>
             </p>
           )}
         </section>
@@ -170,12 +175,12 @@ export default async function MemberProfilePage({ params, searchParams }: { para
       <section className="card p-4" aria-labelledby="my-tools">
         <div className="flex items-center justify-between gap-2 mb-3">
           <h2 id="my-tools" className="text-sm font-semibold text-[#111] inline-flex items-center gap-1.5">
-            <Wrench className="w-4 h-4" /> {isMe ? '내가 쓰는 툴' : `${member.display_name}님이 쓰는 툴`}
+            <Wrench className="w-4 h-4" /> {isMe ? <T>내가 쓰는 툴</T> : <T s="{name}님이 쓰는 툴" vars={{ name: member.display_name }} />}
             <span className="text-[#888] font-normal tabular-nums">{tools.length}</span>
           </h2>
           {isMe && (
             <Link href="/tools?mine=1" className="text-xs text-[#0066cc] inline-flex items-center min-h-[32px]">
-              관리 <ChevronRight className="w-3.5 h-3.5" />
+              <T>관리</T> <ChevronRight className="w-3.5 h-3.5" />
             </Link>
           )}
         </div>
@@ -183,10 +188,10 @@ export default async function MemberProfilePage({ params, searchParams }: { para
           <p className="text-sm text-[#888]">
             {isMe ? (
               <>
-                아직 없어요. <Link href="/tools" className="text-[#0066cc]">툴</Link>에서 ‘나도 써요’를 눌러 모아보세요.
+                <T>아직 없어요.</T> <Link href="/tools" className="text-[#0066cc]"><T>툴</T></Link><T>에서 ‘나도 써요’를 눌러 모아보세요.</T>
               </>
             ) : (
-              '아직 표시한 툴이 없어요.'
+              <T>아직 표시한 툴이 없어요.</T>
             )}
           </p>
         ) : (
@@ -198,8 +203,8 @@ export default async function MemberProfilePage({ params, searchParams }: { para
                   <span className="min-w-0">
                     <span className="block text-sm font-medium text-[#111] truncate">{t.name}</span>
                     <span className="block text-[11.5px] text-[#888] truncate">
-                      {TOOL_TYPE_CHIP[t.type]}
-                      {(t.user_count ?? 0) > 1 ? ` · ${t.user_count}명이 써요` : ''}
+                      <T>{TOOL_TYPE_CHIP[t.type]}</T>
+                      {(t.user_count ?? 0) > 1 ? <> · <T s="{n}명이 써요" vars={{ n: t.user_count ?? 0 }} /></> : ''}
                     </span>
                   </span>
                 </Link>
@@ -211,9 +216,9 @@ export default async function MemberProfilePage({ params, searchParams }: { para
 
       <AgentsSection agents={agents} isMe={isMe} ownerName={member.display_name} />
 
-      <h2 className="text-sm font-semibold text-[#111] px-1">{isMe ? '내 글' : '글'}</h2>
+      <h2 className="text-sm font-semibold text-[#111] px-1">{isMe ? <T>내 글</T> : <T>글</T>}</h2>
       {posts.length === 0 ? (
-        <div className="card p-8 text-center text-sm text-[#888]">아직 글이 없어요.</div>
+        <div className="card p-8 text-center text-sm text-[#888]"><T>아직 글이 없어요.</T></div>
       ) : (
         <div className="timeline-list">
           {posts.map((p) => (
@@ -228,7 +233,7 @@ export default async function MemberProfilePage({ params, searchParams }: { para
           ))}
         </div>
       )}
-      <Pagination base={`/members/${isMe ? 'me' : member.id}`} page={page} totalPages={totalPages} label="프로필 글 페이지" />
+      <Pagination base={`/members/${isMe ? 'me' : member.id}`} page={page} totalPages={totalPages} label={msg('프로필 글 페이지')} />
     </div>
   )
 }

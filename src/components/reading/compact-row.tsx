@@ -1,4 +1,6 @@
 import Link from 'next/link'
+import { T } from '@/i18n/t'
+import { getT } from '@/i18n/server'
 
 /** One compact list row: clear title, short preview, meta line. Opens in the reading pane. */
 export function CompactRow({
@@ -36,9 +38,10 @@ export function CompactRow({
   )
 }
 
-export function CompactList({ children, label }: { children: React.ReactNode; label: string }) {
+export async function CompactList({ children, label }: { children: React.ReactNode; label: string }) {
+  const st = await getT()
   return (
-    <div className="crow-list" role="list" aria-label={label}>
+    <div className="crow-list" role="list" aria-label={st(label)}>
       {children}
     </div>
   )
@@ -48,9 +51,9 @@ export function EmptyList({ title, hint }: { title: string; hint?: string }) {
   return (
     <div className="card p-8 text-center">
       <p className="font-medium" style={{ color: '#333' }}>
-        {title}
+        <T>{title}</T>
       </p>
-      {hint && <p className="text-sm mt-1" style={{ color: '#888' }}>{hint}</p>}
+      {hint && <p className="text-sm mt-1" style={{ color: '#888' }}><T>{hint}</T></p>}
     </div>
   )
 }

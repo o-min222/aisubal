@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react'
 import { Play } from 'lucide-react'
 import type { LinkType } from '@/lib/supabase/types'
+import { T } from '@/i18n/t'
 
 export type LinkCardData = {
   url: string
@@ -89,7 +90,7 @@ export function LinkCard({
           ) : (
             <span className="link-card-fallback-label">{label.slice(0, 2)}</span>
           )}
-          <span className="link-card-fallback-site">{label}</span>
+          <span className="link-card-fallback-site"><T>{label}</T></span>
         </div>
       )}
       <div className="link-card-body">

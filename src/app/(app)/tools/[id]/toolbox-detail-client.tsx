@@ -25,6 +25,8 @@ import { SaveToArchiveButton } from '@/components/save-to-archive-button'
 import { toast } from 'sonner'
 import type { AiRatingSummary } from '@/lib/data/agora'
 import { AiRatingSection } from './ai-rating-section'
+import { T } from '@/i18n/t'
+import { tx, tn } from '@/i18n/client'
 
 interface Props {
   entry: ToolboxEntryDetails
@@ -64,9 +66,9 @@ export function ToolboxDetailClient({ entry: initial, mentionPosts, member, aiRa
   async function copySnippet() {
     try {
       await navigator.clipboard.writeText(snippet)
-      toast.success('설치 스니펫을 복사했습니다.')
+      toast.success(tn('설치 스니펫을 복사했습니다.'))
     } catch {
-      toast.error('복사에 실패했습니다.')
+      toast.error(tn('복사에 실패했습니다.'))
     }
   }
 
@@ -80,11 +82,11 @@ export function ToolboxDetailClient({ entry: initial, mentionPosts, member, aiRa
       })
       const data = await res.json()
       if (!res.ok) {
-        toast.error(data.error || '기록 실패')
+        toast.error(data.error || tn('기록 실패'))
         return
       }
       if (data.entry) setEntry(data.entry)
-      toast.success('설치 카운트가 반영되었습니다. CLI: aisubal toolbox install ' + entry.slug)
+      toast.success(tn('설치 카운트가 반영되었습니다. CLI: aisubal toolbox install ') + entry.slug)
     } finally {
       setBusy(false)
     }
@@ -100,11 +102,11 @@ export function ToolboxDetailClient({ entry: initial, mentionPosts, member, aiRa
       })
       const data = await res.json()
       if (!res.ok) {
-        toast.error(data.error || '리뷰 실패')
+        toast.error(data.error || tn('리뷰 실패'))
         return
       }
       setEntry(data.entry)
-      toast.success('리뷰가 저장되었습니다.')
+      toast.success(tn('리뷰가 저장되었습니다.'))
       setReviewBody('')
     } finally {
       setBusy(false)
@@ -121,11 +123,11 @@ export function ToolboxDetailClient({ entry: initial, mentionPosts, member, aiRa
       })
       const data = await res.json()
       if (!res.ok) {
-        toast.error(data.error || '투표 실패')
+        toast.error(data.error || tn('투표 실패'))
         return
       }
       setEntry(data.entry)
-      toast.success('호환성 투표 반영')
+      toast.success(tn('호환성 투표 반영'))
     } finally {
       setBusy(false)
     }
@@ -139,7 +141,7 @@ export function ToolboxDetailClient({ entry: initial, mentionPosts, member, aiRa
           className="inline-flex items-center gap-2 text-sm text-[#666] hover:text-[#111]"
         >
           <ArrowLeft className="w-4 h-4" />
-          툴 목록
+          <T>툴 목록</T>
         </Link>
       )}
 
@@ -150,8 +152,8 @@ export function ToolboxDetailClient({ entry: initial, mentionPosts, member, aiRa
           </div>
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap gap-2 mb-2">
-              <span className="badge badge-mcp">{TOOLBOX_TYPE_LABEL[entry.type]}</span>
-              {entry.product_id && <span className="launch-chip">런치</span>}
+              <span className="badge badge-mcp"><T>{TOOLBOX_TYPE_LABEL[entry.type]}</T></span>
+              {entry.product_id && <span className="launch-chip"><T>런치</T></span>}
               {entry.tags.map((t) => (
                 <span key={t} className="badge badge-note">
                   #{t}
@@ -166,9 +168,9 @@ export function ToolboxDetailClient({ entry: initial, mentionPosts, member, aiRa
                 {entry.avg_rating.toFixed(1)} ({entry.rating_count})
               </span>
               {(entry.ai_rating_count ?? 0) > 0 && <span>AI {Number(entry.ai_rating_avg).toFixed(1)}</span>}
-              {(entry.user_count ?? 0) > 0 && <span>{entry.user_count}명이 써요</span>}
-              {entry.product_id ? <span>업보트 {entry.upvote_count ?? 0}</span> : <span>설치 {entry.install_count}</span>}
-              <span>언급 {entry.mention_count}</span>
+              {(entry.user_count ?? 0) > 0 && <span><T s="{user_count}명이 써요" vars={{ user_count: entry.user_count }} /></span>}
+              {entry.product_id ? <span><T s="업보트 {v}" vars={{ v: entry.upvote_count ?? 0 }} /></span> : <span><T s="설치 {install_count}" vars={{ install_count: entry.install_count }} /></span>}
+              <span><T s="언급 {mention_count}" vars={{ mention_count: entry.mention_count }} /></span>
             </div>
             <div className="flex flex-wrap gap-3 mt-3 text-sm items-center">
               {entry.github_url && (
@@ -188,7 +190,7 @@ export function ToolboxDetailClient({ entry: initial, mentionPosts, member, aiRa
                   rel="noreferrer"
                   className="text-[#0066cc] inline-flex items-center gap-1"
                 >
-                  홈페이지 <ExternalLink className="w-3.5 h-3.5" />
+                  <T>홈페이지</T> <ExternalLink className="w-3.5 h-3.5" />
                 </a>
               )}
               <SaveToArchiveButton
@@ -213,21 +215,18 @@ export function ToolboxDetailClient({ entry: initial, mentionPosts, member, aiRa
       <section className="card p-4 border-amber-200 bg-amber-50/40">
         <h2 className="font-semibold text-[#111] flex items-center gap-2 mb-2">
           <ShieldAlert className="w-4 h-4 text-amber-700" />
-          설치 전 보안 확인
+          <T>설치 전 보안 확인</T>
         </h2>
         <ul className="text-sm text-[#555] space-y-1">
-          <li>소스: {entry.source_repo || entry.canonical_url}</li>
-          <li>라이선스: {entry.license || '미확인'}</li>
-          <li>
-            최근 커밋:{' '}
-            {entry.last_commit_at
+          <li><T s="소스: {v}" vars={{ v: entry.source_repo || entry.canonical_url }} /></li>
+          <li><T s="라이선스: {v}" vars={{ v: entry.license || tx('미확인') }} /></li>
+          <li><T s="최근 커밋: {v}" vars={{ v: entry.last_commit_at
               ? new Date(entry.last_commit_at).toLocaleDateString('ko-KR', {
                   timeZone: 'Asia/Seoul',
                 })
-              : '미확인'}
-          </li>
+              : tx('미확인') }} /></li>
           <li className="text-[#888]">
-            커뮤니티 디렉터리 항목이며 공식 보증이 아닙니다. 실행 전 레포를 검토하세요.
+            <T>커뮤니티 디렉터리 항목이며 공식 보증이 아닙니다. 실행 전 레포를 검토하세요.</T>
           </li>
         </ul>
       </section>
@@ -235,7 +234,7 @@ export function ToolboxDetailClient({ entry: initial, mentionPosts, member, aiRa
       <section className="card p-6">
         <h2 className="font-semibold text-[#111] mb-3 flex items-center gap-2">
           <Download className="w-4 h-4" />
-          바로 적용
+          <T>바로 적용</T>
         </h2>
         <div className="tab-filters mb-3 flex-wrap">
           {ENVS.map((e) => (
@@ -245,7 +244,7 @@ export function ToolboxDetailClient({ entry: initial, mentionPosts, member, aiRa
               className={`tab-filter ${env === e ? 'active' : ''}`}
               onClick={() => setEnv(e)}
             >
-              {TOOLBOX_ENV_LABEL[e]}
+              <T>{TOOLBOX_ENV_LABEL[e]}</T>
             </button>
           ))}
           <button
@@ -262,11 +261,11 @@ export function ToolboxDetailClient({ entry: initial, mentionPosts, member, aiRa
         <div className="flex flex-wrap gap-2 mt-3">
           <button type="button" className="btn btn-secondary btn-sm" onClick={copySnippet}>
             <Copy className="w-4 h-4" />
-            복사
+            <T>복사</T>
           </button>
           {deeplink && (
             <a href={deeplink} className="btn btn-primary btn-sm">
-              Cursor에 설치
+              <T>Cursor에 설치</T>
             </a>
           )}
           <button
@@ -276,7 +275,7 @@ export function ToolboxDetailClient({ entry: initial, mentionPosts, member, aiRa
             onClick={() => void recordInstall()}
           >
             <Check className="w-4 h-4" />
-            설치함으로 표시
+            <T>설치함으로 표시</T>
           </button>
         </div>
         <p className="text-xs text-[#888] mt-3">
@@ -296,7 +295,7 @@ export function ToolboxDetailClient({ entry: initial, mentionPosts, member, aiRa
                 key={e}
                 className="flex items-center justify-between gap-3 text-sm border-b border-[#f0f0f0] py-2"
               >
-                <span className="text-[#333]">{TOOLBOX_ENV_LABEL[e]}</span>
+                <span className="text-[#333]"><T>{TOOLBOX_ENV_LABEL[e]}</T></span>
                 <span className="text-[#888]">
                   👍 {c.yes} · 👎 {c.no}
                 </span>
@@ -306,7 +305,7 @@ export function ToolboxDetailClient({ entry: initial, mentionPosts, member, aiRa
                     className="btn btn-secondary btn-sm"
                     disabled={busy}
                     onClick={() => void voteCompat(e, true)}
-                    aria-label="작동함"
+                    aria-label={tx('작동함')}
                   >
                     <ThumbsUp className="w-3.5 h-3.5" />
                   </button>
@@ -315,7 +314,7 @@ export function ToolboxDetailClient({ entry: initial, mentionPosts, member, aiRa
                     className="btn btn-secondary btn-sm"
                     disabled={busy}
                     onClick={() => void voteCompat(e, false)}
-                    aria-label="안 됨"
+                    aria-label={tx('안 됨')}
                   >
                     <ThumbsDown className="w-3.5 h-3.5" />
                   </button>
@@ -328,11 +327,9 @@ export function ToolboxDetailClient({ entry: initial, mentionPosts, member, aiRa
       </>)}
 
       <section className="card p-6">
-        <h2 className="font-semibold text-[#111] mb-3">
-          언급된 게시물 ({mentionPosts.length})
-        </h2>
+        <h2 className="font-semibold text-[#111] mb-3"><T s="언급된 게시물 ({length})" vars={{ length: mentionPosts.length }} /></h2>
         {mentionPosts.length === 0 ? (
-          <p className="text-sm text-[#888]">아직 연결된 게시물이 없습니다.</p>
+          <p className="text-sm text-[#888]"><T>아직 연결된 게시물이 없습니다.</T></p>
         ) : (
           <ul className="space-y-2">
             {mentionPosts.map((p) => (
@@ -352,10 +349,10 @@ export function ToolboxDetailClient({ entry: initial, mentionPosts, member, aiRa
       <AiRatingSection summary={aiRating} toolName={entry.name} />
 
       <section className="card p-6">
-        <h2 className="font-semibold text-[#111] mb-3">커뮤니티 리뷰</h2>
+        <h2 className="font-semibold text-[#111] mb-3"><T>커뮤니티 리뷰</T></h2>
         <div className="space-y-3 mb-6">
           {entry.reviews.length === 0 && (
-            <p className="text-sm text-[#888]">첫 리뷰를 남겨 주세요.</p>
+            <p className="text-sm text-[#888]"><T>첫 리뷰를 남겨 주세요.</T></p>
           )}
           {entry.reviews.map((r) => (
             <div key={r.id} className="border-b border-[#f0f0f0] pb-3">
@@ -378,7 +375,7 @@ export function ToolboxDetailClient({ entry: initial, mentionPosts, member, aiRa
                 type="button"
                 onClick={() => setRating(n)}
                 className="p-1"
-                aria-label={`${n}점`}
+                aria-label={tx('{n}점', { n })}
               >
                 <Star
                   className={`w-5 h-5 ${
@@ -391,7 +388,7 @@ export function ToolboxDetailClient({ entry: initial, mentionPosts, member, aiRa
           <textarea
             value={reviewBody}
             onChange={(e) => setReviewBody(e.target.value)}
-            placeholder="짧은 사용 후기 (선택)"
+            placeholder={tx('짧은 사용 후기 (선택)')}
             className="w-full min-h-[80px] rounded-lg border border-[#e5e5e5] p-3 text-sm"
           />
           <button
@@ -400,7 +397,7 @@ export function ToolboxDetailClient({ entry: initial, mentionPosts, member, aiRa
             disabled={busy}
             onClick={() => void submitReview()}
           >
-            리뷰 저장
+            <T>리뷰 저장</T>
           </button>
         </div>
       </section>

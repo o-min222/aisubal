@@ -1,5 +1,6 @@
 'use client'
 
+import { msg } from '@/i18n/translate'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
@@ -8,6 +9,8 @@ import { UserAvatar } from '@/components/user-avatar'
 import { canRemove, ROLE_LABEL, type GroupRole } from '@/lib/group-rules'
 import type { GroupMember } from '@/lib/data/groups'
 import { groupAct } from './group-actions'
+import { T } from '@/i18n/t'
+import { tx, tn } from '@/i18n/client'
 
 function useAct(groupId: string) {
   const router = useRouter()
@@ -17,10 +20,10 @@ function useAct(groupId: string) {
     setBusy(key)
     try {
       await groupAct(groupId, body)
-      toast.success(ok)
+      toast.success(tn(ok))
       router.refresh()
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : '처리하지 못했어요.')
+      toast.error(e instanceof Error ? e.message : tn('처리하지 못했어요.'))
     } finally {
       setBusy(null)
     }
@@ -38,14 +41,14 @@ export function MemberControls({ groupId, member, myRole, isSelf }: { groupId: s
     <span className="flex items-center gap-1">
       {owner && (
         <select
-          aria-label={`${member.name} 역할`}
+          aria-label={tx('{name} 역할', { name: member.name })}
           value={member.role}
           disabled={busy !== null}
           className="rounded-full border border-[#ddd] bg-white px-2 text-[12.5px] min-h-[36px]"
           onChange={(e) => {
             const role = e.target.value as GroupRole
-            if (role === 'owner' && !confirm(`${member.name}님에게 소유권을 넘길까요? 나는 매니저가 돼요.`)) return
-            run('role', { action: 'role', memberId: member.id, role }, role === 'owner' ? '소유권을 넘겼어요' : `${ROLE_LABEL[role]}(으)로 바꿨어요`)
+            if (role === 'owner' && !confirm(tn('{name}님에게 소유권을 넘길까요? 나는 매니저가 돼요.', { name: member.name }))) return
+            run('role', { action: 'role', memberId: member.id, role }, role === 'owner' ? msg('소유권을 넘겼어요') : tn('{role}(으)로 바꿨어요', { role: tn(ROLE_LABEL[role]) }))
           }}
         >
           <option value="member">멤버</option>
@@ -58,9 +61,9 @@ export function MemberControls({ groupId, member, myRole, isSelf }: { groupId: s
           className="rounded-full px-2.5 text-[12.5px] min-h-[36px]"
           style={{ color: '#b42318', border: '1px solid #f3c7c3' }}
           disabled={busy !== null}
-          onClick={() => confirm(`${member.name}님을 그룹에서 내보낼까요?`) && run('rm', { action: 'remove', memberId: member.id }, '내보냈어요')}
+          onClick={() => confirm(tn('{name}님을 그룹에서 내보낼까요?', { name: member.name })) && run('rm', { action: 'remove', memberId: member.id }, msg('내보냈어요'))}
         >
-          내보내기
+          <T>내보내기</T>
         </button>
       )}
     </span>
@@ -90,12 +93,12 @@ export function GroupRequests({ groupId, pending, invited, memberIds }: { groupI
 
   return (
     <div className="space-y-3">
-      <section className="card" aria-label="가입 요청">
+      <section className="card" aria-label={tx('가입 요청')}>
         <h2 className="px-4 pt-3 pb-1 text-[14px] font-bold" style={{ color: '#111' }}>
-          가입 요청 <span className="tabular-nums text-[#999] font-normal">{pending.length}</span>
+          <T>가입 요청</T> <span className="tabular-nums text-[#999] font-normal">{pending.length}</span>
         </h2>
         {pending.length === 0 ? (
-          <p className="px-4 pb-4 text-[13px] text-[#888]">대기 중인 요청이 없어요.</p>
+          <p className="px-4 pb-4 text-[13px] text-[#888]"><T>대기 중인 요청이 없어요.</T></p>
         ) : (
           pending.map((p) => (
             <div key={p.id} className="flex items-center gap-3 px-4 py-3" style={{ borderTop: '1px solid #f0f0f0' }}>
@@ -106,29 +109,29 @@ export function GroupRequests({ groupId, pending, invited, memberIds }: { groupI
                 </span>
                 {p.message && <span className="block text-[12.5px] text-[#666]">“{p.message}”</span>}
               </span>
-              <button className="btn btn-primary btn-sm min-h-[40px] rounded-full" disabled={busy !== null} onClick={() => run(`a${p.id}`, { action: 'decide', memberId: p.id, accept: true }, '가입을 승인했어요')}>
-                승인
+              <button className="btn btn-primary btn-sm min-h-[40px] rounded-full" disabled={busy !== null} onClick={() => run(`a${p.id}`, { action: 'decide', memberId: p.id, accept: true }, msg('가입을 승인했어요'))}>
+                <T>승인</T>
               </button>
-              <button className="btn btn-secondary btn-sm min-h-[40px] rounded-full" disabled={busy !== null} onClick={() => run(`d${p.id}`, { action: 'decide', memberId: p.id, accept: false }, '요청을 거절했어요')}>
-                거절
+              <button className="btn btn-secondary btn-sm min-h-[40px] rounded-full" disabled={busy !== null} onClick={() => run(`d${p.id}`, { action: 'decide', memberId: p.id, accept: false }, msg('요청을 거절했어요'))}>
+                <T>거절</T>
               </button>
             </div>
           ))
         )}
       </section>
 
-      <section className="card p-4 space-y-2" aria-label="초대">
+      <section className="card p-4 space-y-2" aria-label={tx('초대')}>
         <h2 className="text-[14px] font-bold" style={{ color: '#111' }}>
-          멤버 초대
+          <T>멤버 초대</T>
         </h2>
-        <p className="text-[12.5px] text-[#777]">초대받은 사람은 그룹 페이지에서 수락하면 바로 가입돼요. 숨김 그룹은 초대로만 들어올 수 있어요.</p>
+        <p className="text-[12.5px] text-[#777]"><T>초대받은 사람은 그룹 페이지에서 수락하면 바로 가입돼요. 숨김 그룹은 초대로만 들어올 수 있어요.</T></p>
         <form onSubmit={search} className="flex gap-2">
           <label className="flex-1 flex items-center gap-2 rounded-full border border-[#ddd] px-3">
             <Search className="w-4 h-4 text-[#999]" />
-            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="이름으로 찾기" className="flex-1 py-2 text-[15px] bg-transparent focus:outline-none" aria-label="초대할 멤버 이름" />
+            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={tx('이름으로 찾기')} className="flex-1 py-2 text-[15px] bg-transparent focus:outline-none" aria-label={tx('초대할 멤버 이름')} />
           </label>
           <button className="btn btn-secondary btn-sm min-h-[40px] rounded-full" disabled={searching}>
-            찾기
+            <T>찾기</T>
           </button>
         </form>
         {results.map((r) => (
@@ -138,18 +141,16 @@ export function GroupRequests({ groupId, pending, invited, memberIds }: { groupI
               {r.name}
             </span>
             {known.has(r.id) ? (
-              <span className="text-[12px] text-[#888]">{memberIds.includes(r.id) ? '이미 멤버' : '요청·초대 중'}</span>
+              <span className="text-[12px] text-[#888]">{memberIds.includes(r.id) ? <T>이미 멤버</T> : <T>요청·초대 중</T>}</span>
             ) : (
-              <button className="btn btn-primary btn-sm min-h-[36px] rounded-full" disabled={busy !== null} onClick={() => run(`i${r.id}`, { action: 'invite', memberId: r.id }, '초대했어요')}>
-                초대
+              <button className="btn btn-primary btn-sm min-h-[36px] rounded-full" disabled={busy !== null} onClick={() => run(`i${r.id}`, { action: 'invite', memberId: r.id }, msg('초대했어요'))}>
+                <T>초대</T>
               </button>
             )}
           </div>
         ))}
         {invited.length > 0 && (
-          <p className="text-[12.5px] text-[#777] pt-1">
-            초대 대기: {invited.map((i) => i.name).join(', ')}
-          </p>
+          <p className="text-[12.5px] text-[#777] pt-1"><T s="초대 대기: {v}" vars={{ v: invited.map((i) => i.name).join(', ') }} /></p>
         )}
       </section>
     </div>

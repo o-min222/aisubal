@@ -1383,3 +1383,21 @@ html:has(.reading-pane.is-open) body { overflow: hidden; }
 .agent-pledge-sign { background: #fffdf8; border: 1px solid #e8dfcc; border-radius: 14px; padding: 14px; }
 .pledged-mark { display: inline-flex; align-items: center; gap: 2px; font-size: 10.5px; font-weight: 600; color: #8a6d3b; background: #faf5ea; border: 1px solid #ecdfc3; border-radius: 999px; padding: 0 6px; line-height: 17px; flex-shrink: 0; }
 .agent-unsigned { font-size: 12.5px; color: #8a4b00; background: #fff6e8; border: 1px solid #f5dfb8; border-radius: 10px; padding: 8px 10px; }
+
+/* ── i18n: language switcher ─────────────────────────────── */
+.locale-seg { display: inline-flex; gap: 2px; padding: 2px; border-radius: 999px; background: #f2f2f2; }
+.locale-seg button { font-size: 12px; line-height: 1; padding: 6px 10px; border-radius: 999px; color: #666; font-weight: 500; min-height: 28px; }
+.locale-seg button.on { background: #fff; color: #111; font-weight: 600; box-shadow: 0 1px 2px rgba(0,0,0,.08); }
+.locale-seg button:disabled:not(.on) { opacity: .6; }
+.locale-row { cursor: default; }
+.locale-row:hover { background: transparent; }
+.locale-inline { display: inline-flex; align-items: center; gap: 6px; color: #888; }
+.locale-block .locale-seg button { font-size: 14px; padding: 8px 16px; min-height: 36px; }
+.locale-on-dark .locale-inline { color: rgba(255,255,255,.55); }
+.locale-on-dark .locale-seg { background: rgba(255,255,255,.1); }
+.locale-on-dark .locale-seg button { color: rgba(255,255,255,.7); }
+.locale-on-dark .locale-seg button.on { background: #fff; color: #111; }
+.pledge-original { max-width: 600px; margin: 0 auto; font-size: 13px; color: #666; }
+.pledge-original summary { cursor: pointer; text-align: center; color: #8a6d3b; font-weight: 500; padding: 6px 0; min-height: 36px; }
+.pledge-original div { margin-top: 8px; padding: 14px 16px; background: #fffdf8; border: 1px solid #eadfc8; border-radius: 12px; line-height: 1.75; }
+.pledge-original p + p { margin-top: 8px; }

@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation'
 import { HeartHandshake, Clock, Check, X } from 'lucide-react'
 import { toast } from 'sonner'
 import type { FriendState } from '@/lib/social-rules'
+import { T } from '@/i18n/t'
+import { tx, tn } from '@/i18n/client'
 
 /**
  * Friend flow, separate from follow: 친구 신청 → (상대) 수락/거절 → 친구 (끊기 가능).
@@ -29,7 +31,7 @@ export function FriendButton({
     e?.preventDefault()
     e?.stopPropagation()
     if (busy) return
-    if (action === 'remove' && state === 'friends' && !window.confirm('친구를 끊을까요? 팔로우는 그대로 유지돼요.')) return
+    if (action === 'remove' && state === 'friends' && !window.confirm(tn('친구를 끊을까요? 팔로우는 그대로 유지돼요.'))) return
     setBusy(true)
     try {
       const res = await fetch('/api/social/friend', {
@@ -43,11 +45,11 @@ export function FriendButton({
       setState(next)
       onChange?.(next)
       toast.success(
-        action === 'request' ? (next === 'friends' ? '친구가 됐어요' : '친구 요청을 보냈어요') : action === 'accept' ? '친구가 됐어요' : action === 'decline' ? '요청을 거절했어요' : '정리했어요'
+        action === 'request' ? (next === 'friends' ? tx('친구가 됐어요') : tx('친구 요청을 보냈어요')) : action === 'accept' ? tx('친구가 됐어요') : action === 'decline' ? tx('요청을 거절했어요') : tx('정리했어요')
       )
       router.refresh()
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : '처리하지 못했어요.')
+      toast.error(err instanceof Error ? err.message : tn('처리하지 못했어요.'))
     } finally {
       setBusy(false)
     }
@@ -58,31 +60,31 @@ export function FriendButton({
     return (
       <span className="inline-flex items-center gap-1.5">
         <button type="button" disabled={busy} onClick={(e) => act('accept', e)} className={`btn btn-primary btn-sm rounded-full ${size}`}>
-          <Check className="w-4 h-4" /> 친구 수락
+          <Check className="w-4 h-4" /> <T>친구 수락</T>
         </button>
-        <button type="button" disabled={busy} onClick={(e) => act('decline', e)} className={`btn btn-secondary btn-sm rounded-full ${size}`} aria-label="친구 요청 거절">
-          <X className="w-4 h-4" /> {compact ? '' : '거절'}
+        <button type="button" disabled={busy} onClick={(e) => act('decline', e)} className={`btn btn-secondary btn-sm rounded-full ${size}`} aria-label={tx('친구 요청 거절')}>
+          <X className="w-4 h-4" /> {compact ? '' : <T>거절</T>}
         </button>
       </span>
     )
   }
   if (state === 'pending_out') {
     return (
-      <button type="button" disabled={busy} onClick={(e) => act('remove', e)} className={`btn btn-secondary btn-sm rounded-full ${size}`} title="눌러서 요청 취소">
-        <Clock className="w-4 h-4" /> 요청 보냄
+      <button type="button" disabled={busy} onClick={(e) => act('remove', e)} className={`btn btn-secondary btn-sm rounded-full ${size}`} title={tx('눌러서 요청 취소')}>
+        <Clock className="w-4 h-4" /> <T>요청 보냄</T>
       </button>
     )
   }
   if (state === 'friends') {
     return (
-      <button type="button" disabled={busy} onClick={(e) => act('remove', e)} className={`btn btn-secondary btn-sm rounded-full ${size}`} title="눌러서 친구 끊기" style={{ color: '#1f7a4d' }}>
-        <HeartHandshake className="w-4 h-4" /> 친구
+      <button type="button" disabled={busy} onClick={(e) => act('remove', e)} className={`btn btn-secondary btn-sm rounded-full ${size}`} title={tx('눌러서 친구 끊기')} style={{ color: '#1f7a4d' }}>
+        <HeartHandshake className="w-4 h-4" /> <T>친구</T>
       </button>
     )
   }
   return (
     <button type="button" disabled={busy} onClick={(e) => act('request', e)} className={`btn btn-secondary btn-sm rounded-full ${size}`}>
-      <HeartHandshake className="w-4 h-4" /> 친구 신청
+      <HeartHandshake className="w-4 h-4" /> <T>친구 신청</T>
     </button>
   )
 }

@@ -3,7 +3,8 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
-import { PLEDGE_KO, signatureMatches } from '@/lib/pledge'
+import { PLEDGE_KO, pledgeTextFor, signatureMatches } from '@/lib/pledge'
+import { useLocale, useT, tn } from '@/i18n/client'
 import { PledgeDocument, PledgeSeal } from './pledge-document'
 
 /** Type your own nickname as the signature, then '서약하고 입단하기'. */
@@ -13,6 +14,9 @@ export function PledgeForm({ signer, inviter, next }: { signer: string; inviter:
   const [busy, setBusy] = useState(false)
   const [sealed, setSealed] = useState(false)
   const ok = signatureMatches(typed, signer)
+  const t = useT()
+  const locale = useLocale()
+  const doc = pledgeTextFor(locale)
 
   async function sign() {
     if (!ok || busy) return
@@ -20,15 +24,15 @@ export function PledgeForm({ signer, inviter, next }: { signer: string; inviter:
     try {
       const res = await fetch('/api/pledge', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ signature: typed }) })
       const d = await res.json().catch(() => ({}))
-      if (!res.ok) throw new Error(d.error || '서약을 저장하지 못했어요.')
+      if (!res.ok) throw new Error(d.error ? t(d.error) : t('서약을 저장하지 못했어요.'))
       setSealed(true)
-      toast.success(`${signer}님, AI쓰발에 입단했어요`)
+      toast.success(t(tn('{name}님, AI쓰발에 입단했어요'), { name: signer }))
       setTimeout(() => {
         router.replace(next)
         router.refresh()
       }, 1300)
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : '서약을 저장하지 못했어요.')
+      toast.error(e instanceof Error ? e.message : t(tn('서약을 저장하지 못했어요.')))
       setBusy(false)
     }
   }
@@ -42,9 +46,10 @@ export function PledgeForm({ signer, inviter, next }: { signer: string; inviter:
       className="space-y-4"
     >
       <PledgeDocument
-        t={PLEDGE_KO}
+        t={doc}
         inviter={inviter}
-        seal={sealed ? <PledgeSeal animate /> : null}
+        foundingLabel={t('창립 멤버')}
+        seal={sealed ? <PledgeSeal animate label={t('입단')} /> : null}
         signature={
           <input
             value={typed}
@@ -55,18 +60,34 @@ export function PledgeForm({ signer, inviter, next }: { signer: string; inviter:
             spellCheck={false}
             disabled={busy}
             placeholder={signer}
-            aria-label={`서명: 내 닉네임 ‘${signer}’을 입력`}
+            aria-label={t('서명: 내 닉네임 ‘{name}’을 입력', { name: signer })}
             aria-describedby="pledge-sign-hint"
             className={`pledge-signature ${ok ? 'is-ok' : ''}`}
           />
         }
       />
       <p id="pledge-sign-hint" className="text-center text-[12.5px]" style={{ color: ok ? '#0a7a3d' : '#888' }}>
-        {ok ? '서명이 확인됐어요.' : `서약자 칸에 내 닉네임 ‘${signer}’을 그대로 적으면 서명돼요. 실명은 쓰지 않아요.`}
+        {ok ? t('서명이 확인됐어요.') : t('서약자 칸에 내 닉네임 ‘{name}’을 그대로 적으면 서명돼요. 실명은 쓰지 않아요.', { name: signer })}
       </p>
       <button type="submit" disabled={!ok || busy} className="pledge-cta">
-        {sealed ? '입단을 환영해요' : busy ? '서약하는 중…' : '서약하고 입단하기'}
+        {sealed ? t('입단을 환영해요') : busy ? t('서약하는 중…') : t('서약하고 입단하기')}
       </button>
+      {doc !== PLEDGE_KO && <PledgeOriginal />}
     </form>
+  )
+}
+
+/** In translated UIs, the authored Korean original stays one tap away. */
+export function PledgeOriginal() {
+  const t = useT()
+  return (
+    <details className="pledge-original">
+      <summary>{t('한국어 원문 보기 (원문이 기준이에요)')}</summary>
+      <div lang="ko">
+        {[...PLEDGE_KO.preamble, ...PLEDGE_KO.vows, PLEDGE_KO.closing, PLEDGE_KO.dateline].map((p) => (
+          <p key={p}>{p}</p>
+        ))}
+      </div>
+    </details>
   )
 }

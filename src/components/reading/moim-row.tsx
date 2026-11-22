@@ -1,12 +1,12 @@
 import { Lock, MapPin, Users } from 'lucide-react'
 import type { Moim } from '@/lib/data/moim'
-import { kstDateTime, kstDayBadge } from '@/lib/kst'
+import { KstDate } from '@/components/kst-date'
 import { ModeBadge, RsvpBadge } from '@/components/moim/moim-badges'
 import { CompactRow } from './compact-row'
+import { T } from '@/i18n/t'
 
 /** Compact 모임 row: date tile, title, when/where, capacity and my RSVP. */
 export function MoimRow({ moim: m, href, active }: { moim: Moim; href: string; active?: boolean }) {
-  const d = kstDayBadge(m.startsAt)
   const full = m.capacity > 0 && m.confirmed >= m.capacity
   return (
     <CompactRow
@@ -14,16 +14,16 @@ export function MoimRow({ moim: m, href, active }: { moim: Moim; href: string; a
       active={active}
       leading={
         <span className="moim-date-tile" aria-hidden>
-          <small>{d.month}</small>
-          <b>{d.day}</b>
-          <small>{d.weekday}</small>
+          <small><KstDate iso={m.startsAt} part="month" /></small>
+          <b><KstDate iso={m.startsAt} part="day" /></b>
+          <small><KstDate iso={m.startsAt} part="weekday" /></small>
         </span>
       }
       title={m.title}
-      badge={m.myRsvp ? <RsvpBadge status={m.myRsvp.status} position={m.myRsvp.position} /> : m.status === 'cancelled' ? <span className="crow-chip">취소됨</span> : null}
+      badge={m.myRsvp ? <RsvpBadge status={m.myRsvp.status} position={m.myRsvp.position} /> : m.status === 'cancelled' ? <span className="crow-chip"><T>취소됨</T></span> : null}
       preview={
         <>
-          {kstDateTime(m.startsAt)}
+          <KstDate iso={m.startsAt} />
           {m.mode === 'offline' && m.venueName ? ` · ${m.venueName}` : ''}
         </>
       }
@@ -32,12 +32,12 @@ export function MoimRow({ moim: m, href, active }: { moim: Moim; href: string; a
           <ModeBadge mode={m.mode} />
           <span>
             <Users className="w-3 h-3" /> {m.confirmed}/{m.capacity || '∞'}
-            {full && ' · 마감'}
-            {m.waitlisted > 0 && ` · 대기 ${m.waitlisted}`}
+            {full && <T> · 마감</T>}
+            {m.waitlisted > 0 && <T s=" · 대기 {waitlisted}" vars={{ waitlisted: m.waitlisted }} />}
           </span>
           {m.membersOnly && (
             <span>
-              <Lock className="w-3 h-3" /> 그룹 전용
+              <Lock className="w-3 h-3" /> <T>그룹 전용</T>
             </span>
           )}
           {m.group ? (
@@ -49,7 +49,7 @@ export function MoimRow({ moim: m, href, active }: { moim: Moim; href: string; a
           )}
           {m.mode === 'offline' && !m.venueName && (
             <span>
-              <MapPin className="w-3 h-3" /> 장소는 확정 후 공개
+              <MapPin className="w-3 h-3" /> <T>장소는 확정 후 공개</T>
             </span>
           )}
         </>

@@ -6,6 +6,8 @@ import { Bot } from 'lucide-react'
 import { AdaptiveSheet } from '@/components/adaptive-sheet'
 import { UserAvatar } from '@/components/user-avatar'
 import type { TimelineLiker } from './types'
+import { T } from '@/i18n/t'
+import { tx } from '@/i18n/client'
 
 /**
  * "좋아요한 사람" dialog. GET `endpoint` → { likers: TimelineLiker[] }.
@@ -37,7 +39,7 @@ export function LikerList({
         if (anonymous) setAnonCount(typeof data.anonymousCount === 'number' ? data.anonymousCount : 0)
         else setLikers(data.likers || [])
       })
-      .catch((e) => !cancelled && setError(e instanceof Error ? e.message : '불러오지 못했어요'))
+      .catch((e) => !cancelled && setError(e instanceof Error ? e.message : tx('불러오지 못했어요')))
     return () => {
       cancelled = true
     }
@@ -45,7 +47,7 @@ export function LikerList({
 
   return (
     <AdaptiveSheet
-      title={anonymous ? '좋아요' : '좋아요한 사람'}
+      title={anonymous ? tx('좋아요') : tx('좋아요한 사람')}
       open={open}
       onOpenChange={(next) => {
         if (!next) {
@@ -64,14 +66,14 @@ export function LikerList({
                 <span className="skeleton h-4 w-40 rounded block" aria-busy="true" />
               ) : (
                 <p className="text-[15px] text-[#111]">
-                  익명 <b className="tabular-nums">{anonCount}</b>명이 좋아했어요
+                  <T>익명</T> <b className="tabular-nums">{anonCount}</b><T>명이 좋아했어요</T>
                 </p>
               )}
-              <p className="mt-2 text-xs text-[#888]">익명 게시판에서는 누가 좋아요를 눌렀는지 공개하지 않아요.</p>
+              <p className="mt-2 text-xs text-[#888]"><T>익명 게시판에서는 누가 좋아요를 눌렀는지 공개하지 않아요.</T></p>
             </div>
           )}
           {!anonymous && !error && likers === null && (
-            <ul aria-busy="true" aria-label="불러오는 중">
+            <ul aria-busy="true" aria-label={tx('불러오는 중')}>
               {[0, 1, 2].map((i) => (
                 <li key={i} className="flex items-center gap-3 px-1 py-2">
                   <span className="skeleton w-8 h-8 rounded-full" />
@@ -80,7 +82,7 @@ export function LikerList({
               ))}
             </ul>
           )}
-          {likers?.length === 0 && <p className="text-sm text-[#888] px-1">아직 없어요.</p>}
+          {likers?.length === 0 && <p className="text-sm text-[#888] px-1"><T>아직 없어요.</T></p>}
           <ul>
             {likers?.map((l) => (
               <li key={`${l.kind}-${l.id}`} className="flex items-center gap-3 px-1 py-2 min-h-[48px]">

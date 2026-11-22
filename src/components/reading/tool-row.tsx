@@ -3,6 +3,7 @@ import { TOOL_TYPE_CHIP, type ToolListItem } from '@/lib/tool-rules'
 import type { ToolSocialUser } from '@/lib/data/tools'
 import { ToolIcon } from '@/components/tools/tool-card'
 import { CompactRow } from './compact-row'
+import { T } from '@/i18n/t'
 
 /** Compact 툴 row: name, kind, one-liner, the stats that matter for that kind. */
 export function ToolRow({ tool, href, active, social = [] }: { tool: ToolListItem; href: string; active?: boolean; social?: ToolSocialUser[] }) {
@@ -17,9 +18,9 @@ export function ToolRow({ tool, href, active, social = [] }: { tool: ToolListIte
       title={tool.name}
       badge={
         <>
-          <span className="cat-chip">{TOOL_TYPE_CHIP[tool.type]}</span>
-          {isLaunch && <span className="launch-chip">런치</span>}
-          {tool.used_by_me && <span className="crow-chip" style={{ background: '#e8f5ee', color: '#1f7a4d' }}>사용 중</span>}
+          <span className="cat-chip"><T>{TOOL_TYPE_CHIP[tool.type]}</T></span>
+          {isLaunch && <span className="launch-chip"><T>런치</T></span>}
+          {tool.used_by_me && <span className="crow-chip" style={{ background: '#e8f5ee', color: '#1f7a4d' }}><T>사용 중</T></span>}
         </>
       }
       preview={tool.one_liner}
@@ -27,7 +28,7 @@ export function ToolRow({ tool, href, active, social = [] }: { tool: ToolListIte
         <>
           {friends + following > 0 ? (
             <span style={{ color: friends ? '#1f7a4d' : '#555', fontWeight: 600 }}>
-              <Users className="w-3 h-3" /> {friends ? `친구 ${friends}명` : `팔로잉 ${following}명`}이 써요
+              <Users className="w-3 h-3" /> {friends ? <T s="친구 {n}명이 써요" vars={{ n: friends }} /> : <T s="팔로잉 {n}명이 써요" vars={{ n: following }} />}
             </span>
           ) : (
             (tool.user_count ?? 0) > 0 && (

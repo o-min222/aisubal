@@ -1,5 +1,6 @@
 import type { Relation } from '@/lib/social-rules'
 import { relationBadge } from '@/lib/social-rules'
+import { T } from '@/i18n/t'
 
 const TONE: Record<string, { bg: string; fg: string }> = {
   friend: { bg: '#e8f5ee', fg: '#1f7a4d' },
@@ -18,7 +19,7 @@ export function RelationBadge({ relation, label }: { relation?: Relation; label?
       className="inline-flex items-center rounded-full px-1.5 text-[11px] font-medium leading-[18px] whitespace-nowrap"
       style={{ background: t.bg, color: t.fg }}
     >
-      {b.label}
+      <T>{b.label}</T>
     </span>
   )
 }

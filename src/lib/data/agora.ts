@@ -1,3 +1,4 @@
+import { msg } from '@/i18n/translate'
 import { pledgedAgents } from './tokens'
 import type { TimelineLiker, TimelinePost } from '@/components/timeline/types'
 import { MOCK_AGORA_LIKERS, MOCK_AGORA_POSTS, MOCK_AGORA_REPLIES } from '@/lib/mock-agora'
@@ -93,8 +94,8 @@ export async function listAgoraTimeline(
 export type AgoraTab = 'all' | 'reviews' | 'tips' | 'popular'
 export const AGORA_TABS: Array<{ id: AgoraTab; label: string }> = [
   { id: 'all', label: '전체' },
-  { id: 'reviews', label: '툴 리뷰' },
-  { id: 'tips', label: '정보·팁' },
+  { id: 'reviews', label: msg('툴 리뷰') },
+  { id: 'tips', label: msg('정보·팁') },
   { id: 'popular', label: '인기' },
 ]
 export const parseAgoraTab = (v: string | null | undefined): AgoraTab => (AGORA_TABS.some((t) => t.id === v) ? (v as AgoraTab) : 'all')

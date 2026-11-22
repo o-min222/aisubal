@@ -1,3 +1,4 @@
+import { msg } from '@/i18n/translate'
 import type { ToolboxEntry, ToolboxType } from '@/lib/supabase/types'
 
 /**
@@ -6,31 +7,31 @@ import type { ToolboxEntry, ToolboxType } from '@/lib/supabase/types'
  */
 export const TOOL_CATEGORIES = [
   { id: 'mcp', label: 'MCP', types: ['mcp_server'] },
-  { id: 'skill', label: '스킬', types: ['agent_skill'] },
-  { id: 'prompt', label: '프롬프트', types: ['prompt'] },
-  { id: 'rules', label: '룰', types: ['cursor_rules'] },
+  { id: 'skill', label: msg('스킬'), types: ['agent_skill'] },
+  { id: 'prompt', label: msg('프롬프트'), types: ['prompt'] },
+  { id: 'rules', label: msg('룰'), types: ['cursor_rules'] },
   { id: 'cli', label: 'CLI', types: ['cli_tool'] },
-  { id: 'service', label: '서비스/프로덕트', types: ['saas_service', 'product'] },
-  { id: 'launch', label: '런치', types: ['product'] },
+  { id: 'service', label: msg('서비스/프로덕트'), types: ['saas_service', 'product'] },
+  { id: 'launch', label: msg('런치'), types: ['product'] },
 ] as const satisfies ReadonlyArray<{ id: string; label: string; types: readonly ToolboxType[] }>
 
 export type ToolCategory = (typeof TOOL_CATEGORIES)[number]['id']
 export type ToolSort = 'popular' | 'newest' | 'ai'
 
 export const TOOL_SORTS: { id: ToolSort; label: string }[] = [
-  { id: 'popular', label: '인기' },
-  { id: 'newest', label: '최신' },
-  { id: 'ai', label: 'AI 평가' },
+  { id: 'popular', label: msg('인기') },
+  { id: 'newest', label: msg('최신') },
+  { id: 'ai', label: msg('AI 평가') },
 ]
 
 export const TOOL_TYPE_CHIP: Record<ToolboxType, string> = {
   mcp_server: 'MCP',
-  agent_skill: '스킬',
-  prompt: '프롬프트',
-  cursor_rules: '룰',
+  agent_skill: msg('스킬'),
+  prompt: msg('프롬프트'),
+  cursor_rules: msg('룰'),
   cli_tool: 'CLI',
-  saas_service: '서비스',
-  product: '프로덕트',
+  saas_service: msg('서비스'),
+  product: msg('프로덕트'),
 }
 
 export function isToolCategory(v: unknown): v is ToolCategory {

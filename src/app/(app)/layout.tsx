@@ -13,6 +13,7 @@ import { MyGroupsNav } from '@/components/shell/my-groups-nav'
 import { listMyGroups } from '@/lib/data/groups'
 import { BottomTabs, ComposeFab } from '@/components/shell/bottom-tabs'
 import type { ShellMember } from '@/components/shell/nav-items'
+import { getT } from '@/i18n/server'
 
 async function ProfileCardLoader({ member, me }: { member: Member; me: ShellMember }) {
   const card = await getMemberCard(member, member.id).catch(() => null)
@@ -34,6 +35,7 @@ async function RailLoader({ member }: { member: Member }) {
  * navigations (layouts don't re-render), only the center column swaps.
  */
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
+  const st = await getT()
   const state = await getUserState()
   if (state.type === 'unauthenticated') redirect('/login')
   if (state.type === 'waitlist') redirect('/waitlist')
@@ -71,7 +73,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         <main className="app-center" id="main">
           {children}
         </main>
-        <aside className="app-right" aria-label="추천">
+        <aside className="app-right" aria-label={st('추천')}>
           <div className="app-sticky">
             <Suspense fallback={<RailSkeleton />}>
               <RailLoader member={member} />

@@ -5,10 +5,13 @@ import { useSearchParams } from 'next/navigation'
 import Image from 'next/image'
 import { Slogan } from '@/components/slogan'
 import { Suspense } from 'react'
+import { useT, tx } from '@/i18n/client'
+import { LocaleSwitch } from '@/components/i18n/locale-switch'
 
 function LoginContent() {
   const searchParams = useSearchParams()
   const error = searchParams.get('error')
+  const t = useT()
   
   async function handleGoogleLogin() {
     const supabase = createClient()
@@ -25,7 +28,7 @@ function LoginContent() {
       <div className="mb-12 flex flex-col items-center gap-5">
         <Image
           src="/images/logo-white.png"
-          alt="AI쓰발"
+          alt={tx('AI쓰발')}
           width={200}
           height={60}
           priority
@@ -37,7 +40,7 @@ function LoginContent() {
       <div className="w-full max-w-sm">
         {error && (
           <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-red-400 text-sm text-center">
-            로그인에 실패했습니다. 다시 시도해주세요.
+            {t('로그인에 실패했습니다. 다시 시도해주세요.')}
           </div>
         )}
 
@@ -46,8 +49,11 @@ function LoginContent() {
           className="w-full flex items-center justify-center gap-3 px-6 py-3 bg-white hover:bg-gray-50 text-gray-900 font-medium rounded-lg transition-colors"
         >
           <GoogleIcon />
-          Google로 로그인
+          {t('Google로 로그인')}
         </button>
+      </div>
+      <div className="mt-10 locale-on-dark">
+        <LocaleSwitch />
       </div>
     </div>
   )

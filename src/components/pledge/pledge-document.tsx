@@ -1,8 +1,10 @@
 import type { ReactNode } from 'react'
 import type { PledgeText } from '@/lib/pledge'
+import { T } from '@/i18n/t'
+import { msg } from '@/i18n/translate'
 
 /** The authored pledge, typeset like a charter. `signature` fills the 서약자 line. */
-export function PledgeDocument({ t, inviter, signature, foundingLabel = '창립 멤버', seal }: { t: PledgeText; inviter: string | null; signature: ReactNode; foundingLabel?: string; seal?: ReactNode }) {
+export function PledgeDocument({ t, inviter, signature, foundingLabel = msg('창립 멤버'), seal }: { t: PledgeText; inviter: string | null; signature: ReactNode; foundingLabel?: string; seal?: ReactNode }) {
   return (
     <article className="pledge-doc" aria-labelledby="pledge-title">
       <h1 id="pledge-title" className="pledge-title" style={{ color: '#111' }}>
@@ -31,7 +33,7 @@ export function PledgeDocument({ t, inviter, signature, foundingLabel = '창립 
         </span>
         <div className="pledge-sign-cell">
           <span className="pledge-sign-label">{t.inviterLabel}</span>
-          <span className="pledge-sign-value pledge-inviter">{inviter ?? foundingLabel}</span>
+          <span className="pledge-sign-value pledge-inviter">{inviter ?? <T>{foundingLabel}</T>}</span>
         </div>
       </div>
       {seal}
@@ -39,11 +41,11 @@ export function PledgeDocument({ t, inviter, signature, foundingLabel = '창립 
   )
 }
 
-export function PledgeSeal({ animate = false }: { animate?: boolean }) {
+export function PledgeSeal({ animate = false, label = msg('입단') }: { animate?: boolean; label?: string }) {
   return (
     <div className={`pledge-seal ${animate ? 'pledge-seal-in' : ''}`} aria-hidden>
-      <span>AI쓰발</span>
-      <small>입단</small>
+      <span><T>AI쓰발</T></span>
+      <small><T>{label}</T></small>
     </div>
   )
 }

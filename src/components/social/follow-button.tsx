@@ -4,6 +4,8 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { UserPlus, UserCheck } from 'lucide-react'
 import { toast } from 'sonner'
+import { T } from '@/i18n/t'
+import { tn } from '@/i18n/client'
 
 /**
  * One-way follow toggle (instant, no approval). `chip` is the compact form
@@ -45,7 +47,7 @@ export function FollowButton({
       if (refresh) router.refresh()
     } catch (err) {
       setFollowing(!next)
-      toast.error(err instanceof Error ? err.message : '처리하지 못했어요.')
+      toast.error(err instanceof Error ? err.message : tn('처리하지 못했어요.'))
     } finally {
       setBusy(false)
     }
@@ -61,7 +63,7 @@ export function FollowButton({
         className="follow-chip inline-flex items-center gap-0.5 rounded-full px-2 text-[12px] font-semibold leading-[22px] whitespace-nowrap"
         style={following ? { color: '#666', background: '#f2f2f2' } : { color: '#0066cc', background: '#eef5ff' }}
       >
-        {following ? '팔로잉' : '+ 팔로우'}
+        {following ? <T>팔로잉</T> : <T>+ 팔로우</T>}
       </button>
     )
   }
@@ -74,7 +76,7 @@ export function FollowButton({
       className={`btn btn-sm min-h-[40px] rounded-full px-4 ${following ? 'btn-secondary' : 'btn-primary'}`}
     >
       {following ? <UserCheck className="w-4 h-4" /> : <UserPlus className="w-4 h-4" />}
-      {following ? '팔로잉' : '팔로우'}
+      {following ? <T>팔로잉</T> : <T>팔로우</T>}
     </button>
   )
 }

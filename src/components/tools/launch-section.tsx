@@ -17,6 +17,8 @@ import { AuthorAvatar } from '@/components/user-avatar'
 import { RelativeTime } from '@/components/relative-time'
 import { publicAuthorLabel } from '@/lib/profile'
 import { toast } from 'sonner'
+import { T } from '@/i18n/t'
+import { tx, tn } from '@/i18n/client'
 
 /** Launch details (upvotes, screenshots, makers, updates, comments) for a tool that came from 프로덕트 런치. */
 export function LaunchSection({ product: initialProduct }: { product: ProductWithDetails }) {
@@ -31,12 +33,12 @@ export function LaunchSection({ product: initialProduct }: { product: ProductWit
       const res = await fetch(`/api/products/${product.id}/upvote`, { method })
       const data = await res.json()
       if (!res.ok) {
-        toast.error(data.error || '업보트 처리 실패')
+        toast.error(data.error || tn('업보트 처리 실패'))
         return
       }
       setProduct(data.product as ProductWithDetails)
     } catch {
-      toast.error('네트워크 오류')
+      toast.error(tn('네트워크 오류'))
     } finally {
       setUpvoting(false)
     }
@@ -44,12 +46,12 @@ export function LaunchSection({ product: initialProduct }: { product: ProductWit
 
   return (
     <>
-      <section className="card p-5 launch-card" aria-label="프로덕트 런치">
+      <section className="card p-5 launch-card" aria-label={tx('프로덕트 런치')}>
         <div className="flex items-start gap-4">
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
               <Rocket className="w-4 h-4 text-[#c2581f]" />
-              <h2 className="font-semibold text-[#111]">프로덕트 런치</h2>
+              <h2 className="font-semibold text-[#111]"><T>프로덕트 런치</T></h2>
               <span className="text-xs text-[#888]">
                 <RelativeTime date={product.created_at} />
               </span>
@@ -58,7 +60,7 @@ export function LaunchSection({ product: initialProduct }: { product: ProductWit
             <div className="flex flex-wrap items-center gap-3 text-sm mt-3">
               {product.website_url && (
                 <a href={product.website_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-[#0066cc] hover:underline">
-                  <Globe className="w-4 h-4" /> 웹사이트 <ExternalLink className="w-3 h-3 opacity-60" />
+                  <Globe className="w-4 h-4" /> <T>웹사이트</T> <ExternalLink className="w-3 h-3 opacity-60" />
                 </a>
               )}
               {product.app_store_url && (
@@ -73,7 +75,7 @@ export function LaunchSection({ product: initialProduct }: { product: ProductWit
               )}
               {product.launch_post_id && (
                 <Link href={`/posts/${product.launch_post_id}`} className="text-[#0066cc] hover:underline">
-                  런치 게시물 보기
+                  <T>런치 게시물 보기</T>
                 </Link>
               )}
             </div>
@@ -84,7 +86,7 @@ export function LaunchSection({ product: initialProduct }: { product: ProductWit
             onClick={toggleUpvote}
             className={`upvote-btn flex-shrink-0 ${product.user_upvoted ? 'active' : ''}`}
             aria-pressed={product.user_upvoted}
-            aria-label={product.user_upvoted ? '업보트 취소' : '업보트'}
+            aria-label={product.user_upvoted ? tx('업보트 취소') : tx('업보트')}
           >
             {upvoting ? <Loader2 className="w-4 h-4 animate-spin" /> : <ChevronUp />}
             <span>{product.upvote_count}</span>
@@ -99,7 +101,7 @@ export function LaunchSection({ product: initialProduct }: { product: ProductWit
                 <img
                   key={`${src}-${i}`}
                   src={src}
-                  alt={`${product.name} 스크린샷 ${i + 1}`}
+                  alt={tx('{name} 스크린샷 {v}', { name: product.name, v: i + 1 })}
                   className="h-44 sm:h-52 w-auto max-w-[min(100%,420px)] rounded-lg border border-[#e5e5e5] object-cover flex-shrink-0 snap-start bg-[#f7f7f7]"
                 />
               ))}
@@ -109,7 +111,7 @@ export function LaunchSection({ product: initialProduct }: { product: ProductWit
 
         {product.makers.length > 0 && (
           <div className="mt-4 pt-4 border-t border-[#eee]">
-            <h3 className="text-sm font-semibold text-[#333] mb-2">메이커</h3>
+            <h3 className="text-sm font-semibold text-[#333] mb-2"><T>메이커</T></h3>
             <ul className="flex flex-wrap gap-3">
               {product.makers.map((maker) => (
                 <li key={maker.id} className="flex items-center gap-2">
@@ -126,7 +128,7 @@ export function LaunchSection({ product: initialProduct }: { product: ProductWit
         <section className="card p-6 mb-6">
           <h2 className="text-lg font-bold text-[#111] mb-4 flex items-center gap-2">
             <Megaphone className="w-5 h-5" />
-            메이커 업데이트
+            <T>메이커 업데이트</T>
           </h2>
           <ul className="space-y-4">
             {product.updates.map((update) => (
@@ -147,11 +149,11 @@ export function LaunchSection({ product: initialProduct }: { product: ProductWit
       <section className="card p-6">
         <h2 className="text-lg font-bold text-[#111] mb-4 flex items-center gap-2">
           <MessageSquare className="w-5 h-5" />
-          댓글
+          <T>댓글</T>
           <span className="text-sm font-normal text-[#888]">{product.comments.length}</span>
         </h2>
         {product.comments.length === 0 ? (
-          <p className="text-sm text-[#888]">아직 댓글이 없습니다.</p>
+          <p className="text-sm text-[#888]"><T>아직 댓글이 없습니다.</T></p>
         ) : (
           <ul className="space-y-4">
             {product.comments.map((comment) => (

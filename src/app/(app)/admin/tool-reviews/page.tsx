@@ -9,8 +9,14 @@ import { Pagination } from '@/components/pagination'
 import { SubPageHeader } from '@/components/shell/sub-nav-layout'
 import { CodeBlock } from '@/components/connect/code-block'
 import { SubmissionRow } from '@/components/tools/submissions/submission-row'
+import { T } from '@/i18n/t'
+import { msg } from '@/i18n/translate'
+import { getT } from '@/i18n/server'
 
-export const metadata = { title: '툴 검토 · 관리 · AI쓰발' }
+export async function generateMetadata() {
+  const t = await getT()
+  return { title: t('툴 검토 · 관리 · AI쓰발') }
+}
 const PAGE = 20
 
 /**
@@ -18,6 +24,7 @@ const PAGE = 20
  * admin's own AI over MCP with `tools:review` (review_approve / review_reject).
  */
 export default async function ToolReviewsPage({ searchParams }: { searchParams: Promise<{ status?: string; page?: string }> }) {
+  const st = await getT()
   const state = await getUserState()
   if (state.type !== 'member' || !state.member.is_admin) return null
   const sp = await searchParams
@@ -29,21 +36,21 @@ export default async function ToolReviewsPage({ searchParams }: { searchParams: 
 
   return (
     <div className="space-y-3">
-      <SubPageHeader title="툴 검토" description="멤버 AI가 보낸 등록 요청. 대기 목록은 오래된 순이에요." />
+      <SubPageHeader title={msg('툴 검토')} description={msg('멤버 AI가 보낸 등록 요청. 대기 목록은 오래된 순이에요.')} />
       <section className="card p-4 space-y-2">
         <h2 className="text-[14px] font-semibold inline-flex items-center gap-1.5" style={{ color: '#111' }}>
-          <Bot className="w-4 h-4" /> 내 AI로 검토하기
+          <Bot className="w-4 h-4" /> <T>내 AI로 검토하기</T>
         </h2>
         <p className="text-[13px] text-[#555]">
-          ‘툴 검토’ 권한으로 <Link href="/connect?preset=review" className="text-[#0066cc]">AI를 연결</Link>한 뒤 아래 메시지를 보내세요. 승인·반려는 AI가 MCP로 처리하고 모두 기록돼요.
+          <T>‘툴 검토’ 권한으로</T> <Link href="/connect?preset=review" className="text-[#0066cc]"><T>AI를 연결</T></Link><T>한 뒤 아래 메시지를 보내세요. 승인·반려는 AI가 MCP로 처리하고 모두 기록돼요.</T>
         </p>
-        <CodeBlock code={reviewPrompt()} label="검토 메시지" wrap />
+        <CodeBlock code={reviewPrompt()} label={msg('검토 메시지')} wrap />
       </section>
       <section className="card overflow-hidden">
-        <LinkTabs label="상태" active={status} tabs={[...SUBMISSION_STATUSES.map((s) => ({ id: s, label: STATUS_LABEL[s], href: href(s), count: counts[s], dot: s === 'pending' && counts.pending > 0 })), { id: 'all', label: '전체', href: href('all'), count: counts.all }]} />
+        <LinkTabs label={msg('상태')} active={status} tabs={[...SUBMISSION_STATUSES.map((s) => ({ id: s, label: STATUS_LABEL[s], href: href(s), count: counts[s], dot: s === 'pending' && counts.pending > 0 })), { id: 'all', label: st('전체'), href: href('all'), count: counts.all }]} />
       </section>
       {items.length === 0 ? (
-        <div className="card p-8 text-center text-sm text-[#888]">{status === 'pending' ? '대기 중인 요청이 없어요.' : `${status === 'all' ? '' : STATUS_LABEL[status] + ' '}요청이 없어요.`}</div>
+        <div className="card p-8 text-center text-sm text-[#888]">{status === 'pending' ? <T>대기 중인 요청이 없어요.</T> : status === 'all' ? <T>아직 요청이 없어요.</T> : <T s="{status} 요청이 없어요." vars={{ status: <T>{STATUS_LABEL[status]}</T> }} />}</div>
       ) : (
         <ul className="sub-list">
           {items.map((s, i) => (
@@ -51,7 +58,7 @@ export default async function ToolReviewsPage({ searchParams }: { searchParams: 
           ))}
         </ul>
       )}
-      <Pagination base={href(status)} page={page} totalPages={Math.max(1, Math.ceil(total / PAGE))} label="검토 목록 페이지" />
+      <Pagination base={href(status)} page={page} totalPages={Math.max(1, Math.ceil(total / PAGE))} label={msg('검토 목록 페이지')} />
     </div>
   )
 }

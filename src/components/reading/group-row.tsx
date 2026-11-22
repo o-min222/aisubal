@@ -2,11 +2,14 @@ import type { Group } from '@/lib/data/groups'
 import { ROLE_LABEL } from '@/lib/group-rules'
 import { GroupPolicy } from '@/components/groups/group-card'
 import { CompactRow } from './compact-row'
+import { T } from '@/i18n/t'
+import { getT } from '@/i18n/server'
 
 /** Compact 그룹 row; groups open as their own space (timeline + tabs), not in a pane. */
-export function GroupRow({ g }: { g: Group }) {
+export async function GroupRow({ g }: { g: Group }) {
+  const st = await getT()
   const state =
-    g.myStatus === 'active' ? (g.myRole && g.myRole !== 'member' ? ROLE_LABEL[g.myRole] : null) : g.myStatus === 'pending' ? '가입 요청 중' : g.myStatus === 'invited' ? '초대받음' : null
+    g.myStatus === 'active' ? (g.myRole && g.myRole !== 'member' ? ROLE_LABEL[g.myRole] : null) : g.myStatus === 'pending' ? st('가입 요청 중') : g.myStatus === 'invited' ? st('초대받음') : null
   return (
     <CompactRow
       href={`/groups/${g.slug}`}
@@ -20,8 +23,8 @@ export function GroupRow({ g }: { g: Group }) {
       preview={g.description || undefined}
       meta={
         <>
-          <span>멤버 {g.memberCount}</span>
-          <span>글 {g.postCount}</span>
+          <span><T s="멤버 {memberCount}" vars={{ memberCount: g.memberCount }} /></span>
+          <span><T s="글 {postCount}" vars={{ postCount: g.postCount }} /></span>
           <GroupPolicy g={g} />
         </>
       }

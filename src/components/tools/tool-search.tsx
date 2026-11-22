@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Search, X } from 'lucide-react'
+import { tx } from '@/i18n/client'
 
 /** Search box that writes ?q= and keeps the other filters. */
 export function ToolSearch({ initial }: { initial: string }) {
@@ -30,15 +31,15 @@ export function ToolSearch({ initial }: { initial: string }) {
       <input
         value={q}
         onChange={(e) => setQ(e.target.value)}
-        placeholder="툴 이름, 태그, 한 줄 소개"
-        aria-label="툴 검색"
+        placeholder={tx('툴 이름, 태그, 한 줄 소개')}
+        aria-label={tx('툴 검색')}
         enterKeyHint="search"
         className="w-full h-11 pl-9 pr-10 rounded-full border border-[#e3e3e3] bg-white text-[15px]"
       />
       {q && (
         <button
           type="button"
-          aria-label="검색어 지우기"
+          aria-label={tx('검색어 지우기')}
           onClick={() => {
             setQ('')
             go('')

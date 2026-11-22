@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { Globe, MapPin, Lock } from 'lucide-react'
 import type { MoimGroupRef } from '@/lib/data/moim'
 import { RSVP_LABEL, type RsvpStatus } from '@/lib/moim-rules'
+import { T } from '@/i18n/t'
 
 export function GroupBadge({ group, link = true }: { group: MoimGroupRef; link?: boolean }) {
   const inner = (
@@ -26,7 +27,7 @@ export function ModeBadge({ mode }: { mode: 'online' | 'offline' }) {
   return (
     <span className="inline-flex items-center gap-1 rounded-full px-2 text-[12px] font-medium leading-[22px]" style={{ background: '#f2f2f2', color: '#444' }}>
       {mode === 'online' ? <Globe className="w-3 h-3" /> : <MapPin className="w-3 h-3" />}
-      {mode === 'online' ? '온라인' : '오프라인'}
+      {mode === 'online' ? <T>온라인</T> : <T>오프라인</T>}
     </span>
   )
 }
@@ -34,7 +35,7 @@ export function ModeBadge({ mode }: { mode: 'online' | 'offline' }) {
 export function MembersOnlyBadge() {
   return (
     <span className="inline-flex items-center gap-1 rounded-full px-2 text-[12px] font-medium leading-[22px]" style={{ background: '#fff4e5', color: '#9a5b00' }}>
-      <Lock className="w-3 h-3" /> 그룹 멤버만
+      <Lock className="w-3 h-3" /> <T>그룹 멤버만</T>
     </span>
   )
 }
@@ -51,8 +52,8 @@ export function RsvpBadge({ status, position }: { status: RsvpStatus; position?:
   const t = RSVP_TONE[status]
   return (
     <span className="inline-flex items-center rounded-full px-2 text-[12px] font-semibold leading-[22px] whitespace-nowrap" style={{ background: t.bg, color: t.fg }}>
-      {RSVP_LABEL[status]}
-      {status === 'waitlisted' && position ? ` ${position}번째` : ''}
+      <T>{RSVP_LABEL[status]}</T>
+      {status === 'waitlisted' && position ? <> <T s="{n}번째" vars={{ n: position }} /></> : ''}
     </span>
   )
 }
@@ -65,7 +66,8 @@ export function CapacityBar({ confirmed, capacity }: { confirmed: number; capaci
         <span style={{ display: 'block', height: '100%', width: `${pct}%`, background: pct >= 100 ? '#e5484d' : '#111' }} />
       </span>
       <span className="tabular-nums text-[12.5px]" style={{ color: '#555' }}>
-        {confirmed}/{capacity}명{pct >= 100 ? ' · 마감' : ''}
+        <T s="{n}/{cap}명" vars={{ n: confirmed, cap: capacity }} />
+        {pct >= 100 ? <> · <T>마감</T></> : ''}
       </span>
     </span>
   )

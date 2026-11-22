@@ -1,7 +1,9 @@
 import Link from 'next/link'
+import { T } from '@/i18n/t'
+import { getT } from '@/i18n/server'
 
 /** Underlined link tabs (server-renderable). Scrolls horizontally on narrow screens. */
-export function LinkTabs({
+export async function LinkTabs({
   tabs,
   active,
   label,
@@ -12,9 +14,10 @@ export function LinkTabs({
   label: string
   className?: string
 }) {
+  const st = await getT()
   return (
     <nav
-      aria-label={label}
+      aria-label={st(label)}
       className={`link-tabs ${className}`}
       style={{ display: 'flex', gap: 4, overflowX: 'auto', borderBottom: '1px solid #ececec', scrollbarWidth: 'none' }}
     >
@@ -41,9 +44,9 @@ export function LinkTabs({
               whiteSpace: 'nowrap',
             }}
           >
-            {t.label}
+            <T>{t.label}</T>
             {typeof t.count === 'number' && <span style={{ color: '#999', fontWeight: 500, fontVariantNumeric: 'tabular-nums' }}>{t.count}</span>}
-            {t.dot && <span aria-label="새 항목" style={{ width: 6, height: 6, borderRadius: 99, background: '#e5484d', display: 'inline-block' }} />}
+            {t.dot && <span aria-label={st('새 항목')} style={{ width: 6, height: 6, borderRadius: 99, background: '#e5484d', display: 'inline-block' }} />}
           </Link>
         )
       })}

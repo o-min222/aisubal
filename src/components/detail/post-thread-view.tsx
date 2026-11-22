@@ -11,6 +11,7 @@ import { PostCard } from '@/components/timeline/post-card'
 import { Composer } from '@/components/feed/composer'
 import { PostDetailClient } from '@/app/(app)/posts/[id]/post-detail-client'
 import { InteractionToggle } from '@/app/(app)/posts/[id]/interaction-toggle'
+import { T } from '@/i18n/t'
 
 
 /** A human-feed thread. Used by /posts/[id] and the feed / group / profile reading panes. */
@@ -46,7 +47,7 @@ export async function PostThreadView({
         ) : (
           <Link href="/feed" className="hidden md:inline-flex items-center gap-1 text-sm text-[#666] hover:text-[#111] min-h-[36px]">
             <ArrowLeft className="w-4 h-4" />
-            피드
+            <T>피드</T>
           </Link>
         ))}
 
@@ -58,15 +59,15 @@ export async function PostThreadView({
 
       <div className="flex flex-wrap items-center gap-2 text-xs text-[#666] px-1">
         {group ? (
-          <span>그룹 멤버에게만 보이는 글 · 사람만 참여할 수 있어요</span>
+          <span><T>그룹 멤버에게만 보이는 글 · 사람만 참여할 수 있어요</T></span>
         ) : thread.isMine ? (
           <InteractionToggle postId={thread.root.id} initial={thread.root.agentsAllowed ? 'agents_allowed' : 'humans_only'} />
         ) : thread.root.agentsAllowed ? (
           <span className="inline-flex items-center gap-1">
-            <Bot className="w-3.5 h-3.5" /> 작성자가 에이전트의 답글·좋아요를 허용했어요
+            <Bot className="w-3.5 h-3.5" /> <T>작성자가 에이전트의 답글·좋아요를 허용했어요</T>
           </span>
         ) : (
-          <span>사람만 참여할 수 있는 글이에요</span>
+          <span><T>사람만 참여할 수 있는 글이에요</T></span>
         )}
       </div>
 
@@ -75,10 +76,10 @@ export async function PostThreadView({
           {replyTarget && (
             <div className="text-xs text-[#666] mb-2 flex items-center gap-2">
               <span>
-                <b>{replyTarget.author.name}</b>님에게 답글
+                <b>{replyTarget.author.name}</b><T>님에게 답글</T>
               </span>
               <Link href={pageHref} className="text-[#0066cc]">
-                취소
+                <T>취소</T>
               </Link>
             </div>
           )}
@@ -90,9 +91,9 @@ export async function PostThreadView({
             className="!p-0 !border-0 !shadow-none"
           />
         </div>
-        <h2 className="px-4 pt-3 pb-2 text-sm font-semibold text-[#111] border-b border-[#eee]">답글 {thread.replies.length}</h2>
+        <h2 className="px-4 pt-3 pb-2 text-sm font-semibold text-[#111] border-b border-[#eee]"><T s="답글 {length}" vars={{ length: thread.replies.length }} /></h2>
         {ordered.length === 0 ? (
-          <p className="px-4 py-6 text-sm text-[#888] text-center">첫 답글을 남겨보세요.</p>
+          <p className="px-4 py-6 text-sm text-[#888] text-center"><T>첫 답글을 남겨보세요.</T></p>
         ) : (
           ordered.map((post) => (
             <div key={post.id} style={{ paddingLeft: Math.min(post.depth, 3) * 16 }}>

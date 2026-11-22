@@ -18,6 +18,9 @@ import type { ArchiveCollection, ArchiveSourceType, Member } from '@/lib/supabas
 import { ARCHIVE_SOURCE_LABEL } from '@/lib/archive-brain-rules'
 import { RelativeTime } from '@/components/relative-time'
 import { toast } from 'sonner'
+import { T } from '@/i18n/t'
+import { tx, tn } from '@/i18n/client'
+import { msg } from '@/i18n/translate'
 
 type BrainRow = {
   id: string
@@ -42,13 +45,13 @@ interface ArchiveClientProps {
 }
 
 const TYPE_TABS: { key: ArchiveSourceType | 'all'; label: string }[] = [
-  { key: 'all', label: '전체' },
-  { key: 'post', label: '게시물' },
-  { key: 'link', label: '링크' },
-  { key: 'asset', label: '에셋' },
-  { key: 'toolbox', label: '툴박스' },
-  { key: 'meetup', label: '모임' },
-  { key: 'product', label: '프로덕트' },
+  { key: 'all', label: msg('전체') },
+  { key: 'post', label: msg('게시물') },
+  { key: 'link', label: msg('링크') },
+  { key: 'asset', label: msg('에셋') },
+  { key: 'toolbox', label: msg('툴박스') },
+  { key: 'meetup', label: msg('모임') },
+  { key: 'product', label: msg('프로덕트') },
 ]
 
 export function ArchiveClient({
@@ -89,13 +92,13 @@ export function ArchiveClient({
       const res = await fetch(`/api/archive?${params}`)
       const data = await res.json()
       if (!res.ok) {
-        toast.error(data.error || '불러오기 실패')
+        toast.error(data.error || tn('불러오기 실패'))
         return
       }
       setItems(data.items || [])
       setCollections(data.collections || [])
     } catch {
-      toast.error('네트워크 오류')
+      toast.error(tn('네트워크 오류'))
     } finally {
       setLoading(false)
     }
@@ -116,10 +119,10 @@ export function ArchiveClient({
   async function removeItem(id: string) {
     const res = await fetch(`/api/archive/${id}`, { method: 'DELETE' })
     if (!res.ok) {
-      toast.error('삭제 실패')
+      toast.error(tn('삭제 실패'))
       return
     }
-    toast.success('삭제했습니다.')
+    toast.success(tn('삭제했습니다.'))
     if (selected?.id === id) setSelected(null)
     void reload()
   }
@@ -128,15 +131,15 @@ export function ArchiveClient({
     const res = await fetch(`/api/archive/${itemId}`)
     const data = await res.json()
     if (!res.ok) {
-      toast.error(data.error || '실패')
+      toast.error(data.error || tn('실패'))
       return
     }
     const text = data.use_in_ai?.prompt || ''
     try {
       await navigator.clipboard.writeText(text)
-      toast.success('AI용 프롬프트+컨텍스트를 복사했습니다.')
+      toast.success(tn('AI용 프롬프트+컨텍스트를 복사했습니다.'))
     } catch {
-      toast.error('복사 실패')
+      toast.error(tn('복사 실패'))
     }
   }
 
@@ -144,20 +147,20 @@ export function ArchiveClient({
     const res = await fetch(`/api/archive/collections?id=${colId}`)
     const data = await res.json()
     if (!res.ok) {
-      toast.error(data.error || '실패')
+      toast.error(data.error || tn('실패'))
       return
     }
     try {
       await navigator.clipboard.writeText(data.use_in_ai?.prompt || '')
-      toast.success(`컬렉션 컨텍스트 복사 · ${data.use_in_ai?.reference}`)
+      toast.success(tn('컬렉션 컨텍스트 복사 · {ref}', { ref: data.use_in_ai?.reference ?? '' }))
     } catch {
-      toast.error('복사 실패')
+      toast.error(tn('복사 실패'))
     }
   }
 
   async function exportCollection(colId: string) {
     window.open(`/api/archive/export?collection=${colId}&format=pack&json=1`, '_blank')
-    toast.success('컨텍스트 팩 JSON을 열었습니다. CLI: aisubal archive pull ' + colId)
+    toast.success(tn('컨텍스트 팩 JSON을 열었습니다. CLI: aisubal archive pull ') + colId)
   }
 
   async function createCollection() {
@@ -169,11 +172,11 @@ export function ArchiveClient({
     })
     const data = await res.json()
     if (!res.ok) {
-      toast.error(data.error || '생성 실패')
+      toast.error(data.error || tn('생성 실패'))
       return
     }
     setNewColName('')
-    toast.success('컬렉션 생성')
+    toast.success(tn('컬렉션 생성'))
     void reload()
   }
 
@@ -185,11 +188,11 @@ export function ArchiveClient({
       body: JSON.stringify({ quote: hlQuote.trim() }),
     })
     if (!res.ok) {
-      toast.error('하이라이트 실패')
+      toast.error(tn('하이라이트 실패'))
       return
     }
     setHlQuote('')
-    toast.success('하이라이트 추가')
+    toast.success(tn('하이라이트 추가'))
     const detail = await fetch(`/api/archive/${selected.id}`).then((r) => r.json())
     setSelected({ ...detail.item, highlights: detail.highlights })
     void reload()
@@ -208,11 +211,11 @@ export function ArchiveClient({
             }}
           >
             <Brain className="w-4 h-4" />
-            전체 브레인
+            <T>전체 브레인</T>
           </button>
         </div>
         <div className="sidebar-module">
-          <h3 className="sidebar-title">컬렉션</h3>
+          <h3 className="sidebar-title"><T>컬렉션</T></h3>
           <div className="space-y-1">
             {collections.map((c) => (
               <button
@@ -235,7 +238,7 @@ export function ArchiveClient({
             <input
               value={newColName}
               onChange={(e) => setNewColName(e.target.value)}
-              placeholder="새 컬렉션"
+              placeholder={tx('새 컬렉션')}
               className="input text-sm flex-1 h-8"
             />
             <button type="button" className="btn btn-secondary btn-sm" onClick={() => void createCollection()}>
@@ -250,10 +253,10 @@ export function ArchiveClient({
           <div>
             <h1 className="text-2xl font-bold text-[#111] flex items-center gap-2">
               <Brain className="w-6 h-6" />
-              세컨드 브레인
+              <T>세컨드 브레인</T>
             </h1>
             <p className="text-sm text-[#666] mt-1">
-              게시물·링크·툴·모임·프로덕트를 모아 내 AI에 연결합니다. 기본은 비공개 · {member.display_name}
+              <T>게시물·링크·툴·모임·프로덕트를 모아 내 AI에 연결합니다. 기본은 비공개</T> · {member.display_name}
             </p>
           </div>
           <div className="flex gap-2">
@@ -273,13 +276,13 @@ export function ArchiveClient({
                   onClick={() => void exportCollection(collectionId)}
                 >
                   <Download className="w-4 h-4" />
-                  팩보내기
+                  <T>팩보내기</T>
                 </button>
               </>
             )}
             <a href="/api/archive/export" className="btn btn-secondary btn-sm">
               <Download className="w-4 h-4" />
-              전체보내기
+              <T>전체보내기</T>
             </a>
           </div>
         </div>
@@ -291,7 +294,7 @@ export function ArchiveClient({
               value={q}
               onChange={(e) => setQ(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && void reload({ q })}
-              placeholder="전문 검색 (제목·본문·추출문·노트·태그)"
+              placeholder={tx('전문 검색 (제목·본문·추출문·노트·태그)')}
               className="input pl-10"
             />
           </div>
@@ -306,7 +309,7 @@ export function ArchiveClient({
                   void reload({ type: t.key })
                 }}
               >
-                {t.label}
+                <T>{t.label}</T>
               </button>
             ))}
           </div>
@@ -322,7 +325,7 @@ export function ArchiveClient({
                   !tag ? 'bg-[#111] text-white' : 'bg-[#f0f0f0] text-[#666]'
                 }`}
               >
-                전체 태그
+                <T>전체 태그</T>
               </button>
               {allTags.map((t) => (
                 <button
@@ -344,11 +347,11 @@ export function ArchiveClient({
         </div>
 
         {loading ? (
-          <p className="text-sm text-[#888]">불러오는 중…</p>
+          <p className="text-sm text-[#888]"><T>불러오는 중…</T></p>
         ) : items.length === 0 ? (
           <div className="card p-10 text-center text-sm text-[#666]">
             <Bookmark className="w-8 h-8 mx-auto mb-2 text-[#ccc]" />
-            저장된 항목이 없습니다. 피드·툴박스·모임에서 저장해 보세요.
+            <T>저장된 항목이 없습니다. 피드·툴박스·모임에서 저장해 보세요.</T>
           </div>
         ) : (
           <div className="space-y-2">
@@ -364,7 +367,7 @@ export function ArchiveClient({
                   <div className="min-w-0">
                     <div className="flex flex-wrap gap-2 mb-1">
                       <span className="badge badge-note">
-                        {ARCHIVE_SOURCE_LABEL[item.source_type]}
+                        <T>{ARCHIVE_SOURCE_LABEL[item.source_type]}</T>
                       </span>
                       {item.tags.slice(0, 4).map((t) => (
                         <span key={t} className="badge badge-mcp">
@@ -377,7 +380,7 @@ export function ArchiveClient({
                       <p className="feed-item-desc line-clamp-2">{item.summary}</p>
                     )}
                     {item.note && (
-                      <p className="text-xs text-[#666] mt-2">노트: {item.note}</p>
+                      <p className="text-xs text-[#666] mt-2"><T>노트:</T> {item.note}</p>
                     )}
                     <div className="feed-item-meta">
                       <RelativeTime date={item.updated_at} />
@@ -433,7 +436,7 @@ export function ArchiveClient({
             )}
             {selected.extracted_text && (
               <div>
-                <p className="text-xs font-medium text-[#666] mb-1">추출문 / 트랜스크립트</p>
+                <p className="text-xs font-medium text-[#666] mb-1"><T>추출문 / 트랜스크립트</T></p>
                 <pre className="text-xs bg-[#f5f5f5] p-2 rounded max-h-40 overflow-auto whitespace-pre-wrap">
                   {selected.extracted_text.slice(0, 800)}
                 </pre>
@@ -448,7 +451,7 @@ export function ArchiveClient({
               Use in my AI
             </button>
             <div>
-              <p className="text-xs font-medium text-[#666] mb-1">하이라이트</p>
+              <p className="text-xs font-medium text-[#666] mb-1"><T>하이라이트</T></p>
               <ul className="space-y-1 mb-2">
                 {(selected.highlights || []).map((h) => (
                   <li key={h.id} className="text-xs text-[#444]">
@@ -459,7 +462,7 @@ export function ArchiveClient({
               <textarea
                 value={hlQuote}
                 onChange={(e) => setHlQuote(e.target.value)}
-                placeholder="인용 추가"
+                placeholder={tx('인용 추가')}
                 className="w-full text-xs border border-[#e5e5e5] rounded p-2 min-h-[60px]"
               />
               <button
@@ -468,17 +471,16 @@ export function ArchiveClient({
                 onClick={() => void addHighlight()}
               >
                 <Highlighter className="w-3.5 h-3.5" />
-                추가
+                <T>추가</T>
               </button>
             </div>
             <Link href={`/archive`} className="text-xs text-[#888]">
-              상세는 선택 후 AI 버튼으로 전체 컨텍스트를 복사하세요.
+              <T>상세는 선택 후 AI 버튼으로 전체 컨텍스트를 복사하세요.</T>
             </Link>
           </div>
         ) : (
           <div className="sidebar-module text-sm text-[#666]">
-            항목을 선택하면 추출문·하이라이트·AI 복사를 쓸 수 있습니다. 아카이브는 기본 비공개이며,
-            컬렉션만 선택적으로 멤버 공유할 수 있습니다.
+            <T>항목을 선택하면 추출문·하이라이트·AI 복사를 쓸 수 있습니다. 아카이브는 기본 비공개이며, 컬렉션만 선택적으로 멤버 공유할 수 있습니다.</T>
           </div>
         )}
       </aside>

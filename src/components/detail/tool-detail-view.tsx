@@ -15,6 +15,8 @@ import { ToolUsersCard } from '@/components/tools/tool-users'
 import { LaunchSection } from '@/components/tools/launch-section'
 import { RelativeTime } from '@/components/relative-time'
 import { ToolboxDetailClient } from '@/app/(app)/tools/[id]/toolbox-detail-client'
+import { T } from '@/i18n/t'
+import { getT } from '@/i18n/server'
 
 export async function loadToolEntry(id: string): Promise<ToolboxEntryDetails | null> {
   const entry = await getToolboxEntry(id)
@@ -25,6 +27,7 @@ export async function loadToolEntry(id: string): Promise<ToolboxEntryDetails | n
 
 /** Tool detail. Used by /tools/[id] and the 툴 reading pane. */
 export async function ToolDetailView({ entry, member, variant = 'page' }: { entry: ToolboxEntryDetails; member: Member; variant?: 'page' | 'pane' }) {
+  const st = await getT()
   const [mentionPostsRaw, aiRating, usage, launch, unlock, prov] = await Promise.all([
     Promise.all(
       entry.mentions.map(async (m) => {
@@ -50,13 +53,13 @@ export async function ToolDetailView({ entry, member, variant = 'page' }: { entr
       variant={variant}
       provenanceSlot={
         prov ? (
-          <section className="card p-4 text-[13px] space-y-1" aria-label="등록 이력" style={{ color: '#555' }}>
+          <section className="card p-4 text-[13px] space-y-1" aria-label={st('등록 이력')} style={{ color: '#555' }}>
             <p className="flex items-center gap-1.5">
-              <Bot className="w-3.5 h-3.5" /> 등록 요청 <b style={{ color: '#111' }}>{prov.submittedBy}</b> · <RelativeTime date={prov.submittedAt} />
+              <Bot className="w-3.5 h-3.5" /> <T>등록 요청</T> <b style={{ color: '#111' }}>{prov.submittedBy}</b> · <RelativeTime date={prov.submittedAt} />
             </p>
             {prov.approvedBy && prov.approvedAt && (
               <p className="flex items-center gap-1.5">
-                <ShieldCheck className="w-3.5 h-3.5" style={{ color: '#1f7a4d' }} /> 검토·승인 <b style={{ color: '#111' }}>{prov.approvedBy}</b> · <RelativeTime date={prov.approvedAt} />
+                <ShieldCheck className="w-3.5 h-3.5" style={{ color: '#1f7a4d' }} /> <T>검토·승인</T> <b style={{ color: '#111' }}>{prov.approvedBy}</b> · <RelativeTime date={prov.approvedAt} />
               </p>
             )}
           </section>

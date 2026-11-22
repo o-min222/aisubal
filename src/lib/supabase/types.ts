@@ -1,4 +1,6 @@
 export type Member = {
+  /** UI language preference (0019); read via get_my_member, set via member_set_locale */
+  locale?: string | null
   id: string
   auth_id: string
   email: string // private — only from get_my_member() for the owner; never shown to others

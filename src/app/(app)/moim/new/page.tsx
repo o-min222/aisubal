@@ -2,8 +2,12 @@ import { redirect } from 'next/navigation'
 import { getUserState } from '@/lib/auth'
 import { moimHostOptions } from '@/lib/data/moim'
 import { MoimForm } from '@/components/moim/moim-form'
+import { getT } from '@/i18n/server'
 
-export const metadata = { title: '모임 열기 · AI쓰발' }
+export async function generateMetadata() {
+  const t = await getT()
+  return { title: t('모임 열기 · AI쓰발') }
+}
 
 /** 모임 are always created here (never inside a group page); the host can be me or a group I run. */
 export default async function NewMoimPage({ searchParams }: { searchParams: Promise<{ group?: string }> }) {

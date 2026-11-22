@@ -5,6 +5,7 @@ import type { Relation } from '@/lib/social-rules'
 import { FollowButton } from './follow-button'
 import { FriendButton } from './friend-button'
 import { RelationBadge } from './relation-badge'
+import { T } from '@/i18n/t'
 
 /** A person in a list: avatar, name, relation badge, follow (and optionally friend) action. */
 export function PersonRow({
@@ -28,7 +29,7 @@ export function PersonRow({
             <span className="font-semibold text-[15px] truncate" style={{ color: '#111' }}>
               {person.name}
             </span>
-            {r.isMe ? <span className="text-xs text-[#888]">(나)</span> : <RelationBadge relation={r} />}
+            {r.isMe ? <span className="text-xs text-[#888]"><T>(나)</T></span> : <RelationBadge relation={r} />}
           </span>
           {subtitle ? (
             <span className="block text-[12.5px] text-[#777] truncate">{subtitle}</span>

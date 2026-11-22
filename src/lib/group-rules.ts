@@ -1,3 +1,4 @@
+import { msg } from '@/i18n/translate'
 export type GroupRole = 'owner' | 'mod' | 'member'
 export type GroupMemberStatus = 'active' | 'pending' | 'invited'
 export type JoinPolicy = 'open' | 'approval'
@@ -16,7 +17,7 @@ export function slugify(name: string): string {
   return GROUP_SLUG_RE.test(ascii) ? ascii : ''
 }
 
-export const ROLE_LABEL: Record<GroupRole, string> = { owner: '소유자', mod: '매니저', member: '멤버' }
+export const ROLE_LABEL: Record<GroupRole, string> = { owner: msg('소유자'), mod: msg('매니저'), member: msg('멤버') }
 
 export const canModerate = (role: GroupRole | null | undefined) => role === 'owner' || role === 'mod'
 

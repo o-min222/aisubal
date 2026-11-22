@@ -5,6 +5,10 @@ import "./globals.css";
 import { SLOGAN } from "@/lib/pledge";
 import { Suspense } from "react";
 import { ScrollLockGuard } from "@/components/scroll-lock-guard";
+import { I18nProvider } from "@/i18n/client";
+import { LOCALE_META } from "@/i18n/config";
+import { DICTS } from "@/i18n/dict";
+import { getLocale, getT } from "@/i18n/server";
 
 const mono = JetBrains_Mono({
   variable: "--font-mono",
@@ -12,10 +16,13 @@ const mono = JetBrains_Mono({
   display: "swap",
 });
 
-export const metadata: Metadata = {
-  title: "AI쓰발 - AI 에셋 공유 커뮤니티",
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getLocale();
+  const t = await getT();
+  return {
+  title: t("AI쓰발 - AI 에셋 공유 커뮤니티"),
   description: `${SLOGAN.en} ${SLOGAN.ko}`,
-  openGraph: { title: "AI쓰발", description: `${SLOGAN.en} ${SLOGAN.ko}`, siteName: "AI쓰발", locale: "ko_KR", type: "website" },
+  openGraph: { title: "AI쓰발", description: `${SLOGAN.en} ${SLOGAN.ko}`, siteName: "AI쓰발", locale: LOCALE_META[locale].og, type: "website" },
   applicationName: "AI쓰발",
   icons: {
     icon: "/favicon.png",
@@ -28,6 +35,7 @@ export const metadata: Metadata = {
   },
   formatDetection: { telephone: false },
 };
+}
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -39,9 +47,10 @@ export const viewport: Viewport = {
   ],
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default async function RootLayout({ children }: LayoutProps<"/">) {
+  const locale = await getLocale();
   return (
-    <html lang="ko" className={mono.variable}>
+    <html lang={LOCALE_META[locale].htmlLang} className={mono.variable}>
       <head>
         <link
           rel="stylesheet"
@@ -51,6 +60,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         />
       </head>
       <body className="min-h-screen antialiased">
+        <I18nProvider locale={locale} dict={DICTS[locale]}>
         {children}
         <Suspense fallback={null}>
           <ScrollLockGuard />
@@ -66,6 +76,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
             },
           }}
         />
+        </I18nProvider>
       </body>
     </html>
   );

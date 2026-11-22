@@ -9,6 +9,9 @@ import { LinkCard } from '@/components/link-card'
 import { UserAvatar } from '@/components/user-avatar'
 import { memberHasNicknameProfile } from '@/lib/profile'
 import { toast } from 'sonner'
+import { T } from '@/i18n/t'
+import { tx, tn } from '@/i18n/client'
+import { msg } from '@/i18n/translate'
 
 interface NewPostClientProps {
   member: Member
@@ -26,10 +29,10 @@ interface AssetDraft {
 
 const ASSET_TYPES = [
   { value: 'SKILL_MD' as const, label: 'Agent Skill', icon: Bot },
-  { value: 'MCP_CONFIG' as const, label: 'MCP 설정', icon: Terminal },
-  { value: 'CURSOR_RULES' as const, label: 'Cursor 규칙', icon: FileCode },
-  { value: 'PROMPT' as const, label: '프롬프트', icon: MessageSquare },
-  { value: 'NOTE' as const, label: '노트', icon: FileText },
+  { value: 'MCP_CONFIG' as const, label: msg('MCP 설정'), icon: Terminal },
+  { value: 'CURSOR_RULES' as const, label: msg('Cursor 규칙'), icon: FileCode },
+  { value: 'PROMPT' as const, label: msg('프롬프트'), icon: MessageSquare },
+  { value: 'NOTE' as const, label: msg('노트'), icon: FileText },
 ]
 
 export function NewPostClient({
@@ -60,13 +63,13 @@ export function NewPostClient({
       })
       const data = await res.json()
       if (!res.ok) {
-        toast.error(data.error || '미리보기를 가져오지 못했습니다.')
+        toast.error(data.error || tn('미리보기를 가져오지 못했습니다.'))
         return
       }
       setPreview(data.preview)
       if (!title && data.preview.title) setTitle(data.preview.title)
     } catch {
-      toast.error('네트워크 오류')
+      toast.error(tn('네트워크 오류'))
     } finally {
       setFetching(false)
     }
@@ -82,7 +85,7 @@ export function NewPostClient({
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!content.trim()) {
-      toast.error('코멘트를 입력해 주세요.')
+      toast.error(tn('코멘트를 입력해 주세요.'))
       return
     }
     setLoading(true)
@@ -101,13 +104,13 @@ export function NewPostClient({
       })
       if (!res.ok) {
         const data = await res.json()
-        toast.error(data.error || '게시 실패')
+        toast.error(data.error || tn('게시 실패'))
         return
       }
-      toast.success('게시되었습니다.')
+      toast.success(tn('게시되었습니다.'))
       router.push('/feed')
     } catch {
-      toast.error('게시 중 오류')
+      toast.error(tn('게시 중 오류'))
     } finally {
       setLoading(false)
     }
@@ -117,19 +120,19 @@ export function NewPostClient({
     <div className="max-w-2xl mx-auto">
       <Link href="/posts/new" className="inline-flex items-center gap-2 text-sm text-[#666] hover:text-[#111] mb-4">
         <ArrowLeft className="w-4 h-4" />
-        짧은 글로 돌아가기
+        <T>짧은 글로 돌아가기</T>
       </Link>
 
       <div className="card">
         <div className="p-6 border-b border-[#e5e5e5]">
-          <h1 className="text-xl font-bold text-[#111]">새 게시물</h1>
-          <p className="text-sm text-[#666] mt-1">링크를 붙이고 코멘트를 남기세요. AI 에셋은 선택입니다.</p>
+          <h1 className="text-xl font-bold text-[#111]"><T>새 게시물</T></h1>
+          <p className="text-sm text-[#666] mt-1"><T>링크를 붙이고 코멘트를 남기세요. AI 에셋은 선택입니다.</T></p>
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
           {/* Profile switcher */}
           <div>
-            <label className="block text-sm font-medium text-[#333] mb-2">게시 프로필</label>
+            <label className="block text-sm font-medium text-[#333] mb-2"><T>게시 프로필</T></label>
             <div className="flex flex-wrap gap-2">
               <button
                 type="button"
@@ -138,7 +141,7 @@ export function NewPostClient({
               >
                 <UserAvatar id={member.id} name={member.display_name} avatarUrl={member.avatar_url} size="sm" />
                 <span>{member.display_name}</span>
-                <span className="text-xs text-[#888]">기본 프로필</span>
+                <span className="text-xs text-[#888]"><T>기본 프로필</T></span>
               </button>
               {nicknameUnlocked && hasNick ? (
                 <button
@@ -153,14 +156,14 @@ export function NewPostClient({
                     size="sm"
                   />
                   <span>{member.nickname}</span>
-                  <span className="text-xs text-[#888]">별명</span>
+                  <span className="text-xs text-[#888]"><T>별명</T></span>
                 </button>
               ) : (
-                <div className="profile-switch opacity-60 cursor-not-allowed" title="별명 프로필 잠김">
+                <div className="profile-switch opacity-60 cursor-not-allowed" title={tx('별명 프로필 잠김')}>
                   <span className="text-sm text-[#888]">
                     {nicknameUnlocked
-                      ? '설정에서 별명 프로필을 만드세요'
-                      : `별명 잠김 · 멤버 ${unlockThreshold}명부터 (현재 ${activeMemberCount})`}
+                      ? tx('설정에서 별명 프로필을 만드세요')
+                      : tx('별명 잠김 · 멤버 {unlockThreshold}명부터 (현재 {activeMemberCount})', { unlockThreshold, activeMemberCount })}
                   </span>
                 </div>
               )}
@@ -171,7 +174,7 @@ export function NewPostClient({
           <div>
             <label className="block text-sm font-medium text-[#333] mb-2">
               <Link2 className="w-4 h-4 inline mr-1" />
-              공유 링크
+              <T>공유 링크</T>
             </label>
             <div className="flex gap-2">
               <input
@@ -179,7 +182,7 @@ export function NewPostClient({
                 value={urlInput}
                 onChange={(e) => setUrlInput(e.target.value)}
                 className="input flex-1"
-                placeholder="https://… (기사, YouTube, GitHub, X)"
+                placeholder={tx('https://… (기사, YouTube, GitHub, X)')}
               />
               <button
                 type="button"
@@ -187,7 +190,7 @@ export function NewPostClient({
                 disabled={fetching || !urlInput.trim()}
                 className="btn btn-secondary"
               >
-                {fetching ? <Loader2 className="w-4 h-4 animate-spin" /> : '미리보기'}
+                {fetching ? <Loader2 className="w-4 h-4 animate-spin" /> : tx('미리보기')}
               </button>
             </div>
             {preview && (
@@ -201,26 +204,26 @@ export function NewPostClient({
                     setUrlInput('')
                   }}
                 >
-                  링크 제거
+                  <T>링크 제거</T>
                 </button>
               </div>
             )}
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-[#333] mb-2">제목</label>
+            <label className="block text-sm font-medium text-[#333] mb-2"><T>제목</T></label>
             <input
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               className="input"
-              placeholder="한눈에 알 수 있는 제목"
+              placeholder={tx('한눈에 알 수 있는 제목')}
             />
           </div>
 
           <div>
             <label className="block text-sm font-medium text-[#333] mb-2">
-              코멘트 <span className="text-red-500">*</span>
+              <T>코멘트</T> <span className="text-red-500">*</span>
             </label>
             <textarea
               maxLength={500}
@@ -229,7 +232,7 @@ export function NewPostClient({
               required
               rows={6}
               className="input resize-none"
-              placeholder="이 링크에 대한 생각, 팁, 맥락을 적어 주세요. 마크다운 지원."
+              placeholder={tx('이 링크에 대한 생각, 팁, 맥락을 적어 주세요. 마크다운 지원.')}
             />
           </div>
 
@@ -237,12 +240,12 @@ export function NewPostClient({
           <div>
             <div className="flex items-center justify-between mb-3">
               <div>
-                <label className="block text-sm font-medium text-[#333]">AI 에셋 (선택)</label>
-                <p className="text-xs text-[#888]">SKILL / MCP / RULES / 프롬프트 첨부</p>
+                <label className="block text-sm font-medium text-[#333]"><T>AI 에셋 (선택)</T></label>
+                <p className="text-xs text-[#888]"><T>SKILL / MCP / RULES / 프롬프트 첨부</T></p>
               </div>
               <button type="button" onClick={addAsset} className="btn btn-secondary btn-sm">
                 <Plus className="w-4 h-4" />
-                추가
+                <T>추가</T>
               </button>
             </div>
             {assets.map((asset) => (
@@ -258,12 +261,12 @@ export function NewPostClient({
                     className="input text-sm"
                   >
                     {ASSET_TYPES.map((t) => (
-                      <option key={t.value} value={t.value}>{t.label}</option>
+                      <option key={t.value} value={t.value}><T>{t.label}</T></option>
                     ))}
                   </select>
                   <input
                     className="input text-sm flex-1"
-                    placeholder="에셋 이름"
+                    placeholder={tx('에셋 이름')}
                     value={asset.name}
                     onChange={(e) =>
                       setAssets(assets.map((a) =>
@@ -282,7 +285,7 @@ export function NewPostClient({
                 <textarea
                   className="input font-mono text-sm resize-none"
                   rows={5}
-                  placeholder="내용"
+                  placeholder={tx('내용')}
                   value={asset.content}
                   onChange={(e) =>
                     setAssets(assets.map((a) =>
@@ -295,9 +298,9 @@ export function NewPostClient({
           </div>
 
           <div className="flex justify-end gap-3 pt-4 border-t border-[#eee]">
-            <Link href="/feed" className="btn btn-secondary">취소</Link>
+            <Link href="/feed" className="btn btn-secondary"><T>취소</T></Link>
             <button type="submit" disabled={loading || !content.trim()} className="btn btn-primary disabled:opacity-50">
-              {loading ? '게시 중...' : '게시하기'}
+              {loading ? <T>게시 중...</T> : <T>게시하기</T>}
             </button>
           </div>
         </form>

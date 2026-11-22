@@ -5,10 +5,13 @@ import { AgentClientIcon } from '@/components/timeline/agent-attribution'
 import { RelativeTime } from '@/components/relative-time'
 import { rowText } from '@/lib/row-text'
 import { CompactRow } from './compact-row'
+import { T } from '@/i18n/t'
+import { getT } from '@/i18n/server'
 
 /** Compact row for feed / 익명 / 아고라 posts. */
-export function PostRow({ post, href, active, categoryLabel }: { post: TimelinePost; href: string; active?: boolean; categoryLabel?: string | null }) {
-  const { title, preview } = rowText(post.isDeleted ? '삭제된 글이에요' : post.body, post.title)
+export async function PostRow({ post, href, active, categoryLabel }: { post: TimelinePost; href: string; active?: boolean; categoryLabel?: string | null }) {
+  const st = await getT()
+  const { title, preview } = rowText(post.isDeleted ? st('삭제된 글이에요') : post.body, post.title)
   const a = post.author
   const leading =
     a.kind === 'agent' ? (
@@ -22,7 +25,7 @@ export function PostRow({ post, href, active, categoryLabel }: { post: TimelineP
     ) : (
       <UserAvatar id={a.id} name={a.name} avatarUrl={a.avatarUrl} size="sm" />
     )
-  const who = a.kind === 'agent' && a.ownerName ? `${a.ownerName}님의 ${a.name}` : a.name
+  const who = a.kind === 'agent' && a.ownerName ? <T s="{owner}님의 {agent}" vars={{ owner: a.ownerName, agent: a.name }} /> : a.name
   return (
     <CompactRow
       href={href}
@@ -32,9 +35,9 @@ export function PostRow({ post, href, active, categoryLabel }: { post: TimelineP
       badge={
         <>
           {a.kind === 'agent' && <span className="crow-chip" style={{ background: '#111', color: '#fff' }}>AI</span>}
-          {a.kind === 'agent' && a.pledged && <span className="pledged-mark" title="서약한 에이전트">서약</span>}
-          {categoryLabel && <span className="crow-chip">{categoryLabel}</span>}
-          {post.isNickname && <span className="crow-chip" style={{ background: '#fdecef', color: '#b4235a' }}>별명</span>}
+          {a.kind === 'agent' && a.pledged && <span className="pledged-mark" title={st('서약한 에이전트')}><T>서약</T></span>}
+          {categoryLabel && <span className="crow-chip"><T>{categoryLabel}</T></span>}
+          {post.isNickname && <span className="crow-chip" style={{ background: '#fdecef', color: '#b4235a' }}><T>별명</T></span>}
         </>
       }
       preview={preview || null}
@@ -43,7 +46,7 @@ export function PostRow({ post, href, active, categoryLabel }: { post: TimelineP
           <span className="truncate max-w-[180px]" style={{ color: '#555', fontWeight: 600 }}>
             {a.kind === 'agent' && <Bot className="w-3 h-3" />}
             {who}
-            {post.isOp ? ' · 글쓴이' : ''}
+            {post.isOp ? <T> · 글쓴이</T> : ''}
           </span>
           <RelativeTime date={post.createdAt} />
           {post.tool && <span>#{post.tool.name}</span>}
@@ -53,10 +56,10 @@ export function PostRow({ post, href, active, categoryLabel }: { post: TimelineP
               {post.rating}
             </span>
           )}
-          <span aria-label={`좋아요 ${post.likeCount}`}>
+          <span aria-label={st('좋아요 {likeCount}', { likeCount: post.likeCount })}>
             <Heart className="w-3 h-3" /> {post.likeCount}
           </span>
-          <span aria-label={`답글 ${post.replyCount}`}>
+          <span aria-label={st('답글 {replyCount}', { replyCount: post.replyCount })}>
             <MessageCircle className="w-3 h-3" /> {post.replyCount}
           </span>
         </>

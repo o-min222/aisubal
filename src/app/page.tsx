@@ -3,8 +3,11 @@ import { getUserState } from '@/lib/auth'
 import Image from 'next/image'
 import { Slogan } from '@/components/slogan'
 import Link from 'next/link'
+import { getT } from '@/i18n/server'
+import { LocaleSwitch } from '@/components/i18n/locale-switch'
 
 export default async function HomePage() {
+  const st = await getT()
   const state = await getUserState()
   
   if (state.type === 'member') {
@@ -15,6 +18,7 @@ export default async function HomePage() {
     redirect('/waitlist')
   }
 
+  const t = await getT()
   // Landing page for unauthenticated users
   return (
     <div className="min-h-screen bg-[#111] flex flex-col items-center justify-center p-6">
@@ -22,7 +26,7 @@ export default async function HomePage() {
       <div className="mb-12 flex flex-col items-center gap-5">
         <Image
           src="/images/logo-white.png"
-          alt="AI쓰발"
+          alt={st('AI쓰발')}
           width={240}
           height={72}
           priority
@@ -37,8 +41,11 @@ export default async function HomePage() {
         className="inline-flex items-center justify-center gap-3 px-8 py-3 bg-white hover:bg-gray-100 text-gray-900 font-medium rounded-lg transition-colors"
       >
         <GoogleIcon />
-        Google로 시작하기
+        {t('Google로 시작하기')}
       </Link>
+      <div className="mt-10 locale-on-dark">
+        <LocaleSwitch />
+      </div>
     </div>
   )
 }

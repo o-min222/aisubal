@@ -1,5 +1,6 @@
 import Image from 'next/image'
 import { cn } from '@/lib/utils'
+import { getT } from '@/i18n/server'
 
 interface LogoProps {
   variant?: 'light' | 'dark'
@@ -14,7 +15,8 @@ const sizes = {
   xl: { width: 240, height: 72 },
 }
 
-export function Logo({ variant = 'dark', size = 'md', className }: LogoProps) {
+export async function Logo({ variant = 'dark', size = 'md', className }: LogoProps) {
+  const st = await getT()
   const { width, height } = sizes[size]
   const fill = variant === 'light' ? '#ffffff' : '#1a1a1a'
   
@@ -24,7 +26,7 @@ export function Logo({ variant = 'dark', size = 'md', className }: LogoProps) {
       width={width} 
       height={height}
       className={cn('flex-shrink-0', className)}
-      aria-label="AI쓰발"
+      aria-label={st('AI쓰발')}
     >
       <g fill={fill} transform="translate(0, 8)">
         {/* A - stylized italic */}
@@ -47,7 +49,8 @@ export function Logo({ variant = 'dark', size = 'md', className }: LogoProps) {
   )
 }
 
-export function LogoMark({ variant = 'dark', size = 'md', className }: LogoProps) {
+export async function LogoMark({ variant = 'dark', size = 'md', className }: LogoProps) {
+  const st = await getT()
   const sizeMap = { sm: 24, md: 32, lg: 40, xl: 56 }
   const dimension = sizeMap[size]
   const fill = variant === 'light' ? '#ffffff' : '#1a1a1a'
@@ -58,7 +61,7 @@ export function LogoMark({ variant = 'dark', size = 'md', className }: LogoProps
       width={dimension} 
       height={dimension}
       className={cn('flex-shrink-0', className)}
-      aria-label="AI쓰발"
+      aria-label={st('AI쓰발')}
     >
       <g fill={fill}>
         {/* Stylized A mark */}

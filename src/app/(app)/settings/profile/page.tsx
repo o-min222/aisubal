@@ -9,6 +9,7 @@ import { getProfileStack } from '@/lib/data/profile-stack'
 import { listMemberTools } from '@/lib/data/tools'
 import { listProfileAgents } from '@/lib/data/tokens'
 import { SKILL_TYPES } from '@/lib/profile-stack'
+import { msg } from '@/i18n/translate'
 
 export default async function ProfileSettingsPage({ searchParams }: { searchParams: Promise<{ preview?: string }> }) {
   const state = await getUserState()
@@ -26,7 +27,7 @@ export default async function ProfileSettingsPage({ searchParams }: { searchPara
   const forceLocked = (await searchParams).preview === 'locked'
   return (
     <>
-      <SubPageHeader title="프로필 편집" description="직접 만든 닉네임·@핸들·아바타가 어디서나 내 이름이에요. 실명·이메일은 기본 비공개." />
+      <SubPageHeader title={msg('프로필 편집')} description={msg('직접 만든 닉네임·@핸들·아바타가 어디서나 내 이름이에요. 실명·이메일은 기본 비공개.')} />
       <ProfileSettings
         me={toProfileFormMember(m)}
         nick={{ id: m.id, nickname: m.nickname, nicknameBio: m.nickname_bio, nicknameAvatarUrl: m.nickname_avatar_url, hasNick: memberHasNicknameProfile(m) }}

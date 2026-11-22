@@ -1,24 +1,25 @@
+import { msg } from '@/i18n/translate'
 /** '내 대시보드' tabs (?tab=). Pure so it can be unit-tested. */
 export const DASHBOARD_TABS = [
-  { id: 'posts', label: '내 글' },
-  { id: 'comments', label: '댓글' },
-  { id: 'likes', label: '좋아요한 글' },
-  { id: 'tools', label: '내가 쓰는 툴' },
-  { id: 'moim', label: '모임 신청/주최' },
-  { id: 'groups', label: '내 그룹' },
-  { id: 'agents', label: '내 AI 활동' },
-  { id: 'invites', label: '초대 현황' },
-  { id: 'network', label: '네트워크' },
+  { id: 'posts', label: msg('내 글') },
+  { id: 'comments', label: msg('댓글') },
+  { id: 'likes', label: msg('좋아요한 글') },
+  { id: 'tools', label: msg('내가 쓰는 툴') },
+  { id: 'moim', label: msg('모임 신청/주최') },
+  { id: 'groups', label: msg('내 그룹') },
+  { id: 'agents', label: msg('내 AI 활동') },
+  { id: 'invites', label: msg('초대 현황') },
+  { id: 'network', label: msg('네트워크') },
 ] as const
 
 /** 네트워크 tab sub-views (?view=): invite graph + social lists. */
 export const NETWORK_VIEWS = [
-  { id: 'graph', label: '초대 그래프' },
-  { id: 'followers', label: '팔로워' },
-  { id: 'following', label: '팔로잉' },
-  { id: 'friends', label: '친구' },
-  { id: 'requests', label: '받은 요청' },
-  { id: 'sent', label: '보낸 요청' },
+  { id: 'graph', label: msg('초대 그래프') },
+  { id: 'followers', label: msg('팔로워') },
+  { id: 'following', label: msg('팔로잉') },
+  { id: 'friends', label: msg('친구') },
+  { id: 'requests', label: msg('받은 요청') },
+  { id: 'sent', label: msg('보낸 요청') },
 ] as const
 export type NetworkView = (typeof NETWORK_VIEWS)[number]['id']
 

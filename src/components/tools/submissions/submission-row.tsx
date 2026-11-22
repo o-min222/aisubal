@@ -5,6 +5,7 @@ import type { DupCandidate, ReviewLogItem, Submission } from '@/lib/data/tool-su
 import { DUP_REASON_LABEL, LOG_ACTION_LABEL, STATUS_LABEL, STATUS_STYLE, isStale } from '@/lib/tool-review'
 import { TOOL_TYPE_CHIP } from '@/lib/tool-rules'
 import { WithdrawButton } from './withdraw-button'
+import { T } from '@/i18n/t'
 
 const host = (u: string) => {
   try {
@@ -18,7 +19,7 @@ export function StatusChip({ status }: { status: Submission['status'] }) {
   const st = STATUS_STYLE[status]
   return (
     <span className="crow-chip" style={{ background: st.bg, color: st.fg }}>
-      {STATUS_LABEL[status]}
+      <T>{STATUS_LABEL[status]}</T>
     </span>
   )
 }
@@ -47,47 +48,44 @@ export function SubmissionRow({ s, mode, dups = [], log = [], open = false }: { 
             <span>
               <RelativeTime date={s.createdAt} />
             </span>
-            {mode === 'admin' && s.status === 'pending' && isStale(s.snapshotAt) && <span className="text-[#9a5b00]">스냅샷 없음/오래됨</span>}
+            {mode === 'admin' && s.status === 'pending' && isStale(s.snapshotAt) && <span className="text-[#9a5b00]"><T>스냅샷 없음/오래됨</T></span>}
           </div>
         </div>
         {mode === 'mine' && s.status === 'pending' && <WithdrawButton id={s.id} name={s.name} />}
       </div>
       {s.reason && (
         <p className="sub-reason">
-          <b>{s.status === 'rejected' ? '반려 사유' : '검토 메모'}</b> {s.reason}
+          <b>{s.status === 'rejected' ? <T>반려 사유</T> : <T>검토 메모</T>}</b> {s.reason}
         </p>
       )}
       {s.entry && s.status === 'approved' && (
         <Link href={`/tools/${s.entry.slug}`} className="text-[13px] text-[#0066cc]">
-          등록된 툴 보기 →
+          <T>등록된 툴 보기 →</T>
         </Link>
       )}
       {s.duplicateOf && (
         <p className="text-[12.5px] text-[#666]">
-          중복: <Link href={`/tools/${s.duplicateOf.slug}`} className="text-[#0066cc]">{s.duplicateOf.name}</Link>
+          <T>중복:</T> <Link href={`/tools/${s.duplicateOf.slug}`} className="text-[#0066cc]">{s.duplicateOf.name}</Link>
         </p>
       )}
       {mode === 'admin' && dups.length > 0 && (
         <p className="sub-dups">
           <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0" />
-          <span>
-            중복 후보:{' '}
-            {dups.map((d, i) => (
+          <span><T s="중복 후보: {v}" vars={{ v: dups.map((d, i) => (
               <span key={d.id}>
                 {i > 0 && ', '}
                 <Link href={`/tools/${d.slug}`} className="text-[#0066cc]">{d.name}</Link> ({DUP_REASON_LABEL[d.reason] ?? d.reason})
               </span>
-            ))}
-          </span>
+            )) }} /></span>
         </p>
       )}
       {(s.description || s.note || log.length > 0) && (
         <details className="sub-details" open={open}>
-          <summary>자세히</summary>
+          <summary><T>자세히</T></summary>
           {s.description && <p className="whitespace-pre-wrap break-words">{s.description}</p>}
           {s.note && (
             <p className="whitespace-pre-wrap break-words">
-              <b>써본 경험</b> {s.note}
+              <b><T>써본 경험</T></b> {s.note}
             </p>
           )}
           {s.tags.length > 0 && <p className="text-[#888]">{s.tags.map((t) => `#${t}`).join(' ')}</p>}

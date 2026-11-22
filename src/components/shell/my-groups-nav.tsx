@@ -3,25 +3,27 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Plus } from 'lucide-react'
+import { useT } from '@/i18n/client'
 
 export type MyGroupLink = { slug: string; name: string; emoji: string | null; role: string | null }
 
 /** Side panel '내 그룹' (content-only: just links into each group's timeline). */
 export function MyGroupsNav({ groups }: { groups: MyGroupLink[] }) {
   const pathname = usePathname()
+  const t = useT()
   return (
-    <section className="my-groups-nav" aria-label="내 그룹" style={{ marginTop: 14 }}>
+    <section className="my-groups-nav" aria-label={t('내 그룹')} style={{ marginTop: 14 }}>
       <div className="flex items-center justify-between px-3 mb-1">
         <h3 className="text-[12px] font-semibold" style={{ color: '#777' }}>
-          내 그룹
+          {t('내 그룹')}
         </h3>
-        <Link href="/groups/new" className="text-[#888] hover:text-[#111] p-1 rounded" aria-label="그룹 만들기" title="그룹 만들기">
+        <Link href="/groups/new" className="text-[#888] hover:text-[#111] p-1 rounded" aria-label={t('그룹 만들기')} title={t('그룹 만들기')}>
           <Plus className="w-3.5 h-3.5" />
         </Link>
       </div>
       {groups.length === 0 ? (
         <Link href="/groups" className="side-nav-item text-[13px]" style={{ color: '#666' }}>
-          그룹 둘러보기
+          {t('그룹 둘러보기')}
         </Link>
       ) : (
         <ul>
@@ -40,7 +42,7 @@ export function MyGroupsNav({ groups }: { groups: MyGroupLink[] }) {
           {groups.length > 8 && (
             <li>
               <Link href="/groups" className="side-nav-item text-[13px]" style={{ color: '#666' }}>
-                모두 보기 ({groups.length})
+                {t('모두 보기 ({n})', { n: groups.length })}
               </Link>
             </li>
           )}

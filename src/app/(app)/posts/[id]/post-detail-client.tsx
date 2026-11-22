@@ -14,6 +14,9 @@ import { SaveToArchiveButton } from '@/components/save-to-archive-button'
 import { publicAuthorLabel } from '@/lib/profile'
 import { youtubeEmbedUrl } from '@/lib/link-preview'
 import { toast } from 'sonner'
+import { T } from '@/i18n/t'
+import { tn, tx } from '@/i18n/client'
+import { msg } from '@/i18n/translate'
 
 interface PostDetailClientProps {
   post: PostWithDetails
@@ -22,10 +25,10 @@ interface PostDetailClientProps {
 
 const ASSET_TYPE_INFO: Record<string, { label: string; icon: React.ReactNode; badgeClass: string }> = {
   SKILL_MD: { label: 'Agent Skill', icon: <Bot className="w-4 h-4" />, badgeClass: 'badge-skill' },
-  MCP_CONFIG: { label: 'MCP 설정', icon: <Terminal className="w-4 h-4" />, badgeClass: 'badge-mcp' },
-  CURSOR_RULES: { label: 'Cursor 규칙', icon: <FileCode className="w-4 h-4" />, badgeClass: 'badge-rules' },
-  PROMPT: { label: '프롬프트', icon: <MessageSquare className="w-4 h-4" />, badgeClass: 'badge-prompt' },
-  NOTE: { label: '노트', icon: <FileText className="w-4 h-4" />, badgeClass: 'badge-note' },
+  MCP_CONFIG: { label: msg('MCP 설정'), icon: <Terminal className="w-4 h-4" />, badgeClass: 'badge-mcp' },
+  CURSOR_RULES: { label: msg('Cursor 규칙'), icon: <FileCode className="w-4 h-4" />, badgeClass: 'badge-rules' },
+  PROMPT: { label: msg('프롬프트'), icon: <MessageSquare className="w-4 h-4" />, badgeClass: 'badge-prompt' },
+  NOTE: { label: msg('노트'), icon: <FileText className="w-4 h-4" />, badgeClass: 'badge-note' },
 }
 
 export function PostDetailClient({ post }: PostDetailClientProps) {
@@ -41,7 +44,7 @@ export function PostDetailClient({ post }: PostDetailClientProps) {
         <div className="flex items-start justify-between gap-4 mb-4">
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-3 flex-wrap">
-              {post.posted_as === 'nickname' && <span className="badge badge-agent">별명</span>}
+              {post.posted_as === 'nickname' && <span className="badge badge-agent"><T>별명</T></span>}
               {post.assets[0] && (
                 <span className={`badge ${ASSET_TYPE_INFO[post.assets[0].type]?.badgeClass}`}>
                   {ASSET_TYPE_INFO[post.assets[0].type]?.label}
@@ -63,11 +66,11 @@ export function PostDetailClient({ post }: PostDetailClientProps) {
                 <span className="font-medium text-[#333]">{authorName}</span>
               </div>
               <span>·</span>
-              <span title={format(new Date(post.created_at), 'yyyy년 M월 d일 HH:mm', { locale: ko })}>
+              <span title={format(new Date(post.created_at), tx('yyyy년 M월 d일 HH:mm'), { locale: ko })}>
                 <RelativeTime date={post.created_at} />
               </span>
               <span>·</span>
-              <span>{post.archive_count}명이 저장</span>
+              <span><T s="{archive_count}명이 저장" vars={{ archive_count: post.archive_count }} /></span>
             </div>
           </div>
 
@@ -155,19 +158,19 @@ export function PostDetailClient({ post }: PostDetailClientProps) {
                   <button
                     onClick={() => {
                       navigator.clipboard.writeText(activeAsset.content)
-                      toast.success('복사됨')
+                      toast.success(tn('복사됨'))
                     }}
                     className="btn btn-secondary btn-sm"
                   >
                     <Copy className="w-4 h-4" />
-                    복사
+                    <T>복사</T>
                   </button>
                   <button
                     onClick={() => downloadAsset(activeAsset)}
                     className="btn btn-secondary btn-sm"
                   >
                     <Download className="w-4 h-4" />
-                    다운로드
+                    <T>다운로드</T>
                   </button>
                 </div>
               </div>

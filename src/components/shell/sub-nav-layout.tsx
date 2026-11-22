@@ -10,15 +10,17 @@ import {
   Shield,
 } from "lucide-react";
 import { ADMIN_SECTIONS, SETTINGS_SECTIONS, subNavActive } from "./account-nav";
+import { useT } from "@/i18n/client";
+import { msg } from '@/i18n/translate'
 
 const AREAS = {
   settings: {
-    title: "설정",
+    title: msg("설정"),
     icon: Settings,
     base: "/settings",
     items: SETTINGS_SECTIONS,
   },
-  admin: { title: "관리", icon: Shield, base: "/admin", items: ADMIN_SECTIONS },
+  admin: { title: msg("관리"), icon: Shield, base: "/admin", items: ADMIN_SECTIONS },
 } as const;
 
 /**
@@ -33,7 +35,9 @@ export function SubNavLayout({
   area: keyof typeof AREAS;
   children: React.ReactNode;
 }) {
-  const { title, icon: Icon, base, items } = AREAS[area];
+  const t = useT();
+  const { icon: Icon, base, items } = AREAS[area];
+  const title = t(AREAS[area].title);
   const pathname = usePathname();
   const atIndex = pathname === base;
   const current = items.find((i) =>
@@ -45,13 +49,13 @@ export function SubNavLayout({
         <Link
           href="/feed"
           className="subnav-appback"
-          aria-label="앱으로 돌아가기"
+          aria-label={t("앱으로 돌아가기")}
         >
-          <ArrowLeft className="w-4 h-4" /> 앱으로 돌아가기
+          <ArrowLeft className="w-4 h-4" /> {t("앱으로 돌아가기")}
         </Link>
       </div>
       <div className={`subnav-layout ${atIndex ? "at-index" : ""}`}>
-        <nav className="subnav" aria-label={`${title} 메뉴`}>
+        <nav className="subnav" aria-label={t("{area} 메뉴", { area: title })}>
           <h1 className="subnav-title" style={{ color: "#111" }}>
             <Icon className="w-5 h-5" /> {title}
           </h1>
@@ -66,8 +70,8 @@ export function SubNavLayout({
               >
                 <i.icon className="w-[18px] h-[18px] flex-shrink-0" />
                 <span className="min-w-0">
-                  <span className="block">{i.label}</span>
-                  {i.hint && <span className="hint">{i.hint}</span>}
+                  <span className="block">{t(i.label)}</span>
+                  {i.hint && <span className="hint">{t(i.hint)}</span>}
                 </span>
                 <ChevronRight className="chev w-4 h-4" />
               </Link>
@@ -76,7 +80,7 @@ export function SubNavLayout({
         </nav>
         <section
           className="subnav-detail min-w-0"
-          aria-label={current?.label ?? title}
+          aria-label={current ? t(current.label) : title}
         >
           <Link href={base} className="subnav-back">
             <ChevronLeft className="w-4 h-4" /> {title}
@@ -96,12 +100,13 @@ export function SubPageHeader({
   title: string;
   description?: string;
 }) {
+  const t = useT();
   return (
     <header className="mb-4">
       <h2 className="text-xl font-bold" style={{ color: "#111" }}>
-        {title}
+        {t(title)}
       </h2>
-      {description && <p className="text-sm text-[#666] mt-1">{description}</p>}
+      {description && <p className="text-sm text-[#666] mt-1">{t(description)}</p>}
     </header>
   );
 }

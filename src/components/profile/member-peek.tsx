@@ -7,6 +7,8 @@ import { AdaptiveSheet } from '@/components/adaptive-sheet'
 import { useMediaQuery } from '@/hooks/use-media-query'
 import type { MemberCardData } from '@/lib/data/member-card'
 import { MemberCard } from './member-card'
+import { T } from '@/i18n/t'
+import { tx } from '@/i18n/client'
 
 const cache = new Map<string, Promise<MemberCardData | null>>()
 function loadCard(id: string) {
@@ -26,20 +28,20 @@ function PeekBody({ state, memberId }: { state: MemberCardData | null | 'loading
   if (state === 'loading')
     return (
       <div className="p-6 text-center text-sm text-[#888]" role="status">
-        불러오는 중…
+        <T>불러오는 중…</T>
       </div>
     )
   if (!state)
     return (
       <div className="p-6 text-center text-sm text-[#888]">
-        프로필을 불러오지 못했어요. <Link href={`/members/${memberId}`} className="text-[#0066cc]">프로필 열기</Link>
+        <T>프로필을 불러오지 못했어요.</T> <Link href={`/members/${memberId}`} className="text-[#0066cc]"><T>프로필 열기</T></Link>
       </div>
     )
   return (
     <>
       <MemberCard data={state} variant="peek" />
       <Link href={state.isMe ? '/me' : `/members/${state.id}`} className="block text-center text-[13px] text-[#0066cc] py-2.5 border-t border-[#eee]">
-        프로필 전체 보기
+        <T>프로필 전체 보기</T>
       </Link>
     </>
   )
@@ -65,7 +67,7 @@ export function MemberPeek({ memberId, label, children, className = '' }: { memb
   if (desktop) {
     return (
       <Popover open={open} onOpenChange={change}>
-        <PopoverTrigger className={`member-peek-trigger ${className}`} aria-label={`${label} 프로필 카드`}>
+        <PopoverTrigger className={`member-peek-trigger ${className}`} aria-label={tx('{label} 프로필 카드', { label })}>
           {children}
         </PopoverTrigger>
         <PopoverContent align="start" sideOffset={6} className="member-peek-pop">
@@ -76,10 +78,10 @@ export function MemberPeek({ memberId, label, children, className = '' }: { memb
   }
   return (
     <>
-      <button type="button" className={`member-peek-trigger ${className}`} aria-label={`${label} 프로필 카드`} onClick={() => change(true)}>
+      <button type="button" className={`member-peek-trigger ${className}`} aria-label={tx('{label} 프로필 카드', { label })} onClick={() => change(true)}>
         {children}
       </button>
-      <AdaptiveSheet open={open} onOpenChange={setOpen} title={`${label} 프로필`} className="!p-0">
+      <AdaptiveSheet open={open} onOpenChange={setOpen} title={tx('{label} 프로필', { label })} className="!p-0">
         <PeekBody state={state} memberId={memberId} />
       </AdaptiveSheet>
     </>

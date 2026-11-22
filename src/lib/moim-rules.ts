@@ -1,3 +1,4 @@
+import { msg } from '@/i18n/translate'
 /**
  * 모임 rules. The database (0007 moim_* RPCs) is the source of truth in
  * production; these pure functions mirror it for the DEV mock and tests.
@@ -129,11 +130,11 @@ export function canSeePrivate(canManage: boolean, myStatus: RsvpStatus | null | 
 }
 
 export const RSVP_LABEL: Record<RsvpStatus, string> = {
-  pending: '승인 대기',
-  confirmed: '참석 확정',
-  waitlisted: '대기 중',
-  rejected: '거절됨',
-  cancelled: '취소함',
+  pending: msg('승인 대기'),
+  confirmed: msg('참석 확정'),
+  waitlisted: msg('대기 중'),
+  rejected: msg('거절됨'),
+  cancelled: msg('취소함'),
 }
 
 export const MOIM_ERRORS: Record<string, string> = {

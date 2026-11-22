@@ -1,7 +1,9 @@
 import { ImageResponse } from 'next/og'
 import { getInvitePreview } from '@/lib/data/invites'
+import { msg } from '@/i18n/translate'
+import { getT } from '@/i18n/server'
 
-export const alt = 'AI쓰발 초대장'
+export const alt = msg('AI쓰발 초대장')
 export const size = { width: 1200, height: 630 }
 export const contentType = 'image/png'
 
@@ -23,11 +25,12 @@ async function loadFont(text: string): Promise<ArrayBuffer | null> {
 
 /** KakaoTalk / X / Slack preview card for /i/{code}. Inviter name only (no avatar fetch). */
 export default async function Image({ params }: { params: Promise<{ code: string }> }) {
+  const st = await getT()
   const { code } = await params
   const preview = await getInvitePreview(code)
   const who = preview.status === 'valid' && preview.inviter ? preview.inviter.displayName.slice(0, 16) : null
-  const headline = who ? `${who}님이 초대했어요` : 'AI쓰발 초대장'
-  const sub = '프롬프트 · MCP · 에이전트 스킬을 나누는 초대 전용 AI 커뮤니티'
+  const headline = who ? st('{who}님이 초대했어요', { who }) : st('AI쓰발 초대장')
+  const sub = st('프롬프트 · MCP · 에이전트 스킬을 나누는 초대 전용 AI 커뮤니티')
   const brand = 'AI쓰발'
   const footer = `aisubal.vercel.app/i/${code.toUpperCase().slice(0, 8)}`
   // subset must include every glyph drawn with this font (Latin too)

@@ -7,6 +7,8 @@ import { upcomingMoim } from './moim'
 import { listTools, myToolIds, usagePairsAround } from './tools'
 import { listAgoraTimeline } from './agora'
 import { sb, useMockData as isMock } from './client'
+import { getT } from '@/i18n/server'
+import { msg } from '@/i18n/translate'
 
 export type ProfileStats = { posts: number; likes: number; invitesLeft: number }
 
@@ -50,8 +52,8 @@ export const getRailData = cache(async (member: Member): Promise<RailData> => {
   if (isMock()) {
     archiveTags = [['mcp', 'agent'], ['cursor', 'mcp'], ['prompt']]
     people = [
-      { id: 'member-2', name: '프롬프트수집가', avatarUrl: null, reason: '내가 좋아한 글의 작성자' },
-      { id: 'member-3', name: 'MCP장인', avatarUrl: null, reason: '최근 활발히 글을 써요' },
+      { id: 'member-2', name: '프롬프트수집가', avatarUrl: null, reason: msg('내가 좋아한 글의 작성자') },
+      { id: 'member-3', name: 'MCP장인', avatarUrl: null, reason: msg('최근 활발히 글을 써요') },
     ]
   } else {
     const supabase = await sb()
@@ -83,7 +85,7 @@ export const getRailData = cache(async (member: Member): Promise<RailData> => {
         const a = row.author
         if (!a || seen.has(a.id)) continue
         seen.add(a.id)
-        people.push({ id: a.id, name: a.display_name, avatarUrl: a.avatar_url, reason: '내가 좋아한 글의 작성자' })
+        people.push({ id: a.id, name: a.display_name, avatarUrl: a.avatar_url, reason: msg('내가 좋아한 글의 작성자') })
       }
     }
     if (people.length < 3) {
@@ -99,18 +101,19 @@ export const getRailData = cache(async (member: Member): Promise<RailData> => {
         const a = row.author
         if (!a || seen.has(a.id)) continue
         seen.add(a.id)
-        people.push({ id: a.id, name: a.display_name, avatarUrl: a.avatar_url, reason: '최근 활발히 글을 써요' })
+        people.push({ id: a.id, name: a.display_name, avatarUrl: a.avatar_url, reason: msg('최근 활발히 글을 써요') })
       }
     }
   }
 
   const interestTags = pickInterestTags(archiveTags)
+  const tr = await getT()
   const tools = rankToolsForMember(toolbox, interestTags, usedToolIds, 3, coUsage(pairs, member.id)).map((t) => ({
     id: t.id,
     slug: t.slug,
     name: t.name,
     oneLiner: t.one_liner,
-    reason: toolReason(t),
+    reason: toolReason(t, tr),
   }))
 
   const interest = new Set(interestTags)

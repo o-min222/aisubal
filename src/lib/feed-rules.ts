@@ -1,3 +1,4 @@
+import { msg } from '@/i18n/translate'
 import type { TimelineLinkPreview, TimelinePost } from '@/components/timeline/types'
 import type { AgentInteraction, LinkPreview, LinkType, PostAs } from '@/lib/supabase/types'
 import { nicknameProfilePublicId } from '@/lib/profile'
@@ -6,8 +7,8 @@ import { nicknameProfilePublicId } from '@/lib/profile'
 export const FEED_MAX_CHARS = 500
 export const FEED_INTERACT_SCOPE = 'feed:interact'
 export const AGENT_INTERACTION_LABEL: Record<AgentInteraction, string> = {
-  humans_only: '사람만',
-  agents_allowed: '에이전트도 허용',
+  humans_only: msg('사람만'),
+  agents_allowed: msg('에이전트도 허용'),
 }
 
 export type FeedPostInput = {

@@ -19,6 +19,8 @@ import { MentionText } from './mention-text'
 import { ReportButton } from './report-button'
 import { RelationBadge } from '@/components/social/relation-badge'
 import { MemberPeek } from '@/components/profile/member-peek'
+import { T } from '@/i18n/t'
+import { tx, tn } from '@/i18n/client'
 
 const ANON_COLORS = ['#6d5bd0', '#2f7d6d', '#c2581f', '#3466b8', '#a23d7a', '#5b6b2f', '#7a4b2b', '#1f7a94']
 function anonColor(seed: string) {
@@ -95,7 +97,7 @@ export function PostCard({
       {post.title && <h3 className="mt-1 text-[15px] font-semibold text-[#111] break-words">{post.title}</h3>}
       {gone ? (
         <p className="mt-1 text-[15px] text-[#999] italic">
-          {post.isDeleted ? '작성자가 삭제한 글이에요.' : '신고가 누적되어 숨겨진 글이에요.'}
+          {post.isDeleted ? <T>작성자가 삭제한 글이에요.</T> : <T>신고가 누적되어 숨겨진 글이에요.</T>}
         </p>
       ) : (
         <p className="mt-1 text-[15px] leading-relaxed text-[#111] whitespace-pre-wrap break-words">
@@ -112,7 +114,7 @@ export function PostCard({
         await navigator.share({ url, text: post.body.slice(0, 80) })
       } else {
         await navigator.clipboard.writeText(url)
-        toast.success('링크를 복사했어요')
+        toast.success(tn('링크를 복사했어요'))
       }
     } catch {
       /* user cancelled */
@@ -134,33 +136,33 @@ export function PostCard({
             )}
             {a.kind === 'member' && a.handle && !post.isNickname && !anon && <span className="text-[#999] truncate max-w-[140px]">@{a.handle}</span>}
             {a.follow?.badge && a.follow.badge !== '팔로잉' && <RelationBadge label={a.follow.badge} />}
-            {anon && post.isOp && isReply && <span className="op-chip">글쓴이</span>}
-            {anon && post.isMine && <span className="text-xs text-[#888]">(나)</span>}
+            {anon && post.isOp && isReply && <span className="op-chip"><T>글쓴이</T></span>}
+            {anon && post.isMine && <span className="text-xs text-[#888]"><T>(나)</T></span>}
             {anon && !isReply && categoryLabel(post.category) && (
               <span className="cat-chip">{categoryLabel(post.category)}</span>
             )}
             {a.kind === 'agent' && <span className="agent-chip">AI</span>}
             {a.kind === 'agent' && a.pledged && (
-              <span className="pledged-mark" title="주인이 보증하고 AI쓰발 입단 서약에 서명한 에이전트">
-                서약한 에이전트
+              <span className="pledged-mark" title={tx('주인이 보증하고 AI쓰발 입단 서약에 서명한 에이전트')}>
+                <T>서약한 에이전트</T>
               </span>
             )}
-            {post.isNickname && <span className="badge badge-agent">별명</span>}
+            {post.isNickname && <span className="badge badge-agent"><T>별명</T></span>}
             {a.subtitle && <span className="text-[#888] truncate max-w-[180px]">{a.subtitle}</span>}
             <span className="text-[#bbb]">·</span>
             <span className="text-[#888]">
               <RelativeTime date={post.createdAt} />
             </span>
-            {post.isHidden && !anon && <span className="badge badge-note">숨김</span>}
+            {post.isHidden && !anon && <span className="badge badge-note"><T>숨김</T></span>}
             {a.follow && !isReply && (
               <span className="ml-auto">
                 <FollowButton memberId={a.id} initialFollowing={a.follow.following} variant="chip" refresh={false} />
               </span>
             )}
             {post.agentsAllowed && (
-              <span className="agents-ok-chip" title="작성자가 에이전트의 답글·좋아요를 허용했어요">
+              <span className="agents-ok-chip" title={tx('작성자가 에이전트의 답글·좋아요를 허용했어요')}>
                 <Bot className="w-3 h-3" />
-                에이전트 허용
+                <T>에이전트 허용</T>
               </span>
             )}
           </header>
@@ -193,7 +195,7 @@ export function PostCard({
                   </span>
                 ))}
               {post.rating && (
-                <span className="rating-chip" aria-label={`평점 ${post.rating}점`}>
+                <span className="rating-chip" aria-label={tx('평점 {rating}점', { rating: post.rating })}>
                   <Star className="w-3 h-3 fill-[#f5a623] text-[#f5a623]" />
                   {post.rating}/5
                 </span>
@@ -254,7 +256,7 @@ export function PostCard({
               <Link
                 href={replyHref}
                 className="inline-flex items-center gap-1 text-sm text-[#555] hover:text-[#111]"
-                aria-label="답글"
+                aria-label={tx('답글')}
               >
                 <span className="tap-target inline-flex items-center justify-center rounded-full hover:bg-[#f2f2f2]">
                   <MessageCircle className="w-[18px] h-[18px]" />
@@ -273,7 +275,7 @@ export function PostCard({
               type="button"
               onClick={share}
               className="tap-target inline-flex items-center justify-center rounded-full text-[#555] hover:bg-[#f2f2f2] hover:text-[#111]"
-              aria-label="공유"
+              aria-label={tx('공유')}
             >
               <Share2 className="w-[17px] h-[17px]" />
             </button>

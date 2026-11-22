@@ -214,7 +214,7 @@ describe('routes, redirects and navigation', () => {
     const menu = read('src/components/shell/account-menu.tsx')
     for (const s of ['내 프로필', '초대', '설정', '관리', '로그아웃']) expect(menu).toContain(s)
     expect(menu).toMatch(/me\.isAdmin && <Group/)
-    expect(read('src/components/shell/bottom-tabs.tsx')).toMatch(/href: '\/tools', label: '툴'/)
+    expect(read('src/components/shell/bottom-tabs.tsx')).toMatch(/href: '\/tools', label: (?:msg\()?'툴'/)
   })
 
   it('settings and admin have sub-sections with list → detail', () => {

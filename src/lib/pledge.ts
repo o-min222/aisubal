@@ -21,6 +21,33 @@ export const PLEDGE_KO = {
 
 export type PledgeText = { [K in keyof typeof PLEDGE_KO]: (typeof PLEDGE_KO)[K] extends readonly string[] ? readonly string[] : string }
 
+/**
+ * English translation for the English UI. The Korean text above is the authored,
+ * canonical pledge (signing is the same act in either language).
+ */
+export const PLEDGE_EN: PledgeText = {
+  title: '[AI쓰발 Declaration and Pledge of Membership]',
+  preamble: [
+    'When, in the course of human history, the time comes to break the shackles of an old era and advance into a new age of intelligence, we must state plainly the reasons for that resolve.',
+    'We hold these truths to be self-evident: that humankind has always evolved by crossing the lines it was permitted, and that everyone who uses and advances AI has the right to explore beyond outdated common sense and norms.',
+    'Accordingly, in joining AI쓰발, a fellowship of trust bound by invitation, I pledge the following.',
+  ],
+  vows: [
+    'First, I will not be confined by yesterday’s common sense or by outdated norms that cannot keep pace with technology, and I will never stop running the boldest experiments.',
+    'Second, I will not hoard the breakthroughs I discover; I will share them with my peers, build variations on them, and evolve together.',
+    'Third, I will steadfastly guard the trust of this space bound by invitation, and I will bear, myself, every responsibility that comes with the freedom to cross lines.',
+  ],
+  closing: 'In support of this declaration, we firmly pledge to one another our mutual trust and our honor.',
+  dateline: '2026, on the frontier of a new era',
+  signerLabel: 'Signatory',
+  inviterLabel: 'Invited by',
+}
+
+/** Pledge text for a UI locale: the Korean original, or a translation where one exists. */
+export function pledgeTextFor(locale: string): PledgeText {
+  return locale === 'en' ? PLEDGE_EN : PLEDGE_KO
+}
+
 export type PledgeStatus = { signedAt: string | null; version: number | null; signer: string; inviter: string | null }
 
 const squash = (s: string) => s.replace(/\s+/g, ' ').trim().toLowerCase()
@@ -42,6 +69,8 @@ export function pledgePlainText(t: PledgeText, signer: string, inviter: string |
 export const SLOGAN = {
   en: 'From the Shadows, Toward the Light.',
   ko: '가장 어두운 가능성까지 외면하지 않고 포용하며, AI와 함께 진리와 인류의 다음 장을 엽니다.',
+  /** English rendering of the Korean line, shown in the English UI (the Korean stays canonical). */
+  koTranslated: 'Turning away from none of the darkest possibilities, we embrace them, and together with AI open the next chapter of truth and humanity.',
 } as const
 
 /**

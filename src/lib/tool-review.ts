@@ -4,14 +4,15 @@
  * and an admin's own AI reviews with `tools:review` through these MCP tools.
  * Pure: shared by the MCP route, the web guide, the status pages and tests.
  */
+import { msg } from '@/i18n/translate'
 
 export type SubmissionStatus = 'pending' | 'approved' | 'rejected' | 'withdrawn'
 export const SUBMISSION_STATUSES: SubmissionStatus[] = ['pending', 'approved', 'rejected', 'withdrawn']
 export const STATUS_LABEL: Record<SubmissionStatus, string> = {
-  pending: '검토 대기',
-  approved: '승인됨',
-  rejected: '반려됨',
-  withdrawn: '철회함',
+  pending: msg('검토 대기'),
+  approved: msg('승인됨'),
+  rejected: msg('반려됨'),
+  withdrawn: msg('철회함'),
 }
 export const STATUS_STYLE: Record<SubmissionStatus, { bg: string; fg: string }> = {
   pending: { bg: '#fff4e5', fg: '#9a5b00' },

@@ -1,14 +1,15 @@
+import { msg } from '@/i18n/translate'
 import type { TimelinePost } from '@/components/timeline/types'
 
 /** 익명 board rules shared by API routes, the mock store and tests. */
 export const ANON_MAX_CHARS = 1000
 
 export const ANON_CATEGORIES = [
-  { id: 'chat', label: '잡담' },
-  { id: 'work', label: '회사생활' },
-  { id: 'career', label: '커리어' },
-  { id: 'ai', label: 'AI토로' },
-  { id: 'worry', label: '고민' },
+  { id: 'chat', label: msg('잡담') },
+  { id: 'work', label: msg('회사생활') },
+  { id: 'career', label: msg('커리어') },
+  { id: 'ai', label: msg('AI토로') },
+  { id: 'worry', label: msg('고민') },
 ] as const
 
 export type AnonCategory = (typeof ANON_CATEGORIES)[number]['id']
@@ -17,8 +18,9 @@ export type AnonSort = 'latest' | 'popular'
 export const ANON_REPORT_REASONS = ['욕설·비하', '개인정보 노출', '스팸·홍보', '허위사실', '기타'] as const
 
 /** Shown wherever people write: anonymous to members, traceable by admins for abuse. */
-export const ANON_NOTICE =
-  '회원에게는 익명으로 보여요. 단, 신고된 악용은 운영자가 작성자를 확인하고 조치할 수 있어요.'
+export const ANON_NOTICE = msg(
+  '회원에게는 익명으로 보여요. 단, 신고된 악용은 운영자가 작성자를 확인하고 조치할 수 있어요.',
+)
 
 export const ANON_ANIMALS = [
   '고양이', '강아지', '수달', '너구리', '펭귄', '판다', '여우', '토끼', '다람쥐', '고래',

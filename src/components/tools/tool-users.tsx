@@ -12,6 +12,8 @@ import { askPrompt } from '@/lib/ask-rules'
 import { socialProofLine } from '@/lib/social-rules'
 import type { ToolUser, ToolUsers } from '@/lib/data/tools'
 import { UsageToggle } from './usage-toggle'
+import { T } from '@/i18n/t'
+import { tx } from '@/i18n/client'
 
 const COLLAPSED = 6
 
@@ -45,14 +47,14 @@ export function ToolUsersCard({
             <Users className="w-4 h-4" /> {header}
           </h2>
           <p className="text-[12.5px] mt-0.5" style={{ color: '#777' }}>
-            {usage.count > 0 ? `전체 ${usage.count}명이 ‘나도 써요’로 표시했어요` : '써봤다면 표시해서 다른 멤버가 물어볼 수 있게 해주세요'}
+            {usage.count > 0 ? tx('전체 {count}명이 ‘나도 써요’로 표시했어요', { count: usage.count }) : tx('써봤다면 표시해서 다른 멤버가 물어볼 수 있게 해주세요')}
           </p>
         </div>
         <UsageToggle entryId={entryId} initialUsing={usage.usedByMe} initialCount={usage.count} size="md" />
       </div>
 
       {shown.length > 0 && (
-        <ul className="border-t border-[#f0f0f0] divide-y divide-[#f4f4f4]" aria-label="쓰는 사람">
+        <ul className="border-t border-[#f0f0f0] divide-y divide-[#f4f4f4]" aria-label={tx('쓰는 사람')}>
           {shown.map((u) => (
             <li key={u.id} className="tool-person flex items-center gap-3 px-4 py-2.5">
               <Link href={`/members/${u.id}`} className="flex items-center gap-3 min-w-0 flex-1">
@@ -61,7 +63,7 @@ export function ToolUsersCard({
                   <span className="font-medium text-[14.5px] truncate" style={{ color: '#111' }}>
                     {u.name}
                   </span>
-                  {u.relation.isMe ? <span className="text-xs text-[#888]">(나)</span> : <RelationBadge relation={u.relation} />}
+                  {u.relation.isMe ? <span className="text-xs text-[#888]"><T>(나)</T></span> : <RelationBadge relation={u.relation} />}
                 </span>
               </Link>
               {!u.relation.isMe && (
@@ -71,9 +73,9 @@ export function ToolUsersCard({
                     type="button"
                     onClick={() => setAsking(u)}
                     className="btn btn-secondary btn-sm rounded-full min-h-[36px] px-3"
-                    aria-label={`${u.name}님에게 ${tool.name} 물어보기`}
+                    aria-label={tx('{name}님에게 {name2} 물어보기', { name: u.name, name2: tool.name })}
                   >
-                    <MessageCircleQuestion className="w-4 h-4" /> 물어보기
+                    <MessageCircleQuestion className="w-4 h-4" /> <T>물어보기</T>
                   </button>
                 </div>
               )}
@@ -83,19 +85,19 @@ export function ToolUsersCard({
       )}
       {usage.users.length > COLLAPSED && (
         <button type="button" onClick={() => setExpanded((x) => !x)} className="w-full text-sm py-3 border-t border-[#f0f0f0] min-h-[44px]" style={{ color: '#0066cc' }}>
-          {expanded ? '접기' : `${usage.users.length - COLLAPSED}명 더 보기`}
+          {expanded ? tx('접기') : tx('{v}명 더 보기', { v: usage.users.length - COLLAPSED })}
         </button>
       )}
 
-      <AdaptiveSheet open={Boolean(asking)} onOpenChange={(o) => !o && setAsking(null)} title={asking ? `${asking.name}님에게 물어보기` : '물어보기'}>
+      <AdaptiveSheet open={Boolean(asking)} onOpenChange={(o) => !o && setAsking(null)} title={asking ? tx('{name}님에게 물어보기', { name: asking.name }) : tx('물어보기')}>
         {asking && (
           <div className="space-y-3">
             <p className="text-[12.5px] leading-relaxed" style={{ color: '#666' }}>
-              아직 1:1 메시지가 없어서, 질문은 <b>피드 글</b>로 올라가요. 같은 게 궁금한 다른 멤버도 답을 볼 수 있어요.
+              <T>아직 1:1 메시지가 없어서, 질문은</T> <b><T>피드 글</T></b><T>로 올라가요. 같은 게 궁금한 다른 멤버도 답을 볼 수 있어요.</T>
             </p>
             <Composer me={me} initialBody={askPrompt(asking, tool.name, tool.url)} autoFocus onPosted={() => setAsking(null)} className="!p-0 !border-0 !shadow-none" />
             <Link href={`/members/${asking.id}`} className="btn btn-secondary btn-sm w-full min-h-[44px] justify-center">
-              <UserRound className="w-4 h-4" /> 프로필 먼저 보기
+              <UserRound className="w-4 h-4" /> <T>프로필 먼저 보기</T>
             </Link>
           </div>
         )}

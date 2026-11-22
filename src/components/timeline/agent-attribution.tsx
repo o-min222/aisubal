@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { Bot } from 'lucide-react'
+import { T } from '@/i18n/t'
 
 /** Guess the client/model family from the agent's self-declared model string. */
 export function agentFamily(model: string | null | undefined): { label: string; bg: string; fg: string; glyph: string } | null {
@@ -35,7 +36,7 @@ export function AgentAttribution({ ownerName, ownerId, agentName, model }: { own
     <>
       <AgentClientIcon model={model} size={15} />
       <span className="truncate">
-        <b className="font-semibold text-[#333]">{ownerName}</b>님의 {agentName}
+        <T s="{owner}님의 {agent}" vars={{ owner: <b className="font-semibold text-[#333]">{ownerName}</b>, agent: agentName }} />
       </span>
     </>
   )

@@ -14,6 +14,8 @@ import { UserAvatar } from '@/components/user-avatar'
 import { RelationBadge } from '@/components/social/relation-badge'
 import { FollowButton } from '@/components/social/follow-button'
 import { FriendButton } from '@/components/social/friend-button'
+import { T } from '@/i18n/t'
+import { tx, tn } from '@/i18n/client'
 
 type View = { x: number; y: number; k: number }
 const RING_COLOR = { me: '#111', friend: '#2f9e66', mutual: '#7c5cff', following: '#3b82f6', follower: '#c9a227', none: '#d4d4d4' } as const
@@ -145,7 +147,7 @@ export function InviteGraph({ initial }: { initial: GraphPayload }) {
         return [...cur.map((n) => (n.id === parentId ? { ...n, childCount: data.total } : n)), ...add]
       })
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : '불러오지 못했어요.')
+      toast.error(e instanceof Error ? e.message : tn('불러오지 못했어요.'))
     } finally {
       setLoading(null)
     }
@@ -169,7 +171,7 @@ export function InviteGraph({ initial }: { initial: GraphPayload }) {
         width="100%"
         height="100%"
         role="img"
-        aria-label={`초대 네트워크 그래프, ${nodes.length}명`}
+        aria-label={tx('초대 네트워크 그래프, {length}명', { length: nodes.length })}
         style={{ touchAction: 'none', cursor: 'grab', userSelect: 'none', display: 'block' }}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
@@ -191,7 +193,7 @@ export function InviteGraph({ initial }: { initial: GraphPayload }) {
                     {loading === p.more.parentId ? '…' : `+${p.more.remaining}`}
                   </text>
                   <text textAnchor="middle" dy={34} fontSize={10.5} fill="#888">
-                    더 보기
+                    <T>더 보기</T>
                   </text>
                 </g>
               )
@@ -212,11 +214,11 @@ export function InviteGraph({ initial }: { initial: GraphPayload }) {
                 </text>
                 <text textAnchor="middle" dy={r + 17} fontSize={11.5} fontWeight={isRoot ? 700 : 500} fill="#222">
                   {n.name.length > 8 ? `${n.name.slice(0, 7)}…` : n.name}
-                  {n.relation.isMe ? ' (나)' : ''}
+                  {n.relation.isMe ? <T> (나)</T> : ''}
                 </text>
                 {badge && (
                   <text textAnchor="middle" dy={r + 30} fontSize={9.5} fontWeight={600} fill={RING_COLOR[t]}>
-                    {badge.label}
+                    <T>{badge.label}</T>
                   </text>
                 )}
               </g>
@@ -228,37 +230,37 @@ export function InviteGraph({ initial }: { initial: GraphPayload }) {
       <div className="absolute top-2 left-2 flex flex-wrap gap-1.5 text-[11px] pointer-events-none" aria-hidden>
         {(
           [
-            ['friend', `친구 ${counts.friend}`],
-            ['mutual', `맞팔 ${counts.mutual}`],
-            ['following', `팔로잉 ${counts.following}`],
+            ['friend', tx('친구 {friend}', { friend: counts.friend })],
+            ['mutual', tx('맞팔 {mutual}', { mutual: counts.mutual })],
+            ['following', tx('팔로잉 {following}', { following: counts.following })],
           ] as const
         ).map(([k, label]) => (
           <span key={k} className="inline-flex items-center gap-1 rounded-full bg-white/90 px-2 leading-[22px] shadow-sm" style={{ color: '#444' }}>
-            <span style={{ width: 8, height: 8, borderRadius: 99, background: RING_COLOR[k] }} /> {label}
+            <span style={{ width: 8, height: 8, borderRadius: 99, background: RING_COLOR[k] }} /> <T>{label}</T>
           </span>
         ))}
       </div>
 
       <div className="absolute top-2 right-2 flex flex-col gap-1.5">
-        <button type="button" onClick={() => zoomCenter(1.3)} aria-label="확대" title="확대" className="flex items-center justify-center rounded-full bg-white shadow" style={{ width: 40, height: 40, color: '#111' }}>
+        <button type="button" onClick={() => zoomCenter(1.3)} aria-label={tx('확대')} title={tx('확대')} className="flex items-center justify-center rounded-full bg-white shadow" style={{ width: 40, height: 40, color: '#111' }}>
           <Plus className="w-4 h-4" />
         </button>
-        <button type="button" onClick={() => zoomCenter(1 / 1.3)} aria-label="축소" title="축소" className="flex items-center justify-center rounded-full bg-white shadow" style={{ width: 40, height: 40, color: '#111' }}>
+        <button type="button" onClick={() => zoomCenter(1 / 1.3)} aria-label={tx('축소')} title={tx('축소')} className="flex items-center justify-center rounded-full bg-white shadow" style={{ width: 40, height: 40, color: '#111' }}>
           <Minus className="w-4 h-4" />
         </button>
-        <button type="button" onClick={fit} aria-label="전체 보기" title="전체 보기" className="flex items-center justify-center rounded-full bg-white shadow" style={{ width: 40, height: 40, color: '#111' }}>
+        <button type="button" onClick={fit} aria-label={tx('전체 보기')} title={tx('전체 보기')} className="flex items-center justify-center rounded-full bg-white shadow" style={{ width: 40, height: 40, color: '#111' }}>
           <Maximize2 className="w-4 h-4" />
         </button>
         {!byId.get(rootId)?.relation.isMe && (
-          <button onClick={() => router.push(networkHref())} aria-label="나를 중심으로" title="나를 중심으로" className="flex items-center justify-center rounded-full bg-white shadow" style={{ width: 40, height: 40, color: '#111' }}>
+          <button onClick={() => router.push(networkHref())} aria-label={tx('나를 중심으로')} title={tx('나를 중심으로')} className="flex items-center justify-center rounded-full bg-white shadow" style={{ width: 40, height: 40, color: '#111' }}>
             <Crosshair className="w-4 h-4" />
           </button>
         )}
       </div>
 
       {sel && (
-        <div className="graph-card absolute left-2 right-2 bottom-2 md:right-auto md:w-[340px] rounded-2xl bg-white p-3.5 shadow-lg" style={{ border: '1px solid #eee' }} role="dialog" aria-label={`${sel.name} 미니 프로필`}>
-          <button onClick={() => setSelected(null)} className="absolute top-1.5 right-1.5 tap-target inline-flex items-center justify-center rounded-full hover:bg-[#f2f2f2]" aria-label="닫기">
+        <div className="graph-card absolute left-2 right-2 bottom-2 md:right-auto md:w-[340px] rounded-2xl bg-white p-3.5 shadow-lg" style={{ border: '1px solid #eee' }} role="dialog" aria-label={tx('{name} 미니 프로필', { name: sel.name })}>
+          <button onClick={() => setSelected(null)} className="absolute top-1.5 right-1.5 tap-target inline-flex items-center justify-center rounded-full hover:bg-[#f2f2f2]" aria-label={tx('닫기')}>
             <X className="w-4 h-4" />
           </button>
           <div className="flex items-center gap-3 pr-8">
@@ -268,11 +270,11 @@ export function InviteGraph({ initial }: { initial: GraphPayload }) {
                 <span className="font-bold text-[16px] truncate" style={{ color: '#111' }}>
                   {sel.name}
                 </span>
-                {sel.relation.isMe ? <span className="text-xs text-[#888]">(나)</span> : <RelationBadge relation={sel.relation} />}
+                {sel.relation.isMe ? <span className="text-xs text-[#888]"><T>(나)</T></span> : <RelationBadge relation={sel.relation} />}
               </p>
               <p className="text-[12px] text-[#777]">
-                {sel.parentId && byId.get(sel.parentId) ? `${byId.get(sel.parentId)!.name}님의 초대` : sel.depth != null && sel.depth < 0 ? '나를 초대한 줄기' : '초대 네트워크'}
-                {` · 초대한 사람 ${sel.childCount}명`}
+                {sel.parentId && byId.get(sel.parentId) ? tx('{name}님의 초대', { name: byId.get(sel.parentId)!.name }) : sel.depth != null && sel.depth < 0 ? tx('나를 초대한 줄기') : tx('초대 네트워크')}
+                {tx(' · 초대한 사람 {childCount}명', { childCount: sel.childCount })}
               </p>
             </div>
           </div>
@@ -289,11 +291,11 @@ export function InviteGraph({ initial }: { initial: GraphPayload }) {
               </>
             )}
             <Link href={`/members/${sel.id}`} className="btn btn-secondary btn-sm min-h-[40px] rounded-full">
-              프로필
+              <T>프로필</T>
             </Link>
             {sel.id !== rootId && (
               <Link href={networkHref({ root: sel.id })} className="btn btn-secondary btn-sm min-h-[40px] rounded-full">
-                중심으로
+                <T>중심으로</T>
               </Link>
             )}
           </div>

@@ -1,3 +1,4 @@
+import { msg } from '@/i18n/translate'
 /**
  * Privacy-first profile rules (0010). The self-made profile — display name,
  * unique @handle, avatar, bio — is the identity everywhere. Google name, email
@@ -51,16 +52,16 @@ export const LINK_KINDS: Array<{ kind: LinkKind; label: string; placeholder: str
   { kind: 'facebook', label: 'Facebook', placeholder: 'https://facebook.com/handle', host: /^https:\/\/((www|m)\.)?facebook\.com\//i },
   { kind: 'bluesky', label: 'Bluesky', placeholder: 'https://bsky.app/profile/handle', host: /^https:\/\/(www\.)?bsky\.app\//i },
   { kind: 'huggingface', label: 'Hugging Face', placeholder: 'https://huggingface.co/handle', host: /^https:\/\/(www\.)?huggingface\.co\//i },
-  { kind: 'blog', label: '블로그', placeholder: 'https://blog.example.com', host: null },
-  { kind: 'website', label: '웹사이트', placeholder: 'https://example.com', host: null },
+  { kind: 'blog', label: msg('블로그'), placeholder: 'https://blog.example.com', host: null },
+  { kind: 'website', label: msg('웹사이트'), placeholder: 'https://example.com', host: null },
 ]
 export const LINK_KIND_SET = new Set(LINK_KINDS.map((k) => k.kind))
 export const MAX_LINKS = 12
 
 export const LINK_VISIBILITY: Array<{ id: LinkVisibility; label: string; hint: string }> = [
-  { id: 'members', label: '전체 회원', hint: '로그인한 AI쓰발 멤버 모두' },
-  { id: 'friends', label: '친구만', hint: '친구 수락한 사람만' },
-  { id: 'private', label: '비공개', hint: '나만 보기' },
+  { id: 'members', label: msg('전체 회원'), hint: msg('로그인한 AI쓰발 멤버 모두') },
+  { id: 'friends', label: msg('친구만'), hint: msg('친구 수락한 사람만') },
+  { id: 'private', label: msg('비공개'), hint: msg('나만 보기') },
 ]
 
 export function validateLink(kind: string, rawUrl: string): { ok: true; url: string } | { ok: false; reason: string } {

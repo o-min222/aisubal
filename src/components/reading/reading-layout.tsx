@@ -1,6 +1,9 @@
 import Link from 'next/link'
 import { ArrowLeft, Maximize2, PanelRight, X } from 'lucide-react'
 import { PaneKeys } from './pane-keys'
+import { msg } from '@/i18n/translate'
+import { T } from '@/i18n/t'
+import { getT } from '@/i18n/server'
 
 /**
  * List + reading pane (no infinite scroll).
@@ -10,15 +13,15 @@ import { PaneKeys } from './pane-keys'
  * The open item lives in the URL (?open=<id>), so back/forward, refresh and
  * sharing all work and the list keeps its page and tab.
  */
-export function ReadingLayout({
+export async function ReadingLayout({
   list,
   pane,
   openId,
   closeHref,
   fullHref,
   paneTitle,
-  emptyTitle = '항목을 고르면 여기에서 읽어요',
-  emptyHint = '목록에서 하나를 누르면 이 자리에 열려요. 모바일에서는 전체 화면으로 열려요.',
+  emptyTitle = msg('항목을 고르면 여기에서 읽어요'),
+  emptyHint = msg('목록에서 하나를 누르면 이 자리에 열려요. 모바일에서는 전체 화면으로 열려요.'),
 }: {
   list: React.ReactNode
   pane: React.ReactNode | null
@@ -29,25 +32,26 @@ export function ReadingLayout({
   emptyTitle?: string
   emptyHint?: string
 }) {
+  const st = await getT()
   const open = Boolean(openId && pane)
   return (
     <div className={`reading-layout${open ? ' has-open' : ''}`}>
       <div className="reading-list">{list}</div>
-      <aside className={`reading-pane${open ? ' is-open' : ''}`} aria-label={paneTitle ? `${paneTitle} 읽기` : '읽기 창'}>
+      <aside className={`reading-pane${open ? ' is-open' : ''}`} aria-label={paneTitle ? st('{paneTitle} 읽기', { paneTitle }) : st('읽기 창')}>
         {open ? (
           <>
             <div className="reading-pane-bar">
-              <Link href={closeHref} scroll={false} className="pane-back" aria-label="목록으로 돌아가기">
+              <Link href={closeHref} scroll={false} className="pane-back" aria-label={st('목록으로 돌아가기')}>
                 <ArrowLeft className="w-5 h-5" />
-                <span>목록</span>
+                <span><T>목록</T></span>
               </Link>
               <span className="pane-title truncate">{paneTitle}</span>
               {fullHref && (
-                <Link href={fullHref} className="pane-icon" aria-label="전체 페이지로 열기" title="전체 페이지로 열기">
+                <Link href={fullHref} className="pane-icon" aria-label={st('전체 페이지로 열기')} title={st('전체 페이지로 열기')}>
                   <Maximize2 className="w-4 h-4" />
                 </Link>
               )}
-              <Link href={closeHref} scroll={false} className="pane-icon pane-close" aria-label="읽기 창 닫기" title="닫기 (Esc)">
+              <Link href={closeHref} scroll={false} className="pane-icon pane-close" aria-label={st('읽기 창 닫기')} title={st('닫기 (Esc)')}>
                 <X className="w-4 h-4" />
               </Link>
             </div>
@@ -60,10 +64,10 @@ export function ReadingLayout({
           <div className="reading-empty">
             <PanelRight className="w-7 h-7" aria-hidden />
             <p className="font-semibold" style={{ color: '#333' }}>
-              {emptyTitle}
+              <T>{emptyTitle}</T>
             </p>
             <p className="text-[13px]" style={{ color: '#888' }}>
-              {emptyHint}
+              <T>{emptyHint}</T>
             </p>
           </div>
         )}

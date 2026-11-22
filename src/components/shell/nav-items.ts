@@ -6,6 +6,7 @@ import {
   VenetianMask,
   type LucideIcon,
 } from 'lucide-react'
+import { msg } from '@/i18n/translate'
 
 export type NavItem = {
   href: string
@@ -24,11 +25,11 @@ export type NavItem = {
  * behind the avatar / profile card — see account-menu.tsx.
  */
 export const SIDE_NAV: NavItem[] = [
-  { href: '/tools', label: '툴', icon: Wrench },
-  { href: '/archive', label: '아카이브', icon: Archive },
-  { href: '/moim', label: '모임', icon: CalendarDays },
-  { href: '/groups', label: '그룹', icon: Users },
-  { href: '/anon', label: '익명', icon: VenetianMask },
+  { href: '/tools', label: msg('툴'), icon: Wrench },
+  { href: '/archive', label: msg('아카이브'), icon: Archive },
+  { href: '/moim', label: msg('모임'), icon: CalendarDays },
+  { href: '/groups', label: msg('그룹'), icon: Users },
+  { href: '/anon', label: msg('익명'), icon: VenetianMask },
 ]
 
 export function isActive(pathname: string, href: string) {

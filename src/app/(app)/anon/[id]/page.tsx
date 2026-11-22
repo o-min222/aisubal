@@ -3,8 +3,12 @@ import { getUserState } from '@/lib/auth'
 import { getAnonThread } from '@/lib/data/anon'
 import { isFeedId } from '@/lib/feed-ids'
 import { AnonThreadView } from '@/components/detail/anon-thread-view'
+import { getT } from '@/i18n/server'
 
-export const metadata = { title: '익명 · AI쓰발' }
+export async function generateMetadata() {
+  const t = await getT()
+  return { title: t('익명 · AI쓰발') }
+}
 
 export default async function AnonThreadPage({
   params,

@@ -13,8 +13,14 @@ import { PostRow } from '@/components/reading/post-row'
 import { AnonThreadView } from '@/components/detail/anon-thread-view'
 import { Pagination } from '@/components/pagination'
 import { PAGE_SIZE, pageOffset, parsePage } from '@/lib/paging'
+import { T } from '@/i18n/t'
+import { getT } from '@/i18n/server'
+import { msg } from '@/i18n/translate'
 
-export const metadata = { title: '익명 · AI쓰발' }
+export async function generateMetadata() {
+  const t = await getT()
+  return { title: t('익명 · AI쓰발') }
+}
 
 function hrefFor(category: AnonCategory | null, sort: AnonSort) {
   const q = new URLSearchParams()
@@ -29,6 +35,7 @@ export default async function AnonBoardPage({
 }: {
   searchParams: Promise<{ category?: string; sort?: string; page?: string; open?: string }>
 }) {
+  const st = await getT()
   const state = await getUserState()
   if (state.type === 'unauthenticated') redirect('/login')
   if (state.type === 'waitlist') redirect('/waitlist')
@@ -53,18 +60,17 @@ export default async function AnonBoardPage({
           <VenetianMask className="w-5 h-5" />
         </span>
         <div className="min-w-0">
-          <h1 style={{ color: '#fff', fontSize: 17 }}>익명 라운지</h1>
+          <h1 style={{ color: '#fff', fontSize: 17 }}><T>익명 라운지</T></h1>
           <p className="text-[13px] text-white/75 mt-0.5 leading-relaxed">
-            회원끼리도 누군지 몰라요. 글마다 &lsquo;익명의 고양이&rsquo; 같은 별명이 새로 붙어요. 단, 신고된 악용은 운영자가
-            작성자를 확인할 수 있어요. 사람만 쓸 수 있고 AI 에이전트는 접근할 수 없어요.
+            <T>회원끼리도 누군지 몰라요. 글마다 ‘익명의 고양이’ 같은 별명이 새로 붙어요. 단, 신고된 악용은 운영자가 작성자를 확인할 수 있어요. 사람만 쓸 수 있고 AI 에이전트는 접근할 수 없어요.</T>
           </p>
         </div>
       </section>
 
       <div className="anon-toolbar space-y-2">
-        <nav className="chip-row" aria-label="카테고리">
+        <nav className="chip-row" aria-label={st('카테고리')}>
           <Link href={hrefFor(null, sort)} className={`filter-chip ${!category ? 'on' : ''}`} aria-current={!category ? 'page' : undefined}>
-            전체
+            <T>전체</T>
           </Link>
           {ANON_CATEGORIES.map((c) => (
             <Link
@@ -73,20 +79,20 @@ export default async function AnonBoardPage({
               className={`filter-chip ${category === c.id ? 'on' : ''}`}
               aria-current={category === c.id ? 'page' : undefined}
             >
-              {c.label}
+              <T>{c.label}</T>
             </Link>
           ))}
         </nav>
         <div className="flex items-center justify-between">
-          <div className="seg" role="tablist" aria-label="정렬">
+          <div className="seg" role="tablist" aria-label={st('정렬')}>
             <Link href={hrefFor(category, 'latest')} role="tab" aria-selected={sort === 'latest'} className={sort === 'latest' ? 'on seg-link' : 'seg-link'}>
-              최신
+              <T>최신</T>
             </Link>
             <Link href={hrefFor(category, 'popular')} role="tab" aria-selected={sort === 'popular'} className={sort === 'popular' ? 'on seg-link' : 'seg-link'}>
-              인기
+              <T>인기</T>
             </Link>
           </div>
-          {sort === 'popular' && <span className="text-xs text-[#888]">최근 30일 · 좋아요와 답글 순</span>}
+          {sort === 'popular' && <span className="text-xs text-[#888]"><T>최근 30일 · 좋아요와 답글 순</T></span>}
         </div>
       </div>
 
@@ -94,17 +100,17 @@ export default async function AnonBoardPage({
 
       {posts.length === 0 ? (
         <EmptyList
-          title={page > 1 ? '이 페이지에는 글이 없어요' : '아직 글이 없어요'}
-          hint={page > 1 ? '앞 페이지로 돌아가 보세요.' : '첫 익명 글을 남겨보세요. 회원에게는 누군지 보이지 않아요.'}
+          title={page > 1 ? st('이 페이지에는 글이 없어요') : st('아직 글이 없어요')}
+          hint={page > 1 ? st('앞 페이지로 돌아가 보세요.') : st('첫 익명 글을 남겨보세요. 회원에게는 누군지 보이지 않아요.')}
         />
       ) : (
-        <CompactList label="익명 글">
+        <CompactList label={msg('익명 글')}>
           {posts.map((p) => (
             <PostRow key={p.id} post={p} href={openHref(base, p.id)} active={thread?.root.id === p.id} categoryLabel={category ? null : catLabel(p.category)} />
           ))}
         </CompactList>
       )}
-      <Pagination base={listBase} page={page} hasNext={hasNext} label="익명 게시판 페이지" />
+      <Pagination base={listBase} page={page} hasNext={hasNext} label={msg('익명 게시판 페이지')} />
     </>
   )
 
@@ -114,8 +120,8 @@ export default async function AnonBoardPage({
       openId={thread ? open : null}
       closeHref={base}
       fullHref={thread ? `/anon/${thread.root.id}` : null}
-      paneTitle="익명 글 읽기"
-      emptyTitle="글을 고르면 여기에서 읽어요"
+      paneTitle={st('익명 글 읽기')}
+      emptyTitle={st('글을 고르면 여기에서 읽어요')}
       pane={thread ? <AnonThreadView thread={thread} variant="pane" closeHref={base} /> : null}
     />
   )

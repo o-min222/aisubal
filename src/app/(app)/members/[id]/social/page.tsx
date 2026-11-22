@@ -7,15 +7,21 @@ import { getSocialSummary, listSocial, type SocialListKind } from '@/lib/data/so
 import { isFeedId } from '@/lib/feed-ids'
 import { LinkTabs } from '@/components/link-tabs'
 import { PersonRow } from '@/components/social/person-row'
+import { T } from '@/i18n/t'
+import { getT } from '@/i18n/server'
+import { msg } from '@/i18n/translate'
 
-export const metadata = { title: '팔로워 · 팔로잉 · 친구 · AI쓰발' }
+export async function generateMetadata() {
+  const t = await getT()
+  return { title: t('팔로워 · 팔로잉 · 친구 · AI쓰발') }
+}
 
 const EMPTY: Record<SocialListKind, string> = {
-  followers: '아직 팔로워가 없어요.',
-  following: '아직 팔로우한 사람이 없어요.',
-  friends: '아직 친구가 없어요. 친구는 친구 신청 → 수락으로 생겨요 (맞팔과 별개).',
-  requests: '받은 친구 요청이 없어요.',
-  sent: '보낸 친구 요청이 없어요.',
+  followers: msg('아직 팔로워가 없어요.'),
+  following: msg('아직 팔로우한 사람이 없어요.'),
+  friends: msg('아직 친구가 없어요. 친구는 친구 신청 → 수락으로 생겨요 (맞팔과 별개).'),
+  requests: msg('받은 친구 요청이 없어요.'),
+  sent: msg('보낸 친구 요청이 없어요.'),
 }
 
 export default async function SocialListPage({
@@ -25,6 +31,7 @@ export default async function SocialListPage({
   params: Promise<{ id: string }>
   searchParams: Promise<{ tab?: string }>
 }) {
+  const st = await getT()
   const state = await getUserState()
   if (state.type === 'unauthenticated') redirect('/login')
   if (state.type === 'waitlist') redirect('/waitlist')
@@ -41,7 +48,7 @@ export default async function SocialListPage({
   const tab: SocialListKind = allowed.includes(raw) ? raw : 'followers'
   const [people, summary] = await Promise.all([listSocial(viewer.id, member.id, tab).catch(() => []), getSocialSummary(viewer.id, member.id).catch(() => null)])
   const base = `/members/${isMe ? 'me' : member.id}/social?tab=`
-  const labels: Record<SocialListKind, string> = { followers: '팔로워', following: '팔로잉', friends: '친구', requests: '받은 요청', sent: '보낸 요청' }
+  const labels: Record<SocialListKind, string> = { followers: st('팔로워'), following: st('팔로잉'), friends: st('친구'), requests: st('받은 요청'), sent: st('보낸 요청') }
   const counts: Partial<Record<SocialListKind, number | null>> = {
     followers: summary?.followers ?? null,
     following: summary?.following ?? null,
@@ -52,7 +59,7 @@ export default async function SocialListPage({
   return (
     <div className="space-y-3">
       <div className="flex items-center gap-1">
-        <Link href={`/members/${isMe ? 'me' : member.id}`} className="tap-target inline-flex items-center justify-center rounded-full hover:bg-[#f2f2f2]" aria-label="프로필로">
+        <Link href={`/members/${isMe ? 'me' : member.id}`} className="tap-target inline-flex items-center justify-center rounded-full hover:bg-[#f2f2f2]" aria-label={st('프로필로')}>
           <ChevronLeft className="w-5 h-5" />
         </Link>
         <h1 className="text-lg font-bold" style={{ color: '#111' }}>
@@ -62,14 +69,14 @@ export default async function SocialListPage({
       <section className="card overflow-hidden">
         <div style={{ padding: '0 8px' }}>
           <LinkTabs
-            label="관계 목록"
+            label={msg('관계 목록')}
             active={tab}
             tabs={allowed.map((k) => ({ id: k, label: labels[k], href: base + k, count: counts[k] ?? null, dot: k === 'requests' && (summary?.incomingRequests ?? 0) > 0 }))}
           />
         </div>
         {tab === 'friends' || tab === 'requests' ? (
           <p className="text-xs px-4 pt-3" style={{ color: '#888' }}>
-            친구는 서로 수락한 관계예요. 서로 팔로우하는 ‘맞팔’과는 따로예요.
+            <T>친구는 서로 수락한 관계예요. 서로 팔로우하는 ‘맞팔’과는 따로예요.</T>
           </p>
         ) : null}
         {people.length === 0 ? (

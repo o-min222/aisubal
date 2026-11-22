@@ -10,6 +10,8 @@ import { FriendButton } from '@/components/social/friend-button'
 import type { MemberCardData } from '@/lib/data/member-card'
 import { LINK_VISIBILITY, type LinkVisibility } from '@/lib/profile-rules'
 import { STACK_GROUP_LABEL, chipOverflow, platformOf, type MemberAgent, type StackGroup, type StackGroupData, type StackItem } from '@/lib/profile-stack'
+import { T } from '@/i18n/t'
+import { tx } from '@/i18n/client'
 
 const HUES = ['#d97757', '#10a37f', '#4f7cff', '#111111', '#8b5cf6', '#e5484d', '#0f766e', '#c2410c']
 const hue = (s: string) => HUES[[...s].reduce((a, c) => (a * 31 + c.charCodeAt(0)) >>> 0, 7) % HUES.length]
@@ -30,9 +32,9 @@ function ChipIcon({ item }: { item: StackItem }) {
 function VisNote({ vis }: { vis: LinkVisibility | null }) {
   if (!vis || vis === 'members') return null
   return (
-    <span className="mc-vis" title={LINK_VISIBILITY.find((v) => v.id === vis)?.hint}>
+    <span className="mc-vis" title={tx(LINK_VISIBILITY.find((v) => v.id === vis)?.hint ?? '')}>
       {vis === 'private' ? <Lock className="w-3 h-3" /> : <Users className="w-3 h-3" />}
-      {LINK_VISIBILITY.find((v) => v.id === vis)?.label}
+      <T>{LINK_VISIBILITY.find((v) => v.id === vis)?.label ?? ''}</T>
     </span>
   )
 }
@@ -45,28 +47,28 @@ export function StackChips({ group, data, max = 6 }: { group: StackGroup; data: 
   return (
     <div className="mc-group">
       <div className="mc-group-label">
-        {STACK_GROUP_LABEL[group]}
+        <T>{STACK_GROUP_LABEL[group]}</T>
         <VisNote vis={data.visibility} />
       </div>
-      <ul className="mc-chips" aria-label={STACK_GROUP_LABEL[group]}>
+      <ul className="mc-chips" aria-label={tx(STACK_GROUP_LABEL[group])}>
         {shown.map((it, i) => (
           <li key={`${it.label}-${i}`}>
             {it.entry ? (
-              <Link href={`/tools/${it.entry.slug}`} className="mc-chip mc-chip-link" title={`${it.label} — 툴 보기`}>
+              <Link href={`/tools/${it.entry.slug}`} className="mc-chip mc-chip-link" title={tx('{name} — 툴 보기', { name: it.label })}>
                 <ChipIcon item={it} />
-                <span className="truncate">{it.label}</span>
+                <span className="truncate"><T>{it.label}</T></span>
               </Link>
             ) : (
               <span className="mc-chip" title={it.label}>
                 <ChipIcon item={it} />
-                <span className="truncate">{it.label}</span>
+                <span className="truncate"><T>{it.label}</T></span>
               </span>
             )}
           </li>
         ))}
         {more > 0 && (
           <li>
-            <button type="button" className="mc-chip mc-more" onClick={() => setAll(true)} aria-label={`${more}개 더 보기`}>
+            <button type="button" className="mc-chip mc-more" onClick={() => setAll(true)} aria-label={tx('{more}개 더 보기', { more })}>
               +{more}
             </button>
           </li>
@@ -93,7 +95,7 @@ function AgentRow({ a, isMe }: { a: MemberAgent; isMe: boolean }) {
       <span className="min-w-0 flex-1">
         <span className="flex items-center gap-1.5 min-w-0">
           <span className="mc-agent-name truncate">{a.name}</span>
-          {a.connected && <span className="mc-connected">연결됨</span>}
+          {a.connected && <span className="mc-connected"><T>연결됨</T></span>}
           {isMe && <VisNote vis={a.visibility} />}
         </span>
         <span className="mc-agent-meta truncate">
@@ -101,7 +103,7 @@ function AgentRow({ a, isMe }: { a: MemberAgent; isMe: boolean }) {
           {a.connected?.lastActiveAt && (
             <>
               {' · '}
-              <RelativeTime date={a.connected.lastActiveAt} /> 활동
+              <RelativeTime date={a.connected.lastActiveAt} /> <T>활동</T>
             </>
           )}
         </span>
@@ -114,13 +116,13 @@ function AgentRow({ a, isMe }: { a: MemberAgent; isMe: boolean }) {
   return <div className="mc-agent">{inner}</div>
 }
 
-export function AgentList({ agents, isMe, max = 3, title = '내 에이전트' }: { agents: MemberAgent[]; isMe: boolean; max?: number; title?: string }) {
+export function AgentList({ agents, isMe, max = 3, title = tx('내 에이전트') }: { agents: MemberAgent[]; isMe: boolean; max?: number; title?: string }) {
   const [all, setAll] = useState(false)
   if (!agents.length) return null
   const { shown, more } = all ? { shown: agents, more: 0 } : chipOverflow(agents, max)
   return (
     <div className="mc-group">
-      <div className="mc-group-label">{title}</div>
+      <div className="mc-group-label"><T>{title}</T></div>
       <ul className="mc-agents">
         {shown.map((a) => (
           <li key={a.id}>
@@ -130,7 +132,7 @@ export function AgentList({ agents, isMe, max = 3, title = '내 에이전트' }:
       </ul>
       {more > 0 && (
         <button type="button" className="mc-more-row" onClick={() => setAll(true)}>
-          에이전트 +{more}
+          <T s="에이전트 +{n}" vars={{ n: more }} />
         </button>
       )}
     </div>
@@ -148,17 +150,17 @@ export function MemberCard({ data, variant = 'side' }: { data: MemberCardData; v
   const hasStack = s && (['ai', 'subs', 'skills'] as const).some((g) => (s[g]?.items.length ?? 0) > 0)
   const emptyOwn = data.isMe && !hasStack && !(s?.agents.length)
   return (
-    <section className={`profile-card member-card member-card-${variant}`} aria-label={`${data.displayName} 프로필 카드`}>
+    <section className={`profile-card member-card member-card-${variant}`} aria-label={tx('{displayName} 프로필 카드', { displayName: data.displayName })}>
       <div className="profile-card-cover" aria-hidden />
       <div className="px-3 pb-3 -mt-7">
         <div className="flex items-end justify-between gap-2">
-          <Link href={profileHref} className="inline-block rounded-full ring-4 ring-white" aria-label={`${data.displayName} 프로필`}>
+          <Link href={profileHref} className="inline-block rounded-full ring-4 ring-white" aria-label={tx('{displayName} 프로필', { displayName: data.displayName })}>
             <UserAvatar id={data.id} name={data.displayName} avatarUrl={data.avatarUrl} size="lg" />
           </Link>
           <div className="flex items-center gap-1.5 flex-wrap justify-end">
             {data.isMe ? (
               <Link href="/settings/profile" className="btn btn-secondary btn-sm rounded-full min-h-[34px] inline-flex items-center gap-1">
-                <Pencil className="w-3.5 h-3.5" /> 프로필 편집
+                <Pencil className="w-3.5 h-3.5" /> <T>프로필 편집</T>
               </Link>
             ) : (
               data.relation && (
@@ -174,19 +176,19 @@ export function MemberCard({ data, variant = 'side' }: { data: MemberCardData; v
           <span className="pc-name block font-semibold text-[#111] truncate group-hover:underline">{data.displayName}</span>
           {data.handle && <span className="block text-xs text-[#888] truncate">@{data.handle}</span>}
         </Link>
-        {data.isMe && data.nickname && <span className="block text-xs text-[#888] truncate">별명 @{data.nickname} (나만 보여요)</span>}
+        {data.isMe && data.nickname && <span className="block text-xs text-[#888] truncate"><T s="별명 @{nick} (나만 보여요)" vars={{ nick: data.nickname }} /></span>}
         {data.bio && <p className="text-xs text-[#666] mt-1 line-clamp-2">{data.bio}</p>}
         {s && (
           <div className="mc-body">
             <StackChips group="ai" data={s.ai} max={chipMax} />
             <StackChips group="subs" data={s.subs} max={chipMax} />
             <StackChips group="skills" data={s.skills} max={chipMax} />
-            <AgentList agents={s.agents} isMe={data.isMe} max={variant === 'side' ? 2 : 3} title={data.isMe ? '내 에이전트' : '에이전트'} />
+            <AgentList agents={s.agents} isMe={data.isMe} max={variant === 'side' ? 2 : 3} title={data.isMe ? tx('내 에이전트') : tx('에이전트')} />
           </div>
         )}
         {emptyOwn && (
           <Link href="/settings/profile#stack" className="mc-empty">
-            쓰는 AI·구독·에이전트를 추가해 보세요
+            <T>쓰는 AI·구독·에이전트를 추가해 보세요</T>
           </Link>
         )}
       </div>
@@ -194,7 +196,7 @@ export function MemberCard({ data, variant = 'side' }: { data: MemberCardData; v
         {data.stats.map((st) => {
           const body = (
             <>
-              <dt>{st.label}</dt>
+              <dt><T>{st.label}</T></dt>
               <dd>{st.value ?? '–'}</dd>
             </>
           )

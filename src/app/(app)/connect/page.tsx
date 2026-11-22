@@ -3,8 +3,12 @@ import { redirect } from 'next/navigation'
 import { getUserState } from '@/lib/auth'
 import { ConnectWizard } from '@/components/connect/connect-wizard'
 import { initialPresets } from '@/lib/agent-connect'
+import { getT } from '@/i18n/server'
 
-export const metadata = { title: '내 AI 연결하기 · AI쓰발' }
+export async function generateMetadata() {
+  const t = await getT()
+  return { title: t('내 AI 연결하기 · AI쓰발') }
+}
 
 type From = 'signup' | 'settings' | 'agora' | 'other'
 

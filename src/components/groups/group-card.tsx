@@ -2,26 +2,29 @@ import Link from 'next/link'
 import { EyeOff, Lock, Users } from 'lucide-react'
 import type { Group } from '@/lib/data/groups'
 import { ROLE_LABEL } from '@/lib/group-rules'
+import { T } from '@/i18n/t'
+import { getT } from '@/i18n/server'
 
 export function GroupPolicy({ g }: { g: Pick<Group, 'joinPolicy' | 'isHidden'> }) {
   return (
     <span className="inline-flex items-center gap-2 text-[12px]" style={{ color: '#777' }}>
       <span className="inline-flex items-center gap-1">
         {g.joinPolicy === 'approval' ? <Lock className="w-3 h-3" /> : <Users className="w-3 h-3" />}
-        {g.joinPolicy === 'approval' ? '승인 후 가입' : '누구나 가입'}
+        {g.joinPolicy === 'approval' ? <T>승인 후 가입</T> : <T>누구나 가입</T>}
       </span>
       {g.isHidden && (
         <span className="inline-flex items-center gap-1">
-          <EyeOff className="w-3 h-3" /> 숨김
+          <EyeOff className="w-3 h-3" /> <T>숨김</T>
         </span>
       )}
     </span>
   )
 }
 
-export function GroupCard({ g }: { g: Group }) {
+export async function GroupCard({ g }: { g: Group }) {
+  const st = await getT()
   const state =
-    g.myStatus === 'active' ? (g.myRole && g.myRole !== 'member' ? ROLE_LABEL[g.myRole] : '가입됨') : g.myStatus === 'pending' ? '가입 요청 중' : g.myStatus === 'invited' ? '초대받음' : null
+    g.myStatus === 'active' ? (g.myRole && g.myRole !== 'member' ? ROLE_LABEL[g.myRole] : st('가입됨')) : g.myStatus === 'pending' ? st('가입 요청 중') : g.myStatus === 'invited' ? st('초대받음') : null
   return (
     <Link href={`/groups/${g.slug}`} className="group-card card p-3.5 flex gap-3 hover:bg-[#fafafa]">
       <span aria-hidden className="flex-shrink-0 flex items-center justify-center rounded-xl text-[22px]" style={{ width: 48, height: 48, background: '#f3f0ff' }}>
@@ -47,8 +50,8 @@ export function GroupCard({ g }: { g: Group }) {
           </span>
         )}
         <span className="flex flex-wrap items-center gap-x-3 mt-1 text-[12px]" style={{ color: '#888' }}>
-          <span>멤버 {g.memberCount}</span>
-          <span>글 {g.postCount}</span>
+          <span><T s="멤버 {memberCount}" vars={{ memberCount: g.memberCount }} /></span>
+          <span><T s="글 {postCount}" vars={{ postCount: g.postCount }} /></span>
           <GroupPolicy g={g} />
         </span>
       </span>
