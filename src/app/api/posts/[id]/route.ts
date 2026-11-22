@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getMember } from '@/lib/auth'
-import { deletePost, getPost, getPostAuthorMember } from '@/lib/data/posts'
-import { toPublicPost, assertNoIdentityLeak } from '@/lib/profile'
+import { deletePost, getPost } from '@/lib/data/posts'
+import { toPublicPostView, assertNoIdentityLeak } from '@/lib/profile'
 import { te } from '@/i18n/server'
 
 interface RouteParams {
@@ -21,12 +21,9 @@ export async function GET(_request: NextRequest, { params }: RouteParams) {
     if (!post) {
       return NextResponse.json({ error: await te('게시물을 찾을 수 없습니다.') }, { status: 404 })
     }
-    const authorMember = await getPostAuthorMember(post.author_id)
-    if (!authorMember) {
-      return NextResponse.json({ error: await te('게시물을 찾을 수 없습니다.') }, { status: 404 })
-    }
-    const pub = toPublicPost(post, authorMember, { archive_count: post.archive_count })
-    assertNoIdentityLeak(pub, [authorMember.email])
+    // 부캐 posts too: the hydrated author is nickname-only (0052), never the member behind it
+    const pub = toPublicPostView(post, { archive_count: post.archive_count })
+    assertNoIdentityLeak(pub, post.posted_as === 'nickname' && post.author_id ? [post.author_id] : [])
     return NextResponse.json({
       post: {
         ...pub,

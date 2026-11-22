@@ -160,6 +160,34 @@ export type PostPublicView = {
   archive_count?: number
 }
 
+/**
+ * Public view from an already-hydrated post (its author is the 부캐 on nickname rows — never the member).
+ * Use this when the member behind the row isn't (and mustn't be) known, e.g. 부캐 posts since 0052.
+ */
+export function toPublicPostView(
+  post: Post & { author: PublicAuthor },
+  extras?: { archive_count?: number }
+): PostPublicView {
+  return {
+    id: post.id,
+    title: post.title,
+    content: post.content,
+    source_note: post.source_note,
+    url: post.url,
+    link_title: post.link_title,
+    link_description: post.link_description,
+    link_image: post.link_image,
+    link_site_name: post.link_site_name,
+    link_favicon: post.link_favicon,
+    link_type: post.link_type,
+    posted_as: post.posted_as,
+    author: post.author,
+    is_agent_posted: post.is_agent_posted,
+    created_at: post.created_at,
+    archive_count: extras?.archive_count,
+  }
+}
+
 export function toPublicPost(
   post: Post,
   member: Member,

@@ -6,7 +6,6 @@ import { getMember, isDevMode } from '@/lib/auth'
 import {
   listPosts,
   getPost,
-  getPostAuthorMember,
   getProductDetails,
   createProduct,
   getToolboxEntry,
@@ -18,7 +17,7 @@ import { devArchiveBackend } from '@/lib/data/archive'
 import { toAgentArchiveItem } from '@/lib/archive-rules'
 import {
   publicAuthorLabel,
-  toPublicPost,
+  toPublicPostView,
   assertNoIdentityLeak,
 } from '@/lib/profile'
 import { TOOLBOX_ENV_LABEL } from '@/lib/toolbox-rules'
@@ -204,10 +203,8 @@ async function handleToolsCall(name: string, args: Record<string, unknown> = {})
   if (name === 'read_post') {
     const post = await getPost(String(args.postId))
     if (!post) return { error: '게시물을 찾을 수 없습니다.' }
-    const authorMember = await getPostAuthorMember(post.author_id)
-    if (!authorMember) return { error: '작성자를 찾을 수 없습니다.' }
-    const pub = toPublicPost(post, authorMember, { archive_count: post.archive_count })
-    assertNoIdentityLeak(pub, [authorMember.email])
+    const pub = toPublicPostView(post, { archive_count: post.archive_count })
+    assertNoIdentityLeak(pub, post.posted_as === 'nickname' && post.author_id ? [post.author_id] : [])
     return {
       ...pub,
       authorLabel: publicAuthorLabel(pub.author),

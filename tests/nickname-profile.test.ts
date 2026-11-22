@@ -118,3 +118,17 @@ describe('실명/별명 연결 및 이메일 유출 방지', () => {
     }
   })
 })
+
+describe('부캐 posts in the single-post API / MCP read_post (nickname-only author)', () => {
+  it('toPublicPostView keeps the hydrated 부캐 author and never the member', async () => {
+    const { toPublicPostView } = await import('@/lib/profile')
+    const post = MOCK_POSTS.find((p) => p.posted_as === 'nickname')!
+    const member = MOCK_MEMBERS.find((m) => m.id === post.author_id)!
+    const pub = toPublicPostView({ ...post, author: toPublicAuthor(member, 'nickname') })
+    expect(pub.author.kind).toBe('nickname')
+    const text = JSON.stringify(pub)
+    expect(text).not.toContain(member.id)
+    expect(text).not.toContain(member.display_name)
+    expect(collectForbiddenKeys(pub)).toEqual([])
+  })
+})

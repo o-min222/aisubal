@@ -4,7 +4,7 @@ import {
   MOCK_POSTS,
   MOCK_TRENDING,
 } from '@/lib/mock-data'
-import { nicknameProfilePublicId, toPublicAuthor, toPublicPost, assertNoIdentityLeak } from '@/lib/profile'
+import { nicknameProfilePublicId, toPublicAuthor, toPublicPost, toPublicPostView, assertNoIdentityLeak } from '@/lib/profile'
 import { aggregateMentionsFromPosts } from '@/lib/data/toolbox'
 import { archiveSaveCounts } from '@/lib/data/archive'
 import type { AgentInteraction, Asset, LinkPreview, Member, Post, PostAs } from '@/lib/supabase/types'
@@ -322,14 +322,9 @@ export async function getPostAuthorMember(authorId: string | null): Promise<Memb
 
 export async function listPublicPosts() {
   const posts = await listPosts()
-  const authors = await Promise.all(posts.map((p) => getPostAuthorMember(p.author_id)))
-  const result = []
-  for (const [i, p] of posts.entries()) {
-    const authorMember = authors[i]
-    if (!authorMember) continue
-    const pub = toPublicPost(p, authorMember, { archive_count: p.archive_count })
-    assertNoIdentityLeak(pub, [authorMember.email])
-    result.push(pub)
-  }
-  return result
+  return posts.map((p) => {
+    const pub = toPublicPostView(p, { archive_count: p.archive_count })
+    assertNoIdentityLeak(pub, p.posted_as === 'nickname' && p.author_id ? [p.author_id] : [])
+    return pub
+  })
 }
