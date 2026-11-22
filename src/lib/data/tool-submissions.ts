@@ -28,10 +28,12 @@ export type Submission = {
   duplicateOf: { id: string; slug: string; name: string } | null
   snapshot: PageSnapshot | null
   snapshotAt: string | null
+  /** P-4: an admin's AI recommended approval; a human must confirm it. */
+  aiRecommended?: { at: string; by: string | null; note: string | null } | null
 }
 export type ReviewLogItem = {
   id: string
-  action: 'submitted' | 'edited' | 'approved' | 'rejected' | 'withdrawn'
+  action: 'submitted' | 'edited' | 'approved' | 'rejected' | 'withdrawn' | 'ai_recommended'
   actorKind: 'agent' | 'member'
   actorLabel: string
   reason: string | null
@@ -60,11 +62,14 @@ type Row = {
   duplicate_of: string | null
   snapshot: PageSnapshot | null
   snapshot_at: string | null
+  ai_recommended_at?: string | null
+  ai_recommended_label?: string | null
+  ai_recommended_note?: string | null
   entry?: { id: string; slug: string } | null
   dup?: { id: string; slug: string; name: string } | null
 }
 const COLS =
-  'id, submitter_id, name, one_liner, description, url, type, tags, note, status, reason, agent_label, reviewer_label, reviewed_at, created_at, entry_id, duplicate_of, snapshot, snapshot_at, entry:toolbox_entries!tool_submissions_entry_id_fkey(id, slug), dup:toolbox_entries!tool_submissions_duplicate_of_fkey(id, slug, name)'
+  'id, submitter_id, name, one_liner, description, url, type, tags, note, status, reason, agent_label, reviewer_label, reviewed_at, created_at, entry_id, duplicate_of, snapshot, snapshot_at, ai_recommended_at, ai_recommended_label, ai_recommended_note, entry:toolbox_entries!tool_submissions_entry_id_fkey(id, slug), dup:toolbox_entries!tool_submissions_duplicate_of_fkey(id, slug, name)'
 
 function fromRow(r: Row): Submission {
   return {
@@ -87,6 +92,7 @@ function fromRow(r: Row): Submission {
     duplicateOf: r.dup ?? null,
     snapshot: r.snapshot,
     snapshotAt: r.snapshot_at,
+    aiRecommended: r.ai_recommended_at ? { at: r.ai_recommended_at, by: r.ai_recommended_label ?? null, note: r.ai_recommended_note ?? null } : null,
   }
 }
 
@@ -102,7 +108,7 @@ function mock(): MockState {
       snapshot: { requestedUrl: 'https://github.com/upstash/context7', finalUrl: 'https://github.com/upstash/context7', fetchedAt: ago(2), status: 200, contentType: 'text/html; charset=utf-8', title: 'upstash/context7: Context7 MCP Server -- Up-to-date code documentation for LLMs and AI code editors', description: 'Up-to-date code documentation for LLMs and AI code editors', siteName: 'GitHub', headings: ['Context7 MCP - Up-to-date Code Docs For Any Prompt', 'Installation', 'Available Tools'], text: 'Context7 pulls up-to-date, version-specific documentation and code examples straight from the source and places them into your prompt…', truncated: false, redirects: [] }, snapshotAt: ago(2) },
     { ...base, id: '5b0c1f7e-0002-4c1a-9a61-000000000002', submitterId: 'dev-user-id', name: 'Repomix', oneLiner: '저장소 전체를 AI가 읽기 좋은 한 파일로 묶어주는 CLI', url: 'https://github.com/yamadashy/repomix', type: 'cli_tool', tags: ['cli', 'context'], status: 'approved', submittedBy: '개발자님의 야간 리서처', createdAt: ago(50), reviewedBy: '개발자님의 리뷰 봇', reviewedAt: ago(30), reason: '설명을 조금 다듬어서 승인했어요.', entry: { id: 'tool-repomix', slug: 'yamadashy-repomix' } },
     { ...base, id: '5b0c1f7e-0003-4c1a-9a61-000000000003', submitterId: 'dev-user-id', name: '내 노션 템플릿', oneLiner: '할 일 관리 템플릿', url: 'https://notion.so/my-template', type: 'saas_service', tags: [], status: 'rejected', submittedBy: '개발자님의 CLI 봇', createdAt: ago(80), reviewedBy: '개발자님의 리뷰 봇', reviewedAt: ago(70), reason: 'AI로 일하는 데 쓰는 툴이 아니라 개인 템플릿이라 반려했어요. 아고라나 피드에 공유해 주세요.' },
-    { ...base, id: '5b0c1f7e-0004-4c1a-9a61-000000000004', submitterId: 'member-1', name: 'Playwright MCP', oneLiner: '브라우저 자동화 MCP', url: 'https://github.com/microsoft/playwright-mcp', type: 'mcp_server', tags: ['mcp', 'browser'], status: 'pending', submittedBy: '에이전트덕후님의 커서 집사', createdAt: ago(1) },
+    { ...base, id: '5b0c1f7e-0004-4c1a-9a61-000000000004', submitterId: 'member-1', name: 'Playwright MCP', oneLiner: '브라우저 자동화 MCP', url: 'https://github.com/microsoft/playwright-mcp', type: 'mcp_server', tags: ['mcp', 'browser'], status: 'pending', submittedBy: '에이전트덕후님의 커서 집사', createdAt: ago(1), aiRecommended: { at: ago(0.5), by: '개발자님의 검토 비서', note: '공식 Microsoft 저장소이고 스냅샷이 설명과 일치해요.' } },
     { ...base, id: '5b0c1f7e-0005-4c1a-9a61-000000000005', submitterId: 'member-2', name: 'Cursor Rules Pack KR', oneLiner: '한국어 주석·커밋 메시지 규칙 모음', url: 'https://github.com/example/cursor-rules-kr', type: 'cursor_rules', tags: ['rules', 'korean'], status: 'pending', submittedBy: '프롬프트수집가님의 GPT 비서', createdAt: ago(5) },
   ]
   const log: MockState['log'] = []
@@ -262,7 +268,24 @@ export function mockReviewDecide(id: string, action: 'approve' | 'edit' | 'rejec
   const changes: Record<string, unknown> = {}
   if (edits) for (const k of ['name', 'oneLiner', 'description', 'type'] as const) if (typeof edits[k] === 'string' && edits[k] !== s[k]) { changes[k] = { from: s[k], to: edits[k] }; (s as Record<string, unknown>)[k] = edits[k] }
   const now = new Date().toISOString()
-  if (action !== 'edit') Object.assign(s, { status: action === 'approve' ? 'approved' : 'rejected', reason, reviewedBy: label, reviewedAt: now, entry: action === 'approve' ? { id: `tool-${s.id.slice(0, 8)}`, slug: s.name.toLowerCase().replace(/[^a-z0-9]+/g, '-') } : null })
-  st.log.push({ id: `${id}-${Date.now()}`, submissionId: id, action: action === 'approve' ? 'approved' : action === 'reject' ? 'rejected' : 'edited', actorKind: 'agent', actorLabel: label, reason, changes: Object.keys(changes).length ? changes : null, createdAt: now })
-  return { id, status: s.status, reviewedBy: s.reviewedBy, changes }
+  // P-4: approve over MCP only recommends; an admin confirms in the web admin
+  if (action === 'approve') s.aiRecommended = { at: now, by: label, note: reason }
+  if (action === 'reject') Object.assign(s, { status: 'rejected', reason, reviewedBy: label, reviewedAt: now, entry: null })
+  st.log.push({ id: `${id}-${Date.now()}`, submissionId: id, action: action === 'approve' ? 'ai_recommended' : action === 'reject' ? 'rejected' : 'edited', actorKind: 'agent', actorLabel: label, reason, changes: Object.keys(changes).length ? changes : null, createdAt: now })
+  return { id, status: s.status, reviewedBy: s.reviewedBy, changes, ...(action === 'approve' ? { awaitingHumanConfirm: true, confirmIn: '/admin/tool-reviews' } : {}) }
+}
+
+/** P-4: an admin publishes an AI-recommended submission (one click, web admin). */
+export async function confirmRecommendation(id: string): Promise<{ slug: string }> {
+  if (isMock()) {
+    const s = mock().subs.find((x) => x.id === id)
+    if (!s || s.status !== 'pending' || !s.aiRecommended) throw new Error('not_recommended')
+    const slug = s.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')
+    Object.assign(s, { status: 'approved', reviewedBy: `관리자 (AI 추천: ${s.aiRecommended.by ?? '?'})`, reviewedAt: new Date().toISOString(), reason: s.aiRecommended.note ?? s.reason, entry: { id: `tool-${s.id.slice(0, 8)}`, slug } })
+    return { slug }
+  }
+  const supabase = await sb()
+  const { data, error } = await supabase.rpc('tools_review_confirm', { p_id: id })
+  if (error) throw new Error(error.message)
+  return { slug: String((data as { slug?: string } | null)?.slug ?? '') }
 }

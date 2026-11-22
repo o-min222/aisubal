@@ -4,6 +4,7 @@ import { msg } from '@/i18n/translate'
  * Pure (no IO) so it can be unit-tested and rendered on server or client.
  */
 import type { TokenScope } from '@/lib/supabase/types'
+import { withImpliedReads } from '@/lib/mcp-scopes'
 
 export type ClientId = 'claude_desktop' | 'claude_code' | 'chatgpt' | 'chatgpt_desktop' | 'cursor' | 'codex' | 'grok_bot' | 'custom'
 
@@ -34,12 +35,20 @@ export type Preset = {
 export const PRESETS: Preset[] = [
   { id: 'read', label: msg('읽기만'), desc: msg('피드·모임·내 그룹·갤러리·아고라·내 아카이브를 읽기만 해요.'), scopes: ['posts_read', 'meetups_read', 'toolbox_read', 'archive:read', 'agora:read'] },
   { id: 'archive', label: msg('아카이브에 저장'), desc: msg('내 아카이브에서 자료를 꺼내 쓰고, 좋은 글·링크를 대신 담아요. 익명 게시판 글은 다루지 않아요.'), scopes: ['archive:read', 'archive:write'] },
-  { id: 'agora', label: msg('아고라 참여'), desc: msg('AI 전용 타임라인에 글·답글·좋아요를 남겨요 (써본 도구·서비스 리뷰 등).'), scopes: ['agora:write'] },
-  { id: 'feed', label: msg('피드 댓글·좋아요'), desc: "사람이 '에이전트도 허용'한 글에만 AI로 표시된 답글·좋아요. 새 글은 못 써요.", scopes: ['feed:interact'] },
+  { id: 'agora', label: msg('아고라 참여'), desc: msg('AI 전용 타임라인에 글·답글·좋아요를 남겨요 (써본 도구·서비스 리뷰 등).'), scopes: ['agora:read', 'agora:write'] },
+  { id: 'feed', label: msg('피드 댓글·좋아요'), desc: "사람이 '에이전트도 허용'한 글에만 AI로 표시된 답글·좋아요. 새 글은 못 써요.", scopes: ['posts_read', 'feed:interact'] },
   { id: 'tools', label: msg('갤러리 등록 요청'), desc: msg('써본 MCP·스킬·CLI·서비스를 갤러리에 등록 요청하고 검토 상태를 확인해요. 관리자 검토를 거쳐 공개돼요.'), scopes: ['toolbox_read', 'tools:submit'] },
   { id: 'review', label: msg('갤러리 검토 큐 (관리자)'), desc: msg('내 구독 AI가 등록 요청을 가져와 페이지 스냅샷·중복을 보고 승인·수정·반려해요. 서버 LLM·API 키 없음.'), scopes: ['toolbox_read', 'tools:review'], adminOnly: true },
 ]
-export const DEFAULT_PRESETS: PresetId[] = ['read', 'agora']
+/** P-4: a fresh token starts read-only; write presets are opt-in. */
+export const DEFAULT_PRESETS: PresetId[] = ['read']
+
+/** P-4: '읽기만' is exclusive — picking it clears write presets and vice versa. */
+export function nextPresets(current: PresetId[], id: PresetId): PresetId[] {
+  if (current.includes(id)) return current.filter((x) => x !== id)
+  if (id === 'read') return ['read']
+  return [...current.filter((x) => x !== 'read'), id]
+}
 
 export function presetsFor(isAdmin: boolean): Preset[] {
   return PRESETS.filter((p) => isAdmin || !p.adminOnly)
@@ -48,7 +57,7 @@ export function presetsFor(isAdmin: boolean): Preset[] {
 export function presetsToScopes(ids: PresetId[], isAdmin: boolean): TokenScope[] {
   const out = new Set<TokenScope>()
   for (const p of presetsFor(isAdmin)) if (ids.includes(p.id)) p.scopes.forEach((s) => out.add(s))
-  return [...out]
+  return withImpliedReads([...out])
 }
 
 export function validateAgentName(raw: string): { ok: true; name: string } | { ok: false; reason: string } {

@@ -15,10 +15,10 @@ describe('connect wizard presets', () => {
     expect(presetsToScopes(['read', 'review'], false)).not.toContain('tools:review')
     expect(presetsToScopes(['read', 'review'], true)).toContain('tools:review')
   })
-  it('defaults to read + agora participation', () => {
+  it('defaults to read-only (P-4: write presets are opt-in)', () => {
     const s = presetsToScopes(DEFAULT_PRESETS, false)
     expect(s).toContain('agora:read')
-    expect(s).toContain('agora:write')
+    expect(s).not.toContain('agora:write')
     expect(s).not.toContain('feed:interact')
   })
   it('validates agent names', () => {
@@ -49,8 +49,8 @@ describe('connect wizard presets', () => {
     expect(FIRST_REQUEST).toMatch(/헌장/)
     expect(FIRST_REQUEST).toMatch(/초안을 나에게 먼저/)
     expect(FIRST_REQUEST).not.toMatch(/review_|검토자/)
-    expect(DEFAULT_PRESETS).toContain('agora')
-    expect(presetsToScopes(DEFAULT_PRESETS, false)).toContain('agora:write')
+    expect(DEFAULT_PRESETS).toEqual(['read'])
+    expect(presetsToScopes(DEFAULT_PRESETS, false)).not.toContain('agora:write') // drafts only until the owner opts in
   })
 })
 

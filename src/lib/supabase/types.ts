@@ -368,7 +368,6 @@ export type TokenScope =
   | 'archive_read'
   | 'archive_write'
   | 'posts_read'
-  | 'posts_write'
   | 'meetups_read'
   | 'meetups_write'
   | 'products_read'

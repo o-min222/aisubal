@@ -1718,6 +1718,17 @@ const en: Record<string, string> = {
   "내가 쓰는 것과 함께 많이 쓰는 것부터 보여줘요. 이미 쓰는 건 빼요.": "Shows what's most used alongside what you use, minus what you already use.",
   "제작자": "Maker",
   "갤러리 검색": "Search the Gallery",
+  "‘갤러리 검토’ 권한으로 {connect}한 뒤 아래 메시지를 보내세요. 반려는 AI가 MCP로 처리하고, AI가 추천한 승인은 여기서 ‘승인 확정’을 눌러야 공개돼요. 모두 기록돼요.": "Connect {connect} with the ‘Gallery review’ permission, then send the message below. Your AI rejects over MCP; approvals it recommends go live only after you press ‘Confirm’ here. Everything is logged.",
+  "관리자만 할 수 있어요.": "Only admins can do this.",
+  "같은 주소가 이미 갤러리에 있어요.": "That URL is already in the Gallery.",
+  "이미 처리됐거나 AI 추천 상태가 아니에요.": "Already decided, or not recommended by AI.",
+  "승인하지 못했어요.": "Couldn't approve it.",
+  "‘{name}’을(를) 갤러리에 공개할까요?": "Publish ‘{name}’ to the Gallery?",
+  "갤러리에 공개했어요": "Published to the Gallery",
+  "공개 중…": "Publishing…",
+  "승인 확정": "Confirm",
+  "AI 추천": "AI recommended",
+  "AI 추천 메모": "AI note",
 }
 
 export default en

@@ -5,6 +5,7 @@ import type { DupCandidate, ReviewLogItem, Submission } from '@/lib/data/tool-su
 import { DUP_REASON_LABEL, LOG_ACTION_LABEL, STATUS_LABEL, STATUS_STYLE, isStale } from '@/lib/tool-review'
 import { TOOL_TYPE_CHIP } from '@/lib/tool-rules'
 import { WithdrawButton } from './withdraw-button'
+import { ConfirmRecommendation } from './confirm-recommendation'
 import { T } from '@/i18n/t'
 
 const host = (u: string) => {
@@ -36,6 +37,11 @@ export function SubmissionRow({ s, mode, dups = [], log = [], open = false }: { 
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-1.5 flex-wrap min-w-0">
             <StatusChip status={s.status} />
+            {s.status === 'pending' && s.aiRecommended && (
+              <span className="crow-chip" style={{ background: 'var(--n-f2f2f2)', color: 'var(--n-333)' }} title={s.aiRecommended.by ?? undefined}>
+                <T>AI 추천</T>
+              </span>
+            )}
             <span className="font-semibold text-[15px] text-n-111 truncate max-w-full">{s.name}</span>
             <span className="cat-chip">{typeLabel}</span>
           </div>
@@ -52,7 +58,13 @@ export function SubmissionRow({ s, mode, dups = [], log = [], open = false }: { 
           </div>
         </div>
         {mode === 'mine' && s.status === 'pending' && <WithdrawButton id={s.id} name={s.name} />}
+        {mode === 'admin' && s.status === 'pending' && s.aiRecommended && <ConfirmRecommendation id={s.id} name={s.name} />}
       </div>
+      {mode === 'admin' && s.status === 'pending' && s.aiRecommended?.note && (
+        <p className="sub-reason">
+          <b><T>AI 추천 메모</T></b> {s.aiRecommended.note}
+        </p>
+      )}
       {s.reason && (
         <p className="sub-reason">
           <b>{s.status === 'rejected' ? <T>반려 사유</T> : <T>검토 메모</T>}</b> {s.reason}

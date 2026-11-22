@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getMember } from '@/lib/auth'
 import { issueApiToken, listApiTokens, revokeApiToken } from '@/lib/data/tokens'
 import { z } from 'zod'
+import { withImpliedReads } from '@/lib/mcp-scopes'
 import { CLIENT_IDS, type ClientId } from '@/lib/agent-connect'
 import { msg } from '@/i18n/translate'
 import { te } from '@/i18n/server'
@@ -16,7 +17,6 @@ const createTokenSchema = z.object({
         'archive_read',
         'archive_write',
         'posts_read',
-        'posts_write',
         'meetups_read',
         'meetups_write',
         'products_read',
@@ -79,7 +79,7 @@ export async function POST(request: NextRequest) {
     if (data.scopes.includes('tools:review') && !member.is_admin) {
       return NextResponse.json({ error: await te('갤러리 검토 큐 권한은 관리자만 만들 수 있어요.') }, { status: 403 })
     }
-    const { token } = await issueApiToken(member.id, data.name, data.scopes, {
+    const { token } = await issueApiToken(member.id, data.name, withImpliedReads(data.scopes), {
       agentName: data.agentName,
       agentModel: data.agentModel,
       client: data.client ?? null,

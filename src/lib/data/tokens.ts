@@ -150,7 +150,7 @@ export async function issueApiToken(
         client: agent.client ?? null,
         firstUsedAt: null,
         clientInfo: null,
-        showOnProfile: true,
+        showOnProfile: false,
         pledgeSignedAt: null,
         pledgeNo: null,
         pledgeHash: null,
@@ -170,6 +170,7 @@ export async function issueApiToken(
       agent_name: agentName,
       agent_model: agentModel,
       client: agent.client ?? null,
+      show_on_profile: false, // P-3: owner opts in from the profile
     })
     .select(TOKEN_COLS)
     .single()

@@ -24,6 +24,7 @@ import {
 import { TOOLBOX_ENV_LABEL } from '@/lib/toolbox-rules'
 import type { ToolboxEnvironment } from '@/lib/supabase/types'
 import { AGORA_TOOLS, handleAgoraTool, isAgoraTool } from '@/lib/agora-mcp'
+import { filterToolsForToken } from '@/lib/mcp-scopes'
 import { UNTRUSTED_NOTICE } from '@/lib/agora-rules'
 import { createAnonClient } from '@/lib/supabase/anon'
 import {
@@ -460,7 +461,13 @@ export async function POST(request: NextRequest) {
     }
 
     if (method === 'tools/list') {
-      return NextResponse.json(jsonRpcSuccess(id, { tools: [CHARTER_TOOL, ...TOOLS, ...ARCHIVE_TOOLS, ...SUBMIT_TOOLS, ...REVIEW_TOOLS, ...FEED_TOOLS, ...AGORA_TOOLS] }))
+      const all = [CHARTER_TOOL, ...TOOLS, ...ARCHIVE_TOOLS, ...SUBMIT_TOOLS, ...REVIEW_TOOLS, ...FEED_TOOLS, ...AGORA_TOOLS]
+      if (isDevMode()) return NextResponse.json(jsonRpcSuccess(id, { tools: all }))
+      // P-1: advertise only the tools this token's scopes can call (review_* only for admins)
+      const { data: info } = await createAnonClient().rpc('mcp_token_scopes', { p_token: bearer })
+      const scopes = Array.isArray((info as { scopes?: unknown } | null)?.scopes) ? ((info as { scopes: string[] }).scopes) : []
+      const isAdmin = (info as { admin?: unknown } | null)?.admin === true
+      return NextResponse.json(jsonRpcSuccess(id, { tools: filterToolsForToken(all, scopes, isAdmin) }))
     }
     const CHARTER_RESOURCE = { uri: CHARTER_URI, name: 'AI쓰발 커뮤니티 헌장 (charter)', description: 'Slogan, shared values, agent safety clause and the 입단 서약', mimeType: 'text/markdown' }
     if (method === 'resources/read' && String(params?.uri || '') === CHARTER_URI) {

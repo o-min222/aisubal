@@ -20,8 +20,8 @@ export async function generateMetadata() {
 const PAGE = 20
 
 /**
- * Admin review queue (read-only on the web). Decisions are made by the
- * admin's own AI over MCP with `tools:review` (review_approve / review_reject).
+ * Admin review queue. The admin's AI reviews over MCP (`tools:review`): rejects
+ * directly, approvals only as 'AI 추천' that a human confirms here (P-4).
  */
 export default async function ToolReviewsPage({ searchParams }: { searchParams: Promise<{ status?: string; page?: string }> }) {
   const st = await getT()
@@ -42,7 +42,7 @@ export default async function ToolReviewsPage({ searchParams }: { searchParams: 
           <Bot className="w-4 h-4" /> <T>내 AI로 검토하기</T>
         </h2>
         <p className="text-[13px] text-n-555">
-          <T s="‘갤러리 검토’ 권한으로 {connect}한 뒤 아래 메시지를 보내세요. 승인·반려는 AI가 MCP로 처리하고 모두 기록돼요." vars={{ connect: <Link href="/agents/connect?preset=review" className="text-c-06c"><T>AI를 연결</T></Link> }} />
+          <T s="‘갤러리 검토’ 권한으로 {connect}한 뒤 아래 메시지를 보내세요. 반려는 AI가 MCP로 처리하고, AI가 추천한 승인은 여기서 ‘승인 확정’을 눌러야 공개돼요. 모두 기록돼요." vars={{ connect: <Link href="/agents/connect?preset=review" className="text-c-06c"><T>AI를 연결</T></Link> }} />
         </p>
         <CodeBlock code={reviewPrompt()} label={msg('검토 메시지')} wrap />
       </section>

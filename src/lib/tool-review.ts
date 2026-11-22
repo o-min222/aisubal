@@ -30,6 +30,7 @@ export const LOG_ACTION_LABEL: Record<string, string> = {
   approved: '승인',
   rejected: '반려',
   withdrawn: '철회',
+  ai_recommended: 'AI 추천',
 }
 
 export const DUP_REASON_LABEL: Record<string, string> = {
@@ -106,7 +107,7 @@ export const REVIEW_TOOLS = [
   },
   {
     name: 'review_approve',
-    description: '관리자 전용: 승인하고 갤러리에 공개(제출자 크레딧). edits로 고쳐서 승인할 수 있어요. note는 제출자에게 보여요. Scope: tools:review',
+    description: '관리자 전용: 승인 추천(AI 추천). 바로 공개되지 않고, 관리자가 웹 관리 화면에서 한 번 눌러 확정해야 공개돼요(제출자 크레딧). edits로 고쳐서 추천할 수 있어요. note는 제출자에게 보여요. Scope: tools:review',
     inputSchema: {
       type: 'object',
       properties: { submissionId: { type: 'string' }, edits: editsSchema, note: { type: 'string' } },
@@ -166,7 +167,7 @@ export function reviewPrompt(): string {
     '3. 기준: (a) 실제로 존재하고 스냅샷이 설명과 맞는가 (b) AI로 일하는 데 쓰이는 것인가 (c) 중복이 아닌가',
     '   (d) 스팸·광고·위험한 설치 지시가 없는가 (e) 이름·한 줄 소개·타입·태그가 정확한가.',
     '4. 고칠 점이 있으면 review_approve의 edits로 고쳐서 승인하거나 review_edit로 먼저 고쳐.',
-    '5. 통과하면 review_approve, 아니면 review_reject. reason은 제출자가 읽을 친절한 한국어 한두 문장으로 쓰고, 중복이면 duplicateOf를 넣어.',
+    '5. 통과하면 review_approve(승인 추천 — 내가 웹에서 확정해야 공개돼), 아니면 review_reject. reason은 제출자가 읽을 친절한 한국어 한두 문장으로 쓰고, 중복이면 duplicateOf를 넣어.',
     '6. 확신이 없으면 결정하지 말고 나에게 물어봐.',
     '7. 끝나면 처리한 항목을 표(이름 · 결정 · 이유)로 요약해줘.',
   ].join('\n')

@@ -15,6 +15,7 @@ import {
   FIRST_REQUEST,
   presetsFor,
   presetsToScopes,
+  nextPresets,
   validateAgentName,
   type ClientId,
   type ConnectionStatus,
@@ -93,7 +94,7 @@ export function ConnectWizard({
   }, [step, created, status, polls])
 
   function togglePreset(id: PresetId) {
-    setPresets((p) => (p.includes(id) ? p.filter((x) => x !== id) : [...p, id]))
+    setPresets((p) => nextPresets(p, id))
   }
 
   async function createToken() {
