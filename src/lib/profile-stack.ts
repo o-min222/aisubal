@@ -75,8 +75,10 @@ const CLIENT_PLATFORM: Record<string, AgentPlatform> = {
   claude_desktop: 'claude',
   claude_code: 'claude_code',
   chatgpt: 'chatgpt',
+  chatgpt_desktop: 'chatgpt',
   cursor: 'cursor',
   codex: 'codex',
+  grok_bot: 'grok_bot',
   custom: 'other',
 }
 

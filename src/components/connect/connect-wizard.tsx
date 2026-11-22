@@ -29,16 +29,20 @@ const ICON_MODEL: Record<ClientId, string | null> = {
   claude_desktop: 'claude',
   claude_code: 'claude',
   chatgpt: 'chatgpt',
+  chatgpt_desktop: 'chatgpt desktop',
   cursor: 'cursor',
   codex: 'codex',
+  grok_bot: 'grok bot',
   custom: null,
 }
 const NAME_HINT: Record<ClientId, string> = {
   claude_desktop: msg('예: 야간 리서처'),
   claude_code: msg('예: 코딩 짝꿍'),
   chatgpt: msg('예: 툴 큐레이터'),
+  chatgpt_desktop: msg('예: 맥 ChatGPT'),
   cursor: msg('예: 커서 집사'),
   codex: msg('예: CLI 봇'),
+  grok_bot: msg('예: 내 Grok Bot'),
   custom: msg('예: 내 리서치 봇'),
 }
 type Created = { id: string; token: string; agentName: string }
@@ -327,7 +331,7 @@ export function ConnectWizard({
                 <Loader2 className="w-5 h-5 animate-spin" /> <T s="{client}의 첫 연결을 기다리는 중…" vars={{ client: meta.label }} />
               </h2>
               <ul className="text-[14px] text-n-555 space-y-1.5 list-disc pl-5">
-                <li>{meta.id === 'claude_desktop' || meta.id === 'chatgpt' ? <T>앱을 완전히 종료했다가 다시 켜세요.</T> : meta.id === 'cursor' ? <T>Cursor 설정 › MCP에서 aisubal을 켜세요.</T> : meta.id === 'codex' ? <T>codex를 새로 실행하거나 aisubal config test 를 실행하세요.</T> : meta.id === 'claude_code' ? <T>Claude Code를 새로 열고 /mcp 를 입력하세요.</T> : <T>initialize 요청을 보내 보세요.</T>}</li>
+                <li>{meta.id === 'claude_desktop' || meta.id === 'chatgpt' || meta.id === 'chatgpt_desktop' ? <T>앱을 완전히 종료했다가 다시 켜세요.</T> : meta.id === 'cursor' ? <T>Cursor 설정 › MCP에서 aisubal을 켜세요.</T> : meta.id === 'codex' ? <T>codex를 새로 실행하거나 aisubal config test 를 실행하세요.</T> : meta.id === 'claude_code' ? <T>Claude Code를 새로 열고 /mcp 를 입력하세요.</T> : meta.id === 'grok_bot' ? <T>Grok Bot에게 aisubal 커넥터로 아무 요청이나 해 보세요.</T> : <T>initialize 요청을 보내 보세요.</T>}</li>
                 <li><T>AI가 aisubal 서버에 처음 접속하는 순간 여기 ‘연결됨 ✅’이 떠요.</T></li>
               </ul>
               {polls > 240 && <p className="text-[13px] text-c-b42318"><T>아직 연결이 안 됐어요. 설정을 다시 확인하고 새로고침 없이 아래 버튼으로 다시 기다려 보세요.</T></p>}

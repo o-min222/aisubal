@@ -6,15 +6,17 @@ import { msg } from '@/i18n/translate'
 import type { TokenScope } from '@/lib/supabase/types'
 import { reviewPrompt, submitPrompt } from '@/lib/tool-review'
 
-export type ClientId = 'claude_desktop' | 'claude_code' | 'chatgpt' | 'cursor' | 'codex' | 'custom'
+export type ClientId = 'claude_desktop' | 'claude_code' | 'chatgpt' | 'chatgpt_desktop' | 'cursor' | 'codex' | 'grok_bot' | 'custom'
 
 export const CLIENTS: Array<{ id: ClientId; label: string; model: string; hint: string }> = [
-  { id: 'claude_desktop', label: 'Claude Desktop', model: 'Claude Desktop', hint: msg('Mac · Windows 앱') },
+  { id: 'claude_desktop', label: msg('Claude 데스크톱'), model: 'Claude Desktop', hint: msg('Mac · Windows 앱') },
   { id: 'claude_code', label: 'Claude Code', model: 'Claude Code', hint: msg('터미널 코딩 에이전트') },
-  { id: 'chatgpt', label: 'ChatGPT', model: 'ChatGPT', hint: msg('데스크톱 앱') },
+  { id: 'chatgpt', label: 'ChatGPT', model: 'ChatGPT', hint: msg('웹 · 개발자 모드 커넥터') },
+  { id: 'chatgpt_desktop', label: msg('ChatGPT 데스크톱'), model: 'ChatGPT Desktop', hint: msg('Mac · Windows 앱') },
   { id: 'cursor', label: 'Cursor', model: 'Cursor', hint: msg('에디터 에이전트') },
   { id: 'codex', label: 'Codex · CLI', model: 'Codex', hint: 'Codex CLI · aisubal CLI' },
-  { id: 'custom', label: msg('직접 만든 에이전트'), model: '', hint: msg('MCP 클라이언트 · 스크립트') },
+  { id: 'grok_bot', label: 'Grok Bot', model: 'Grok Bot', hint: msg('원격 MCP 커넥터 (URL + 토큰)') },
+  { id: 'custom', label: msg('직접 입력'), model: '', hint: msg('MCP 클라이언트 · 스크립트') },
 ]
 export const CLIENT_IDS = CLIENTS.map((c) => c.id)
 export const clientById = (id: string | null | undefined) => CLIENTS.find((c) => c.id === id) ?? null
@@ -98,11 +100,21 @@ export function configFor(client: ClientId, mcpUrl: string, token: string, origi
       }
     case 'chatgpt':
       return {
-        intro: 'ChatGPT 데스크톱 앱에서 연결해요. (ChatGPT 웹은 아직 OAuth 서버만 지원해서 토큰으로 연결할 수 없어요.)',
+        intro: 'ChatGPT 웹의 커스텀 커넥터는 설정 › 커넥터 › 고급 › 개발자 모드에서 추가해요. 다만 지금은 OAuth 또는 인증 없는 서버만 받아서, 토큰(Bearer)을 쓰는 AI쓰발은 웹에서 바로 연결되지 않아요.',
         steps: [
-          { title: 'MCP 서버 추가', body: 'ChatGPT 데스크톱 › 설정 › MCP 서버 › 서버 추가 › Streamable HTTP' },
-          { title: 'URL', lang: 'text', code: mcpUrl },
-          { title: '헤더', lang: 'text', code: `Authorization: ${auth}` },
+          { title: '지금 쓸 수 있는 방법', body: 'ChatGPT 데스크톱 앱(헤더 지원) 또는 Codex CLI로 연결하세요. 같은 토큰을 쓰면 돼요.' },
+          { title: 'MCP 서버 URL', lang: 'text', code: mcpUrl },
+          { title: '인증 헤더', lang: 'text', code: `Authorization: ${auth}` },
+        ],
+        note: '개발자 모드·커넥터는 요금제(Plus·Pro·Business 등)와 워크스페이스 설정에 따라 보이지 않을 수 있어요. OAuth 연결을 지원하게 되면 여기에서 알려 드릴게요.',
+      }
+    case 'chatgpt_desktop':
+      return {
+        intro: 'ChatGPT 데스크톱 앱의 MCP(커넥터) 설정에 URL과 인증 헤더를 넣어요.',
+        steps: [
+          { title: 'MCP 서버 추가', body: 'ChatGPT 데스크톱 › 설정 › 커넥터(MCP) › 서버 추가 › Streamable HTTP' },
+          { title: 'MCP 서버 URL', lang: 'text', code: mcpUrl },
+          { title: '인증 헤더', lang: 'text', code: `Authorization: ${auth}` },
           {
             title: '또는 설정 파일로 (Codex와 같은 파일)',
             path: '~/.codex/config.toml',
@@ -110,6 +122,7 @@ export function configFor(client: ClientId, mcpUrl: string, token: string, origi
             code: `[mcp_servers.aisubal]\nurl = "${mcpUrl}"\nhttp_headers = { "Authorization" = "${auth}" }`,
           },
         ],
+        note: '커넥터(MCP) 메뉴는 앱 버전·요금제·개발자 모드 설정에 따라 없을 수 있어요. 안 보이면 앱을 업데이트하거나 Codex CLI로 연결하세요.',
       }
     case 'cursor': {
       const server = { url: mcpUrl, headers: { Authorization: auth } }
@@ -131,6 +144,18 @@ export function configFor(client: ClientId, mcpUrl: string, token: string, origi
           { title: 'Codex에 서버 추가', lang: 'bash', code: `codex mcp add aisubal --url ${mcpUrl} --bearer-token-env-var AISUBAL_TOKEN` },
           { title: 'aisubal CLI도 쓴다면', lang: 'bash', code: `aisubal config set server ${origin}\naisubal config set token "$AISUBAL_TOKEN"\naisubal config test` },
         ],
+      }
+    case 'grok_bot':
+      return {
+        intro: 'Grok Bot은 원격 MCP 서버를 URL과 토큰으로 연결해요. 커넥터(MCP 서버)를 추가할 때 아래 두 값을 붙여넣으세요.',
+        steps: [
+          { title: '커넥터 추가', body: 'Grok Bot › 커넥터(MCP) › 직접 추가 › 원격 MCP 서버 (Streamable HTTP)' },
+          { title: 'MCP 서버 URL', lang: 'text', code: mcpUrl },
+          { title: '인증 헤더', body: '헤더 이름은 Authorization, 값은 Bearer 로 시작해요.', lang: 'text', code: `Authorization: ${auth}` },
+          { title: '확인', body: 'Grok Bot에게 "aisubal 커넥터로 내 아카이브를 보여줘"라고 해 보세요. 연결 확인 화면에 바로 표시돼요.' },
+          { title: '또는 aisubal CLI로', body: 'Grok Bot이 셸을 쓸 수 있고 aisubal CLI가 설치돼 있다면 CLI로도 연결돼요.', lang: 'bash', code: `aisubal config set server ${origin}\naisubal config set token "${token}"\naisubal config test` },
+        ],
+        note: '토큰은 비밀번호와 같아요. 커넥터 설정 칸에만 넣고 채팅에는 붙여넣지 마세요.',
       }
     default:
       return {

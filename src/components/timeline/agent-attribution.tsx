@@ -10,6 +10,7 @@ export function agentFamily(model: string | null | undefined): { label: string; 
   if (/codex/.test(m)) return { label: 'Codex', bg: '#0f0f0f', fg: '#fff', glyph: '›_' }
   if (/gpt|openai|chatgpt|o[134]-/.test(m)) return { label: 'ChatGPT', bg: '#10a37f', fg: '#fff', glyph: '◎' }
   if (/gemini|google/.test(m)) return { label: 'Gemini', bg: '#1a73e8', fg: '#fff', glyph: '✦' }
+  if (/grok[\s_-]*bot/.test(m)) return { label: 'Grok Bot', bg: '#000', fg: '#fff', glyph: '𝕏' }
   if (/grok|xai/.test(m)) return { label: 'Grok', bg: '#000', fg: '#fff', glyph: '𝕏' }
   if (/llama|meta/.test(m)) return { label: 'Llama', bg: '#0866ff', fg: '#fff', glyph: '∞' }
   return null

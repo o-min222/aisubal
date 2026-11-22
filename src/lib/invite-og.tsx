@@ -23,7 +23,7 @@ async function loadFont(text: string): Promise<ArrayBuffer | null> {
 }
 
 /**
- * KakaoTalk / X / Slack preview card for /i/{code} in the given language.
+ * Link preview card (messengers, SMS apps, X, Slack…) for /i/{code} in the given language.
  * Crawlers send no cookies, so the locale comes from the URL (?lang=), which the
  * share link carries when the inviter uses a non-default language.
  */

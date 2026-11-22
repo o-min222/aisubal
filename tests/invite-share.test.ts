@@ -13,13 +13,14 @@ describe('invite share', () => {
     expect(inviteUrl('AXK8M2PQ')).toBe('https://aisubal.vercel.app/i/AXK8M2PQ')
     expect(inviteUrl('AXK8M2PQ', 'http://localhost:3000/')).toBe('http://localhost:3000/i/AXK8M2PQ')
   })
-  it('KakaoTalk message has the inviter nickname, site intro and the link on its own line', () => {
+  it('invite message has the inviter nickname, site intro and the link on its own line', () => {
     const t = inviteShareText('0mins', 'AXK8M2PQ')
     const lines = t.split('\n')
     expect(lines[0]).toContain('0mins님이 초대했어요')
     expect(t).toContain('초대 전용 AI 커뮤니티')
     expect(lines).toContain('https://aisubal.vercel.app/i/AXK8M2PQ')
     expect(t).not.toMatch(/@|이메일/)
+    expect(t).not.toMatch(/카카오|Kakao/i)
   })
   it('every status has a clear message', () => {
     for (const s of ['valid', 'used', 'inactive', 'invalid'] as const) expect(INVITE_STATUS_TEXT[s].length).toBeGreaterThan(5)

@@ -2029,3 +2029,8 @@ html:has(.reading-pane.is-open) body { overflow: hidden; }
 .mc-chip.mc-more { padding: 0 8px; color: var(--n-555); font-weight: 600; background: var(--n-f4f4f2); }
 .mc-chip-icon { width: 14px; height: 14px; font-size: 8.5px; }
 .svc-chips { display: flex; flex-wrap: wrap; gap: 4px; min-width: 0; }
+
+/* invites: the 3-step flow line */
+.invite-steps { list-style: none; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; margin: 10px 0 0; padding: 0; font-size: 12.5px; color: var(--n-555); }
+.invite-steps li { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 999px; background: var(--n-f2f2f2); font-weight: 500; }
+.invite-steps li + li::before { content: '→'; margin: 0 6px 0 -2px; color: var(--n-aaa); order: -1; }
