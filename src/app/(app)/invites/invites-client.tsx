@@ -55,7 +55,7 @@ export function InvitesClient({ inviterName, codes, codesActive, loadFailed }: {
           <Users className="w-6 h-6" /> <T>초대하기</T>
         </h1>
         <p className="text-sm text-n-666 mt-1">
-          <T>링크를 복사해 카카오톡·문자·메일 등 어디로든 보내세요. 받은 사람이 링크를 누르면 초대 코드가 자동으로 입력돼 바로 가입할 수 있어요.</T>{' '}
+          <T>링크를 복사해 카톡·문자·DM 어디로든 보내세요.</T>{' '}
           <T s="남은 초대 {n}장" vars={{ n: <b className="text-n-111">{available}</b> }} />
         </p>
         <ol className="invite-steps" aria-label={tx('초대 순서')}>

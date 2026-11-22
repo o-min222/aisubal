@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { inviteShareText, inviteUrl, normalizeInviteCode, INVITE_STATUS_TEXT } from '@/lib/invite-share'
+import { makeT } from '@/i18n/translate'
+import { DICTS } from '@/i18n/dict'
 import { readFileSync } from 'node:fs'
 
 describe('invite share', () => {
@@ -13,14 +15,18 @@ describe('invite share', () => {
     expect(inviteUrl('AXK8M2PQ')).toBe('https://aisubal.vercel.app/i/AXK8M2PQ')
     expect(inviteUrl('AXK8M2PQ', 'http://localhost:3000/')).toBe('http://localhost:3000/i/AXK8M2PQ')
   })
-  it('invite message has the inviter nickname, site intro and the link on its own line', () => {
+  it('invite text is two lines: who invited you, then the link (no separate code line)', () => {
     const t = inviteShareText('0mins', 'AXK8M2PQ')
-    const lines = t.split('\n')
-    expect(lines[0]).toContain('0mins님이 초대했어요')
-    expect(t).toContain('초대 전용 AI 커뮤니티')
-    expect(lines).toContain('https://aisubal.vercel.app/i/AXK8M2PQ')
+    expect(t.split('\n')).toEqual([
+      '0mins님이 당신을 AI쓰발에 초대했습니다. 초대받은 자만 들어올 수 있습니다.',
+      'https://aisubal.vercel.app/i/AXK8M2PQ',
+    ])
     expect(t).not.toMatch(/@|이메일/)
     expect(t).not.toMatch(/카카오|Kakao/i)
+  })
+  it('the English invite has the same two lines', () => {
+    const en = inviteShareText('0mins', 'AXK8M2PQ', undefined, makeT('en', DICTS.en), 'en')
+    expect(en.split('\n')).toEqual(['0mins has invited you to AI쓰발. Only the invited may enter.', 'https://aisubal.vercel.app/i/AXK8M2PQ?lang=en'])
   })
   it('every status has a clear message', () => {
     for (const s of ['valid', 'used', 'inactive', 'invalid'] as const) expect(INVITE_STATUS_TEXT[s].length).toBeGreaterThan(5)

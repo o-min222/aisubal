@@ -1,4 +1,4 @@
-/** Invite links (/i/{code}) and the ready-to-paste share text (any messenger, SMS, email). Pure: unit-tested. */
+/** Invite links (/i/{code}) and the short invite text (works in any messenger, SMS, DM or email). Pure: unit-tested. */
 
 export const INVITE_COOKIE = 'aisubal_invite'
 /** short-lived: long enough for Google login + coming back (30 min) */
@@ -22,9 +22,11 @@ export function inviteUrl(code: string, origin: string = SITE_ORIGIN, lang?: str
 
 import { interpolate, msg } from '@/i18n/translate'
 
-export const SITE_INTRO = msg('AI쓰발은 프롬프트·MCP·에이전트 스킬과 AI 툴 사용기를 나누는 초대 전용 AI 커뮤니티예요.')
+/** One-line description for the invite link preview and landing page. */
+export const INVITE_TAGLINE = msg('초대받은 자만 들어올 수 있습니다.')
 
-/** Ready-to-paste invite message for any app (the link line alone gets the OG preview card). */
+/** Two lines: who invited you, then the link on its own line (it gets the OG preview card).
+ * The code is already in the URL, so there's no separate code line. */
 export function inviteShareText(
   inviterName: string,
   code: string,
@@ -33,11 +35,8 @@ export function inviteShareText(
   lang?: string,
 ): string {
   return [
-    t(msg('[AI쓰발 초대장] {name}님이 초대했어요 🙌'), { name: inviterName }),
-    t(SITE_INTRO),
-    t(msg('아래 링크를 누르면 초대 코드가 자동으로 입력돼 바로 가입할 수 있어요.')),
+    t(msg('{name}님이 당신을 AI쓰발에 초대했습니다. 초대받은 자만 들어올 수 있습니다.'), { name: inviterName }),
     inviteUrl(code, origin, lang),
-    t(msg('(초대 코드 {code} · 1회용)'), { code }),
   ].join('\n')
 }
 

@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { CheckCircle2, AlertCircle } from 'lucide-react'
 import { getUserState } from '@/lib/auth'
 import { getInvitePreview } from '@/lib/data/invites'
-import { INVITE_STATUS_TEXT, SITE_INTRO, normalizeInviteCode } from '@/lib/invite-share'
+import { INVITE_STATUS_TEXT, INVITE_TAGLINE, normalizeInviteCode } from '@/lib/invite-share'
 import { InviteLandingActions } from '@/components/invite/invite-landing-actions'
 import { LocaleSwitch } from '@/components/i18n/locale-switch'
 import { LOCALE_META, isLocale } from '@/i18n/config'
@@ -21,11 +21,9 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
   const { lang } = await searchParams
   const locale = isLocale(lang) ? lang : await getLocale()
   const t = makeT(locale, DICTS[locale])
-  const preview = await getInvitePreview(code)
-  const who = preview.inviter?.displayName
-  const intro = t(SITE_INTRO)
-  const title = preview.status === 'valid' && who ? t('{name}님이 AI쓰발에 초대했어요', { name: who }) : t('AI쓰발 초대장')
-  const image = { url: `/i/${encodeURIComponent(code)}/og?lang=${locale}`, width: 1200, height: 630, alt: t('AI쓰발 초대장') }
+  const intro = t(INVITE_TAGLINE)
+  const title = t('AI쓰발에 초대되었습니다')
+  const image = { url: `/i/${encodeURIComponent(code)}/og?lang=${locale}`, width: 1200, height: 630, alt: title }
   return {
     title,
     description: intro,
@@ -67,9 +65,9 @@ export default async function InviteLandingPage({ params }: Props) {
           </span>
         )}
         <h1 className="mt-4 text-xl font-bold" style={{ color: 'var(--n-111)' }}>
-          {inviter && preview.status !== 'invalid' ? t('{name}님이 AI쓰발에 초대했어요', { name: inviter.displayName }) : t('AI쓰발 초대장')}
+          {inviter && preview.status !== 'invalid' ? t('{name}님이 당신을 AI쓰발에 초대했습니다', { name: inviter.displayName }) : t('AI쓰발에 초대되었습니다')}
         </h1>
-        <p className="mt-2 text-sm text-n-555 leading-relaxed">{t(SITE_INTRO)}</p>
+        <p className="mt-2 text-sm text-n-555 leading-relaxed">{t(INVITE_TAGLINE)}</p>
 
         <div
           className={`mt-5 rounded-xl px-3 py-2.5 text-sm flex items-start gap-2 text-left ${usable ? 'bg-c-eefbf3 text-c-17663a' : 'bg-c-fff4e5 text-c-8a4b00'}`}
@@ -85,7 +83,7 @@ export default async function InviteLandingPage({ params }: Props) {
         <div className="mt-6">
           {isMember ? (
             <div className="space-y-3">
-              <p className="text-sm text-n-555">{t('이미 AI쓰발 멤버예요. 이 초대 링크는 새로 오는 분을 위한 거예요.')}</p>
+              <p className="text-sm text-n-555">{t('이미 AI쓰발 멤버입니다. 이 초대장은 새로 들어올 사람을 위한 것입니다.')}</p>
               <Link href="/feed" className="btn btn-primary w-full justify-center min-h-[48px]">
                 {t('피드로 가기')}
               </Link>
@@ -96,7 +94,7 @@ export default async function InviteLandingPage({ params }: Props) {
         </div>
       </main>
       <p className="mt-6 text-xs text-n-999 text-center max-w-sm">
-        {t('초대받은 분만 가입할 수 있어요. 로그인에는 Google 계정만 쓰고, 이메일·실명은 다른 멤버에게 보이지 않아요.')}
+        {t('로그인에는 Google 계정만 씁니다. 이메일·실명은 다른 멤버에게 보이지 않습니다.')}
       </p>
       <div className="mt-4">
         <LocaleSwitch />

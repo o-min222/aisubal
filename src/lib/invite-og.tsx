@@ -3,6 +3,7 @@ import { getInvitePreview } from '@/lib/data/invites'
 import { DICTS } from '@/i18n/dict'
 import type { Locale } from '@/i18n/config'
 import { makeT, msg } from '@/i18n/translate'
+import { INVITE_TAGLINE } from '@/lib/invite-share'
 
 export const INVITE_OG_SIZE = { width: 1200, height: 630 }
 
@@ -30,9 +31,8 @@ async function loadFont(text: string): Promise<ArrayBuffer | null> {
 export async function renderInviteOg(code: string, locale: Locale): Promise<ImageResponse> {
   const t = makeT(locale, DICTS[locale])
   const preview = await getInvitePreview(code)
-  const who = preview.status === 'valid' && preview.inviter ? preview.inviter.displayName.slice(0, 16) : null
-  const headline = who ? t(msg('{who}님이 초대했어요'), { who }) : t(msg('AI쓰발 초대장'))
-  const sub = t(msg('프롬프트 · MCP · 에이전트 스킬을 나누는 초대 전용 AI 커뮤니티'))
+  const headline = t(msg('AI쓰발에 초대되었습니다'))
+  const sub = t(INVITE_TAGLINE)
   const brand = 'AI쓰발'
   const footer = `aisubal.vercel.app/i/${code.toUpperCase().slice(0, 8)}`
   // the subset must include every glyph drawn with this font (Latin too)
@@ -46,8 +46,8 @@ export async function renderInviteOg(code: string, locale: Locale): Promise<Imag
           <div style={{ fontSize: 40, fontWeight: 800 }}>{ok ? brand : 'AISUBAL'}</div>
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 22 }}>
-          <div style={{ fontSize: locale === 'ko' ? 76 : 70, fontWeight: 800, lineHeight: 1.15, letterSpacing: locale === 'ko' ? -1.5 : -1 }}>{ok ? headline : "You're invited"}</div>
-          <div style={{ fontSize: 34, color: '#bdbdbd' }}>{ok ? sub : 'An invite-only AI community'}</div>
+          <div style={{ fontSize: locale === 'ko' ? 76 : 70, fontWeight: 800, lineHeight: 1.15, letterSpacing: locale === 'ko' ? -1.5 : -1 }}>{ok ? headline : "You've been invited"}</div>
+          <div style={{ fontSize: 34, color: '#bdbdbd' }}>{ok ? sub : 'Only the invited may enter.'}</div>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 14, fontSize: 28, color: '#8f8f8f' }}>
           <div style={{ width: 14, height: 14, borderRadius: 99, background: preview.status === 'valid' ? '#3ccf7c' : '#f5a623' }} />
