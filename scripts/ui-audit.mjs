@@ -35,7 +35,7 @@ const DYNAMIC = [
 ]
 const MATRIX = [
   { w: 390, theme: 'light', loc: 'ko' }, { w: 390, theme: 'dark', loc: 'ko' }, { w: 1440, theme: 'light', loc: 'ko' }, { w: 1440, theme: 'dark', loc: 'ko' },
-  { w: 390, theme: 'light', loc: 'en' }, { w: 1440, theme: 'light', loc: 'en' }, { w: 768, theme: 'light', loc: 'ko' }, { w: 1024, theme: 'light', loc: 'ko' },
+  { w: 390, theme: 'light', loc: 'en' }, { w: 390, theme: 'dark', loc: 'en' }, { w: 1440, theme: 'light', loc: 'en' }, { w: 1440, theme: 'dark', loc: 'en' }, { w: 768, theme: 'light', loc: 'ko' }, { w: 1024, theme: 'light', loc: 'ko' },
 ]
 
 mkdirSync(OUT, { recursive: true })
