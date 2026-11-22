@@ -1,9 +1,10 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import type { ReactNode } from 'react'
-import { Bot, Heart, MessageCircle, Pencil, Settings } from 'lucide-react'
+import { Bot, Heart, MessageCircle, Pencil, ScrollText, Settings } from 'lucide-react'
 import { getUserState } from '@/lib/auth'
 import { getProfileStats } from '@/lib/data/shell'
+import { getPledgeStatus } from '@/lib/data/pledge'
 import { getDashboardStats, listMyComments, listMyLikedPosts, type DashItem } from '@/lib/data/dashboard'
 import { listFeedPage } from '@/lib/data/feed'
 import { listMemberTools } from '@/lib/data/tools'
@@ -95,6 +96,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
     listMyInviteCodes(me.id, Boolean(me.signup_completed_at)).catch(() => null),
     getSocialSummary(me.id, me.id).catch(() => null),
   ])
+  const pledge = await getPledgeStatus(me).catch(() => null)
   const stats = await getDashboardStats(me, profile.likes, profile.posts).catch(() => ({ posts: profile.posts, comments: 0, likesReceived: profile.likes, likesGiven: 0 }))
   const moims = [...new Map([...moimHosting, ...moimMine].map((m) => [m.id, m])).values()].sort((a, b) => b.startsAt.localeCompare(a.startsAt))
   const codes = invites?.codes ?? []
@@ -391,6 +393,13 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
               공개 프로필 보기
             </Link>
           </div>
+          {pledge?.signedAt && (
+            <Link href="/pledge" className="pledge-chip mt-2" title="내가 서명한 선언 및 입단 서약 보기">
+              <ScrollText className="w-3.5 h-3.5" />
+              {new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium', timeZone: 'Asia/Seoul' }).format(new Date(pledge.signedAt))} 입단 서약
+              <span className="text-[#9a8a66]">· 초대인 {pledge.inviter ?? '창립 멤버'}</span>
+            </Link>
+          )}
         </div>
         <dl className="dash-stats grid grid-cols-4 border-t border-[#f0f0f0]">
           {summary.map((s) => (

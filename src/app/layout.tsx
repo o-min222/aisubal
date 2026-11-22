@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { JetBrains_Mono } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
+import { SLOGAN } from "@/lib/pledge";
 import { Suspense } from "react";
 import { ScrollLockGuard } from "@/components/scroll-lock-guard";
 
@@ -13,7 +14,8 @@ const mono = JetBrains_Mono({
 
 export const metadata: Metadata = {
   title: "AI쓰발 - AI 에셋 공유 커뮤니티",
-  description: "프롬프트, MCP 설정, 에이전트 스킬을 공유하는 초대 전용 커뮤니티",
+  description: `${SLOGAN.en} ${SLOGAN.ko}`,
+  openGraph: { title: "AI쓰발", description: `${SLOGAN.en} ${SLOGAN.ko}`, siteName: "AI쓰발", locale: "ko_KR", type: "website" },
   applicationName: "AI쓰발",
   icons: {
     icon: "/favicon.png",

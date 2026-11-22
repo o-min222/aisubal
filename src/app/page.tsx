@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import { getUserState } from '@/lib/auth'
 import Image from 'next/image'
+import { Slogan } from '@/components/slogan'
 import Link from 'next/link'
 
 export default async function HomePage() {
@@ -18,7 +19,7 @@ export default async function HomePage() {
   return (
     <div className="min-h-screen bg-[#111] flex flex-col items-center justify-center p-6">
       {/* Logo */}
-      <div className="mb-12">
+      <div className="mb-12 flex flex-col items-center gap-5">
         <Image
           src="/images/logo-white.png"
           alt="AI쓰발"
@@ -27,6 +28,7 @@ export default async function HomePage() {
           priority
           className="h-16 w-auto"
         />
+        <Slogan />
       </div>
 
       {/* CTA */}

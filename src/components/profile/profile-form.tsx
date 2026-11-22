@@ -110,7 +110,7 @@ export function ProfileForm({ me, mode }: { me: ProfileFormMember; mode: 'onboar
         throw new Error(d.error || '저장하지 못했어요.')
       }
       toast.success(mode === 'onboarding' ? `@${d.handle} 님, 환영해요!` : '프로필을 저장했어요')
-      if (mode === 'onboarding') router.replace('/connect?from=signup')
+      if (mode === 'onboarding') router.replace('/pledge?from=signup')
       router.refresh()
     } catch (err) {
       toast.error(err instanceof Error ? err.message : '저장하지 못했어요.')

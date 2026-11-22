@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/client'
 import { useSearchParams } from 'next/navigation'
 import Image from 'next/image'
+import { Slogan } from '@/components/slogan'
 import { Suspense } from 'react'
 
 function LoginContent() {
@@ -21,7 +22,7 @@ function LoginContent() {
 
   return (
     <div className="min-h-screen bg-[#111] flex flex-col items-center justify-center p-6">
-      <div className="mb-12">
+      <div className="mb-12 flex flex-col items-center gap-5">
         <Image
           src="/images/logo-white.png"
           alt="AI쓰발"
@@ -30,6 +31,7 @@ function LoginContent() {
           priority
           className="h-14 w-auto"
         />
+        <Slogan />
       </div>
 
       <div className="w-full max-w-sm">

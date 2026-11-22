@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import { getUserState } from '@/lib/auth'
 import { getRailData } from '@/lib/data/shell'
 import { getMemberCard } from '@/lib/data/member-card'
+import { getPledgeStatus } from '@/lib/data/pledge'
 import type { Member } from '@/lib/supabase/types'
 import { TopBar } from '@/components/shell/top-bar'
 import { SideNav } from '@/components/shell/side-nav'
@@ -39,6 +40,9 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const member = state.member
   // Self-made profile (handle + name + avatar) is required before entering; Google data is never the public identity.
   if (!member.profile_completed_at) redirect('/onboarding')
+  // Signup is complete only after the 입단 서약 (existing members sign once too).
+  const pledge = await getPledgeStatus(member).catch(() => null)
+  if (pledge && !pledge.signedAt) redirect('/pledge')
   // Only public-safe fields cross into client components (no email).
   const me: ShellMember = {
     id: member.id,
