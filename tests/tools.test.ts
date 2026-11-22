@@ -221,7 +221,7 @@ describe('routes, redirects and navigation', () => {
 
   it('settings and admin have sub-sections with list → detail', () => {
     expect(SETTINGS_SECTIONS.map((s) => s.label)).toEqual(['계정', '프로필 편집', '내 에이전트', '알림'])
-    expect(ADMIN_SECTIONS.map((s) => s.label)).toEqual(['대시보드', '유저', '초대 트리', '갤러리 검토', '신고', '익명 관리', '사이트 설정'])
+    expect(ADMIN_SECTIONS.map((s) => s.label)).toEqual(['대시보드', '유저', '초대 트리', '갤러리 검토', '설치 확인', '신고', '익명 관리', '사이트 설정'])
     expect(subNavActive('/settings', '/settings/account', '/settings', '/settings/account')).toBe(true)
     expect(subNavActive('/settings/tokens', '/settings/account', '/settings', '/settings/account')).toBe(false)
     expect(read('src/app/(app)/admin/layout.tsx')).toMatch(/is_admin\) redirect/)
