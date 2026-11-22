@@ -14,6 +14,8 @@ const nextConfig: NextConfig = {
       { source: "/meetups", destination: "/moim", permanent: true },
       { source: "/meetups/new", destination: "/moim/new", permanent: true },
       { source: "/meetups/:id", destination: "/moim/:id", permanent: true },
+      // 네트워크 → 내 대시보드 › 네트워크 (query like ?root= is carried over)
+      { source: "/network", destination: "/me?tab=network", permanent: true },
     ];
   },
   turbopack: {

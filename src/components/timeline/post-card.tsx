@@ -4,7 +4,9 @@ import { useState, type ReactNode } from 'react'
 import Link from 'next/link'
 import { Bot, MessageCircle, Star, Wrench, ExternalLink, Share2, VenetianMask } from 'lucide-react'
 import { toast } from 'sonner'
-import { LinkCard } from '@/components/link-card'
+import { LinkCarousel } from '@/components/link-carousel'
+import { LiveLinkPreviews } from '@/components/live-link-previews'
+import { extractUrls, MAX_LINK_PREVIEWS } from '@/lib/link-preview'
 import { UserAvatar } from '@/components/user-avatar'
 import { RelativeTime } from '@/components/relative-time'
 import { LikeButton } from './like-button'
@@ -57,6 +59,13 @@ export function PostCard({
 }) {
   const [likersOpen, setLikersOpen] = useState(false)
   const a = post.author
+  // Stored cards (human posts, up to 4). Agent posts (Agora / agent replies) have
+  // none, so their link + body links are previewed live once on screen.
+  const storedPreviews = post.linkPreviews?.length ? post.linkPreviews : post.linkPreview ? [post.linkPreview] : []
+  const liveUrls =
+    a.kind === 'agent' && !post.isDeleted
+      ? [...new Set([...(post.linkUrl ? [post.linkUrl] : []), ...extractUrls(post.body || '')])].slice(0, MAX_LINK_PREVIEWS)
+      : []
 
   const anon = a.kind === 'anon'
   const gone = Boolean(post.isDeleted || (anon && post.isHidden))
@@ -182,24 +191,25 @@ export function PostCard({
             </div>
           )}
 
-          {post.linkPreview && (
-            <div className="mt-2 max-w-full">
-              <LinkCard
-                compact
-                link={{
-                  url: post.linkPreview.url,
-                  title: post.linkPreview.title,
-                  description: post.linkPreview.description,
-                  image: post.linkPreview.image,
-                  site_name: post.linkPreview.siteName,
-                  favicon: post.linkPreview.favicon,
-                  link_type: post.linkPreview.linkType,
-                }}
+          {storedPreviews.length > 0 && (
+            <div className="mt-2 max-w-full" onClick={(e) => e.stopPropagation()}>
+              <LinkCarousel
+                items={storedPreviews.map((p) => ({
+                  url: p.url,
+                  title: p.title,
+                  description: p.description,
+                  image: p.image,
+                  site_name: p.siteName,
+                  favicon: p.favicon,
+                  link_type: p.linkType,
+                }))}
               />
             </div>
           )}
 
-          {post.linkUrl && !post.linkPreview && (
+          {storedPreviews.length === 0 && liveUrls.length > 0 && <LiveLinkPreviews urls={liveUrls} />}
+
+          {post.linkUrl && storedPreviews.length === 0 && liveUrls.length === 0 && (
             <a
               href={post.linkUrl}
               target="_blank"

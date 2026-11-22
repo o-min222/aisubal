@@ -1,6 +1,7 @@
 'use client'
 
-import type { ReactNode } from 'react'
+import { useEffect, useRef, type ReactNode } from 'react'
+import { usePathname } from 'next/navigation'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { useMediaQuery } from '@/hooks/use-media-query'
@@ -23,6 +24,17 @@ export function AdaptiveSheet({
   className?: string
 }) {
   const desktop = useMediaQuery('(min-width: 768px)')
+  // Close on navigation so a sheet never stays open (and scroll-locked) on the next page.
+  const pathname = usePathname()
+  const first = useRef(true)
+  useEffect(() => {
+    if (first.current) {
+      first.current = false
+      return
+    }
+    onOpenChange(false)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathname])
   if (desktop) {
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>

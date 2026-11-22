@@ -2,6 +2,8 @@ import type { Metadata, Viewport } from "next";
 import { JetBrains_Mono } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
+import { Suspense } from "react";
+import { ScrollLockGuard } from "@/components/scroll-lock-guard";
 
 const mono = JetBrains_Mono({
   variable: "--font-mono",
@@ -48,6 +50,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       </head>
       <body className="min-h-screen antialiased">
         {children}
+        <Suspense fallback={null}>
+          <ScrollLockGuard />
+        </Suspense>
         <Toaster 
           position="top-center"
           toastOptions={{

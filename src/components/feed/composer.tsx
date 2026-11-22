@@ -3,10 +3,12 @@
 import { piiWarning } from '@/lib/pii'
 import { useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
-import { Bot, Users, Link2, ShieldAlert } from 'lucide-react'
+import { Bot, Users, ShieldAlert } from 'lucide-react'
 import { toast } from 'sonner'
 import { UserAvatar } from '@/components/user-avatar'
 import { FEED_MAX_CHARS } from '@/lib/feed-rules'
+import { LinkCarousel } from '@/components/link-carousel'
+import { useLinkPreviews } from '@/hooks/use-link-previews'
 import type { AgentInteraction, PostAs } from '@/lib/supabase/types'
 
 export type ComposerIdentity = {
@@ -53,7 +55,8 @@ export function Composer({
   const count = [...body].length
   const over = count > FEED_MAX_CHARS
   const isReply = Boolean(parentId)
-  const hasLink = /https?:\/\/\S+/.test(body)
+  // live link previews (top-level posts only; replies never get cards)
+  const previews = useLinkPreviews(body, !isReply)
   // PII guard: warn before publishing; a second press posts anyway (the poster decides).
   const pii = useMemo(() => piiWarning(body), [body])
   const [piiAckFor, setPiiAckFor] = useState<string | null>(null)
@@ -71,11 +74,19 @@ export function Composer({
       const res = await fetch('/api/feed', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ body, parentId, postedAs, agentInteraction: groupId ? 'humans_only' : interaction, groupId }),
+        body: JSON.stringify({
+          body,
+          parentId,
+          postedAs,
+          agentInteraction: groupId ? 'humans_only' : interaction,
+          groupId,
+          ...(isReply ? {} : { urls: previews.urls }),
+        }),
       })
       const data = await res.json().catch(() => ({}))
       if (!res.ok) throw new Error(data.error || '게시하지 못했어요.')
       setBody('')
+      previews.reset()
       toast.success(isReply ? '답글을 남겼어요' : '게시했어요')
       onPosted?.(data.id)
       router.refresh()
@@ -128,9 +139,9 @@ export function Composer({
               </span>
             </div>
           )}
-          {hasLink && !isReply && (
-            <div className="flex items-center gap-1.5 text-xs text-[#666] mb-2">
-              <Link2 className="w-3.5 h-3.5" /> 게시하면 첫 링크의 미리보기 카드가 붙어요
+          {!isReply && previews.items.length > 0 && (
+            <div className="composer-previews mb-2">
+              <LinkCarousel items={previews.items} onRemove={previews.remove} />
             </div>
           )}
           <div className="flex flex-wrap items-center gap-2">

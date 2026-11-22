@@ -1,28 +1,34 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getMember } from '@/lib/auth'
-import { fetchLinkPreview } from '@/lib/link-preview'
+import { fetchLinkPreview } from '@/lib/link-preview-server'
+import { checkFetchUrl } from '@/lib/safe-fetch'
 
-export async function POST(request: NextRequest) {
+/**
+ * Link preview for the composer carousel and Agora cards (members only).
+ * SSRF-safe fetch + server cache live in lib/link-preview-server.ts.
+ */
+async function handle(raw: unknown) {
   const member = await getMember()
-  if (!member) {
-    return NextResponse.json({ error: '인증이 필요합니다.' }, { status: 401 })
+  if (!member) return NextResponse.json({ error: '인증이 필요합니다.' }, { status: 401 })
+  if (!raw || typeof raw !== 'string' || raw.length > 2000) {
+    return NextResponse.json({ error: 'URL이 필요합니다.' }, { status: 400 })
   }
-
+  const check = checkFetchUrl(raw)
+  if (!check.ok) return NextResponse.json({ error: '미리보기를 만들 수 없는 주소예요.', reason: check.reason }, { status: 422 })
   try {
-    const { url } = await request.json()
-    if (!url || typeof url !== 'string') {
-      return NextResponse.json({ error: 'URL이 필요합니다.' }, { status: 400 })
-    }
-    try {
-      new URL(url)
-    } catch {
-      return NextResponse.json({ error: '올바른 URL이 아닙니다.' }, { status: 400 })
-    }
-
-    const preview = await fetchLinkPreview(url)
-    return NextResponse.json({ preview })
+    const preview = await fetchLinkPreview(raw)
+    return NextResponse.json({ preview }, { headers: { 'Cache-Control': 'private, max-age=3600' } })
   } catch (error) {
     console.error('OG preview error:', error)
     return NextResponse.json({ error: '미리보기 실패' }, { status: 500 })
   }
+}
+
+export async function GET(request: NextRequest) {
+  return handle(request.nextUrl.searchParams.get('url'))
+}
+
+export async function POST(request: NextRequest) {
+  const body = await request.json().catch(() => ({}))
+  return handle((body as { url?: unknown }).url)
 }

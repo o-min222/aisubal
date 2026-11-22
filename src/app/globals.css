@@ -770,6 +770,43 @@ code, pre, .font-mono {
 .link-card-desc { font-size: 12px; color: var(--text-secondary); margin: 4px 0 0; line-height: 1.4;
   overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
 
+/* Multi-link carousel (composer + posted cards) */
+.link-carousel { position: relative; }
+.link-carousel-track { display: flex; gap: 10px; }
+.link-carousel-slide { position: relative; min-width: 0; flex: 1 1 auto; }
+.link-carousel.is-multi .link-carousel-track {
+  overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain; padding-bottom: 2px;
+}
+.link-carousel.is-multi .link-carousel-track::-webkit-scrollbar { display: none; }
+.link-carousel.is-multi .link-carousel-slide { flex: 0 0 min(78%, 260px); scroll-snap-align: start; }
+.link-card-tile { flex-direction: column; height: 100%; }
+.link-card-tile .link-card-media { width: 100%; min-height: 0; aspect-ratio: 1.91 / 1; }
+.link-card-tile .link-card-body { padding: 10px 12px; justify-content: flex-start; }
+.link-card-tile .link-card-desc { -webkit-line-clamp: 2; }
+.link-carousel-remove {
+  position: absolute; top: 6px; right: 6px; z-index: 2; width: 28px; height: 28px; border-radius: 999px;
+  display: inline-flex; align-items: center; justify-content: center; background: rgba(17,17,17,0.72); color: #fff;
+}
+.link-carousel-remove::after { content: ''; position: absolute; inset: -8px; } /* 44px touch target */
+.link-carousel-remove:hover { background: #111; }
+.link-carousel-arrow {
+  position: absolute; top: calc(50% - 22px); z-index: 3; width: 32px; height: 32px; border-radius: 999px;
+  display: none; align-items: center; justify-content: center; background: #fff; color: #111;
+  border: 1px solid #e5e5e5; box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+}
+.link-carousel-arrow.is-prev { left: -10px; }
+.link-carousel-arrow.is-next { right: -10px; }
+.link-carousel-arrow:disabled { opacity: 0; pointer-events: none; }
+@media (hover: hover) and (pointer: fine) { .link-carousel.is-multi .link-carousel-arrow { display: inline-flex; } }
+.link-carousel-dots { display: flex; justify-content: center; gap: 2px; margin-top: 4px; }
+.link-carousel-dots button { width: 22px; height: 22px; display: inline-flex; align-items: center; justify-content: center; }
+.link-carousel-dots button::before { content: ''; width: 6px; height: 6px; border-radius: 999px; background: #d4d4d4; transition: all 0.15s; }
+.link-carousel-dots button.on::before { background: #111; width: 14px; }
+.link-card-skeleton .link-card-media { background: #f0f0f0; }
+.link-card-skeleton .sk-line { display: block; height: 10px; border-radius: 4px; background: #eee; margin: 4px 0; animation: sk-pulse 1.2s ease-in-out infinite; }
+@keyframes sk-pulse { 50% { opacity: 0.5; } }
+
 /* Profile switcher in composer */
 .profile-switch {
   display: inline-flex; align-items: center; gap: 8px;
@@ -831,8 +868,16 @@ a.tool-chip:hover { border-color: #111; color: #111; }
    App shell (signed-in): minimal top bar · left panel · center · right rail
    Mobile: sticky top bar with 사람|AI switch, bottom tabs, FAB, sheets.
    ===================================================================== */
-html, body { overflow-x: hidden; }
-body { -webkit-tap-highlight-color: transparent; overscroll-behavior-y: none; }
+/*
+ * The page itself (the viewport) is the only scroller. `overflow-x: hidden` on
+ * <body> used to make body its own scroll container, and with overscroll-behavior
+ * on body, wheel/touch scrolling never reached the page, so long forms couldn't
+ * scroll. `clip` cuts horizontal overflow without creating a scroll container.
+ */
+html, body { overflow-x: clip; }
+@supports not (overflow: clip) { html { overflow-x: hidden; } }
+html { overscroll-behavior-y: none; }
+body { -webkit-tap-highlight-color: transparent; }
 
 .app-root { min-height: 100dvh; background: #f4f4f2; }
 
@@ -1135,14 +1180,18 @@ body { -webkit-tap-highlight-color: transparent; overscroll-behavior-y: none; }
 .profile-card-trigger:hover .pc-name { text-decoration: underline; }
 
 /* ---------- settings / admin sub-layout ---------- */
-.app-grid:has(.subnav-layout) { grid-template-columns: minmax(0, 1fr); }
-@media (min-width: 768px) { .app-grid:has(.subnav-layout) { grid-template-columns: 220px minmax(0, 1fr); } }
-@media (min-width: 1100px) {
-  .app-grid:has(.subnav-layout) { grid-template-columns: 230px minmax(0, 1fr); }
-  .app-grid:has(.subnav-layout) .app-right { display: none; }
-}
+/* Settings / admin are full-page: no left profile panel, no right rail, wider canvas. */
+.app-grid:has(.subnav-layout) { grid-template-columns: minmax(0, 1fr) !important; max-width: 1080px; }
+.app-grid:has(.subnav-layout) .app-left,
+.app-grid:has(.subnav-layout) .app-right { display: none !important; }
+.subnav-page { display: flex; flex-direction: column; gap: 12px; }
+.subnav-appbar { display: flex; align-items: center; gap: 8px; min-height: 44px; }
+.subnav-appback { display: inline-flex; align-items: center; gap: 4px; min-height: 40px; padding: 0 12px 0 8px; border-radius: 999px; border: 1px solid #e5e5e5; background: #fff; font-size: 14px; color: #333; }
+.subnav-appback:hover { background: #f4f4f4; text-decoration: none; }
+.subnav-apptitle { font-size: 15px; font-weight: 700; color: #111; display: inline-flex; align-items: center; gap: 6px; }
+@media (max-width: 899px) { .subnav-page:has(.subnav-layout:not(.at-index)) .subnav-appbar { display: none; } }
 .subnav-layout { display: grid; gap: 16px; }
-@media (min-width: 900px) { .subnav-layout { grid-template-columns: 220px minmax(0, 1fr); align-items: start; } }
+@media (min-width: 900px) { .subnav-layout { grid-template-columns: 240px minmax(0, 1fr); align-items: start; } }
 .subnav { background: #fff; border: 1px solid #e5e5e5; border-radius: 14px; padding: 6px; }
 @media (min-width: 900px) { .subnav { position: sticky; top: 80px; } }
 .subnav-title { padding: 10px 10px 6px; font-size: 18px; font-weight: 700; color: #111; display: flex; align-items: center; gap: 8px; }

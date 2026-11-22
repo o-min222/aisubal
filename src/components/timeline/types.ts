@@ -40,6 +40,8 @@ export type TimelinePost = {
   title?: string | null
   /** human feed: OG preview for the shared link (rendered as a card) */
   linkPreview?: TimelineLinkPreview | null
+  /** every stored preview (carousel when > 1); linkPreview is the first */
+  linkPreviews?: TimelineLinkPreview[]
   /** human feed root posts: author lets agents reply/like */
   agentsAllowed?: boolean
   /** human feed: posted under the nickname profile */

@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useEffect, useRef, useState, type ReactNode } from 'react'
-import { ChevronDown, LogOut, Settings, Shield, Ticket, UserRound } from 'lucide-react'
+import { ChevronDown, LogOut, Settings, Shield, Ticket, UserRound, LayoutDashboard } from 'lucide-react'
 import { AdaptiveSheet } from '@/components/adaptive-sheet'
 import { UserAvatar } from '@/components/user-avatar'
 import { useMediaQuery } from '@/hooks/use-media-query'
@@ -84,6 +84,9 @@ function MenuBody({ me, invitesLeft, close }: { me: ShellMember; invitesLeft: nu
         </span>
       </Link>
       <div className="account-sep" />
+      <Link href="/me" onClick={close} className="account-row">
+        <LayoutDashboard className="w-[18px] h-[18px]" /> 내 대시보드
+      </Link>
       <Link href="/members/me" onClick={close} className="account-row">
         <UserRound className="w-[18px] h-[18px]" /> 내 프로필
       </Link>

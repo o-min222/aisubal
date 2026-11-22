@@ -1,5 +1,5 @@
-import type { TimelinePost } from '@/components/timeline/types'
-import type { AgentInteraction, LinkType, PostAs } from '@/lib/supabase/types'
+import type { TimelineLinkPreview, TimelinePost } from '@/components/timeline/types'
+import type { AgentInteraction, LinkPreview, LinkType, PostAs } from '@/lib/supabase/types'
 import { nicknameProfilePublicId } from '@/lib/profile'
 
 /** Human feed rules — shared by the API, the DB-backed data layer and tests. */
@@ -74,6 +74,7 @@ export type FeedRow = {
   link_site_name: string | null
   link_favicon: string | null
   link_type: LinkType | null
+  link_previews?: LinkPreview[] | null
   posted_as: PostAs
   author_kind: 'member' | 'agent'
   agent_name: string | null
@@ -149,6 +150,7 @@ export function feedRowToTimeline(r: FeedRow, liked: Set<string>): TimelinePost 
           linkType: r.link_type,
         }
       : null,
+    linkPreviews: previewsFromRow(r),
     tool: null,
     rating: null,
     likeCount: r.like_count ?? 0,
@@ -160,6 +162,23 @@ export function feedRowToTimeline(r: FeedRow, liked: Set<string>): TimelinePost 
     isNickname: r.author_kind === 'member' && r.posted_as === 'nickname' && Boolean(a?.nickname),
     groupId: r.group_id ?? null,
   }
+}
+
+/** posts.link_previews (validated by a DB CHECK) → timeline shape; [] when absent. */
+export function previewsFromRow(r: Pick<FeedRow, 'link_previews'>): TimelineLinkPreview[] {
+  const list = Array.isArray(r.link_previews) ? r.link_previews : []
+  return list
+    .filter((x) => x && typeof x.url === 'string')
+    .slice(0, 4)
+    .map((x) => ({
+      url: x.url,
+      title: x.title ?? null,
+      description: x.description ?? null,
+      image: x.image ?? null,
+      siteName: x.site_name ?? null,
+      favicon: x.favicon ?? null,
+      linkType: x.link_type ?? null,
+    }))
 }
 
 /** Depth-first order so each reply sits under its parent (Threads style). */

@@ -32,10 +32,13 @@ function tileColor(seed: string) {
 export function LinkCard({
   link,
   compact = false,
+  tile = false,
   href,
 }: {
   link: LinkCardData
   compact?: boolean
+  /** vertical card (image on top) used inside the multi-link carousel */
+  tile?: boolean
   href?: string
 }) {
   const isYoutube = link.link_type === 'youtube'
@@ -53,7 +56,7 @@ export function LinkCard({
       href={target}
       target="_blank"
       rel="noopener noreferrer"
-      className={`link-card group ${compact ? 'link-card-compact' : ''}`}
+      className={`link-card group ${compact ? 'link-card-compact' : ''} ${tile ? 'link-card-tile' : ''}`}
       onClick={(e) => e.stopPropagation()}
     >
       {showImage ? (
@@ -109,7 +112,7 @@ export function LinkCard({
           <span>{link.site_name || host}</span>
         </div>
         <div className="link-card-title">{link.title || link.url}</div>
-        {link.description && !compact && (
+        {link.description && (!compact || link.link_type === 'x') && (
           <p className="link-card-desc">{link.description}</p>
         )}
       </div>

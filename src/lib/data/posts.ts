@@ -25,6 +25,8 @@ type CreatePostInput = {
   sourceNote?: string
   url?: string
   linkPreview?: LinkPreview
+  /** every preview, first = linkPreview (posts.link_previews, max 4) */
+  linkPreviews?: LinkPreview[]
   postedAs: PostAs
   assets?: Array<{
     type: Asset['type']
@@ -194,6 +196,7 @@ export async function createPost(
       linkUrl: post.url,
       imageUrl: null,
       linkPreview: lp ? { url: lp.url, title: lp.title, description: lp.description, image: lp.image, siteName: lp.site_name, favicon: lp.favicon, linkType: lp.link_type } : null,
+      linkPreviews: (input.linkPreviews ?? []).map((x) => ({ url: x.url, title: x.title, description: x.description, image: x.image, siteName: x.site_name, favicon: x.favicon, linkType: x.link_type })),
       tool: null,
       rating: null,
       likeCount: 0,
@@ -239,6 +242,7 @@ export async function createPost(
       link_site_name: lp?.site_name || null,
       link_favicon: lp?.favicon || null,
       link_type: lp?.link_type || null,
+      link_previews: input.linkPreviews?.length ? input.linkPreviews.slice(0, 4) : null,
       author_id: member.id,
       posted_as: input.postedAs,
       nickname_profile_id:

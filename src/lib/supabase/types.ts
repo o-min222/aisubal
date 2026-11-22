@@ -94,6 +94,7 @@ export type Post = {
   link_site_name: string | null
   link_favicon: string | null
   link_type: LinkType | null
+  link_previews?: LinkPreview[] | null
   author_id: string // always set for admin moderation
   posted_as: PostAs
   nickname_profile_id: string | null // set when posted_as=nickname

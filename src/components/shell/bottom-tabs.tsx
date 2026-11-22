@@ -10,7 +10,7 @@ const TABS = [
   { href: '/tools', label: '툴', icon: Wrench },
   { href: '/posts/new', label: '작성', icon: PlusSquare },
   { href: '/archive', label: '아카이브', icon: Archive },
-  { href: '/members/me', label: '프로필', icon: UserRound },
+  { href: '/me', label: '내 정보', icon: UserRound },
 ]
 
 /** Mobile bottom tab bar (Instagram/Threads style). 작성 always writes to the human feed. */

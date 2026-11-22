@@ -8,19 +8,21 @@ import { getGroupById } from '@/lib/data/groups'
 import { canReadTimeline } from '@/lib/group-rules'
 import { parseFeedScope } from '@/lib/social-rules'
 import { validateFeedInput } from '@/lib/feed-rules'
-import { fetchLinkPreview, detectLinkType } from '@/lib/link-preview'
+import { extractUrls, MAX_LINK_PREVIEWS } from '@/lib/link-preview'
+import { fetchLinkPreviews } from '@/lib/link-preview-server'
+import { checkFetchUrl } from '@/lib/safe-fetch'
 import type { LinkPreview } from '@/lib/supabase/types'
 
 const schema = z.object({
   body: z.string().max(2000),
   parentId: z.string().max(64).nullish(),
   url: z.string().max(2000).nullish(),
+  /** links the composer is showing previews for (after the author removed some); max 4 */
+  urls: z.array(z.string().max(2000)).max(MAX_LINK_PREVIEWS).optional(),
   agentInteraction: z.enum(['humans_only', 'agents_allowed']).optional(),
   postedAs: z.enum(['real', 'nickname']).optional(),
   groupId: z.string().max(64).nullish(),
 })
-
-const URL_RE = /https?:\/\/[^\s<>"']+/i
 
 export async function GET(request: NextRequest) {
   const member = await getMember()
@@ -52,7 +54,14 @@ export async function POST(request: NextRequest) {
   } catch {
     return NextResponse.json({ error: '요청 형식이 올바르지 않아요.' }, { status: 400 })
   }
-  const url = raw.url || (raw.parentId ? null : raw.body.match(URL_RE)?.[0]) || null
+  // Top-level posts: preview the links the composer kept (or every link in the body,
+  // for older clients). Replies never get preview cards.
+  const previewUrls = raw.parentId
+    ? []
+    : (raw.urls ?? (raw.url ? [raw.url] : extractUrls(raw.body)))
+        .filter((u, i, a) => a.indexOf(u) === i && checkFetchUrl(u).ok)
+        .slice(0, MAX_LINK_PREVIEWS)
+  const url = previewUrls[0] ?? null
   const v = validateFeedInput({ ...raw, url })
   if (!v.ok) return NextResponse.json({ error: v.error }, { status: 400 })
 
@@ -71,22 +80,8 @@ export async function POST(request: NextRequest) {
   const asCheck = canPostAs(member, v.value.postedAs, unlock.unlocked)
   if (!asCheck.ok) return NextResponse.json({ error: asCheck.reason }, { status: 403 })
 
-  let linkPreview: LinkPreview | undefined
-  if (v.value.url) {
-    try {
-      linkPreview = await fetchLinkPreview(v.value.url)
-    } catch {
-      linkPreview = {
-        url: v.value.url,
-        title: null,
-        description: null,
-        image: null,
-        site_name: null,
-        favicon: null,
-        link_type: detectLinkType(v.value.url),
-      }
-    }
-  }
+  const linkPreviews: LinkPreview[] = previewUrls.length ? await fetchLinkPreviews(previewUrls) : []
+  const linkPreview: LinkPreview | undefined = linkPreviews[0]
 
   try {
     const { details } = await createPost(member, {
@@ -97,6 +92,7 @@ export async function POST(request: NextRequest) {
       groupId: raw.parentId ? null : raw.groupId || null,
       url: v.value.url || undefined,
       linkPreview,
+      linkPreviews: linkPreviews.length ? linkPreviews : undefined,
     })
     return NextResponse.json({ id: details.id }, { status: 201 })
   } catch (e) {

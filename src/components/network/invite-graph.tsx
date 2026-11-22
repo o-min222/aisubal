@@ -1,5 +1,6 @@
 'use client'
 
+import { networkHref } from '@/lib/dashboard-tabs'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
@@ -249,7 +250,7 @@ export function InviteGraph({ initial }: { initial: GraphPayload }) {
           <Maximize2 className="w-4 h-4" />
         </button>
         {!byId.get(rootId)?.relation.isMe && (
-          <button onClick={() => router.push('/network')} aria-label="나를 중심으로" title="나를 중심으로" className="flex items-center justify-center rounded-full bg-white shadow" style={{ width: 40, height: 40, color: '#111' }}>
+          <button onClick={() => router.push(networkHref())} aria-label="나를 중심으로" title="나를 중심으로" className="flex items-center justify-center rounded-full bg-white shadow" style={{ width: 40, height: 40, color: '#111' }}>
             <Crosshair className="w-4 h-4" />
           </button>
         )}
@@ -291,7 +292,7 @@ export function InviteGraph({ initial }: { initial: GraphPayload }) {
               프로필
             </Link>
             {sel.id !== rootId && (
-              <Link href={`/network?root=${sel.id}`} className="btn btn-secondary btn-sm min-h-[40px] rounded-full">
+              <Link href={networkHref({ root: sel.id })} className="btn btn-secondary btn-sm min-h-[40px] rounded-full">
                 중심으로
               </Link>
             )}

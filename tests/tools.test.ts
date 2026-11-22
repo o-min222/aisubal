@@ -207,7 +207,9 @@ describe('routes, redirects and navigation', () => {
 
   it('side panel holds content sections only; account items live in the account menu', () => {
     const hrefs = SIDE_NAV.map((i) => i.href)
-    expect(hrefs).toEqual(['/tools', '/archive', '/moim', '/groups', '/network', '/anon'])
+    expect(hrefs).toEqual(['/tools', '/archive', '/moim', '/groups', '/anon'])
+    // 네트워크 moved into 내 대시보드; the old URL redirects there
+    expect(read('src/app/(app)/network/page.tsx')).toMatch(/redirect\(networkHref/)
     for (const h of ['/members/me', '/invites', '/settings', '/admin', '/toolbox', '/products']) expect(hrefs).not.toContain(h)
     const menu = read('src/components/shell/account-menu.tsx')
     for (const s of ['내 프로필', '초대', '설정', '관리', '로그아웃']) expect(menu).toContain(s)

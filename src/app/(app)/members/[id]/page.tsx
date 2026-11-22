@@ -10,6 +10,7 @@ import { getMemberById } from '@/lib/data/members'
 import { listFeedPage } from '@/lib/data/feed'
 import { Pagination } from '@/components/pagination'
 import { parsePage } from '@/lib/paging'
+import { networkHref } from '@/lib/dashboard-tabs'
 import { getProfileStats } from '@/lib/data/shell'
 import { isFeedId } from '@/lib/feed-ids'
 import { UserAvatar } from '@/components/user-avatar'
@@ -120,7 +121,7 @@ export default async function MemberProfilePage({ params, searchParams }: { para
                   친구 요청 {social.incomingRequests}
                 </Link>
               )}
-              <Link href={`/network?root=${member.id}`} className="min-h-[32px] inline-flex items-center gap-1 text-[#0066cc]">
+              <Link href={isMe ? networkHref() : networkHref({ root: member.id })} className="min-h-[32px] inline-flex items-center gap-1 text-[#0066cc]">
                 <Network className="w-3.5 h-3.5" /> 초대 네트워크
               </Link>
             </div>
