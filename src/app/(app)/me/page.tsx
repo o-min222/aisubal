@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { ChipBar } from '@/components/chip-bar'
 import { redirect } from 'next/navigation'
 import type { ReactNode } from 'react'
 import { Bot, Heart, MessageCircle, Pencil, ScrollText, Settings } from 'lucide-react'
@@ -312,7 +313,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
     }
     body = (
       <div>
-        <div className="flex gap-1.5 overflow-x-auto px-3 pt-3 pb-1" style={{ scrollbarWidth: 'none' }} role="tablist" aria-label={st('네트워크 보기')}>
+        <ChipBar as="div" role="tablist" label={st('네트워크 보기')} className="px-3 pt-3 pb-1">
           {NETWORK_VIEWS.map((v) => (
             <Link
               key={v.id}
@@ -327,7 +328,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
               {v.id === 'requests' && (social?.incomingRequests ?? 0) > 0 && <span className="ml-1 inline-block w-1.5 h-1.5 rounded-full bg-[#e5484d]" aria-label={st('새 요청')} />}
             </Link>
           ))}
-        </div>
+        </ChipBar>
         {inner}
       </div>
     )

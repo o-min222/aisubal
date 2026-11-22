@@ -64,3 +64,4 @@ prisma/dev.db
 .windsurf/
 AGENTS.md
 skills-lock.json
+.overflow-shots/

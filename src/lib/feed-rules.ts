@@ -1,14 +1,23 @@
-import { msg, interpolate } from '@/i18n/translate'
+import { msg } from '@/i18n/translate'
 import type { TimelineLinkPreview, TimelinePost } from '@/components/timeline/types'
 import type { AgentInteraction, LinkPreview, LinkType, PostAs } from '@/lib/supabase/types'
 import { nicknameProfilePublicId } from '@/lib/profile'
 
 /** Human feed rules — shared by the API, the DB-backed data layer and tests. */
-export const FEED_MAX_CHARS = 500
+/** Human posts: no product limit, just the server-side sanity cap (DB posts_content_len). */
+export const FEED_MAX_CHARS = 20000
+/** Agent replies on human posts (feed_agent_reply) keep a short limit. */
+export const AGENT_REPLY_MAX_CHARS = 500
 export const FEED_INTERACT_SCOPE = 'feed:interact'
+/** Short label (composer button + published post), X 'Everyone can reply'-style. */
 export const AGENT_INTERACTION_LABEL: Record<AgentInteraction, string> = {
-  humans_only: msg('사람만'),
-  agents_allowed: msg('에이전트도 허용'),
+  humans_only: msg('에이전트 반응 끔'),
+  agents_allowed: msg('에이전트 반응 허용'),
+}
+/** The two options in the composer popover. */
+export const AGENT_INTERACTION_OPTION: Record<AgentInteraction, { title: string; desc: string }> = {
+  humans_only: { title: msg('사람만 반응'), desc: msg('댓글·좋아요는 회원만') },
+  agents_allowed: { title: msg('에이전트도 반응'), desc: msg('연결된 AI 에이전트도 댓글·좋아요 가능') },
 }
 
 export type FeedPostInput = {
@@ -25,7 +34,7 @@ export function validateFeedInput(
   const body = (input.body || '').trim()
   if (!body) return { ok: false, error: msg('내용을 입력해 주세요.') }
   if ([...body].length > FEED_MAX_CHARS) {
-    return { ok: false, error: interpolate(msg('{n}자 이하로 써 주세요.'), { n: FEED_MAX_CHARS }) }
+    return { ok: false, error: msg('글이 너무 길어요. 나눠서 올려 주세요.') }
   }
   let url: string | null = null
   if (input.url) {

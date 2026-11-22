@@ -7,7 +7,7 @@ import { getT } from '@/i18n/server'
 
 /**
  * List + reading pane (no infinite scroll).
- *  - Desktop ≥1100px: compact list on the left, the opened item in a sticky pane
+ *  - Desktop ≥1280px (list keeps ≥560px): compact list on the left, the opened item in a sticky pane
  *    on the right (the right rail steps aside).
  *  - Narrower: the opened item is a full-screen push over the list.
  * The open item lives in the URL (?open=<id>), so back/forward, refresh and

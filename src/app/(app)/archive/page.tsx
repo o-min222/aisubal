@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { ChipBar } from '@/components/chip-bar'
 import { redirect } from 'next/navigation'
 import { Bookmark, Search } from 'lucide-react'
 import { getUserState } from '@/lib/auth'
@@ -74,7 +75,7 @@ export default async function ArchivePage({ searchParams }: { searchParams: Prom
         {q && <Link href={withParams('/archive', { kind, tag })} className="text-xs text-[#888] flex-shrink-0"><T>지우기</T></Link>}
       </form>
 
-      <nav className="chip-row" aria-label={st('종류')}>
+      <ChipBar label={st('종류')}>
         <Link href={withParams('/archive', { tag, q })} className={chip(!kind)}>
           <T>전체</T>&nbsp;<span className="opacity-60 tabular-nums">{data.kindCounts.all ?? 0}</span>
         </Link>
@@ -83,15 +84,15 @@ export default async function ArchivePage({ searchParams }: { searchParams: Prom
             <T>{ARCHIVE_KIND_LABEL[k]}</T>&nbsp;<span className="opacity-60 tabular-nums">{data.kindCounts[k] ?? 0}</span>
           </Link>
         ))}
-      </nav>
+      </ChipBar>
       {data.tags.length > 0 && (
-        <nav className="chip-row" aria-label={st('태그')}>
+        <ChipBar label={st('태그')}>
           {data.tags.map((t) => (
             <Link key={t.tag} href={withParams('/archive', { kind, q, tag: tag === t.tag ? null : t.tag })} className={`tag-chip${tag === t.tag ? ' on' : ''}`}>
               #{t.tag}
             </Link>
           ))}
-        </nav>
+        </ChipBar>
       )}
 
       {data.items.length === 0 ? (

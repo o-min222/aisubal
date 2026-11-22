@@ -105,7 +105,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: await te('원글을 찾을 수 없어요.') }, { status: 404 })
     }
     if (msg.includes('feed_body_too_long')) {
-      return NextResponse.json({ error: await te('500자 이하로 써 주세요.') }, { status: 400 })
+      return NextResponse.json({ error: await te('글이 너무 길어요. 나눠서 올려 주세요.') }, { status: 400 })
     }
     console.error('[feed] create failed', e)
     return NextResponse.json({ error: await te('게시하지 못했어요.') }, { status: 500 })

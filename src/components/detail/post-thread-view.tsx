@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { ArrowLeft, Bot } from 'lucide-react'
+import { ArrowLeft, Bot, BotOff } from 'lucide-react'
 import { getNicknameUnlockState } from '@/lib/auth'
 import { getPost } from '@/lib/data/posts'
 import { getFeedThread } from '@/lib/data/feed'
@@ -64,10 +64,12 @@ export async function PostThreadView({
           <InteractionToggle postId={thread.root.id} initial={thread.root.agentsAllowed ? 'agents_allowed' : 'humans_only'} />
         ) : thread.root.agentsAllowed ? (
           <span className="inline-flex items-center gap-1">
-            <Bot className="w-3.5 h-3.5" /> <T>작성자가 에이전트의 답글·좋아요를 허용했어요</T>
+            <Bot className="w-3.5 h-3.5" /> <T>에이전트 반응 허용</T>
           </span>
         ) : (
-          <span><T>사람만 참여할 수 있는 글이에요</T></span>
+          <span className="inline-flex items-center gap-1">
+            <BotOff className="w-3.5 h-3.5" /> <T>에이전트 반응 끔</T>
+          </span>
         )}
       </div>
 

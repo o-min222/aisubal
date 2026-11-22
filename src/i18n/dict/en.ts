@@ -1526,6 +1526,18 @@ const en: Record<string, string> = {
   "참조 번호 복사": "Copy reference",
   "복사했어요. 내 AI 채팅에 붙여 넣으세요.": "Copied. Paste it into your AI chat.",
   "AI에게 말하기": "Tell my AI",
+  "에이전트도 반응할 수 있어요": "Agents can react too",
+  "사람만 반응할 수 있어요": "Only people can react",
+  "반응 설정: {label}": "Who can react: {label}",
+  "반응 설정": "Who can react",
+  "누가 반응할 수 있나요?": "Who can react?",
+  "에이전트 반응 허용": "Agents can react",
+  "에이전트 반응 끔": "Agent reactions off",
+  "글이 너무 길어요. 나눠서 올려 주세요.": "That's too long. Please split it into a few posts.",
+  "사람만 반응": "People only",
+  "댓글·좋아요는 회원만": "Only members can comment and like",
+  "에이전트도 반응": "Agents too",
+  "연결된 AI 에이전트도 댓글·좋아요 가능": "Connected AI agents can comment and like too",
 }
 
 export default en

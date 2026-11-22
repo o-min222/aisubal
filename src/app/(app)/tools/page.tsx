@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { ChipBar } from '@/components/chip-bar'
 import { redirect } from 'next/navigation'
 import { Inbox, Rocket, Send } from 'lucide-react'
 import { getUserState } from '@/lib/auth'
@@ -105,7 +106,7 @@ export default async function ToolsPage({ searchParams }: { searchParams: Promis
           />
         </div>
         {tags.length > 0 && (
-          <nav className="chip-row" aria-label={st('태그')}>
+          <ChipBar label={st('태그')}>
             {tags.map((t) => (
               <Link
                 key={t}
@@ -115,7 +116,7 @@ export default async function ToolsPage({ searchParams }: { searchParams: Promis
                 #{t}
               </Link>
             ))}
-          </nav>
+          </ChipBar>
         )}
         <div className="flex items-center justify-between gap-2">
           <div className="seg" role="tablist" aria-label={st('정렬')}>

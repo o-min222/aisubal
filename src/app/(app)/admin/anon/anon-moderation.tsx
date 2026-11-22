@@ -1,5 +1,6 @@
 'use client'
 
+import { ChipBar } from '@/components/chip-bar'
 import { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
 import { Eye, EyeOff, Trash2, UserSearch, ShieldAlert } from 'lucide-react'
@@ -104,13 +105,13 @@ export function AnonModeration() {
           <ShieldAlert className="w-3.5 h-3.5 mt-px flex-shrink-0" />
           <T>작성자 조회는 신고된 악용 대응에만 쓰세요. 조회할 때마다 사유와 함께 운영 기록에 남아요.</T>
         </p>
-        <div className="chip-row mt-3">
+        <ChipBar as="div" className="mt-3">
           {FILTERS.map((f) => (
             <button key={f.id} type="button" onClick={() => setFilter(f.id)} className={`filter-chip ${filter === f.id ? 'on' : ''}`}>
               <T>{f.label}</T>
             </button>
           ))}
-        </div>
+        </ChipBar>
       </div>
 
       <div className="space-y-2">

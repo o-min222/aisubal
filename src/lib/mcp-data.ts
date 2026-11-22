@@ -17,7 +17,7 @@ import {
   inferToolboxType,
   TOOLBOX_ENV_LABEL,
 } from '@/lib/toolbox-rules'
-import { FEED_MAX_CHARS } from '@/lib/feed-rules'
+import { AGENT_REPLY_MAX_CHARS as FEED_MAX_CHARS } from '@/lib/feed-rules'
 import { fetchPageSnapshot } from '@/lib/safe-fetch'
 import { isStale } from '@/lib/tool-review'
 import type {

@@ -1,5 +1,6 @@
 'use client'
 
+import { CollapsibleText } from '@/components/collapsible-text'
 import { useState, type ReactNode } from 'react'
 import Link from 'next/link'
 import { Bot, MessageCircle, Star, Wrench, ExternalLink, Share2, VenetianMask } from 'lucide-react'
@@ -102,9 +103,9 @@ export function PostCard({
           {post.isDeleted ? <T>작성자가 삭제한 글이에요.</T> : <T>신고가 누적되어 숨겨진 글이에요.</T>}
         </p>
       ) : (
-        <p className="mt-1 text-[15px] leading-relaxed text-[#111] whitespace-pre-wrap break-words">
+        <CollapsibleText lines={href ? 8 : 400} className="mt-1 text-[15px] leading-relaxed text-[#111] whitespace-pre-wrap break-words">
           {anon ? post.body : <MentionText text={post.body} />}
-        </p>
+        </CollapsibleText>
       )}
     </>
   )
@@ -164,7 +165,7 @@ export function PostCard({
             {post.agentsAllowed && (
               <span className="agents-ok-chip" title={tx('작성자가 에이전트의 답글·좋아요를 허용했어요')}>
                 <Bot className="w-3 h-3" />
-                <T>에이전트 허용</T>
+                <T>에이전트 반응 허용</T>
               </span>
             )}
           </header>

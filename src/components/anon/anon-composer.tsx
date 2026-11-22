@@ -5,9 +5,11 @@ import { piiWarning } from '@/lib/pii'
 import { useRouter } from 'next/navigation'
 import { VenetianMask, ShieldAlert } from 'lucide-react'
 import { toast } from 'sonner'
-import { ANON_CATEGORIES, ANON_MAX_CHARS, ANON_NOTICE, type AnonCategory } from '@/lib/anon-rules'
+import { ANON_CATEGORIES, ANON_NOTICE, type AnonCategory } from '@/lib/anon-rules'
 import { T } from '@/i18n/t'
 import { tx, tn } from '@/i18n/client'
+import { ChipBar } from '@/components/chip-bar'
+import { ComposerFrame, ComposerTextarea } from '@/components/composer/composer-frame'
 
 /** 익명 composer. Root posts pick a category; replies inherit the thread's. */
 export function AnonComposer({
@@ -29,9 +31,7 @@ export function AnonComposer({
   const [body, setBody] = useState('')
   const [category, setCategory] = useState<AnonCategory | null>(defaultCategory ?? null)
   const [busy, setBusy] = useState(false)
-  const count = [...body].length
-  const over = count > ANON_MAX_CHARS
-  const canSubmit = body.trim().length > 0 && !over && !busy && (isReply || category)
+  const canSubmit = body.trim().length > 0 && !busy && (isReply || category)
 
   const pii = useMemo(() => piiWarning(body), [body])
   const [piiAckFor, setPiiAckFor] = useState<string | null>(null)
@@ -67,68 +67,56 @@ export function AnonComposer({
   }
 
   return (
-    <div className={`composer ${className}`}>
-      <div className="flex gap-3">
-        <span className="w-10 h-10 rounded-full bg-[#222] text-white flex items-center justify-center flex-shrink-0" aria-hidden="true">
+    <ComposerFrame
+      className={className}
+      avatar={
+        <span className="w-10 h-10 rounded-full bg-[#222] text-white flex items-center justify-center" aria-hidden="true">
           <VenetianMask className="w-5 h-5" />
         </span>
-        <div className="min-w-0 flex-1">
-          <div className="text-sm font-semibold text-[#111]"><T>익명</T></div>
-          {!isReply && (
-            <div className="chip-row mt-1.5" role="radiogroup" aria-label={tx('카테고리')}>
-              {ANON_CATEGORIES.map((c) => (
-                <button
-                  key={c.id}
-                  type="button"
-                  role="radio"
-                  aria-checked={category === c.id}
-                  onClick={() => setCategory(c.id)}
-                  className={`filter-chip ${category === c.id ? 'on' : ''}`}
-                >
-                  <T>{c.label}</T>
-                </button>
-              ))}
-            </div>
-          )}
-          <textarea
-            value={body}
-            onChange={(e) => setBody(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) submit()
-            }}
-            placeholder={isReply ? tx('익명으로 답글 남기기…') : tx('회사 얘기, 커리어 고민, AI 때문에 생긴 일… 편하게 털어놓으세요.')}
-            autoFocus={autoFocus}
-            rows={isReply ? 2 : 4}
-            aria-label={isReply ? tx('익명 답글 내용') : tx('익명 게시물 내용')}
-            className="composer-input"
-          />
-          {pii && (
-            <p role="alert" className="pii-warning flex items-start gap-1.5 rounded-lg px-2.5 py-2 text-xs mb-2" style={{ background: '#fff4e5', color: '#8a4b00' }}>
-              <ShieldAlert className="w-3.5 h-3.5 mt-px flex-shrink-0" />
-              <span><T s="{pii} 익명 글이어도 신원이 드러날 수 있어요. 지우거나 가려주세요." vars={{ pii }} /></span>
-            </p>
-          )}
-          <p className="flex items-start gap-1.5 text-xs text-[#777] mb-2">
-            <ShieldAlert className="w-3.5 h-3.5 mt-px flex-shrink-0" />
-            <span><T>{ANON_NOTICE}</T></span>
-          </p>
-          <div className="flex items-center gap-2">
-            <div className="ml-auto flex items-center gap-2">
-              <span className={`text-xs tabular-nums ${over ? 'text-red-600' : 'text-[#999]'}`}>
-                {count}/{ANON_MAX_CHARS}
-              </span>
-              <button
-                type="button"
-                onClick={submit}
-                disabled={!body.trim() || over || busy}
-                className="btn btn-primary btn-sm min-h-[40px] px-4 rounded-full"
-              >
-                {busy ? <T>게시 중…</T> : isReply ? <T>답글</T> : <T>익명으로 게시</T>}
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+      }
+      head={<span className="font-semibold text-[#111]"><T>익명</T></span>}
+      tools={
+        <span className="composer-note" title={tx(ANON_NOTICE)}>
+          <ShieldAlert className="w-3.5 h-3.5 flex-shrink-0" />
+          <span className="truncate"><T>{ANON_NOTICE}</T></span>
+        </span>
+      }
+      onSubmit={submit}
+      canSubmit={Boolean(body.trim())}
+      busy={busy}
+      submitLabel={busy ? <T>게시 중…</T> : isReply ? <T>답글</T> : <T>게시</T>}
+    >
+      {!isReply && (
+        <ChipBar as="div" role="radiogroup" label={tx('카테고리')} className="mt-1">
+          {ANON_CATEGORIES.map((c) => (
+            <button
+              key={c.id}
+              type="button"
+              role="radio"
+              aria-checked={category === c.id}
+              onClick={() => setCategory(c.id)}
+              className={`filter-chip is-sm ${category === c.id ? 'on' : ''}`}
+            >
+              <T>{c.label}</T>
+            </button>
+          ))}
+        </ChipBar>
+      )}
+      <ComposerTextarea
+        value={body}
+        onChange={(e) => setBody(e.target.value)}
+        onSubmitShortcut={submit}
+        placeholder={isReply ? tx('익명으로 답글 남기기…') : tx('회사 얘기, 커리어 고민, AI 때문에 생긴 일… 편하게 털어놓으세요.')}
+        autoFocus={autoFocus}
+        rows={isReply ? 2 : 3}
+        aria-label={isReply ? tx('익명 답글 내용') : tx('익명 게시물 내용')}
+      />
+      {pii && (
+        <p role="alert" className="pii-warning flex items-start gap-1.5 rounded-lg px-2.5 py-2 text-xs mb-1" style={{ background: '#fff4e5', color: '#8a4b00' }}>
+          <ShieldAlert className="w-3.5 h-3.5 mt-px flex-shrink-0" />
+          <span><T s="{pii} 익명 글이어도 신원이 드러날 수 있어요. 지우거나 가려주세요." vars={{ pii }} /></span>
+        </p>
+      )}
+    </ComposerFrame>
   )
 }

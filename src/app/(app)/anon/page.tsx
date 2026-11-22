@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { ChipBar } from '@/components/chip-bar'
 import { redirect } from 'next/navigation'
 import { VenetianMask } from 'lucide-react'
 import { getUserState } from '@/lib/auth'
@@ -68,7 +69,7 @@ export default async function AnonBoardPage({
       </section>
 
       <div className="anon-toolbar space-y-2">
-        <nav className="chip-row" aria-label={st('카테고리')}>
+        <ChipBar label={st('카테고리')}>
           <Link href={hrefFor(null, sort)} className={`filter-chip ${!category ? 'on' : ''}`} aria-current={!category ? 'page' : undefined}>
             <T>전체</T>
           </Link>
@@ -82,7 +83,7 @@ export default async function AnonBoardPage({
               <T>{c.label}</T>
             </Link>
           ))}
-        </nav>
+        </ChipBar>
         <div className="flex items-center justify-between">
           <div className="seg" role="tablist" aria-label={st('정렬')}>
             <Link href={hrefFor(category, 'latest')} role="tab" aria-selected={sort === 'latest'} className={sort === 'latest' ? 'on seg-link' : 'seg-link'}>
