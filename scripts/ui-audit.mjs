@@ -79,8 +79,8 @@ async function run({ r, m }) {
   await page.waitForTimeout(300)
   const status = res.status()
   const finalUrl = page.url().replace(BASE, '')
-  const found = await page.evaluate((loc) => {
-    const out = { overflow: null, clipped: [], scrollRows: [], brokenImg: [], hangul: [], overlay: false }
+  const found = await page.evaluate(({ loc, theme }) => {
+    const out = { overflow: null, clipped: [], scrollRows: [], brokenImg: [], hangul: [], lightInDark: [], overlay: false }
     const d = document.documentElement
     if (d.scrollWidth > d.clientWidth + 1) out.overflow = `${d.scrollWidth}>${d.clientWidth}`
     out.overlay = Boolean(document.querySelector('nextjs-portal')?.shadowRoot?.querySelector('[data-nextjs-dialog], [data-nextjs-toast-errors]'))
@@ -99,6 +99,16 @@ async function run({ r, m }) {
         const cut = [...el.children].filter((c) => { const b = c.getBoundingClientRect(); return b.left < box.right - 1 && b.right > box.right + 1 })
         out.scrollRows.push(`${label(el)} ${el.scrollWidth}>${el.clientWidth}${cut.length ? ' cut:"' + cut[0].textContent.trim().slice(0, 20) + '"' : ''}`)
       }
+      // dark theme: a wide light band (a background with no dark variant); buttons invert on purpose
+      if (theme === 'dark' && el.tagName !== 'BUTTON' && !el.classList.contains('btn')) {
+        // rgb()/rgba() in 0–255, or color(srgb …) in 0–1 (what color-mix() computes to)
+        const m = cs.backgroundColor.match(/rgba?\(([\d.]+), ([\d.]+), ([\d.]+)(?:, ([\d.]+))?/)
+        const c = cs.backgroundColor.match(/color\(srgb ([\d.]+) ([\d.]+) ([\d.]+)(?: \/ ([\d.]+))?/)
+        const [r, g, bl, a] = m ? [m[1] / 255, m[2] / 255, m[3] / 255, m[4]] : c ? [+c[1], +c[2], +c[3], c[4]] : []
+        const b = el.getBoundingClientRect()
+        if (r !== undefined && (a === undefined || +a >= 0.5) && 0.2126 * r + 0.7152 * g + 0.0722 * bl > 0.7 && b.width >= innerWidth * 0.5 && b.height >= 20)
+          out.lightInDark.push(`${label(el)} ${cs.backgroundColor} ${Math.round(b.width)}x${Math.round(b.height)}`)
+      }
       if (el.tagName === 'IMG' && el.complete && el.naturalWidth === 0 && el.getAttribute('src')) out.brokenImg.push(el.getAttribute('src').slice(0, 80))
     }
     if (loc === 'en') {
@@ -116,8 +126,9 @@ async function run({ r, m }) {
     }
     out.clipped = [...new Set(out.clipped)].slice(0, 8)
     out.scrollRows = [...new Set(out.scrollRows)].slice(0, 5)
+    out.lightInDark = [...new Set(out.lightInDark)].slice(0, 5)
     return out
-  }, m.loc)
+  }, { loc: m.loc, theme: m.theme })
   const tag = `${slug(r)}@${m.w}-${m.theme}-${m.loc}`
   await page.screenshot({ path: `${OUT}/${tag}.png` }).catch(() => {})
   results.push({ route: r, ...m, status, finalUrl, errors: [...new Set(errors)].slice(0, 5), ...found, shot: `${tag}.png` })
@@ -128,5 +139,5 @@ let i = 0
 await Promise.all(Array.from({ length: CONC }, async () => { while (i < jobs.length) { const j = jobs[i++]; await run(j).catch((e) => results.push({ route: j.r, ...j.m, fatal: String(e).slice(0, 200) })) } }))
 await browser.close()
 writeFileSync(`${OUT}/report.json`, JSON.stringify(results, null, 1))
-const bad = results.filter((x) => x.fatal || x.overflow || x.overlay || x.errors?.length || x.clipped?.length || x.brokenImg?.length || (typeof x.status === 'number' && x.status >= 500))
+const bad = results.filter((x) => x.fatal || x.overflow || x.overlay || x.errors?.length || x.clipped?.length || x.lightInDark?.length || x.brokenImg?.length || (typeof x.status === 'number' && x.status >= 500))
 console.log(`${results.length} loads over ${routes.length} routes; ${bad.length} with issues. Report: ${OUT}/report.json`)

@@ -247,7 +247,7 @@ export function ToolboxDetailClient({ entry: initial, mentionPosts, member, aiRa
             {install.tabs.length === 1 && install.tabs[0] !== 'generic' && (
               <p className="text-[12.5px] text-n-666 mb-2"><T>{TOOLBOX_ENV_LABEL[install.tabs[0] as ToolboxEnvironment]}</T></p>
             )}
-            <pre className="bg-n-111 text-n-f5f5f5 text-xs p-4 rounded-lg overflow-x-auto whitespace-pre-wrap font-mono">
+            <pre className="code-surface text-xs p-4 rounded-lg overflow-x-auto whitespace-pre-wrap font-mono">
               {snippet}
             </pre>
           </>
