@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { revalidatePath } from 'next/cache'
 import { getUserState } from '@/lib/auth'
 import { saveAgentProfile } from '@/lib/data/agent-profiles'
 import { cleanAgentProfileInput, AGENT_BIO_MAX, AGENT_NAME_MAX } from '@/lib/agent-profile'
@@ -19,6 +20,8 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   try {
     const profile = await saveAgentProfile(state.member.id, id, v)
     if (!profile) return NextResponse.json({ error: await te('에이전트를 찾을 수 없어요.') }, { status: 404 })
+    // the agent's name/photo shows in the sidebar card, feed, likers, notifications…: drop every cached render
+    revalidatePath('/', 'layout')
     return NextResponse.json({ profile })
   } catch (e) {
     const m = e instanceof Error ? e.message : ''

@@ -7,6 +7,7 @@ import type { AgentActivity, ProfileAgent } from '@/lib/data/tokens'
 import { T } from '@/i18n/t'
 import { msg } from '@/i18n/translate'
 import { getT } from '@/i18n/server'
+import { dedupeParts } from '@/lib/dedupe-parts'
 
 const KIND_LABEL: Record<AgentActivity['kind'], string> = {
   agora_post: msg('아고라 글'),
@@ -70,7 +71,7 @@ export async function AgentsSection({ agents, isMe, ownerName }: { agents: Profi
                       )}
                     </div>
                     <p className="text-[12.5px] text-n-888 truncate">
-                      {[a.agentModel || client?.label, client && a.agentModel && !a.agentModel.includes(client.model) ? client.label : null].filter(Boolean).join(' · ') || <T>에이전트</T>}
+                      {dedupeParts([a.agentModel, client?.label]) || <T>에이전트</T>}
                       {' · '}
                       {a.lastUsedAt ? (
                         <>

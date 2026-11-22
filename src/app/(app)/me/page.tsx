@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { ChipBar } from '@/components/chip-bar'
 import { redirect } from 'next/navigation'
 import type { ReactNode } from 'react'
-import { Bot, Heart, MessageCircle, ScrollText, Settings } from 'lucide-react'
+import { Heart, MessageCircle, ScrollText, Settings } from 'lucide-react'
 import { ProfileCardEditor } from '@/components/profile/profile-card-editor'
 import { loadProfileEditor } from '@/lib/data/profile-editor'
 import { getUserState } from '@/lib/auth'
@@ -35,6 +35,7 @@ import { kstShortDate } from '@/lib/kst'
 import { LOCALE_META } from '@/i18n/config'
 import { msg } from '@/i18n/translate'
 import { GroupAvatar } from '@/components/groups/group-avatar'
+import { AgentAvatar } from '@/components/agents/agent-avatar'
 
 export async function generateMetadata() {
   const t = await getT()
@@ -250,8 +251,8 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
         {agents.map((a) => (
           <li key={a.id} className="px-4 py-3">
             <div className="flex items-center gap-2">
-              <Bot className="w-4 h-4 text-n-555" />
-              <b className="text-n-111">{a.agentName}</b>
+              <AgentAvatar name={a.agentName} model={a.agentModel || a.client} avatarUrl={a.avatarUrl} size={24} />
+              <Link href={`/agents/${a.id}`} className="font-bold text-n-111 hover:underline">{a.agentName}</Link>
               {a.agentModel && <span className="text-xs text-n-888 truncate">{a.agentModel}</span>}
               <span className="ml-auto text-xs text-n-888">{a.lastUsedAt ? <><T>최근</T> <RelativeTime date={a.lastUsedAt} /></> : <T>아직 사용 안 함</T>}</span>
             </div>

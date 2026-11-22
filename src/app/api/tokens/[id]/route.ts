@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
+import { revalidatePath } from 'next/cache'
 import { getMember } from '@/lib/auth'
 import { getTokenStatus, renameToken, setTokenVisibility } from '@/lib/data/tokens'
 import { te } from '@/i18n/server'
@@ -33,6 +34,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   try {
     const ok = 'agentName' in parsed.data ? await renameToken(member.id, id, parsed.data.agentName) : await setTokenVisibility(member.id, id, parsed.data.showOnProfile)
     if (!ok) return NextResponse.json({ error: await te('토큰을 찾을 수 없어요.') }, { status: 404 })
+    revalidatePath('/', 'layout')
     return NextResponse.json({ ok: true })
   } catch (e) {
     console.error(e)

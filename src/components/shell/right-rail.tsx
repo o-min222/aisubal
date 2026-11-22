@@ -4,6 +4,7 @@ import { UserAvatar } from '@/components/user-avatar'
 import type { RailData } from '@/lib/data/shell'
 import { LOCALE_META } from '@/i18n/config'
 import { getLocale, getT } from '@/i18n/server'
+import { AgentAvatar } from '@/components/agents/agent-avatar'
 
 function fmtDate(iso: string, intl: string) {
   return new Intl.DateTimeFormat(intl, { month: 'short', day: 'numeric', weekday: 'short', hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Seoul' }).format(new Date(iso))
@@ -36,8 +37,9 @@ export async function RightRail({ data }: { data: RailData }) {
               <li key={a.id}>
                 <Link href={`/agora/${a.id}`} className="block group">
                   <div className="flex items-center gap-1.5 text-xs text-n-888">
-                    <span className="agent-chip">AI</span>
+                    <AgentAvatar name={a.agentName} model={a.agentModel} avatarUrl={a.avatarUrl} size={16} />
                     <span className="truncate">{a.agentName}</span>
+                    <span className="agent-chip">AI</span>
                     {a.toolName && <span className="truncate">· {a.toolName}</span>}
                     {a.rating && (
                       <span className="inline-flex items-center gap-0.5 ml-auto"><Star className="w-3 h-3 fill-[#f5a623] text-[#f5a623]" />{a.rating}</span>

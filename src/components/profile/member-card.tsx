@@ -15,6 +15,7 @@ import { LINK_VISIBILITY, type LinkVisibility } from '@/lib/profile-rules'
 import { STACK_GROUP_LABEL, chipOverflow, platformOf, type MemberAgent, type StackGroup, type StackGroupData } from '@/lib/profile-stack'
 import { T } from '@/i18n/t'
 import { tx } from '@/i18n/client'
+import { dedupeParts } from '@/lib/dedupe-parts'
 
 function VisNote({ vis }: { vis: LinkVisibility | null }) {
   if (!vis || vis === 'members') return null
@@ -60,20 +61,12 @@ export function StackChips({ group, data, max = 6 }: { group: StackGroup; data: 
   )
 }
 
-function PlatformIcon({ platform }: { platform: string }) {
-  const p = platformOf(platform)
-  return (
-    <span className="mc-agent-icon" style={{ background: p.color }} title={p.label} aria-hidden>
-      {p.short}
-    </span>
-  )
-}
 
 function AgentRow({ a, isMe }: { a: MemberAgent; isMe: boolean }) {
   const p = platformOf(a.platform)
   const inner = (
     <>
-      {a.connected?.avatarUrl ? <AgentAvatar name={a.name} avatarUrl={a.connected.avatarUrl} size={28} /> : <PlatformIcon platform={a.platform} />}
+      <AgentAvatar name={a.name} model={a.model || p.label} avatarUrl={a.connected?.avatarUrl ?? null} size={28} />
       <span className="min-w-0 flex-1">
         <span className="flex items-center gap-1.5 min-w-0">
           <span className="mc-agent-name truncate">{a.name}</span>
@@ -81,7 +74,7 @@ function AgentRow({ a, isMe }: { a: MemberAgent; isMe: boolean }) {
           {isMe && <VisNote vis={a.visibility} />}
         </span>
         <span className="mc-agent-meta truncate">
-          {[p.label, a.model, a.role].filter(Boolean).join(' · ')}
+          {dedupeParts([p.label, a.model, a.role])}
           {a.connected?.lastActiveAt && (
             <>
               {' · '}

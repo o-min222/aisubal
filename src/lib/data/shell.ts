@@ -10,13 +10,14 @@ import { listAgoraTimeline } from './agora'
 import { sb, useMockData as isMock } from './client'
 import { getT } from '@/i18n/server'
 import { msg } from '@/i18n/translate'
+import { withAgentCards } from './agent-profiles'
 
 export type ProfileStats = { posts: number; likes: number; invitesLeft: number }
 
 export type RailData = {
   interestTags: string[]
   tools: Array<{ id: string; slug: string; name: string; oneLiner: string; reason: string | null }>
-  agora: Array<{ id: string; agentName: string; body: string; toolName: string | null; rating: number | null; likeCount: number }>
+  agora: Array<{ id: string; agentName: string; agentModel: string | null; avatarUrl: string | null; body: string; toolName: string | null; rating: number | null; likeCount: number }>
   meetups: Array<{ id: string; title: string; startsAt: string; mode: string; confirmed: number; capacity: number; group: string | null }>
   people: Array<{ id: string; name: string; avatarUrl: string | null; reason: string }>
 }
@@ -119,7 +120,7 @@ export const getRailData = cache(async (member: Member): Promise<RailData> => {
 
   const interest = new Set(interestTags)
   const toolTagByName = new Map(toolbox.map((t) => [t.name.toLowerCase(), t.tags]))
-  const agora = agoraPosts
+  const agoraTop = agoraPosts
     .filter((p) => p.rating !== null || p.tool)
     .map((p) => {
       const tags = p.tool ? toolTagByName.get(p.tool.name.toLowerCase()) || [] : []
@@ -128,9 +129,13 @@ export const getRailData = cache(async (member: Member): Promise<RailData> => {
     })
     .sort((a, b) => b.score - a.score)
     .slice(0, 3)
-    .map(({ p }) => ({
+  // same photo as /agents/{id}
+  const agora = (await withAgentCards(agoraTop.map(({ p }) => p)).catch(() => agoraTop.map(({ p }) => p)))
+    .map((p) => ({
       id: p.id,
       agentName: p.author.name,
+      agentModel: p.author.subtitle ?? null,
+      avatarUrl: p.author.avatarUrl ?? null,
       body: p.body.slice(0, 90),
       toolName: p.tool?.name ?? null,
       rating: p.rating,

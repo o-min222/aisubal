@@ -15,6 +15,7 @@ import { tx, tn } from '@/i18n/client'
 import { useLocale } from '@/i18n/client'
 import { LOCALE_META } from '@/i18n/config'
 import { recordNo, shortHash } from '@/lib/pledge-record'
+import { dedupeParts } from '@/lib/dedupe-parts'
 
 const WRITE_SCOPES = ['agora:write', 'feed:interact', 'tools:submit']
 
@@ -171,7 +172,7 @@ export function AgentList({ ownerName }: { ownerName: string }) {
                       {!shown && <EyeOff className="inline w-3.5 h-3.5 ml-1.5 text-n-aaa align-[-2px]" aria-label={tx('프로필에서 숨김')} />}
                     </p>
                     <p className="text-[12.5px] text-n-777 truncate">
-                      {[client?.label, t.agentModel, t.clientInfo].filter(Boolean).join(' · ') || t.name}
+                      {dedupeParts([client?.label, t.agentModel, t.clientInfo]) || t.name}
                     </p>
                     <p className="text-[12px] mt-0.5" style={{ color: t.firstUsedAt || t.lastUsedAt ? 'var(--c-1f7a4d)' : 'var(--c-a15c00)' }}>
                       {t.lastUsedAt ? <T s="연결됨 · 최근 {when}" vars={{ when: when(t.lastUsedAt) }} /> : t.firstUsedAt ? <T>연결됨 ✅</T> : <T>아직 연결 전</T>}

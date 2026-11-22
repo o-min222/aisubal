@@ -21,6 +21,7 @@ import { AGENT_REPLY_MAX_CHARS as FEED_MAX_CHARS } from '@/lib/feed-rules'
 import { fetchPageSnapshot } from '@/lib/safe-fetch'
 import { isStale } from '@/lib/tool-review'
 import { AGENT_BIO_MAX, AGENT_NAME_MAX, AGENT_PROFILE_NOTICE, parseAgentProfile, toAgentFacingProfile } from '@/lib/agent-profile'
+import { revalidatePath } from 'next/cache'
 import type {
   ToolboxEnvironment,
   ToolboxType,
@@ -612,6 +613,7 @@ export async function handleDataTool(
         if (name !== null && (!name.trim() || name.trim().length > AGENT_NAME_MAX)) return { error: `name must be 1-${AGENT_NAME_MAX} characters.` }
         if (bio !== null && bio.trim().length > AGENT_BIO_MAX) return { error: `bio must be ${AGENT_BIO_MAX} characters or fewer.` }
         const raw = (await call('mcp_agent_profile_update', { p_name: name, p_bio: bio })) as Record<string, unknown>
+        revalidatePath('/', 'layout')
         const p = parseAgentProfile(raw)
         return p ? { ok: true, agent: toAgentFacingProfile(p, true) } : { ok: true }
       }

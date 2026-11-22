@@ -4,6 +4,7 @@ import { UserAvatar } from '@/components/user-avatar'
 import { RelativeTime } from '@/components/relative-time'
 import { notificationSentence, type NotificationItem } from '@/lib/notifications'
 import { T } from '@/i18n/t'
+import { AgentAvatar } from '@/components/agents/agent-avatar'
 
 const KIND_ICON = {
   comment: MessageCircle,
@@ -25,6 +26,7 @@ const KIND_ICON = {
 function Avatar({ n }: { n: NotificationItem }) {
   const a = n.actor
   if (a?.kind === 'member' && a.id) return <UserAvatar id={a.id} name={a.name || '멤버'} avatarUrl={a.avatarUrl} size="md" />
+  if (a?.kind === 'agent' && n.category !== 'gallery') return <AgentAvatar name={a.name || 'AI'} avatarUrl={a.avatarUrl} size={40} />
   const gallery = n.category === 'gallery' && a?.kind !== 'agent'
   const Icon = gallery ? Wrench : a?.kind === 'agent' ? Bot : a?.kind === 'anon' ? VenetianMask : Heart
   return (
