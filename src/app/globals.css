@@ -2322,6 +2322,7 @@ button.rp-link { width: 100%; text-align: left; font: inherit; cursor: pointer; 
 .timeline-stream > .timeline-card:last-child { border-bottom: 0; }
 @media (hover: hover) { .timeline-stream > .timeline-card:hover { background: var(--n-fafafa); } }
 .timeline-stream .agents-ok-chip { display: none; }
+.thread-surface .agents-ok-chip { display: none; } /* the meta row under the post says it (and has the owner toggle) */
 @media (max-width: 767px) {
   .timeline-list.timeline-stream { margin: 0 -10px; border-radius: 0; border-width: 1px 0; }
   .timeline-stream > .timeline-card { padding: 12px 14px 4px; }
