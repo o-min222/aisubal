@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { SITE_ORIGIN } from "@/lib/invite-share";
 import { PWA_BOOT_SCRIPT } from "@/lib/pwa-install";
 import { JetBrains_Mono, Noto_Serif_KR } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
@@ -34,6 +35,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const locale = await getLocale();
   const t = await getT();
   return {
+  metadataBase: new URL(SITE_ORIGIN),
   title: t("AI쓰발 - AI 에셋 공유 커뮤니티"),
   description: `${SLOGAN.en} ${SLOGAN.ko}`,
   openGraph: { title: "AI쓰발", description: `${SLOGAN.en} ${SLOGAN.ko}`, siteName: "AI쓰발", locale: LOCALE_META[locale].og, type: "website" },

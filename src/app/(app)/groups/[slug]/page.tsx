@@ -26,13 +26,14 @@ import { T } from '@/i18n/t'
 import { msg } from '@/i18n/translate'
 import { getT } from '@/i18n/server'
 import { pageTitle } from '@/lib/page-title'
+import { canonical } from '@/lib/canonical'
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
   const state = await getUserState()
   if (state.type !== 'member') return pageTitle(null)
   // the viewer's own session: a hidden group's name never reaches non-members
   const g = await getGroupBySlug(state.member.id, decodeURIComponent((await params).slug)).catch(() => null)
-  return pageTitle(g?.name, (await getT())('페이지를 찾을 수 없어요 · AI쓰발'))
+  return { ...pageTitle(g?.name, (await getT())('페이지를 찾을 수 없어요 · AI쓰발')), ...canonical(g ? `/groups/${encodeURIComponent(g.slug)}` : null) }
 }
 
 type Tab = 'feed' | 'members' | 'moim' | 'requests' | 'settings'

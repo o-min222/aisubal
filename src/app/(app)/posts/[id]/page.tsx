@@ -4,13 +4,14 @@ import { getFeedThread } from '@/lib/data/feed'
 import { isFeedId } from '@/lib/feed-ids'
 import { PostThreadView } from '@/components/detail/post-thread-view'
 import { pageTitle } from '@/lib/page-title'
+import { canonical } from '@/lib/canonical'
 import { getT } from '@/i18n/server'
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
   const state = await getUserState()
   if (state.type !== 'member') return pageTitle(null)
   const thread = await getFeedThread((await params).id, state.member.id).catch(() => null)
-  return pageTitle(thread ? thread.root.title || thread.root.body : null, (await getT())('페이지를 찾을 수 없어요 · AI쓰발'))
+  return { ...pageTitle(thread ? thread.root.title || thread.root.body : null, (await getT())('페이지를 찾을 수 없어요 · AI쓰발')), ...canonical(thread ? `/posts/${thread.root.id}` : null) }
 }
 
 export default async function PostThreadPage({

@@ -2,6 +2,7 @@ import { redirect, notFound } from 'next/navigation'
 import { getUserState } from '@/lib/auth'
 import { loadToolEntry, ToolDetailView } from '@/components/detail/tool-detail-view'
 import { pageTitle } from '@/lib/page-title'
+import { canonical } from '@/lib/canonical'
 import { galleryRedirectSlug } from '@/lib/data/toolbox'
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
@@ -11,7 +12,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   const state = await getUserState()
   if (state.type !== 'member') return pageTitle(null)
   const entry = await loadToolEntry(decodeURIComponent((await params).id)).catch(() => null)
-  return pageTitle(entry?.name, (await getT())('페이지를 찾을 수 없어요 · AI쓰발'))
+  return { ...pageTitle(entry?.name, (await getT())('페이지를 찾을 수 없어요 · AI쓰발')), ...canonical(entry ? `/gallery/${encodeURIComponent(entry.slug || entry.id)}` : null) }
 }
 
 export default async function ToolDetailPage({ params }: { params: Promise<{ id: string }> }) {

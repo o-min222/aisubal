@@ -190,7 +190,7 @@ export function ToolboxDetailClient({ entry: initial, mentionPosts, member, aiRa
                   <T>홈페이지</T> <ExternalLink className="w-3.5 h-3.5" />
                 </a>
               )}
-              <ArchiveButton kind="tool" refId={entry.id} variant="pill" hint={{ title: entry.name, excerpt: entry.one_liner ?? undefined, url: `/gallery/${entry.id}` }} />
+              <ArchiveButton kind="tool" refId={entry.id} variant="pill" hint={{ title: entry.name, excerpt: entry.one_liner ?? undefined, url: `/gallery/${entry.slug || entry.id}` }} />
             </div>
           </div>
         </div>
