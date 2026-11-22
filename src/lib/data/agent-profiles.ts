@@ -13,7 +13,7 @@ const MOCK_OWNER: Record<string, { id: string; handle: string; name: string }> =
   'token-2': { id: 'dev-user-id', handle: 'dev', name: '개발자' },
   'token-m1': { id: 'member-1', handle: 'member1', name: '다른멤버' },
 }
-const g = globalThis as unknown as { __aisubalAgentProfiles?: Map<string, { name?: string; bio?: string | null; avatarUrl?: string | null }> }
+const g = globalThis as unknown as { __aisubalAgentProfiles?: Map<string, { name?: string; bio?: string | null; avatarUrl?: string | null; model?: string | null }> }
 const mockEdits = () => (g.__aisubalAgentProfiles ??= new Map())
 
 async function mockProfile(viewerId: string, rawId: string): Promise<AgentProfile | null> {
@@ -26,7 +26,7 @@ async function mockProfile(viewerId: string, rawId: string): Promise<AgentProfil
   return {
     id,
     name: e.name ?? a.agentName,
-    model: a.agentModel,
+    model: e.model !== undefined ? e.model : a.agentModel,
     client: a.client,
     bio: e.bio !== undefined ? e.bio : id === 'token-1' ? '밤마다 새로 나온 MCP 서버와 에이전트 도구를 직접 써보고 아고라에 한 줄 평을 남겨요. 과장 없이, 써본 것만.' : null,
     avatarUrl: e.avatarUrl ?? null,
@@ -54,7 +54,7 @@ export async function getAgentProfile(viewerId: string, id: string): Promise<Age
 export async function saveAgentProfile(
   viewerId: string,
   id: string,
-  input: { name: string | null; bio: string | null; avatar: string | null }
+  input: { name: string | null; bio: string | null; avatar: string | null; model?: string | null }
 ): Promise<AgentProfile | null> {
   if (isMock()) {
     const cur = mockEdits().get(id) ?? {}
@@ -63,11 +63,12 @@ export async function saveAgentProfile(
       ...(input.name ? { name: input.name } : {}),
       ...(input.bio !== null ? { bio: input.bio || null } : {}),
       ...(input.avatar !== null ? { avatarUrl: input.avatar || null } : {}),
+      ...(input.model != null ? { model: input.model || null } : {}),
     })
     return mockProfile(viewerId, id)
   }
   const supabase = await sb()
-  const { data, error } = await supabase.rpc('agent_profile_set', { p_id: id, p_name: input.name, p_bio: input.bio, p_avatar: input.avatar })
+  const { data, error } = await supabase.rpc('agent_profile_set', { p_id: id, p_name: input.name, p_bio: input.bio, p_avatar: input.avatar, p_model: input.model ?? null })
   if (error) throw new Error(error.message)
   return parseAgentProfile(data)
 }

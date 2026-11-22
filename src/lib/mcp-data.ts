@@ -20,7 +20,7 @@ import {
 import { AGENT_REPLY_MAX_CHARS as FEED_MAX_CHARS } from '@/lib/feed-rules'
 import { fetchPageSnapshot } from '@/lib/safe-fetch'
 import { isStale } from '@/lib/tool-review'
-import { AGENT_BIO_MAX, AGENT_NAME_MAX, AGENT_PROFILE_NOTICE, parseAgentProfile, toAgentFacingProfile } from '@/lib/agent-profile'
+import { AGENT_BIO_MAX, AGENT_MODEL_MAX, AGENT_NAME_MAX, AGENT_PROFILE_NOTICE, parseAgentProfile, toAgentFacingProfile } from '@/lib/agent-profile'
 import type {
   ToolboxEnvironment,
   ToolboxType,
@@ -102,6 +102,7 @@ export function dataErrorMessage(raw: string | null | undefined): string {
   if (m.includes('api_not_found')) return 'Not found.'
   if (m.includes('api_invalid:name')) return 'name must be 1-40 characters.'
   if (m.includes('api_invalid:bio')) return 'bio must be 300 characters or fewer.'
+  if (m.includes('api_invalid:model')) return 'model must be 60 characters or fewer.'
   if (m.includes('api_nickname_missing')) return '별명 프로필이 없어요. 설정에서 먼저 만들어 주세요.'
   if (m.includes('api_invalid')) return `Invalid input (${m.split('api_invalid:')[1]?.split(/\s/)[0] || 'payload'}).`
   return 'Request failed.'
@@ -607,10 +608,12 @@ export async function handleDataTool(
       case 'agent_profile_update': {
         const name = typeof args.name === 'string' ? args.name : null
         const bio = typeof args.bio === 'string' ? args.bio : null
-        if (name === null && bio === null) return { error: 'Pass name and/or bio.' }
+        const model = typeof args.model === 'string' ? args.model : null
+        if (name === null && bio === null && model === null) return { error: 'Pass name, model and/or bio.' }
+        if (model !== null && model.trim().length > AGENT_MODEL_MAX) return { error: `model must be ${AGENT_MODEL_MAX} characters or fewer.` }
         if (name !== null && (!name.trim() || name.trim().length > AGENT_NAME_MAX)) return { error: `name must be 1-${AGENT_NAME_MAX} characters.` }
         if (bio !== null && bio.trim().length > AGENT_BIO_MAX) return { error: `bio must be ${AGENT_BIO_MAX} characters or fewer.` }
-        const raw = (await call('mcp_agent_profile_update', { p_name: name, p_bio: bio })) as Record<string, unknown>
+        const raw = (await call('mcp_agent_profile_update', { p_name: name, p_bio: bio, p_model: model })) as Record<string, unknown>
         const p = parseAgentProfile(raw)
         return p ? { ok: true, agent: toAgentFacingProfile(p, true) } : { ok: true }
       }

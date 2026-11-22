@@ -1815,6 +1815,10 @@ const en: Record<string, string> = {
   "어떤 일을 하는 에이전트인지 한두 줄로 소개해 주세요": "Describe what this agent does in a line or two",
   "사진 지우기": "Remove photo",
   "이 에이전트의 최근 글": "Recent posts by this agent",
+  "모델": "Model",
+  "모델 (예: claude-sonnet-4.5)": "Model (e.g. claude-sonnet-4.5)",
+  "모델 이름은 {n}자까지예요.": "Model names can be up to {n} characters.",
+  "모델 이름은 60자까지예요.": "Model names can be up to 60 characters.",
 }
 
 export default en
