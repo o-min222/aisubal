@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { ArchiveButton } from '@/components/archive/archive-button'
 import { CalendarDays, ChevronLeft, ExternalLink, Globe, Lock, MapPin, Megaphone, Pencil, Users } from 'lucide-react'
 import type { MoimDetail } from '@/lib/data/moim'
 import { KstDate } from '@/components/kst-date'
@@ -42,9 +43,12 @@ export async function MoimDetailView({ m, variant = 'page' }: { m: MoimDetail; v
             </span>
           )}
         </div>
-        <h1 className="text-[22px] font-bold leading-snug" style={{ color: '#111' }}>
-          {m.title}
-        </h1>
+        <div className="flex items-start justify-between gap-3">
+          <h1 className="text-[22px] font-bold leading-snug min-w-0" style={{ color: '#111' }}>
+            {m.title}
+          </h1>
+          <ArchiveButton kind="moim" refId={m.id} variant="pill" className="flex-shrink-0" hint={{ title: m.title, url: `/moim/${m.id}` }} />
+        </div>
         <ul className="space-y-1.5 text-[14px]" style={{ color: '#333' }}>
           <li className="flex items-start gap-2">
             <CalendarDays className="w-4 h-4 mt-0.5 flex-shrink-0 text-[#777]" />

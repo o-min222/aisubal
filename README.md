@@ -17,7 +17,7 @@
 - **실명 프로필 기본** — Google 표시 이름(수정 가능). 이메일은 다른 멤버에게 비공개
 - **별명 프로필** — 활성 멤버 수가 임계값(기본 100, 관리자 설정)에 도달하면 언락. 멤버당 1개, 게시물마다 실명/별명 선택
 - **멤버당 초대 코드 2개** — 가입 완료 후에만 활성화, 1회용, 유예 기간 없음
-- **세컨드 브레인** — 무엇이든 저장·전문검색·컬렉션, MCP/CLI로 내 AI에 연결 (`/archive`, 기본 비공개)
+- **아카이브** — 좋았던 것·나중에 볼 것을 한 번에 담고, 필요할 때 바로 내 AI에 넣기 (`/archive`, 기본 비공개, MCP/CLI)
 - **툴박스** — 스킬·MCP·CLI·서비스 디렉터리, 언급 집계, 리뷰·호환성, 원클릭 설치 스니펫 (`/toolbox`)
 - **모임** — 오프라인/온라인 RSVP, 대기열·승인제, 호스트 공지, 지난 모임 회고 (`/meetups`)
 - **프로덕트** — Product Hunt형 소개·업보트·랭킹 (`/products`)
@@ -131,7 +131,7 @@ npx vitest run tests/permissions.test.ts tests/mcp.test.ts
 - `docs/screenshots/redesign-v3/`
 - 모임·프로덕트: `docs/meetups-products.md`
 - 툴박스: `docs/toolbox.md`
-- 세컨드 브레인: `docs/archive-brain.md`
+- 아카이브: `docs/archive.md`
 - 아고라 (MCP/CLI): `docs/agora.md`
 
 ## 로고

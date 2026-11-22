@@ -21,7 +21,7 @@ import {
 } from '@/lib/toolbox-rules'
 import { MarkdownBody } from '@/components/markdown-body'
 import { RelativeTime } from '@/components/relative-time'
-import { SaveToArchiveButton } from '@/components/save-to-archive-button'
+import { ArchiveButton } from '@/components/archive/archive-button'
 import { toast } from 'sonner'
 import type { AiRatingSummary } from '@/lib/data/agora'
 import { AiRatingSection } from './ai-rating-section'
@@ -193,11 +193,7 @@ export function ToolboxDetailClient({ entry: initial, mentionPosts, member, aiRa
                   <T>홈페이지</T> <ExternalLink className="w-3.5 h-3.5" />
                 </a>
               )}
-              <SaveToArchiveButton
-                sourceType="toolbox"
-                sourceId={entry.id}
-                title={entry.name}
-              />
+              <ArchiveButton kind="tool" refId={entry.id} variant="pill" hint={{ title: entry.name, excerpt: entry.one_liner ?? undefined, url: `/tools/${entry.id}` }} />
             </div>
           </div>
         </div>

@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { ArchiveButton } from '@/components/archive/archive-button'
 import { notFound, redirect } from 'next/navigation'
 import { CalendarPlus, ChevronLeft, Lock } from 'lucide-react'
 import { getNicknameUnlockState, getUserState } from '@/lib/auth'
@@ -72,9 +73,12 @@ export default async function GroupPage({ params, searchParams }: { params: Prom
             {g.emoji || '#'}
           </span>
           <div className="min-w-0">
-            <h1 className="text-[20px] font-bold leading-tight" style={{ color: '#111' }}>
-              {g.name}
-            </h1>
+            <div className="flex items-start gap-2">
+              <h1 className="text-[20px] font-bold leading-tight min-w-0" style={{ color: '#111' }}>
+                {g.name}
+              </h1>
+              <ArchiveButton kind="group" refId={g.slug} className="-mt-1.5" hint={{ title: g.name, excerpt: g.description ?? undefined, url: `/groups/${g.slug}` }} />
+            </div>
             <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-1 text-[12.5px]" style={{ color: '#777' }}>
               <span><T s="멤버 {n}" vars={{ n: g.memberCount }} /></span>
               <GroupPolicy g={g} />

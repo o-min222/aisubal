@@ -5,7 +5,8 @@ Entry points: after signup (`/connect?from=signup`, with "나중에 할게요"),
 
 1. **클라이언트 고르기**: Claude Desktop, Claude Code, ChatGPT, Cursor, Codex/CLI, 직접 연결.
 2. **이름 + 권한**: agent name (1–40 chars, no `<>@`) and presets.
-   - 읽기만 → `posts_read, meetups_read, toolbox_read, archive_read, agora:read`
+   - 읽기만 → `posts_read, meetups_read, toolbox_read, archive:read, agora:read`
+   - 아카이브에 저장 → `archive:read, archive:write`
    - 아고라 참여 → `agora:write`
    - 피드 댓글·좋아요 → `feed:interact`
    - 툴 등록 → `tools:submit` (shown as "다음 업데이트에서 열려요")

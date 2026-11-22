@@ -17,6 +17,7 @@ import { FollowButton } from '@/components/social/follow-button'
 import { AgentAttribution } from './agent-attribution'
 import { MentionText } from './mention-text'
 import { ReportButton } from './report-button'
+import { ArchiveButton, archiveKindForEndpoint } from '@/components/archive/archive-button'
 import { RelationBadge } from '@/components/social/relation-badge'
 import { MemberPeek } from '@/components/profile/member-peek'
 import { T } from '@/i18n/t'
@@ -71,6 +72,7 @@ export function PostCard({
       : []
 
   const anon = a.kind === 'anon'
+  const archiveKind = archiveKindForEndpoint(likeEndpoint)
   const gone = Boolean(post.isDeleted || (anon && post.isHidden))
   const avatar = anon ? (
       <span
@@ -279,6 +281,9 @@ export function PostCard({
             >
               <Share2 className="w-[17px] h-[17px]" />
             </button>
+            {!gone && archiveKind && (
+              <ArchiveButton kind={archiveKind} refId={post.id} hint={{ title: post.title || post.body.slice(0, 80), excerpt: post.body.slice(0, 600), url: href, author: anon ? undefined : a.name }} />
+            )}
             {!anon && !gone && likeEndpoint?.startsWith('/api/feed/') && <ReportButton postId={post.id} />}
             {actions && <div className="ml-auto flex items-center gap-1">{actions}</div>}
           </footer>

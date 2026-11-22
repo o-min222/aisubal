@@ -150,51 +150,6 @@ export type ArchiveItem = {
   created_at: string
 }
 
-/** Second-brain archive: anything can be saved */
-export type ArchiveSourceType =
-  | 'post'
-  | 'link'
-  | 'asset'
-  | 'toolbox'
-  | 'meetup'
-  | 'product'
-
-export type BrainArchiveItem = {
-  id: string
-  owner_id: string
-  source_type: ArchiveSourceType
-  source_id: string
-  title: string
-  summary: string | null
-  content_text: string // searchable / LLM body
-  source_url: string | null
-  extracted_text: string | null // article / transcript when available
-  tags: string[]
-  note: string | null
-  collection_ids: string[]
-  created_at: string
-  updated_at: string
-}
-
-export type ArchiveCollection = {
-  id: string
-  owner_id: string
-  name: string
-  description: string | null
-  is_shared: boolean // false = private (default)
-  created_at: string
-  updated_at: string
-}
-
-export type ArchiveHighlight = {
-  id: string
-  item_id: string
-  owner_id: string
-  quote: string
-  note: string | null
-  created_at: string
-}
-
 export type ApiToken = {
   id: string
   member_id: string
@@ -397,6 +352,9 @@ export type ToolboxCompatVote = {
 }
 
 export type TokenScope =
+  | 'archive:read'
+  | 'archive:write'
+  /** legacy names, still honored by the DB */
   | 'archive_read'
   | 'archive_write'
   | 'posts_read'

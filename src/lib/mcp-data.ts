@@ -11,11 +11,6 @@ import { AGENT_PLEDGE_REQUIRED_MESSAGE } from './pledge'
  * wrapped as untrusted.
  */
 import {
-  collectionContextBundle,
-  itemToLlmContext,
-  useInAiCollectionPrompt as collectionPrompt,
-} from '@/lib/archive-brain-rules'
-import {
   canonicalUrl,
   defaultInstallSnippets,
   extractGithubOwnerRepo,
@@ -26,8 +21,6 @@ import { FEED_MAX_CHARS } from '@/lib/feed-rules'
 import { fetchPageSnapshot } from '@/lib/safe-fetch'
 import { isStale } from '@/lib/tool-review'
 import type {
-  ArchiveCollection,
-  BrainArchiveItem,
   ToolboxEnvironment,
   ToolboxType,
 } from '@/lib/supabase/types'
@@ -421,82 +414,6 @@ export async function handleDataTool(
           error:
             'Agents cannot create posts in the human feed. Use agora_post for the AI Agora, or feed_comment on posts whose author allows agents.',
         }
-
-      // ------------------------------------------------------------ archive
-      case 'list_archive':
-      case 'search_archive': {
-        const rows = (await call('mcp_archive_list', {
-          p_query: name === 'search_archive' ? str(args.query) : null,
-          p_type: str(args.type),
-          p_tag: str(args.tag),
-          p_collection_id: isUuid(args.collectionId) ? args.collectionId : null,
-          p_limit: num(args.limit, 20, 100),
-        })) as Array<{ id: string; title: string; source_type: string; summary: string | null; tags: string[] }>
-        return {
-          items: (rows || []).map((i) => ({
-            id: i.id,
-            title: i.title,
-            sourceType: i.source_type,
-            summary: i.summary,
-            tags: i.tags,
-            reference: `aisubal://archive/${i.id}`,
-          })),
-        }
-      }
-      case 'get_archive_item': {
-        if (!isUuid(args.itemId)) return { error: 'itemId must be a UUID' }
-        const item = (await call('mcp_archive_get', { p_item_id: args.itemId })) as BrainArchiveItem
-        return {
-          id: item.id,
-          title: item.title,
-          sourceType: item.source_type,
-          sourceUrl: item.source_url,
-          tags: item.tags,
-          note: item.note,
-          content: item.content_text,
-          extractedText: item.extracted_text,
-          llmContext: itemToLlmContext(item),
-          reference: `aisubal://archive/${item.id}`,
-        }
-      }
-      case 'list_collections': {
-        const rows = (await call('mcp_collections', {})) as Array<ArchiveCollection & { item_count: number }>
-        return {
-          collections: (rows || []).map((c) => ({
-            id: c.id,
-            name: c.name,
-            description: c.description,
-            isShared: c.is_shared,
-            itemCount: c.item_count ?? 0,
-            reference: `aisubal://collection/${c.id}`,
-          })),
-        }
-      }
-      case 'get_collection_context': {
-        if (!isUuid(args.collectionId)) return { error: 'collectionId must be a UUID' }
-        const d = (await call('mcp_collection_get', { p_collection_id: args.collectionId })) as {
-          collection: ArchiveCollection
-          items: BrainArchiveItem[]
-        }
-        const bundle = collectionContextBundle(d.collection, d.items)
-        return {
-          collectionId: d.collection.id,
-          name: d.collection.name,
-          itemCount: bundle.itemCount,
-          reference: `aisubal://collection/${d.collection.id}`,
-          context: bundle.markdown,
-          prompt: collectionPrompt(d.collection, d.items),
-        }
-      }
-      case 'save_to_archive': {
-        const postId = str(args.postId) || (['post', 'link'].includes(String(args.sourceType)) ? str(args.sourceId) : null)
-        if (!isUuid(postId)) {
-          return { error: 'MCP save_to_archive는 post/link(postId)를 지원합니다. 다른 타입은 웹에서 저장하세요.' }
-        }
-        const tags = Array.isArray(args.tags) ? (args.tags as unknown[]).filter((t): t is string => typeof t === 'string') : null
-        const r = (await call('mcp_archive_save_post', { p_post_id: postId, p_tags: tags })) as { id: string; created: boolean }
-        return { success: true, id: r.id, created: r.created }
-      }
 
       // ------------------------------------------------------------ 모임 (read-only for agents)
       case 'list_meetups': {

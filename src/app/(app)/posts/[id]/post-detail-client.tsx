@@ -10,7 +10,7 @@ import { RelativeTime } from '@/components/relative-time'
 import { AuthorAvatar } from '@/components/user-avatar'
 import { MarkdownBody } from '@/components/markdown-body'
 import { LinkCard } from '@/components/link-card'
-import { SaveToArchiveButton } from '@/components/save-to-archive-button'
+import { ArchiveButton } from '@/components/archive/archive-button'
 import { publicAuthorLabel } from '@/lib/profile'
 import { youtubeEmbedUrl } from '@/lib/link-preview'
 import { toast } from 'sonner'
@@ -74,11 +74,7 @@ export function PostDetailClient({ post }: PostDetailClientProps) {
             </div>
           </div>
 
-          <SaveToArchiveButton
-            sourceType={post.url ? 'link' : 'post'}
-            sourceId={post.id}
-            title={post.title}
-          />
+          <ArchiveButton kind="post" refId={post.id} variant="pill" hint={{ title: post.title ?? undefined, excerpt: post.content?.slice(0, 600) }} />
         </div>
 
         <MarkdownBody content={post.content} />

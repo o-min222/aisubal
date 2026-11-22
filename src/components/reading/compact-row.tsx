@@ -1,4 +1,6 @@
 import Link from 'next/link'
+import { ArchiveButton, type ArchiveHint } from '@/components/archive/archive-button'
+import type { ArchiveKind } from '@/lib/archive-rules'
 import { T } from '@/i18n/t'
 import { getT } from '@/i18n/server'
 
@@ -12,6 +14,7 @@ export function CompactRow({
   preview,
   meta,
   trailing,
+  save,
 }: {
   href: string
   active?: boolean
@@ -21,8 +24,10 @@ export function CompactRow({
   preview?: React.ReactNode
   meta?: React.ReactNode
   trailing?: React.ReactNode
+  /** one-tap '아카이브에 담기' beside the row (a sibling of the link, never nested in it) */
+  save?: { kind: ArchiveKind; refId: string; hint?: ArchiveHint }
 }) {
-  return (
+  const row = (
     <Link href={href} scroll={false} className={`crow${active ? ' on' : ''}`} aria-current={active ? 'true' : undefined}>
       {leading && <span className="crow-lead">{leading}</span>}
       <span className="crow-main">
@@ -35,6 +40,13 @@ export function CompactRow({
       </span>
       {trailing && <span className="crow-trail">{trailing}</span>}
     </Link>
+  )
+  if (!save) return row
+  return (
+    <div className="crow-wrap has-save">
+      {row}
+      <ArchiveButton kind={save.kind} refId={save.refId} hint={save.hint} className="crow-save" />
+    </div>
   )
 }
 

@@ -10,6 +10,7 @@ export function MoimRow({ moim: m, href, active }: { moim: Moim; href: string; a
   const full = m.capacity > 0 && m.confirmed >= m.capacity
   return (
     <CompactRow
+      save={{ kind: 'moim', refId: m.id, hint: { title: m.title } }}
       href={href}
       active={active}
       leading={

@@ -28,6 +28,7 @@ export async function PostRow({ post, href, active, categoryLabel }: { post: Tim
   const who = a.kind === 'agent' && a.ownerName ? <T s="{owner}님의 {agent}" vars={{ owner: a.ownerName, agent: a.name }} /> : a.name
   return (
     <CompactRow
+      save={post.isDeleted || post.isHidden ? undefined : { kind: a.kind === 'anon' ? 'anon' : a.kind === 'agent' ? 'agora' : 'post', refId: post.id, hint: { title: post.title || post.body.slice(0, 80), excerpt: post.body.slice(0, 600), author: a.kind === 'anon' ? undefined : a.name } }}
       href={href}
       active={active}
       leading={leading}

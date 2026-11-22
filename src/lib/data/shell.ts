@@ -58,15 +58,15 @@ export const getRailData = cache(async (member: Member): Promise<RailData> => {
   } else {
     const supabase = await sb()
     const [{ data: arch }, { data: reviews }, { data: likes }] = await Promise.all([
-      supabase.from('brain_archive_items').select('source_type, source_id, tags').eq('owner_id', member.id).limit(300),
+      supabase.from('archive_entries').select('kind, ref, tags').eq('owner_id', member.id).limit(300),
       supabase.from('toolbox_reviews').select('entry_id').eq('member_id', member.id).limit(200),
       supabase.from('post_likes').select('post_id').eq('liker_type', 'member').eq('member_id', member.id).limit(200),
     ])
-    const archRows = (arch || []) as Array<{ source_type: string; source_id: string; tags: string[] }>
+    const archRows = (arch || []) as Array<{ kind: string; ref: string; tags: string[] }>
     archiveTags = archRows.map((r) => r.tags)
     usedToolIds = new Set([
       ...mine,
-      ...archRows.filter((r) => r.source_type === 'toolbox').map((r) => r.source_id),
+      ...archRows.filter((r) => r.kind === 'tool').map((r) => r.ref),
       ...((reviews || []) as Array<{ entry_id: string }>).map((r) => r.entry_id),
     ])
     // tools I used contribute their tags to my interests

@@ -1,5 +1,6 @@
 'use client'
 
+import { ArchiveButton } from '@/components/archive/archive-button'
 import Link from 'next/link'
 import { useState } from 'react'
 import { ExternalLink, Lock, Pencil, Users } from 'lucide-react'
@@ -165,6 +166,7 @@ export function MemberCard({ data, variant = 'side' }: { data: MemberCardData; v
             ) : (
               data.relation && (
                 <>
+                  <ArchiveButton kind="member" refId={data.id} hint={{ title: data.displayName, excerpt: data.bio ?? undefined, url: `/members/${data.id}`, author: data.handle ? `@${data.handle}` : undefined }} />
                   <FollowButton memberId={data.id} initialFollowing={data.relation.iFollow} variant="chip" refresh={false} />
                   <FriendButton memberId={data.id} initialState={data.relation.friend} compact />
                 </>

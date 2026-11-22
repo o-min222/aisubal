@@ -10,28 +10,18 @@ import {
   createProduct,
   getToolboxEntry,
   recordToolboxInstall,
-  listBrainForOwner,
-  getBrainItem,
-  listCollections,
-  saveAnything,
-  exportCollectionPack,
-  buildUseInAi,
-  getCollectionDetail,
-  resolveArchiveSource,
 } from '@/lib/data'
 import type { PostWithDetails } from '@/lib/data/types'
-import {
-  itemToLlmContext,
-  useInAiCollectionPrompt,
-  collectionContextBundle,
-} from '@/lib/archive-brain-rules'
+import { ARCHIVE_ALIASES, ARCHIVE_READ_TOOLS, ARCHIVE_TOOLS, ARCHIVE_TOOL_NAMES, handleArchiveTool, rpcArchiveBackend } from '@/lib/archive-mcp'
+import { devArchiveBackend } from '@/lib/data/archive'
+import { toAgentArchiveItem } from '@/lib/archive-rules'
 import {
   publicAuthorLabel,
   toPublicPost,
   assertNoIdentityLeak,
 } from '@/lib/profile'
 import { TOOLBOX_ENV_LABEL } from '@/lib/toolbox-rules'
-import type { ArchiveSourceType, ToolboxEnvironment } from '@/lib/supabase/types'
+import type { ToolboxEnvironment } from '@/lib/supabase/types'
 import { AGORA_TOOLS, handleAgoraTool, isAgoraTool } from '@/lib/agora-mcp'
 import { UNTRUSTED_NOTICE } from '@/lib/agora-rules'
 import { createAnonClient } from '@/lib/supabase/anon'
@@ -89,61 +79,6 @@ const TOOLS = [
       type: 'object',
       properties: { postId: { type: 'string' } },
       required: ['postId'],
-    },
-  },
-  {
-    name: 'list_archive',
-    description: '레거시: 내 아카이브 요약. Scope: archive_read',
-    inputSchema: { type: 'object', properties: { limit: { type: 'number' } } },
-  },
-  {
-    name: 'search_archive',
-    description: '세컨드 브레인 전문 검색. Scope: archive_read',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        query: { type: 'string' },
-        type: { type: 'string' },
-        tag: { type: 'string' },
-        collectionId: { type: 'string' },
-        limit: { type: 'number' },
-      },
-    },
-  },
-  {
-    name: 'get_archive_item',
-    description: '아카이브 항목 전체 본문(추출문 포함). Scope: archive_read',
-    inputSchema: {
-      type: 'object',
-      properties: { itemId: { type: 'string' } },
-      required: ['itemId'],
-    },
-  },
-  {
-    name: 'list_collections',
-    description: '아카이브 컬렉션 목록. Scope: archive_read',
-    inputSchema: { type: 'object', properties: {} },
-  },
-  {
-    name: 'get_collection_context',
-    description: '컬렉션 LLM 컨텍스트 번들. Scope: archive_read',
-    inputSchema: {
-      type: 'object',
-      properties: { collectionId: { type: 'string' } },
-      required: ['collectionId'],
-    },
-  },
-  {
-    name: 'save_to_archive',
-    description: '임의 소스 저장. Scope: archive_write',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        sourceType: { type: 'string' },
-        sourceId: { type: 'string' },
-        postId: { type: 'string' },
-        tags: { type: 'array', items: { type: 'string' } },
-      },
     },
   },
   // 모임: read-only for agents (no create / rsvp), plus my_groups
@@ -281,130 +216,6 @@ async function handleToolsCall(name: string, args: Record<string, unknown> = {})
     return {
       error:
         'Agents cannot create posts in the human feed. Use agora_post for the AI Agora, or feed_comment on posts whose author allows agents.',
-    }
-  }
-
-  if (name === 'list_archive') {
-    const member = await getMember()
-    if (!member) return { error: 'Unauthorized' }
-    const items = (await listBrainForOwner(member.id)).slice(0, Number(args.limit || 20))
-    return {
-      items: items.map((i) => ({
-        id: i.id,
-        title: i.title,
-        sourceType: i.source_type,
-        tags: i.tags,
-        reference: `aisubal://archive/${i.id}`,
-      })),
-    }
-  }
-
-  if (name === 'search_archive') {
-    const member = await getMember()
-    if (!member) return { error: 'Unauthorized' }
-    const items = (
-      await listBrainForOwner(member.id, {
-        q: args.query ? String(args.query) : undefined,
-        type: args.type ? (String(args.type) as ArchiveSourceType) : 'all',
-        tag: args.tag ? String(args.tag) : undefined,
-        collectionId: args.collectionId ? String(args.collectionId) : undefined,
-      })
-    ).slice(0, Number(args.limit || 20))
-    return {
-      items: items.map((i) => ({
-        id: i.id,
-        title: i.title,
-        sourceType: i.source_type,
-        summary: i.summary,
-        tags: i.tags,
-        reference: `aisubal://archive/${i.id}`,
-      })),
-    }
-  }
-
-  if (name === 'get_archive_item') {
-    const member = await getMember()
-    if (!member) return { error: 'Unauthorized' }
-    const item = await getBrainItem(String(args.itemId), member.id)
-    if (!item) return { error: '항목을 찾을 수 없습니다.' }
-    return {
-      id: item.id,
-      title: item.title,
-      sourceType: item.source_type,
-      sourceUrl: item.source_url,
-      tags: item.tags,
-      note: item.note,
-      content: item.content_text,
-      extractedText: item.extracted_text,
-      llmContext: itemToLlmContext(item),
-      reference: `aisubal://archive/${item.id}`,
-      useInAi: await buildUseInAi(item.id, member.id),
-    }
-  }
-
-  if (name === 'list_collections') {
-    const member = await getMember()
-    if (!member) return { error: 'Unauthorized' }
-    const collections = await listCollections(member.id)
-    return {
-      collections: collections.map((c) => ({
-        id: c.id,
-        name: c.name,
-        description: c.description,
-        isShared: c.is_shared,
-        itemCount: c.item_count ?? 0,
-        reference: `aisubal://collection/${c.id}`,
-      })),
-    }
-  }
-
-  if (name === 'get_collection_context') {
-    const member = await getMember()
-    if (!member) return { error: 'Unauthorized' }
-    const detail = await getCollectionDetail(String(args.collectionId), member.id)
-    if (!detail) return { error: '컬렉션을 찾을 수 없습니다.' }
-    const pack = await exportCollectionPack(detail.collection.id, member.id)
-    if (!pack) return { error: '컬렉션을 찾을 수 없습니다.' }
-    const bundle = collectionContextBundle(detail.collection, detail.items)
-    return {
-      collectionId: detail.collection.id,
-      name: detail.collection.name,
-      itemCount: bundle.itemCount,
-      reference: `aisubal://collection/${detail.collection.id}`,
-      context: pack.markdown,
-      llmsTxt: pack.llmsTxt,
-      skillMd: pack.skillMd,
-      prompt: useInAiCollectionPrompt(detail.collection, detail.items),
-    }
-  }
-
-  if (name === 'save_to_archive') {
-    const member = await getMember()
-    if (!member) return { error: 'Unauthorized' }
-    const postId = args.postId ? String(args.postId) : undefined
-    const sourceType = ((args.sourceType as ArchiveSourceType) ||
-      (postId ? 'post' : undefined)) as ArchiveSourceType | undefined
-    const sourceId = String(args.sourceId || postId || '')
-    if (!sourceType || !sourceId) {
-      return { error: 'sourceType/sourceId 또는 postId가 필요합니다.' }
-    }
-    if (sourceType === 'post' || sourceType === 'link') {
-      const resolved = await resolveArchiveSource(sourceType, sourceId)
-      if (!resolved) return { error: '게시물을 찾을 수 없습니다.' }
-      const result = await saveAnything(member, {
-        source_type: resolved.source_url ? 'link' : 'post',
-        source_id: sourceId,
-        title: resolved.title,
-        summary: resolved.summary,
-        content_text: resolved.content_text,
-        source_url: resolved.source_url,
-        extracted_text: resolved.extracted_text,
-        tags: Array.isArray(args.tags) ? (args.tags as string[]) : undefined,
-      })
-      return { success: true, id: result.item.id, created: result.created }
-    }
-    return {
-      error: 'MCP save_to_archive는 현재 post/link를 지원합니다. UI/API로 다른 타입도 저장하세요.',
     }
   }
 
@@ -649,121 +460,49 @@ export async function POST(request: NextRequest) {
     }
 
     if (method === 'tools/list') {
-      return NextResponse.json(jsonRpcSuccess(id, { tools: [CHARTER_TOOL, ...TOOLS, ...SUBMIT_TOOLS, ...REVIEW_TOOLS, ...FEED_TOOLS, ...AGORA_TOOLS] }))
+      return NextResponse.json(jsonRpcSuccess(id, { tools: [CHARTER_TOOL, ...TOOLS, ...ARCHIVE_TOOLS, ...SUBMIT_TOOLS, ...REVIEW_TOOLS, ...FEED_TOOLS, ...AGORA_TOOLS] }))
     }
     const CHARTER_RESOURCE = { uri: CHARTER_URI, name: 'AI쓰발 커뮤니티 헌장 (charter)', description: 'Slogan, shared values, agent safety clause and the 입단 서약', mimeType: 'text/markdown' }
     if (method === 'resources/read' && String(params?.uri || '') === CHARTER_URI) {
       return NextResponse.json(jsonRpcSuccess(id, { contents: [{ uri: CHARTER_URI, mimeType: 'text/markdown', text: agentCharterText() }] }))
     }
-    if (method === 'resources/list' && !isDevMode()) {
-      const [items, cols] = await Promise.all([
-        handleDataTool('list_archive', { limit: 50 }, bearer, anonRpc),
-        handleDataTool('list_collections', {}, bearer, anonRpc),
-      ])
-      const resources = [
-        CHARTER_RESOURCE,
-        ...((items.items as Array<{ id: string; title: string; summary: string | null; sourceType: string }>) || []).map((i) => ({
-          uri: `aisubal://archive/${i.id}`,
-          name: i.title,
-          description: i.summary || i.sourceType,
-          mimeType: 'text/markdown',
-        })),
-        ...((cols.collections as Array<{ id: string; name: string; description: string | null }>) || []).map((c) => ({
-          uri: `aisubal://collection/${c.id}`,
-          name: `Collection: ${c.name}`,
-          description: c.description || 'archive collection',
-          mimeType: 'text/markdown',
-        })),
-      ]
-      return NextResponse.json(jsonRpcSuccess(id, { resources }))
+    // Archive resources: aisubal://archive/{id} (anonymous-board items never listed).
+    const archiveBackend = async () => {
+      if (!isDevMode()) return bearer ? rpcArchiveBackend(bearer, anonRpc) : null
+      const m = await getMember()
+      return m ? devArchiveBackend(m) : null
     }
-    if (method === 'resources/read' && !isDevMode()) {
-      const uri = String(params?.uri || '')
-      const a = uri.match(/^aisubal:\/\/archive\/(.+)$/)
-      const c = uri.match(/^aisubal:\/\/collection\/(.+)$/)
-      const r = a
-        ? await handleDataTool('get_archive_item', { itemId: a[1] }, bearer, anonRpc)
-        : c
-          ? await handleDataTool('get_collection_context', { collectionId: c[1] }, bearer, anonRpc)
-          : null
-      if (!r) return NextResponse.json(jsonRpcError(id, -32602, 'Unknown resource URI'))
-      if ('error' in r) return NextResponse.json(jsonRpcError(id, -32002, String(r.error)))
-      return NextResponse.json(
-        jsonRpcSuccess(id, {
-          contents: [{ uri, mimeType: 'text/markdown', text: String(a ? r.llmContext : r.context) }],
-        })
-      )
-    }
+    const origin = new URL(request.url).origin
     if (method === 'resources/list') {
-      const member = await getMember()
       const resources: Array<{ uri: string; name: string; description: string; mimeType: string }> = [CHARTER_RESOURCE]
-      if (member) {
-        for (const item of (await listBrainForOwner(member.id)).slice(0, 50)) {
-          resources.push({
-            uri: `aisubal://archive/${item.id}`,
-            name: item.title,
-            description: item.summary || item.source_type,
-            mimeType: 'text/markdown',
-          })
-        }
-        for (const c of await listCollections(member.id)) {
-          resources.push({
-            uri: `aisubal://collection/${c.id}`,
-            name: `Collection: ${c.name}`,
-            description: c.description || 'archive collection',
-            mimeType: 'text/markdown',
-          })
+      const backend = await archiveBackend()
+      if (backend) {
+        const r = await backend.list({ query: null, kind: null, tag: null, limit: 50, offset: 0 }).catch(() => ({ items: [] as Awaited<ReturnType<typeof backend.list>>['items'] }))
+        for (const it of r.items) {
+          if (it.kind === 'anon') continue
+          resources.push({ uri: `aisubal://archive/${it.id}`, name: it.title, description: `archive · ${it.kind}`, mimeType: 'application/json' })
         }
       }
       return NextResponse.json(jsonRpcSuccess(id, { resources }))
     }
     if (method === 'resources/read') {
-      const member = await getMember()
-      if (!member) {
-        return NextResponse.json(jsonRpcError(id, -32001, 'Unauthorized'), { status: 401 })
-      }
       const uri = String(params?.uri || '')
-      const archiveMatch = uri.match(/^aisubal:\/\/archive\/(.+)$/)
-      const collectionMatch = uri.match(/^aisubal:\/\/collection\/(.+)$/)
-      if (archiveMatch) {
-        const item = await getBrainItem(archiveMatch[1], member.id)
-        if (!item) {
-          return NextResponse.json(jsonRpcError(id, -32002, 'Not found'))
-        }
-        return NextResponse.json(
-          jsonRpcSuccess(id, {
-            contents: [
-              {
-                uri,
-                mimeType: 'text/markdown',
-                text: itemToLlmContext(item),
-              },
-            ],
-          })
-        )
-      }
-      if (collectionMatch) {
-        const pack = await exportCollectionPack(collectionMatch[1], member.id)
-        if (!pack) {
-          return NextResponse.json(jsonRpcError(id, -32002, 'Not found'))
-        }
-        return NextResponse.json(
-          jsonRpcSuccess(id, {
-            contents: [
-              {
-                uri,
-                mimeType: 'text/markdown',
-                text: pack.markdown,
-              },
-            ],
-          })
-        )
-      }
-      return NextResponse.json(jsonRpcError(id, -32602, 'Unknown resource URI'))
+      const a = uri.match(/^aisubal:\/\/archive\/([\w-]{1,64})$/)
+      if (!a) return NextResponse.json(jsonRpcError(id, -32602, 'Unknown resource URI'))
+      const backend = await archiveBackend()
+      if (!backend) return NextResponse.json(jsonRpcError(id, -32001, 'Unauthorized'), { status: 401 })
+      const it = await backend.get(a[1]).catch(() => null)
+      if (!it || it.kind === 'anon') return NextResponse.json(jsonRpcError(id, -32002, 'Not found'))
+      return NextResponse.json(
+        jsonRpcSuccess(id, { contents: [{ uri, mimeType: 'application/json', text: JSON.stringify(maskPiiDeep(toAgentArchiveItem(it, origin)), null, 2) }] })
+      )
     }
     if (method === 'tools/call') {
       // Pre-0006 names (list_toolbox, list_products, read_product, …) resolve to the unified 툴 tools.
-      const alias = resolveToolAlias(String(params?.name || ''), (params?.arguments || {}) as Record<string, unknown>)
+      const rawName = String(params?.name || '')
+      const rawArgs = (params?.arguments || {}) as Record<string, unknown>
+      const archiveAlias = ARCHIVE_ALIASES[rawName]?.(rawArgs)
+      const alias = archiveAlias ? { ...archiveAlias, legacyKey: undefined } : resolveToolAlias(rawName, rawArgs)
       const name = alias.name
       const args = alias.args
       if (name === CHARTER_TOOL.name) {
@@ -785,6 +524,19 @@ export async function POST(request: NextRequest) {
               { type: 'text', text: JSON.stringify(isRead ? maskPiiDeep(result) : result, null, 2) },
             ],
             ...('error' in result ? { isError: true } : {}),
+          })
+        )
+      }
+      if (ARCHIVE_TOOL_NAMES.has(name)) {
+        const backend = await archiveBackend()
+        if (!backend) return NextResponse.json(jsonRpcError(id, -32001, 'Unauthorized'), { status: 401 })
+        const result = await handleArchiveTool(name, args, backend, origin)
+        const failed = 'error' in result
+        const isRead = ARCHIVE_READ_TOOLS.has(name) && !failed
+        return NextResponse.json(
+          jsonRpcSuccess(id, {
+            content: [...(isRead ? [{ type: 'text', text: String(result.notice) }] : []), { type: 'text', text: JSON.stringify(isRead ? maskPiiDeep(result) : result, null, 2) }],
+            ...(failed ? { isError: true } : {}),
           })
         )
       }

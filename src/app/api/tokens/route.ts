@@ -11,6 +11,8 @@ const createTokenSchema = z.object({
   scopes: z
     .array(
       z.enum([
+        'archive:read',
+        'archive:write',
         'archive_read',
         'archive_write',
         'posts_read',

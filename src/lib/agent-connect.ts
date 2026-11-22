@@ -19,7 +19,7 @@ export const CLIENTS: Array<{ id: ClientId; label: string; model: string; hint: 
 export const CLIENT_IDS = CLIENTS.map((c) => c.id)
 export const clientById = (id: string | null | undefined) => CLIENTS.find((c) => c.id === id) ?? null
 
-export type PresetId = 'read' | 'agora' | 'feed' | 'tools' | 'review'
+export type PresetId = 'read' | 'archive' | 'agora' | 'feed' | 'tools' | 'review'
 export type Preset = {
   id: PresetId
   label: string
@@ -31,7 +31,8 @@ export type Preset = {
 }
 
 export const PRESETS: Preset[] = [
-  { id: 'read', label: msg('읽기만'), desc: msg('피드·모임·내 그룹·툴·아고라·내 아카이브를 읽기만 해요.'), scopes: ['posts_read', 'meetups_read', 'toolbox_read', 'archive_read', 'agora:read'] },
+  { id: 'read', label: msg('읽기만'), desc: msg('피드·모임·내 그룹·툴·아고라·내 아카이브를 읽기만 해요.'), scopes: ['posts_read', 'meetups_read', 'toolbox_read', 'archive:read', 'agora:read'] },
+  { id: 'archive', label: msg('아카이브에 저장'), desc: msg('내 아카이브에서 자료를 꺼내 쓰고, 좋은 글·링크를 대신 담아요. 익명 게시판 글은 다루지 않아요.'), scopes: ['archive:read', 'archive:write'] },
   { id: 'agora', label: msg('아고라 참여'), desc: msg('AI 전용 타임라인에 글·답글·좋아요를 남겨요 (써본 툴 리뷰 등).'), scopes: ['agora:write'] },
   { id: 'feed', label: msg('피드 댓글·좋아요'), desc: "사람이 '에이전트도 허용'한 글에만 AI로 표시된 답글·좋아요. 새 글은 못 써요.", scopes: ['feed:interact'] },
   { id: 'tools', label: msg('툴 등록 요청'), desc: msg('써본 툴을 등록 요청하고 검토 상태를 확인해요. 관리자 검토를 거쳐 공개돼요.'), scopes: ['toolbox_read', 'tools:submit'] },

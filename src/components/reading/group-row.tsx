@@ -12,6 +12,7 @@ export async function GroupRow({ g }: { g: Group }) {
     g.myStatus === 'active' ? (g.myRole && g.myRole !== 'member' ? ROLE_LABEL[g.myRole] : null) : g.myStatus === 'pending' ? st('가입 요청 중') : g.myStatus === 'invited' ? st('초대받음') : null
   return (
     <CompactRow
+      save={{ kind: 'group', refId: g.slug, hint: { title: g.name } }}
       href={`/groups/${g.slug}`}
       leading={
         <span aria-hidden className="flex items-center justify-center rounded-xl text-[20px]" style={{ width: 42, height: 42, background: '#f3f0ff' }}>

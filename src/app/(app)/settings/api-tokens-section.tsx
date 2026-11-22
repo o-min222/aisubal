@@ -48,8 +48,8 @@ const SCOPE_GROUPS: { label: string; scopes: { id: string; label: string }[] }[]
   {
     label: msg('아카이브'),
     scopes: [
-      { id: 'archive_read', label: msg('읽기') },
-      { id: 'archive_write', label: msg('저장') },
+      { id: 'archive:read', label: msg('읽기') },
+      { id: 'archive:write', label: msg('저장') },
     ],
   },
   {

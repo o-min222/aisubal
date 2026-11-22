@@ -5,7 +5,7 @@ import {
 } from '@/lib/mock-data'
 import { nicknameProfilePublicId, toPublicAuthor, toPublicPost, assertNoIdentityLeak } from '@/lib/profile'
 import { aggregateMentionsFromPosts } from '@/lib/data/toolbox'
-import { saveAnything } from '@/lib/data/archive'
+import { archiveSaveCounts } from '@/lib/data/archive'
 import type { AgentInteraction, Asset, LinkPreview, Member, Post, PostAs } from '@/lib/supabase/types'
 import { mockAppendFeedPost, mockFeedGroupOf } from './feed'
 import { sb, useMockData } from './client'
@@ -36,15 +36,9 @@ type CreatePostInput = {
   }>
 }
 
+/** How many members saved this post into their archive (count only, never who). */
 async function archiveCountForPost(postId: string): Promise<number> {
-  const supabase = await sb()
-  const { count, error } = await supabase
-    .from('brain_archive_items')
-    .select('id', { count: 'exact', head: true })
-    .in('source_type', ['post', 'link'])
-    .eq('source_id', postId)
-  if (error) return 0
-  return count ?? 0
+  return (await archiveSaveCounts('post', [postId]).catch(() => ({} as Record<string, number>)))[postId] ?? 0
 }
 
 async function hydratePost(
@@ -209,19 +203,6 @@ export async function createPost(
     if (parentId || input.groupId) return { post: pub, details }
     MOCK_POSTS.unshift(details)
     await aggregateMentionsFromPosts([details])
-    await saveAnything(member, {
-      source_type: post.url ? 'link' : 'post',
-      source_id: post.id,
-      title: post.title || post.link_title || post.content.slice(0, 60),
-      summary: post.link_description || post.content.slice(0, 140),
-      content_text: post.content,
-      source_url: post.url,
-      extracted_text: post.url
-        ? `[Auto-fetched excerpt]\n${post.link_description || ''}`
-        : null,
-      tags: ['내글'],
-      note: '내 게시물 자동 저장',
-    })
     return { post: pub, details }
   }
 
@@ -275,23 +256,10 @@ export async function createPost(
   const pub = toPublicPost(post, member)
   assertNoIdentityLeak(pub, [member.email])
   const details = await hydratePost(post, member, assets)
-  // replies and group posts are not mirrored into the archive / mention stats
+  // replies and group posts are not counted in mention stats
   if (post.parent_id || input.groupId) return { post: pub, details }
 
   await aggregateMentionsFromPosts([details])
-  await saveAnything(member, {
-    source_type: post.url ? 'link' : 'post',
-    source_id: post.id,
-    title: post.title || post.link_title || post.content.slice(0, 60),
-    summary: post.link_description || post.content.slice(0, 140),
-    content_text: post.content,
-    source_url: post.url,
-    extracted_text: post.url
-      ? `[Auto-fetched excerpt]\n${post.link_description || ''}`
-      : null,
-    tags: ['내글'],
-    note: '내 게시물 자동 저장',
-  })
 
   return { post: pub, details }
 }

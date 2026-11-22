@@ -12,6 +12,7 @@ export function ToolRow({ tool, href, active, social = [] }: { tool: ToolListIte
   const following = social.filter((u) => u.kind === 'following').length
   return (
     <CompactRow
+      save={{ kind: 'tool', refId: tool.id, hint: { title: tool.name } }}
       href={href}
       active={active}
       leading={<ToolIcon name={tool.name} iconUrl={tool.icon_url} dim="w-9 h-9" />}
