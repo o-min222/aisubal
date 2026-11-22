@@ -81,6 +81,19 @@ export async function featuredToolbox(limit = 4): Promise<ToolboxEntry[]> {
   return list.filter((e) => e.featured).slice(0, limit)
 }
 
+/** Old gallery slug → current slug (0035 toolbox_slug_redirects), or null. */
+export async function galleryRedirectSlug(oldSlug: string): Promise<string | null> {
+  if (useMockData() || UUID_RE.test(oldSlug)) return null
+  const supabase = await sb()
+  const { data } = await supabase
+    .from('toolbox_slug_redirects')
+    .select('entry:toolbox_entries(slug)')
+    .eq('old_slug', oldSlug)
+    .maybeSingle()
+  const entry = (data as { entry?: { slug?: string } | null } | null)?.entry
+  return entry?.slug ?? null
+}
+
 export async function getToolboxEntry(
   idOrSlug: string
 ): Promise<ToolboxEntryDetails | null> {
