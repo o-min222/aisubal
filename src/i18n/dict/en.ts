@@ -1860,6 +1860,7 @@ const en: Record<string, string> = {
   "만드는 중…": "Creating…",
   "예전 주소로 들어와도 새 주소로 이동해요.": "Links to the old address will redirect here.",
   "{name} 그룹": "{name} group",
+  "그룹 소개": "About",
 }
 
 export default en

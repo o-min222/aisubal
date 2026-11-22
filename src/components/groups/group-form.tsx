@@ -34,7 +34,7 @@ function DescField({ value, onChange }: { value: string; onChange: (v: string) =
   return (
     <div>
       <label htmlFor="g-desc" className={label} style={{ color: 'var(--n-111)' }}>
-        <T>소개</T>
+        <T>그룹 소개</T>
       </label>
       <textarea id="g-desc" className={field} rows={3} maxLength={500} value={value} onChange={(e) => onChange(e.target.value)} placeholder={tx('어떤 이야기를 나누는 그룹인가요?')} />
     </div>
