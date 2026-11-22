@@ -8,8 +8,7 @@ import { RelationBadge } from '@/components/social/relation-badge'
 import { getUserState } from '@/lib/auth'
 import { getMemberById } from '@/lib/data/members'
 import { listFeedPage } from '@/lib/data/feed'
-import { Pagination } from '@/components/pagination'
-import { parsePage } from '@/lib/paging'
+import { InfiniteList } from '@/components/infinite/infinite-list'
 import { networkHref } from '@/lib/dashboard-tabs'
 import { getProfileStats } from '@/lib/data/shell'
 import { isFeedId } from '@/lib/feed-ids'
@@ -27,14 +26,13 @@ import { getProfileStack } from '@/lib/data/profile-stack'
 import { AgentList, StackChips } from '@/components/profile/member-card'
 import { T } from '@/i18n/t'
 import { getT } from '@/i18n/server'
-import { msg } from '@/i18n/translate'
 
 export async function generateMetadata() {
   const t = await getT()
   return { title: t('프로필 · AI쓰발') }
 }
 
-export default async function MemberProfilePage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ page?: string }> }) {
+export default async function MemberProfilePage({ params }: { params: Promise<{ id: string }> }) {
   const st = await getT()
   const state = await getUserState()
   if (state.type === 'unauthenticated') redirect('/login')
@@ -44,20 +42,27 @@ export default async function MemberProfilePage({ params, searchParams }: { para
   const id = rawId === 'me' ? viewer.id : rawId
   if (id !== viewer.id && !isFeedId(id)) notFound()
   const isMe = id === viewer.id
-  const page = parsePage((await searchParams).page)
 
   const member = isMe ? viewer : await getMemberById(id)
   if (!member || !member.signup_completed_at) notFound()
 
   // Other members' pages only list real-name posts: nickname posts stay unlinkable.
   const [{ posts, totalPages }, stats, tools, social, agents, stack] = await Promise.all([
-    listFeedPage(viewer.id, { authorId: member.id, includeNickname: isMe, page }),
+    listFeedPage(viewer.id, { authorId: member.id, includeNickname: isMe, page: 1 }),
     isMe ? getProfileStats(viewer) : Promise.resolve(null),
     listMemberTools(member.id).catch(() => []),
     getSocialSummary(viewer.id, member.id).catch(() => null),
     listProfileAgents(viewer.id, member.id).catch(() => []),
     getProfileStack(viewer.id, member.id).catch(() => null),
   ])
+  const authorId = member.id
+  async function more(page: number) {
+    'use server'
+    const st = await getUserState()
+    if (st.type !== 'member') return { nodes: null, hasMore: false }
+    const r = await listFeedPage(st.member.id, { authorId, includeNickname: st.member.id === authorId, page })
+    return { nodes: r.posts.length ? <ProfilePosts posts={r.posts} /> : null, hasMore: page < r.totalPages }
+  }
   const stackShown = stack && ((['ai', 'subs', 'skills'] as const).some((g) => (stack[g]?.items.length ?? 0) > 0) || stack.agents.length > 0)
   // SNS links: filtered server-side by each link's visibility (전체 회원 / 친구만 / 비공개).
   const links = await getProfileLinks(viewer.id, member.id, social?.relation.friend === 'friends').catch(() => [])
@@ -220,20 +225,20 @@ export default async function MemberProfilePage({ params, searchParams }: { para
       {posts.length === 0 ? (
         <div className="card p-8 text-center text-sm text-n-888"><T>아직 글이 없어요.</T></div>
       ) : (
-        <div className="timeline-list">
-          {posts.map((p) => (
-            <PostCard
-              key={p.id}
-              post={p}
-              href={`/posts/${p.id}`}
-              replyHref={`/posts/${p.id}`}
-              likeEndpoint={`/api/feed/${p.id}/like`}
-              likersEndpoint={`/api/feed/${p.id}/likers`}
-            />
-          ))}
-        </div>
+        <InfiniteList key={member.id} className="inf-cards" hasMore={totalPages > 1} load={more} storageKey={`/members/${member.id}`}>
+          <ProfilePosts posts={posts} />
+        </InfiniteList>
       )}
-      <Pagination base={`/members/${isMe ? 'me' : member.id}`} page={page} totalPages={totalPages} label={msg('프로필 글 페이지')} />
+    </div>
+  )
+}
+
+function ProfilePosts({ posts }: { posts: Awaited<ReturnType<typeof listFeedPage>>['posts'] }) {
+  return (
+    <div className="timeline-list">
+      {posts.map((p) => (
+        <PostCard key={p.id} post={p} href={`/posts/${p.id}`} replyHref={`/posts/${p.id}`} likeEndpoint={`/api/feed/${p.id}/like`} likersEndpoint={`/api/feed/${p.id}/likers`} />
+      ))}
     </div>
   )
 }

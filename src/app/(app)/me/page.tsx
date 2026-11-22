@@ -21,12 +21,12 @@ import { getSocialSummary, listSocial, type SocialListKind } from '@/lib/data/so
 import { getInviteGraph, GRAPH_HOPS } from '@/lib/data/graph'
 import { InviteGraph } from '@/components/network/invite-graph'
 import { PersonRow } from '@/components/social/person-row'
-import { parsePage, PAGE_SIZE } from '@/lib/paging'
+import { PAGE_SIZE } from '@/lib/paging'
 import { toolHref, TOOL_TYPE_CHIP } from '@/lib/tool-rules'
 import { RSVP_LABEL } from '@/lib/moim-rules'
 import { ROLE_LABEL } from '@/lib/group-rules'
 import { LinkTabs } from '@/components/link-tabs'
-import { Pagination } from '@/components/pagination'
+import { InfiniteList } from '@/components/infinite/infinite-list'
 import { RelativeTime } from '@/components/relative-time'
 import { ToolIcon } from '@/components/tools/tool-card'
 import { T } from '@/i18n/t'
@@ -90,7 +90,141 @@ function moimRole(m: Moim): string {
   return m.myRsvp ? RSVP_LABEL[m.myRsvp.status] : msg('신청')
 }
 
-export default async function DashboardPage({ searchParams }: { searchParams: Promise<{ tab?: string; page?: string; view?: string; root?: string }> }) {
+/** The rows of a paged dashboard tab (page 1 on the server render, later pages via infinite scroll). */
+async function myMoims(meId: string): Promise<Moim[]> {
+  const [mine, hosting] = await Promise.all([listMoim(meId, 'mine', null, 100).catch(() => [] as Moim[]), listMoim(meId, 'hosting', null, 100).catch(() => [] as Moim[])])
+  return [...new Map([...hosting, ...mine].map((m) => [m.id, m])).values()].sort((x, y) => y.startsAt.localeCompare(x.startsAt))
+}
+
+async function dashboardListChunk(meId: string, tab: DashboardTab, view: string, page: number): Promise<{ nodes: ReactNode; totalPages: number }> {
+  const t = await getT()
+  const st = t
+  const locale = await getLocale()
+  let body: ReactNode = null
+  let totalPages = 1
+  if (tab === 'posts') {
+    const r = await listFeedPage(meId, { authorId: meId, includeNickname: true, page })
+    totalPages = r.totalPages
+    body = (
+      <PostRows
+        empty={t('아직 쓴 글이 없어요.')}
+        items={r.posts.map((p) => ({
+          id: p.id,
+          href: `/posts/${p.id}`,
+          title: p.title ?? null,
+          body: p.body || p.linkPreview?.title || p.linkUrl || '',
+          createdAt: p.createdAt,
+          likeCount: p.likeCount,
+          replyCount: p.replyCount,
+          isNickname: Boolean(p.isNickname),
+        }))}
+      />
+    )
+  } else if (tab === 'comments') {
+    const r = await listMyComments(meId, page).catch(() => ({ items: [], totalPages: 1 }))
+    totalPages = r.totalPages
+    body = <PostRows items={r.items} empty={msg('아직 남긴 댓글이 없어요.')} />
+  } else if (tab === 'likes') {
+    const r = await listMyLikedPosts(meId, page).catch(() => ({ items: [], totalPages: 1 }))
+    totalPages = r.totalPages
+    body = <PostRows items={r.items} empty={msg('아직 좋아요한 글이 없어요.')} />
+  } else if (tab === 'tools') {
+    const s = pageSlice(await listMemberTools(meId).catch(() => []), page, PAGE_SIZE)
+    totalPages = s.totalPages
+    body = s.items.length ? (
+      <ul className="divide-y divide-n-f0f0f0">
+        {s.items.map((t) => (
+          <li key={t.id}>
+            <Link href={toolHref(t)} className="flex items-center gap-3 px-4 py-3 hover:bg-n-fafafa">
+              <ToolIcon name={t.name} iconUrl={t.icon_url} dim="w-9 h-9" />
+              <span className="min-w-0 flex-1">
+                <span className="block font-medium text-n-111 truncate">{t.name}</span>
+                <span className="block text-xs text-n-888 truncate">{t.one_liner}</span>
+              </span>
+              <span className="badge"><T>{TOOL_TYPE_CHIP[t.type] ?? t.type}</T></span>
+            </Link>
+          </li>
+        ))}
+      </ul>
+    ) : (
+      <Empty>
+        <T>아직 ‘쓰는 중’으로 표시한 게 없어요.</T> <Link href="/gallery" className="text-c-06c"><T>갤러리 둘러보기</T></Link>
+      </Empty>
+    )
+  } else if (tab === 'moim') {
+    const s = pageSlice(await myMoims(meId), page, PAGE_SIZE)
+    totalPages = s.totalPages
+    body = s.items.length ? (
+      <ul className="divide-y divide-n-f0f0f0">
+        {s.items.map((m) => (
+          <Row
+            key={m.id}
+            href={`/moim/${m.id}`}
+            meta={
+              <>
+                <span className="badge">{moimRole(m)}</span>
+                <span>{new Date(m.startsAt).toLocaleString(LOCALE_META[locale].intl, { timeZone: 'Asia/Seoul', month: 'short', day: 'numeric', weekday: 'short', hour: '2-digit', minute: '2-digit' })}</span>
+                <span><T s="{confirmed}/{capacity}명" vars={{ confirmed: m.confirmed, capacity: m.capacity }} /></span>
+                {m.group && <span>· {m.group.name}</span>}
+                {m.status === 'cancelled' && <span className="text-c-e5484d"><T>취소됨</T></span>}
+              </>
+            }
+          >
+            <b className="text-n-111">{m.title}</b>
+          </Row>
+        ))}
+      </ul>
+    ) : (
+      <Empty>
+        <T>신청했거나 주최한 모임이 없어요.</T> <Link href="/moim" className="text-c-06c"><T>모임 보기</T></Link>
+      </Empty>
+    )
+  } else if (tab === 'groups') {
+    const s = pageSlice(await listMyGroups(meId, true).catch(() => []), page, PAGE_SIZE)
+    totalPages = s.totalPages
+    body = s.items.length ? (
+      <ul className="divide-y divide-n-f0f0f0">
+        {s.items.map((g) => (
+          <li key={g.id}>
+            <Link href={`/groups/${g.slug}`} className="flex items-center gap-3 px-4 py-3 hover:bg-n-fafafa">
+              <GroupAvatar name={g.name} size={36} />
+              <span className="min-w-0 flex-1">
+                <span className="block font-medium text-n-111 truncate">{g.name}</span>
+                <span className="block text-xs text-n-888"><T s="멤버 {memberCount} · 글 {postCount}" vars={{ memberCount: g.memberCount, postCount: g.postCount }} /></span>
+              </span>
+              <span className="badge">{g.myStatus === 'pending' ? <T>가입 요청 중</T> : g.myStatus === 'invited' ? <T>초대받음</T> : g.myRole ? ROLE_LABEL[g.myRole] : <T>멤버</T>}</span>
+            </Link>
+          </li>
+        ))}
+      </ul>
+    ) : (
+      <Empty>
+        <T>가입한 그룹이 없어요.</T> <Link href="/groups" className="text-c-06c"><T>그룹 둘러보기</T></Link>
+      </Empty>
+    )
+  } else if (tab === 'network') {
+    const kind = view as SocialListKind
+    const people = await listSocial(meId, meId, kind).catch(() => [])
+    const s = pageSlice(people, page, PAGE_SIZE)
+    totalPages = s.totalPages
+    body = s.items.length ? (
+      <ul className="divide-y divide-n-f0f0f0">
+        {s.items.map((p) => (
+          <li key={p.id}>
+            <PersonRow person={p} showFriend={kind === 'requests' || kind === 'sent' || kind === 'friends'} />
+          </li>
+        ))}
+      </ul>
+    ) : (
+      <Empty>
+        {{ followers: st('아직 팔로워가 없어요.'), following: st('아직 팔로우한 사람이 없어요.'), friends: st('아직 친구가 없어요. 친구는 친구 신청 → 수락으로 생겨요 (맞팔과 별개).'), requests: st('받은 친구 요청이 없어요.'), sent: <T>보낸 친구 요청이 없어요.</T> }[kind]}
+      </Empty>
+    )
+  }
+  return { nodes: body, totalPages }
+}
+
+export default async function DashboardPage({ searchParams }: { searchParams: Promise<{ tab?: string; view?: string; root?: string }> }) {
   const st = await getT()
   const t = await getT()
   const locale = await getLocale()
@@ -101,7 +235,6 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   const editor = await loadProfileEditor(me)
   const sp = await searchParams
   const tab = parseDashboardTab(sp.tab)
-  const page = parsePage(sp.page)
 
   const [profile, tools, moimMine, moimHosting, groups, agents, invites, social] = await Promise.all([
     getProfileStats(me),
@@ -144,107 +277,22 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   ]
 
   let body: ReactNode = null
-  let totalPages = 1
-  if (tab === 'posts') {
-    const r = await listFeedPage(me.id, { authorId: me.id, includeNickname: true, page })
-    totalPages = r.totalPages
-    body = (
-      <PostRows
-        empty={t('아직 쓴 글이 없어요.')}
-        items={r.posts.map((p) => ({
-          id: p.id,
-          href: `/posts/${p.id}`,
-          title: p.title ?? null,
-          body: p.body || p.linkPreview?.title || p.linkUrl || '',
-          createdAt: p.createdAt,
-          likeCount: p.likeCount,
-          replyCount: p.replyCount,
-          isNickname: Boolean(p.isNickname),
-        }))}
-      />
-    )
-  } else if (tab === 'comments') {
-    const r = await listMyComments(me.id, page).catch(() => ({ items: [], totalPages: 1 }))
-    totalPages = r.totalPages
-    body = <PostRows items={r.items} empty={msg('아직 남긴 댓글이 없어요.')} />
-  } else if (tab === 'likes') {
-    const r = await listMyLikedPosts(me.id, page).catch(() => ({ items: [], totalPages: 1 }))
-    totalPages = r.totalPages
-    body = <PostRows items={r.items} empty={msg('아직 좋아요한 글이 없어요.')} />
-  } else if (tab === 'tools') {
-    const s = pageSlice(tools, page, PAGE_SIZE)
-    totalPages = s.totalPages
-    body = s.items.length ? (
-      <ul className="divide-y divide-n-f0f0f0">
-        {s.items.map((t) => (
-          <li key={t.id}>
-            <Link href={toolHref(t)} className="flex items-center gap-3 px-4 py-3 hover:bg-n-fafafa">
-              <ToolIcon name={t.name} iconUrl={t.icon_url} dim="w-9 h-9" />
-              <span className="min-w-0 flex-1">
-                <span className="block font-medium text-n-111 truncate">{t.name}</span>
-                <span className="block text-xs text-n-888 truncate">{t.one_liner}</span>
-              </span>
-              <span className="badge"><T>{TOOL_TYPE_CHIP[t.type] ?? t.type}</T></span>
-            </Link>
-          </li>
-        ))}
-      </ul>
-    ) : (
-      <Empty>
-        <T>아직 ‘쓰는 중’으로 표시한 게 없어요.</T> <Link href="/gallery" className="text-c-06c"><T>갤러리 둘러보기</T></Link>
-      </Empty>
-    )
-  } else if (tab === 'moim') {
-    const s = pageSlice(moims, page, PAGE_SIZE)
-    totalPages = s.totalPages
-    body = s.items.length ? (
-      <ul className="divide-y divide-n-f0f0f0">
-        {s.items.map((m) => (
-          <Row
-            key={m.id}
-            href={`/moim/${m.id}`}
-            meta={
-              <>
-                <span className="badge">{moimRole(m)}</span>
-                <span>{new Date(m.startsAt).toLocaleString(LOCALE_META[locale].intl, { timeZone: 'Asia/Seoul', month: 'short', day: 'numeric', weekday: 'short', hour: '2-digit', minute: '2-digit' })}</span>
-                <span><T s="{confirmed}/{capacity}명" vars={{ confirmed: m.confirmed, capacity: m.capacity }} /></span>
-                {m.group && <span>· {m.group.name}</span>}
-                {m.status === 'cancelled' && <span className="text-c-e5484d"><T>취소됨</T></span>}
-              </>
-            }
-          >
-            <b className="text-n-111">{m.title}</b>
-          </Row>
-        ))}
-      </ul>
-    ) : (
-      <Empty>
-        <T>신청했거나 주최한 모임이 없어요.</T> <Link href="/moim" className="text-c-06c"><T>모임 보기</T></Link>
-      </Empty>
-    )
-  } else if (tab === 'groups') {
-    const s = pageSlice(groups, page, PAGE_SIZE)
-    totalPages = s.totalPages
-    body = s.items.length ? (
-      <ul className="divide-y divide-n-f0f0f0">
-        {s.items.map((g) => (
-          <li key={g.id}>
-            <Link href={`/groups/${g.slug}`} className="flex items-center gap-3 px-4 py-3 hover:bg-n-fafafa">
-              <GroupAvatar name={g.name} size={36} />
-              <span className="min-w-0 flex-1">
-                <span className="block font-medium text-n-111 truncate">{g.name}</span>
-                <span className="block text-xs text-n-888"><T s="멤버 {memberCount} · 글 {postCount}" vars={{ memberCount: g.memberCount, postCount: g.postCount }} /></span>
-              </span>
-              <span className="badge">{g.myStatus === 'pending' ? <T>가입 요청 중</T> : g.myStatus === 'invited' ? <T>초대받음</T> : g.myRole ? ROLE_LABEL[g.myRole] : <T>멤버</T>}</span>
-            </Link>
-          </li>
-        ))}
-      </ul>
-    ) : (
-      <Empty>
-        <T>가입한 그룹이 없어요.</T> <Link href="/groups" className="text-c-06c"><T>그룹 둘러보기</T></Link>
-      </Empty>
-    )
+  const listView = parseNetworkView(sp.view)
+  const listKey = tab === 'network' ? networkHref({ view: listView }) : dashboardHref(tab)
+  async function more(p: number) {
+    'use server'
+    const s = await getUserState()
+    if (s.type !== 'member') return { nodes: null, hasMore: false }
+    const r = await dashboardListChunk(s.member.id, tab, listView, p)
+    return { nodes: r.nodes, hasMore: p < r.totalPages }
+  }
+  const infinite = (c: { nodes: ReactNode; totalPages: number }) => (
+    <InfiniteList key={listKey} hasMore={c.totalPages > 1} load={more} storageKey={listKey}>
+      {c.nodes}
+    </InfiniteList>
+  )
+  if (tab === 'posts' || tab === 'comments' || tab === 'likes' || tab === 'tools' || tab === 'moim' || tab === 'groups') {
+    body = infinite(await dashboardListChunk(me.id, tab, listView, 1))
   } else if (tab === 'agents') {
     body = agents.length ? (
       <ul className="divide-y divide-n-f0f0f0">
@@ -296,23 +344,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
         </div>
       )
     } else {
-      const kind = view as SocialListKind
-      const people = await listSocial(me.id, me.id, kind).catch(() => [])
-      const s = pageSlice(people, page, PAGE_SIZE)
-      totalPages = s.totalPages
-      inner = s.items.length ? (
-        <ul className="divide-y divide-n-f0f0f0">
-          {s.items.map((p) => (
-            <li key={p.id}>
-              <PersonRow person={p} showFriend={kind === 'requests' || kind === 'sent' || kind === 'friends'} />
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <Empty>
-          {{ followers: st('아직 팔로워가 없어요.'), following: st('아직 팔로우한 사람이 없어요.'), friends: st('아직 친구가 없어요. 친구는 친구 신청 → 수락으로 생겨요 (맞팔과 별개).'), requests: st('받은 친구 요청이 없어요.'), sent: <T>보낸 친구 요청이 없어요.</T> }[kind]}
-        </Empty>
-      )
+      inner = infinite(await dashboardListChunk(me.id, 'network', view, 1))
     }
     body = (
       <div>
@@ -419,7 +451,6 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
       <section className="card overflow-hidden">
         <LinkTabs label={msg('대시보드 탭')} active={tab} tabs={TAB_IDS.map((id) => ({ id, label: DASHBOARD_TABS.find((t) => t.id === id)!.label, href: dashboardHref(id), count: counts[id] }))} />
         {body}
-        <Pagination base={tab === 'network' ? networkHref({ view: parseNetworkView(sp.view) }) : dashboardHref(tab)} page={page} totalPages={totalPages} />
       </section>
     </div>
   )

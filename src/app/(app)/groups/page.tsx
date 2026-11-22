@@ -4,10 +4,10 @@ import { Plus, Search } from 'lucide-react'
 import { getUserState } from '@/lib/auth'
 import { listDiscoverGroups, listMyGroups } from '@/lib/data/groups'
 import { LinkTabs } from '@/components/link-tabs'
-import { Pagination } from '@/components/pagination'
+import { InfiniteList } from '@/components/infinite/infinite-list'
 import { CompactList, EmptyList } from '@/components/reading/compact-row'
 import { GroupRow } from '@/components/reading/group-row'
-import { parsePage, withParams } from '@/lib/paging'
+import { withParams } from '@/lib/paging'
 import { pageSlice } from '@/lib/dashboard-tabs'
 import { T } from '@/i18n/t'
 import { getT } from '@/i18n/server'
@@ -21,7 +21,7 @@ export async function generateMetadata() {
 type GroupsTab = 'mine' | 'discover' | 'waiting'
 const PAGE = 15
 
-export default async function GroupsPage({ searchParams }: { searchParams: Promise<{ q?: string; tab?: string; page?: string }> }) {
+export default async function GroupsPage({ searchParams }: { searchParams: Promise<{ q?: string; tab?: string }> }) {
   const st = await getT()
   const state = await getUserState()
   if (state.type === 'unauthenticated') redirect('/login')
@@ -37,7 +37,27 @@ export default async function GroupsPage({ searchParams }: { searchParams: Promi
   const fallback: GroupsTab = q ? 'discover' : active.length ? 'mine' : 'discover'
   const tab: GroupsTab = sp.tab === 'mine' || sp.tab === 'discover' || (sp.tab === 'waiting' && waiting.length) ? (sp.tab as GroupsTab) : fallback
   const source = tab === 'mine' ? active : tab === 'waiting' ? waiting : others
-  const { items, totalPages, page } = pageSlice(source, parsePage(sp.page), PAGE)
+  const { items, totalPages } = pageSlice(source, 1, PAGE)
+  const here = withParams('/groups', { tab, q: tab === 'discover' ? q || null : null })
+  async function more(page: number) {
+    'use server'
+    const s = await getUserState()
+    if (s.type !== 'member') return { nodes: null, hasMore: false }
+    const [my, disc] = await Promise.all([listMyGroups(s.member.id, true).catch(() => []), listDiscoverGroups(s.member.id, q || null).catch(() => [])])
+    const ids = new Set(my.map((g) => g.id))
+    const src = tab === 'mine' ? my.filter((g) => g.myStatus === 'active') : tab === 'waiting' ? my.filter((g) => g.myStatus !== 'active') : disc.filter((g) => !ids.has(g.id))
+    const r = pageSlice(src, page, PAGE)
+    return {
+      nodes: r.items.length ? (
+        <CompactList label={msg('그룹 목록')}>
+          {r.items.map((g) => (
+            <GroupRow key={g.id} g={g} />
+          ))}
+        </CompactList>
+      ) : null,
+      hasMore: page < r.totalPages,
+    }
+  }
   const tabHref = (t: GroupsTab) => withParams('/groups', { tab: t, q: t === 'discover' ? q || null : null })
   const tabs = [
     { id: 'mine', label: st('내 그룹'), href: tabHref('mine'), count: active.length },
@@ -75,13 +95,14 @@ export default async function GroupsPage({ searchParams }: { searchParams: Promi
       {items.length === 0 ? (
         <EmptyList title={empty} />
       ) : (
-        <CompactList label={msg('그룹 목록')}>
-          {items.map((g) => (
-            <GroupRow key={g.id} g={g} />
-          ))}
-        </CompactList>
+        <InfiniteList key={here} className="inf-surface" hasMore={totalPages > 1} load={more} storageKey={here}>
+          <CompactList label={msg('그룹 목록')}>
+            {items.map((g) => (
+              <GroupRow key={g.id} g={g} />
+            ))}
+          </CompactList>
+        </InfiniteList>
       )}
-      <Pagination base={withParams('/groups', { tab, q: tab === 'discover' ? q || null : null })} page={page} totalPages={totalPages} label={msg('그룹 페이지')} />
     </div>
   )
 }

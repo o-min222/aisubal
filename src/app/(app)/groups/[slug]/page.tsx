@@ -5,8 +5,7 @@ import { CalendarPlus, ChevronLeft, Lock } from 'lucide-react'
 import { getNicknameUnlockState, getUserState } from '@/lib/auth'
 import { getGroupBySlug, listGroupMembers, resolveGroupSlug } from '@/lib/data/groups'
 import { listFeedPage } from '@/lib/data/feed'
-import { Pagination } from '@/components/pagination'
-import { parsePage } from '@/lib/paging'
+import { InfiniteList } from '@/components/infinite/infinite-list'
 import { listMoim } from '@/lib/data/moim'
 import { getRelations } from '@/lib/data/social'
 import { composerIdentity } from '@/lib/composer-identity'
@@ -39,7 +38,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
 type Tab = 'feed' | 'members' | 'moim' | 'requests' | 'settings'
 
-export default async function GroupPage({ params, searchParams }: { params: Promise<{ slug: string }>; searchParams: Promise<{ tab?: string; page?: string }> }) {
+export default async function GroupPage({ params, searchParams }: { params: Promise<{ slug: string }>; searchParams: Promise<{ tab?: string }> }) {
   const st = await getT()
   const state = await getUserState()
   if (state.type === 'unauthenticated') redirect('/login')
@@ -69,7 +68,6 @@ export default async function GroupPage({ params, searchParams }: { params: Prom
   ]
   const sp = await searchParams
   const raw = sp.tab as Tab
-  const page = parsePage(sp.page)
   const tab: Tab = tabs.some((t) => t.id === raw) ? raw : 'feed'
   const base = `/groups/${g.slug}`
 
@@ -119,7 +117,7 @@ export default async function GroupPage({ params, searchParams }: { params: Prom
 
       {tab === 'feed' &&
         (readable ? (
-          <GroupTimeline groupId={g.id} groupName={g.name} canPost={g.myStatus === 'active'} member={state.member} viewerId={me} page={page} base={base} />
+          <GroupTimeline groupId={g.id} groupName={g.name} canPost={g.myStatus === 'active'} member={state.member} viewerId={me} base={base} />
         ) : (
           <div className="card p-8 text-center space-y-1">
             <Lock className="w-5 h-5 mx-auto text-n-999" />
@@ -155,17 +153,29 @@ export default async function GroupPage({ params, searchParams }: { params: Prom
   )
 }
 
-async function GroupTimeline({ groupId, groupName, canPost, member, viewerId, page, base }: { groupId: string; groupName: string; canPost: boolean; member: Member; viewerId: string; page: number; base: string }) {
+async function GroupTimeline({ groupId, groupName, canPost, member, viewerId, base }: { groupId: string; groupName: string; canPost: boolean; member: Member; viewerId: string; base: string }) {
   const st = await getT()
   const [{ posts, totalPages }, unlock] = await Promise.all([
-    listFeedPage(viewerId, { groupId, page }).catch(() => ({ posts: [], totalPages: 1 })),
+    listFeedPage(viewerId, { groupId, page: 1 }).catch(() => ({ posts: [], totalPages: 1 })),
     getNicknameUnlockState(),
   ])
+  async function more(page: number) {
+    'use server'
+    const s = await getUserState()
+    if (s.type !== 'member') return { nodes: null, hasMore: false }
+    const r = await listFeedPage(s.member.id, { groupId, page }).catch(() => ({ posts: [], totalPages: 1 }))
+    return { nodes: r.posts.length ? <FeedTimeline initial={r.posts} /> : null, hasMore: page < r.totalPages }
+  }
   return (
     <>
-      {canPost && page === 1 && <Composer me={{ ...composerIdentity(member, unlock.unlocked), nicknameAvailable: false }} groupId={groupId} groupName={groupName} />}
-      <FeedTimeline initial={posts} emptyTitle={st('아직 그룹 글이 없어요')} emptyHint={canPost ? st('첫 글을 남겨보세요. 그룹 멤버에게만 보여요.') : st('가입하면 글을 쓸 수 있어요.')} />
-      <Pagination base={base} page={page} totalPages={totalPages} label={msg('그룹 타임라인 페이지')} />
+      {canPost && <Composer me={{ ...composerIdentity(member, unlock.unlocked), nicknameAvailable: false }} groupId={groupId} groupName={groupName} />}
+      {posts.length === 0 ? (
+        <FeedTimeline initial={posts} emptyTitle={st('아직 그룹 글이 없어요')} emptyHint={canPost ? st('첫 글을 남겨보세요. 그룹 멤버에게만 보여요.') : st('가입하면 글을 쓸 수 있어요.')} />
+      ) : (
+        <InfiniteList key={base} className="inf-cards" hasMore={totalPages > 1} load={more} storageKey={base}>
+          <FeedTimeline initial={posts} />
+        </InfiniteList>
+      )}
     </>
   )
 }

@@ -2373,3 +2373,10 @@ a.notif-pop-all:hover { background: var(--n-fafafa); }
     border-radius: 0 0 16px 16px; border-left: 0; border-right: 0; border-top: 0;
   }
 }
+/* a list that grows by chunks keeps one surface: the wrapper draws it, hairlines between chunks */
+.inf-list.inf-surface { background: var(--n-fff); border: 1px solid var(--n-e5e5e5); border-radius: 14px; overflow: hidden; }
+.inf-surface .crow-list, .inf-surface .sub-list, .inf-surface .timeline-list.timeline-stream { border: 0; border-radius: 0; margin: 0; background: transparent; }
+.inf-surface > .inf-chunk, .inf-surface > .inf-skeletons, .inf-surface > .inf-end { border-top: 1px solid var(--n-eee); }
+@media (max-width: 767px) { .inf-list.inf-surface.inf-stream { margin: 0 -10px; border-radius: 0; border-width: 1px 0; } }
+.inf-list.inf-cards { display: flex; flex-direction: column; gap: 10px; }
+.inf-list.inf-cards > .inf-skeletons { background: var(--n-fff); border: 1px solid var(--n-e5e5e5); border-radius: 14px; }

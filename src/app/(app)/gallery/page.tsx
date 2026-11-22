@@ -14,8 +14,8 @@ import {
   type ToolSort,
 } from '@/lib/tool-rules'
 import { LinkTabs } from '@/components/link-tabs'
-import { Pagination } from '@/components/pagination'
-import { PAGE_SIZE, parsePage } from '@/lib/paging'
+import { InfiniteList } from '@/components/infinite/infinite-list'
+import { PAGE_SIZE } from '@/lib/paging'
 import { ReadingLayout, openHref } from '@/components/reading/reading-layout'
 import { CompactList, EmptyList } from '@/components/reading/compact-row'
 import { ToolRow } from '@/components/reading/tool-row'
@@ -56,17 +56,15 @@ export default async function ToolsPage({ searchParams }: { searchParams: Promis
   const rec = sp.view === 'rec'
   const tag = sp.tag?.toLowerCase() || null
   const q = sp.q || ''
-  const page = parsePage(sp.page)
   const base: Params = { category: category ?? undefined, tag: tag ?? undefined, q: q || undefined, sort, view: rec ? 'rec' : undefined }
   // Old links (?category=launch|rules|prompt, ?type=…, ?mine=1) land on today's URL.
   // '내가 쓰는 것' moved to the profile, so ?mine=1 just opens the gallery.
   if ((sp.category && sp.category !== category) || sp.type || sp.mine) {
-    const to = new URL(hrefWith({ ...base, page: sp.page }, {}), 'http://x')
+    const to = new URL(hrefWith(base, {}), 'http://x')
     if (sp.open) to.searchParams.set('open', sp.open)
     redirect(to.pathname + to.search)
   }
-  // tabs/filters reset the page; the current list URL keeps it
-  const here = hrefWith({ ...base, page: String(page) }, {})
+  const here = hrefWith(base, {})
   const open = sp.open ? decodeURIComponent(sp.open).slice(0, 120) : null
 
   const [all, forTags, openEntry] = await Promise.all([
@@ -75,10 +73,29 @@ export default async function ToolsPage({ searchParams }: { searchParams: Promis
     open ? loadToolEntry(open).catch(() => null) : Promise.resolve(null),
   ])
   const totalPages = Math.max(1, Math.ceil(all.length / PAGE_SIZE))
-  const tools = all.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
+  const tools = all.slice(0, PAGE_SIZE)
   const tags = topTags(forTags, 14)
   const social = await socialToolUsers(state.member.id, tools.map((t) => t.id)).catch(() => new Map())
   const tab = rec ? 'rec' : category ?? 'all'
+
+  async function more(page: number) {
+    'use server'
+    const s = await getUserState()
+    if (s.type !== 'member') return { nodes: null, hasMore: false }
+    const rows = await listTools(s.member.id, { category, tag, q, sort, rec })
+    const slice = rows.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
+    const soc = await socialToolUsers(s.member.id, slice.map((t) => t.id)).catch(() => new Map())
+    return {
+      nodes: slice.length ? (
+        <CompactList label={msg('갤러리 목록')}>
+          {slice.map((t) => (
+            <ToolRow key={t.id} tool={t} href={openHref(here, t.slug)} social={soc.get(t.id) || []} />
+          ))}
+        </CompactList>
+      ) : null,
+      hasMore: page * PAGE_SIZE < rows.length,
+    }
+  }
 
   const list = (
     <>
@@ -151,13 +168,14 @@ export default async function ToolsPage({ searchParams }: { searchParams: Promis
           hint={rec ? st('쓰는 것에 ‘나도 써요’를 누르면 비슷한 사람들이 쓰는 걸 추천해 드려요.') : st('필터를 바꾸거나, 쓰는 걸 갤러리에 등록해 보세요. 내가 만든 서비스도 등록해 홍보할 수 있어요.')}
         />
       ) : (
-        <CompactList label={msg('갤러리 목록')}>
-          {tools.map((t) => (
-            <ToolRow key={t.id} tool={t} href={openHref(here, t.slug)} active={Boolean(openEntry && openEntry.id === t.id)} social={social.get(t.id) || []} />
-          ))}
-        </CompactList>
+        <InfiniteList key={here} className="inf-surface" hasMore={totalPages > 1} load={more} storageKey={here}>
+          <CompactList label={msg('갤러리 목록')}>
+            {tools.map((t) => (
+              <ToolRow key={t.id} tool={t} href={openHref(here, t.slug)} active={Boolean(openEntry && openEntry.id === t.id)} social={social.get(t.id) || []} />
+            ))}
+          </CompactList>
+        </InfiniteList>
       )}
-      <Pagination base={here} page={page} totalPages={totalPages} label={msg('갤러리 페이지')} />
     </>
   )
 

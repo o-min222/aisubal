@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import { Loader2 } from 'lucide-react'
+import { useSearchParams } from 'next/navigation'
 import { REFRESH_EVENT } from '@/components/shell/pull-to-refresh'
 import { T } from '@/i18n/t'
 
@@ -12,9 +13,10 @@ export type LoadChunk = (page: number) => Promise<Chunk>
 type Saved = { n: number; y: number }
 const SAVE_PREFIX = 'aisubal:inf:'
 
-// Back/forward navigation flag: set by popstate, consumed by the list that mounts next.
-let popped = false
-if (typeof window !== 'undefined') window.addEventListener('popstate', () => (popped = true))
+// Back/forward navigation: lists that mount right after a popstate restore themselves.
+let poppedAt = 0
+if (typeof window !== 'undefined') window.addEventListener('popstate', () => (poppedAt = Date.now()))
+const isBackNav = () => Date.now() - poppedAt < 3000
 
 function readSaved(key: string): Saved | null {
   try {
@@ -55,16 +57,13 @@ export function InfiniteList({
   const [busy, setBusy] = useState(false)
   const [failed, setFailed] = useState(false)
   const sentinel = useRef<HTMLDivElement>(null)
-  const loading = useRef(false)
   const pageRef = useRef(first)
   const loadRef = useRef(load)
   useLayoutEffect(() => {
     loadRef.current = load
   }, [load])
 
-  const next = useCallback(async () => {
-    if (loading.current) return false
-    loading.current = true
+  const run = useCallback(async (): Promise<boolean> => {
     setBusy(true)
     setFailed(false)
     try {
@@ -77,48 +76,112 @@ export function InfiniteList({
       setFailed(true)
       return false
     } finally {
-      loading.current = false
       setBusy(false)
     }
   }, [])
+  const inflight = useRef<Promise<boolean> | null>(null)
+  const next = useCallback((): Promise<boolean> => {
+    if (inflight.current) return inflight.current
+    inflight.current = run().finally(() => (inflight.current = null))
+    return inflight.current
+  }, [run])
 
+  const [pendingY, setPendingY] = useState<number | null>(null)
+  // read once per instance (StrictMode runs effects twice; the save effect must not clobber it)
+  const restore = useRef<Saved | null | undefined>(undefined)
+  const restoring = useRef(false)
+  const getRestore = useCallback(() => {
+    if (restore.current === undefined) {
+      restore.current = storageKey && isBackNav() ? readSaved(storageKey) : null
+      restoring.current = Boolean(restore.current)
+    }
+    return restore.current
+  }, [storageKey])
   // back navigation: replay the pages that were loaded, then jump to where the reader was
   useEffect(() => {
     if (!storageKey) return
-    const saved = popped ? readSaved(storageKey) : null
-    popped = false
+    const saved = getRestore()
     if (!saved) return
     let alive = true
     ;(async () => {
-      for (let i = 0; i < saved.n && alive; i++) if (!(await next())) break
-      if (alive) requestAnimationFrame(() => window.scrollTo(0, saved.y))
+      // idempotent (StrictMode runs this twice): load until saved.n extra pages are on screen
+      while (alive && pageRef.current - first < saved.n) if (!(await next())) break
+      if (alive) {
+        restoring.current = false
+        setPendingY(saved.y)
+      }
     })()
     return () => {
       alive = false
     }
-  }, [storageKey, next])
+  }, [storageKey, next, first, getRestore])
+
+  // after the replayed pages are on screen, go back to where the reader was and hold it briefly
+  // (the router and late-loading previews may move the page right after); any input ends it
+  useEffect(() => {
+    if (pendingY === null) return
+    const until = performance.now() + 800
+    let raf = 0
+    const stop = () => {
+      cancelAnimationFrame(raf)
+      window.removeEventListener('wheel', stop)
+      window.removeEventListener('touchstart', stop)
+      window.removeEventListener('keydown', stop)
+      setPendingY(null)
+    }
+    const go = () => {
+      if (Math.abs(window.scrollY - pendingY) > 2) window.scrollTo(0, pendingY)
+      if (performance.now() < until) raf = requestAnimationFrame(go)
+      else stop()
+    }
+    window.addEventListener('wheel', stop, { passive: true })
+    window.addEventListener('touchstart', stop, { passive: true })
+    window.addEventListener('keydown', stop)
+    raf = requestAnimationFrame(go)
+    return () => {
+      cancelAnimationFrame(raf)
+      window.removeEventListener('wheel', stop)
+      window.removeEventListener('touchstart', stop)
+      window.removeEventListener('keydown', stop)
+    }
+  }, [pendingY])
 
   // remember how far we got (pages + last scroll position) for the back button
   const lastY = useRef(0)
   useEffect(() => {
     if (!storageKey) return
+    getRestore()
     const save = () => {
+      if (restoring.current) return
       try {
         sessionStorage.setItem(SAVE_PREFIX + storageKey, JSON.stringify({ n: pageRef.current - first, y: lastY.current }))
       } catch {}
     }
     let t: ReturnType<typeof setTimeout> | null = null
+    let frozen = false
     const onScroll = () => {
+      if (frozen) return
       lastY.current = window.scrollY
       if (!t) t = setTimeout(() => ((t = null), save()), 150)
     }
+    // leaving through a link: keep the position from the moment of the click (the route
+    // transition scrolls before this list unmounts)
+    const onClick = (e: MouseEvent) => {
+      if (!(e.target as Element | null)?.closest?.('a[href]')) return
+      lastY.current = window.scrollY
+      save()
+      frozen = true
+      setTimeout(() => (frozen = false), 1500)
+    }
     save()
     window.addEventListener('scroll', onScroll, { passive: true })
+    document.addEventListener('click', onClick, true)
     return () => {
       window.removeEventListener('scroll', onScroll)
+      document.removeEventListener('click', onClick, true)
       if (t) clearTimeout(t)
     }
-  }, [storageKey, first, chunks.length])
+  }, [storageKey, first, chunks.length, getRestore])
 
   // pull-to-refresh re-renders page 1 on the server: drop the appended pages
   useEffect(() => {
@@ -142,9 +205,21 @@ export function InfiniteList({
     return () => io.disconnect()
   }, [more, failed, next, chunks.length])
 
+  // reading-pane lists: rows in appended chunks follow ?open= (page 1 re-renders on the server)
+  const openId = useSearchParams().get('open')
+  const box = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    box.current?.querySelectorAll<HTMLAnchorElement>('.inf-chunk a.crow').forEach((a) => {
+      const on = Boolean(openId) && new URL(a.href, location.href).searchParams.get('open') === openId
+      a.classList.toggle('on', on)
+      if (on) a.setAttribute('aria-current', 'true')
+      else a.removeAttribute('aria-current')
+    })
+  }, [openId, chunks.length])
+
   const empty = children === undefined && chunks.length === 0
   return (
-    <div className={`inf-list ${className}`}>
+    <div ref={box} className={`inf-list ${className}`}>
       {children}
       {chunks.map((c, i) => (
         <div key={i} className="inf-chunk">
@@ -177,7 +252,7 @@ export function InfiniteList({
           </button>
         </p>
       )}
-      {!more && !failed && (first === 2 || chunks.length > 0) && endLabel !== null && <p className="inf-end">{endLabel ?? <T>모두 봤어요</T>}</p>}
+      {!more && !failed && chunks.length > 0 && endLabel !== null && <p className="inf-end">{endLabel ?? <T>모두 봤어요</T>}</p>}
     </div>
   )
 }

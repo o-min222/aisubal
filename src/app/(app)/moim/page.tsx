@@ -4,13 +4,13 @@ import { Plus } from 'lucide-react'
 import { getUserState } from '@/lib/auth'
 import { getMoim, listMoim, type MoimTab } from '@/lib/data/moim'
 import { LinkTabs } from '@/components/link-tabs'
-import { Pagination } from '@/components/pagination'
+import { InfiniteList } from '@/components/infinite/infinite-list'
 import { ReadingLayout, openHref } from '@/components/reading/reading-layout'
 import { CompactList, EmptyList } from '@/components/reading/compact-row'
 import { MoimRow } from '@/components/reading/moim-row'
 import { MoimDetailView } from '@/components/detail/moim-detail-view'
 import { isFeedId } from '@/lib/feed-ids'
-import { parsePage, withParams } from '@/lib/paging'
+import { withParams } from '@/lib/paging'
 import { pageSlice } from '@/lib/dashboard-tabs'
 import { T } from '@/i18n/t'
 import { msg } from '@/i18n/translate'
@@ -36,7 +36,7 @@ const EMPTY: Record<MoimTab, string> = {
   past: msg('지난 모임이 없어요.'),
 }
 
-export default async function MoimPage({ searchParams }: { searchParams: Promise<{ tab?: string; page?: string; open?: string }> }) {
+export default async function MoimPage({ searchParams }: { searchParams: Promise<{ tab?: string; open?: string }> }) {
   const st = await getT()
   const state = await getUserState()
   if (state.type === 'unauthenticated') redirect('/login')
@@ -51,8 +51,27 @@ export default async function MoimPage({ searchParams }: { searchParams: Promise
   // 신청 현황: my status order first so the applicant sees where each application stands
   const order = ['confirmed', 'waitlisted', 'pending', 'rejected', 'cancelled'] as const
   const sorted = tab === 'mine' ? [...all].sort((a, b) => order.indexOf(a.myRsvp?.status ?? 'cancelled') - order.indexOf(b.myRsvp?.status ?? 'cancelled')) : all
-  const { items, totalPages, page } = pageSlice(sorted, parsePage(sp.page), PAGE)
-  const base = withParams('/moim', { tab: tab === 'upcoming' ? null : tab, page: page > 1 ? page : null })
+  const { items, totalPages } = pageSlice(sorted, 1, PAGE)
+  const base = withParams('/moim', { tab: tab === 'upcoming' ? null : tab })
+
+  async function more(page: number) {
+    'use server'
+    const s = await getUserState()
+    if (s.type !== 'member') return { nodes: null, hasMore: false }
+    const rows = await listMoim(s.member.id, tab, null, 300).catch(() => [])
+    const ordered = tab === 'mine' ? [...rows].sort((a, b) => order.indexOf(a.myRsvp?.status ?? 'cancelled') - order.indexOf(b.myRsvp?.status ?? 'cancelled')) : rows
+    const r = pageSlice(ordered, page, PAGE)
+    return {
+      nodes: r.items.length ? (
+        <CompactList label={msg('모임 목록')}>
+          {r.items.map((m) => (
+            <MoimRow key={m.id} moim={m} href={openHref(base, m.id)} />
+          ))}
+        </CompactList>
+      ) : null,
+      hasMore: page < r.totalPages,
+    }
+  }
 
   const list = (
     <>
@@ -73,15 +92,16 @@ export default async function MoimPage({ searchParams }: { searchParams: Promise
         <LinkTabs label={msg('모임 보기')} active={tab} tabs={TABS.map((t) => ({ id: t.id, label: t.label, href: t.id === 'upcoming' ? '/moim' : `/moim?tab=${t.id}`, count: t.id === tab ? all.length : undefined }))} />
       </div>
       {items.length === 0 ? (
-        <EmptyList title={page > 1 ? st('이 페이지에는 모임이 없어요') : EMPTY[tab]} />
+        <EmptyList title={EMPTY[tab]} />
       ) : (
-        <CompactList label={msg('모임 목록')}>
-          {items.map((m) => (
-            <MoimRow key={m.id} moim={m} href={openHref(base, m.id)} active={detail?.id === m.id} />
-          ))}
-        </CompactList>
+        <InfiniteList key={base} className="inf-surface" hasMore={totalPages > 1} load={more} storageKey={base}>
+          <CompactList label={msg('모임 목록')}>
+            {items.map((m) => (
+              <MoimRow key={m.id} moim={m} href={openHref(base, m.id)} active={detail?.id === m.id} />
+            ))}
+          </CompactList>
+        </InfiniteList>
       )}
-      <Pagination base={base} page={page} totalPages={totalPages} label={msg('모임 페이지')} />
     </>
   )
 
