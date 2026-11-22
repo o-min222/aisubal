@@ -1883,6 +1883,12 @@ const en: Record<string, string> = {
   "다 했어요": "Done",
   "재발급은 한 시간에 3번까지예요. 잠시 후 다시 해주세요.": "You can reissue up to 3 times an hour. Try again a bit later.",
   "재발급하지 못했어요.": "Couldn't reissue the token.",
+  "토큰 관리": "Manage token",
+  "토큰": "Token",
+  "만든 날": "Created",
+  "최근 사용": "Last used",
+  "아직 없음": "Not yet",
+  "서약하기 전에는 글·댓글·좋아요 같은 쓰기가 막혀 있어요.": "Until the pledge is signed, writing (posts, replies, likes) is blocked.",
 }
 
 export default en

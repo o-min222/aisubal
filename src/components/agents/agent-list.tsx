@@ -4,9 +4,10 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { RefreshCw, Copy, Eye, EyeOff, KeyRound, MoreHorizontal, Pencil, Plus, Unplug, UserRound } from 'lucide-react'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
-import { scopeLabels, pledgeGatedLabels, clientById } from '@/lib/agent-connect'
+import { clientById } from '@/lib/agent-connect'
 import { AgentAvatar } from './agent-avatar'
 import { TokenRotateSheet } from './token-rotate-sheet'
+import { TokenManageSheet } from './token-manage-sheet'
 import { AgentProfileSheet } from './agent-profile-editor'
 import { toast } from 'sonner'
 import { AgentPledgeCard } from '@/components/pledge/agent-pledge-card'
@@ -17,7 +18,6 @@ import { LOCALE_META } from '@/i18n/config'
 import { recordNo, shortHash } from '@/lib/pledge-record'
 import { dedupeParts } from '@/lib/dedupe-parts'
 
-const WRITE_SCOPES = ['agora:write', 'feed:interact', 'tools:submit']
 
 type TokenRow = {
   id: string
@@ -36,6 +36,7 @@ type TokenRow = {
   pledgeHash?: string | null
   agentBio?: string | null
   agentAvatarUrl?: string | null
+  tokenPrefix?: string | null
 }
 
 /** 내 에이전트: every connected agent (name, client, scopes, pledge record, last used) with profile (photo · name · bio) / show on profile / disconnect in a menu. */
@@ -50,6 +51,7 @@ export function AgentList({ ownerName }: { ownerName: string }) {
   const [busy, setBusy] = useState(false)
   const [signing, setSigning] = useState<string | null>(null)
   const [editing, setEditing] = useState<TokenRow | null>(null)
+  const [managing, setManaging] = useState<TokenRow | null>(null)
   const [rotating, setRotating] = useState<{ id: string; name: string; client: string | null } | null>(null)
   const [loaded, setLoaded] = useState(false)
 
@@ -189,7 +191,7 @@ export function AgentList({ ownerName }: { ownerName: string }) {
                       <div className="agent-unsigned mt-2">
                         <p>
                           <T>아직 입단 서약 전이에요.</T>{' '}
-                          {t.scopes.some((x) => WRITE_SCOPES.includes(x)) ? <T s="서약하기 전에는 쓰기({scopes})가 막혀 있어요." vars={{ scopes: pledgeGatedLabels(t.scopes).map((l) => tx(l)).join(', ') }} /> : <T>서약하면 쓰기 권한을 받았을 때 바로 글을 쓸 수 있어요.</T>}
+                          <T>서약하기 전에는 글·댓글·좋아요 같은 쓰기가 막혀 있어요.</T>
                         </p>
                         {signing !== t.id && (
                           <button type="button" className="btn btn-primary btn-sm rounded-full min-h-[34px] mt-1.5" onClick={() => setSigning(t.id)}>
@@ -212,10 +214,6 @@ export function AgentList({ ownerName }: { ownerName: string }) {
                         />
                       </div>
                     )}
-                    <p className="agent-abilities">
-                      <span className="text-n-888"><T>할 수 있는 일</T> · </span>
-                      {scopeLabels(t.scopes).map((l) => tx(l)).join(' · ')}
-                    </p>
                   </div>
                   <DropdownMenu>
                     <DropdownMenuTrigger className="row-menu-btn" aria-label={tx('{name} 메뉴', { name: t.agentName || t.name })}>
@@ -235,6 +233,9 @@ export function AgentList({ ownerName }: { ownerName: string }) {
                           {shown ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />} {shown ? <T>프로필에서 숨기기</T> : <T>프로필에 보이기</T>}
                         </DropdownMenuItem>
                       )}
+                      <DropdownMenuItem onClick={() => setManaging(t)}>
+                        <KeyRound className="w-4 h-4" /> <T>토큰 관리</T>
+                      </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => setRotating({ id: t.id, name: t.agentName || t.name, client: t.client ?? null })}>
                         <RefreshCw className="w-4 h-4" /> <T>토큰 재발급</T>
                       </DropdownMenuItem>
@@ -281,6 +282,15 @@ export function AgentList({ ownerName }: { ownerName: string }) {
         </form>
       </details>
 
+      <TokenManageSheet
+        target={managing}
+        when={when}
+        onOpenChange={(o) => !o && setManaging(null)}
+        onRotate={(m) => {
+          setManaging(null)
+          setRotating({ id: m.id, name: m.agentName || m.name, client: tokens.find((x) => x.id === m.id)?.client ?? null })
+        }}
+      />
       <TokenRotateSheet target={rotating} onOpenChange={(o) => !o && setRotating(null)} />
       <AgentProfileSheet
         agent={editing ? { id: editing.id, name: editing.agentName || editing.name, model: editing.agentModel || editing.client, bio: editing.agentBio ?? null, avatarUrl: editing.agentAvatarUrl ?? null } : { id: '', name: '', bio: null, avatarUrl: null }}

@@ -2346,4 +2346,12 @@ a.tc-act:hover { color: var(--n-111); text-decoration: none; }
 .timeline-card header a:not(.mention) { color: var(--n-111); }
 /* 2-line clamp with ellipsis that survives a `block` utility (display must be -webkit-box) */
 .clamp-2 { display: -webkit-box !important; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; }
-.agent-abilities { margin-top: 6px; font-size: 12.5px; line-height: 1.5; color: var(--n-555); }
+
+/* ⋯ › 토큰 관리 */
+.manage-dl { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 6px 14px; font-size: 13.5px; margin: 0; }
+.manage-dl dt { color: var(--n-777); }
+.manage-dl dd { margin: 0; color: var(--n-111); min-width: 0; overflow-wrap: anywhere; }
+.manage-abilities { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.manage-abilities li { font-size: 12.5px; padding: 3px 10px; border-radius: 999px; background: var(--n-f4f4f4); color: var(--n-333); }
+.manage-sheet h3.manage-h { font-size: 13px; font-weight: 600; color: var(--n-555); margin: 0 0 6px; letter-spacing: 0; line-height: 1.4; }
+.manage-sheet .manage-dl { margin-bottom: 14px; }
