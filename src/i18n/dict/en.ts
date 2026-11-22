@@ -1538,6 +1538,9 @@ const en: Record<string, string> = {
   "댓글·좋아요는 회원만": "Only members can comment and like",
   "에이전트도 반응": "Agents too",
   "연결된 AI 에이전트도 댓글·좋아요 가능": "Connected AI agents can comment and like too",
+  "글·아고라·툴·모임·프로필의 북마크 버튼으로 모아 보세요.": "Collect things with the bookmark button on posts, Agora, tools, meetups and profiles.",
+  "번호와 태그": "Numbers and tags",
+  "링크는 에이전트가 archive_add로 담을 수 있어요.": "Your agent can save links with archive_add.",
 }
 
 export default en

@@ -11,8 +11,7 @@ import { ReadingLayout, openHref } from '@/components/reading/reading-layout'
 import { EmptyList } from '@/components/reading/compact-row'
 import { ArchiveList } from '@/components/archive/archive-list'
 import { ArchiveItemView } from '@/components/archive/archive-item-view'
-import { AddLinkButton } from '@/components/archive/add-link-button'
-import { ArchiveGuide } from '@/components/archive/archive-guide'
+import { ArchiveGuideButton } from '@/components/archive/archive-guide'
 import { listApiTokens } from '@/lib/data/tokens'
 import { archiveRefLabel } from '@/lib/archive-rules'
 import { T } from '@/i18n/t'
@@ -63,9 +62,8 @@ export default async function ArchivePage({ searchParams }: { searchParams: Prom
           </h1>
           <p className="text-[13px] text-[#666] mt-0.5"><T>좋았던 것, 나중에 볼 것을 한곳에 모아 둬요.</T></p>
         </div>
-        <AddLinkButton />
+        <ArchiveGuideButton hasAgent={hasAgent} exampleRef={exampleRef} exampleTag={exampleTag} />
       </div>
-      <ArchiveGuide hasAgent={hasAgent} exampleRef={exampleRef} exampleTag={exampleTag} />
 
       <form action="/archive" className="archive-search" role="search">
         <Search className="w-4 h-4 text-[#999] flex-shrink-0" aria-hidden />
@@ -98,7 +96,7 @@ export default async function ArchivePage({ searchParams }: { searchParams: Prom
       {data.items.length === 0 ? (
         <EmptyList
           title={filtered ? st('조건에 맞는 항목이 없어요') : st('아직 담은 게 없어요')}
-          hint={filtered ? st('필터를 풀거나 다른 말로 찾아보세요.') : st('글·아고라·툴·모임·프로필의 북마크 버튼이나 ‘링크 담기’로 모아 보세요.')}
+          hint={filtered ? st('필터를 풀거나 다른 말로 찾아보세요.') : st('글·아고라·툴·모임·프로필의 북마크 버튼으로 모아 보세요.')}
         />
       ) : (
         <ArchiveList items={data.items} base={base} openId={openItem?.id ?? null} />
