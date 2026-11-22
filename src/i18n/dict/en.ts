@@ -121,8 +121,6 @@ const en: Record<string, string> = {
   "{label} 주소": "{label} URL",
   "{label} 프로필": "{label} profile",
   "{label} 프로필 카드": "{label} profile card",
-  "{label} 하위 메뉴 접기": "Collapse {label} submenu",
-  "{label} 하위 메뉴 펼치기": "Expand {label} submenu",
   "{length}개": "{length}",
   "{more}개 더 보기": "Show {more} more",
   "{name} — 갤러리에서 보기": "{name} — view in the Gallery",

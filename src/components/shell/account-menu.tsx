@@ -2,17 +2,15 @@
 
 import Link from 'next/link'
 import { useEffect, useRef, useState, type ReactNode } from 'react'
-import { ChevronDown, LogOut, Settings, Shield, SquarePlus, Ticket, UserRound, LayoutDashboard } from 'lucide-react'
+import { LogOut, Settings, Shield, SquarePlus, Ticket, UserRound, LayoutDashboard } from 'lucide-react'
 import { AdaptiveSheet } from '@/components/adaptive-sheet'
 import { UserAvatar } from '@/components/user-avatar'
 import { useMediaQuery } from '@/hooks/use-media-query'
-import { ADMIN_SECTIONS, SETTINGS_SECTIONS, type SubNavItem } from './account-nav'
 import type { ShellMember } from './nav-items'
 import { signOut } from './sign-out'
 import { useT } from '@/i18n/client'
 import { LocaleSwitch } from '@/components/i18n/locale-switch'
 import { ThemeSwitch } from '@/components/theme/theme-switch'
-import { msg } from '@/i18n/translate'
 import { usePwaInstall } from '@/hooks/use-pwa-install'
 import { IosInstallSheet } from '@/components/pwa/ios-install-sheet'
 
@@ -32,52 +30,6 @@ function useInvitesLeft(open: boolean, initial: number | null) {
     }
   }, [open, left])
   return left
-}
-
-function Group({
-  icon: Icon,
-  label,
-  href,
-  items,
-  onNavigate,
-}: {
-  icon: typeof Settings
-  label: string
-  href: string
-  items: SubNavItem[]
-  onNavigate: () => void
-}) {
-  const [expanded, setExpanded] = useState(false)
-  const t = useT()
-  return (
-    <div>
-      <div className="account-row-wrap">
-        <Link href={href} onClick={onNavigate} className="account-row flex-1">
-          <Icon className="w-[18px] h-[18px]" /> {t(label)}
-        </Link>
-        <button
-          type="button"
-          className="account-expand"
-          aria-expanded={expanded}
-          aria-label={expanded ? t('{label} 하위 메뉴 접기', { label: t(label) }) : t('{label} 하위 메뉴 펼치기', { label: t(label) })}
-          onClick={() => setExpanded((v) => !v)}
-        >
-          <ChevronDown className={`w-4 h-4 transition-transform ${expanded ? 'rotate-180' : ''}`} />
-        </button>
-      </div>
-      {expanded && (
-        <ul className="account-sub">
-          {items.map((i) => (
-            <li key={i.href}>
-              <Link href={i.href} onClick={onNavigate} className="account-subrow">
-                <i.icon className="w-4 h-4" /> {t(i.label)}
-              </Link>
-            </li>
-          ))}
-        </ul>
-      )}
-    </div>
-  )
 }
 
 function MenuBody({ me, invitesLeft, close, onInstall }: { me: ShellMember; invitesLeft: number | null; close: () => void; onInstall: (() => void) | null }) {
@@ -102,8 +54,14 @@ function MenuBody({ me, invitesLeft, close, onInstall }: { me: ShellMember; invi
         <Ticket className="w-[18px] h-[18px]" /> {t('초대')}
         {invitesLeft !== null && <span className="account-badge">{t('{n}장 남음', { n: invitesLeft })}</span>}
       </Link>
-      <Group icon={Settings} label={msg('설정')} href="/settings" items={SETTINGS_SECTIONS} onNavigate={close} />
-      {me.isAdmin && <Group icon={Shield} label={msg('관리')} href="/admin" items={ADMIN_SECTIONS} onNavigate={close} />}
+      <Link href="/settings" onClick={close} className="account-row">
+        <Settings className="w-[18px] h-[18px]" /> {t('설정')}
+      </Link>
+      {me.isAdmin && (
+        <Link href="/admin" onClick={close} className="account-row">
+          <Shield className="w-[18px] h-[18px]" /> {t('관리')}
+        </Link>
+      )}
       <div className="account-sep" />
       <LocaleSwitch variant="row" />
       <ThemeSwitch variant="row" />
