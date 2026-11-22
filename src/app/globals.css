@@ -2441,3 +2441,9 @@ a.notif-pop-all:hover { background: var(--n-fafafa); }
 .mention-opt.is-active { background: var(--n-f3f3f3); }
 .mention-opt-name { font-weight: 600; color: var(--n-111); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
 .mention-opt-handle { margin-left: auto; color: var(--n-888); font-size: 12px; white-space: nowrap; flex: 0 0 auto; }
+
+/* C-final: the 5 fixed feed tabs share the row on phones (en "For you / Following / Friends" no longer cut at 375–390) */
+@media (max-width: 640px) {
+  .feed-scope-tabs { gap: 0 !important; }
+  .feed-scope-tabs > a { flex: 1 1 auto !important; justify-content: center; padding: 10px 6px !important; font-size: 14px !important; }
+}

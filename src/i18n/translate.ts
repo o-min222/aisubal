@@ -10,11 +10,26 @@ export function interpolate(s: string, vars?: Vars): string {
   return s.replace(/\{(\w+)\}/g, (m, k: string) => (k in vars ? String(vars[k]) : m))
 }
 
+/**
+ * Context marker: '추천||feed tab' is shown as '추천' in Korean but has its own
+ * dictionary entry, for a short word whose translation depends on where it sits.
+ */
+export const CTX_SEP = '||'
+const stripCtx = (s: string) => {
+  const i = s.indexOf(CTX_SEP)
+  return i < 0 ? s : s.slice(0, i)
+}
+
 export function makeT(locale: Locale, dict: Dict | null): T {
-  if (locale === DEFAULT_LOCALE || !dict) return (s, vars) => interpolate(s, vars)
+  if (locale === DEFAULT_LOCALE || !dict) return (s, vars) => interpolate(stripCtx(s), vars)
   return (s, vars) => {
     const hit = dict[s]
     if (hit !== undefined) return interpolate(hit, vars)
+    if (s.includes(CTX_SEP)) {
+      s = stripCtx(s)
+      const plain = dict[s]
+      if (plain !== undefined) return interpolate(plain, vars)
+    }
     // Server messages often arrive already filled with numbers ("500자 이하로 써 주세요.").
     // Retry as a template — digits become {n}, {n2}, … — and put the numbers back.
     const nums: Record<string, string> = {}

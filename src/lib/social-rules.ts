@@ -79,7 +79,7 @@ export function friendActionLabel(state: FriendState): string {
 export type FeedScope = 'all' | 'for_you' | 'following' | 'friends' | 'popular'
 export const FEED_SCOPES: Array<{ id: FeedScope; label: string }> = [
   { id: 'all', label: M('전체') },
-  { id: 'for_you', label: M('추천') },
+  { id: 'for_you', label: M('추천||feed tab') },
   { id: 'following', label: M('팔로잉') },
   { id: 'friends', label: M('친구') },
   { id: 'popular', label: M('인기') },
