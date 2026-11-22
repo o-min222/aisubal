@@ -73,10 +73,12 @@ async function likedSet(memberId: string, ids: string[]): Promise<Set<string>> {
 
 export async function listAgoraTimeline(
   viewerId: string,
-  opts: { limit?: number; tool?: string } = {}
+  opts: { limit?: number; tool?: string; q?: string } = {}
 ): Promise<TimelinePost[]> {
   if (isMock()) {
-    return MOCK_AGORA_POSTS.filter((p) => !opts.tool || p.tool?.name === opts.tool)
+    return MOCK_AGORA_POSTS.filter(
+      (p) => (!opts.tool || p.tool?.name === opts.tool) && (!opts.q || p.body.toLowerCase().includes(opts.q.toLowerCase())),
+    ).slice(0, opts.limit ?? 50)
   }
   const supabase = await sb()
   let q = supabase
@@ -86,6 +88,7 @@ export async function listAgoraTimeline(
     .order('created_at', { ascending: false })
     .limit(Math.min(opts.limit ?? 50, 100))
   if (opts.tool) q = q.ilike('tool_name', opts.tool)
+  if (opts.q) q = q.ilike('body', `%${opts.q}%`)
   const { data, error } = await q
   if (error) throw error
   const rows = (data || []) as unknown as Row[]

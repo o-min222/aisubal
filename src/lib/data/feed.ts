@@ -225,6 +225,8 @@ export type FeedListOpts = {
   scope?: FeedScope
   /** group timeline; when omitted, group posts are excluded */
   groupId?: string | null
+  /** search: title or body contains this (already sanitized by lib/search-rules) */
+  q?: string
 }
 
 async function queryFeed(viewerId: string, opts: FeedListOpts, withCount: boolean): Promise<{ posts: TimelinePost[]; total: number | null }> {
@@ -242,7 +244,8 @@ async function queryFeed(viewerId: string, opts: FeedListOpts, withCount: boolea
         (opts.groupId ? p.groupId === opts.groupId : !p.groupId) &&
         (!opts.authorId || p.author.id === opts.authorId) &&
         (!authorIds || (authorIds.includes(p.author.id) && !p.isNickname)) &&
-        (!opts.before || p.createdAt < opts.before)
+        (!opts.before || p.createdAt < opts.before) &&
+        (!opts.q || `${p.title ?? ''} ${p.body}`.toLowerCase().includes(opts.q.toLowerCase()))
     )
     if (popular) rows = [...rows].sort((a, b) => b.likeCount * 2 + b.replyCount - (a.likeCount * 2 + a.replyCount) || b.createdAt.localeCompare(a.createdAt))
     return { posts: await withFollowState(viewerId, rows.slice(offset, offset + limit)), total: rows.length }
@@ -259,6 +262,7 @@ async function queryFeed(viewerId: string, opts: FeedListOpts, withCount: boolea
     : q.order('created_at', { ascending: false })
   q = opts.groupId ? q.eq('group_id', opts.groupId) : q.is('group_id', null)
   if (opts.before) q = q.lt('created_at', opts.before)
+  if (opts.q) q = q.or(`title.ilike.%${opts.q}%,content.ilike.%${opts.q}%`)
   if (authorIds) q = q.in('author_id', authorIds.slice(0, 500)).eq('posted_as', 'real').eq('author_kind', 'member')
   if (opts.authorId) {
     q = q.eq('author_id', opts.authorId)
