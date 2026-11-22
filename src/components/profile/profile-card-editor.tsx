@@ -69,7 +69,7 @@ export function ProfileCardEditor({
     const nameOk = validateDisplayName(next.name)
     if (!nameOk.ok) return toast.error(nameOk.reason)
     const h = validateHandle(next.handle)
-    if (!h.ok) return setHandleErr(h.reason ?? tx('핸들을 확인해 주세요.'))
+    if (!h.ok) return setHandleErr(h.reason)
     if (!patch.avatar && next.name === last.current.name && next.handle === last.current.handle && next.bio === last.current.bio && next.showReal === last.current.showReal) return
     mark('saving')
     try {
@@ -281,7 +281,8 @@ export function ProfileCardEditor({
             onBlur={() => void saveProfile()}
             onKeyDown={(e) => e.key === 'Enter' && e.currentTarget.blur()}
           />
-          <HandleField initial={me.handle ?? ''} onChanged={(h) => { setHandle(h); last.current = { ...last.current, handle: h } }} />
+          <HandleField initial={me.handle ?? ''} onChanged={(h) => { setHandle(h); setHandleErr(null); last.current = { ...last.current, handle: h } }} />
+          {handleErr && <p role="alert" className="text-[12px] mt-1 px-0.5 text-c-b42318">{tx(handleErr)}</p>}
           <textarea
             className="pe-inline pe-bio"
             value={bio}
