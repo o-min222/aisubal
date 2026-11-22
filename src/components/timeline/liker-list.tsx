@@ -2,7 +2,8 @@
 
 import { AgentAttribution } from './agent-attribution'
 import { useEffect, useState } from 'react'
-import { Bot } from 'lucide-react'
+import Link from 'next/link'
+import { AgentAvatar } from '@/components/agents/agent-avatar'
 import { AdaptiveSheet } from '@/components/adaptive-sheet'
 import { UserAvatar } from '@/components/user-avatar'
 import type { TimelineLiker } from './types'
@@ -87,9 +88,11 @@ export function LikerList({
             {likers?.map((l) => (
               <li key={`${l.kind}-${l.id}`} className="flex items-center gap-3 px-1 py-2 min-h-[48px]">
                 {l.kind === 'agent' ? (
-                  <span className="w-8 h-8 rounded-full bg-n-111 text-n-fff flex items-center justify-center flex-shrink-0">
-                    <Bot className="w-4 h-4" />
-                  </span>
+                  l.profileHref ? (
+                    <Link href={l.profileHref} aria-label={l.name}><AgentAvatar name={l.name} avatarUrl={l.avatarUrl} size={32} /></Link>
+                  ) : (
+                    <AgentAvatar name={l.name} avatarUrl={l.avatarUrl} size={32} />
+                  )
                 ) : (
                   <UserAvatar id={l.id} name={l.name} avatarUrl={l.avatarUrl} size="sm" />
                 )}

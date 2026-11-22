@@ -1,6 +1,7 @@
 'use client'
 
 import { ArchiveButton } from '@/components/archive/archive-button'
+import { AgentAvatar } from '@/components/agents/agent-avatar'
 import Link from 'next/link'
 import { useState } from 'react'
 import { ExternalLink, Lock, Users } from 'lucide-react'
@@ -72,7 +73,7 @@ function AgentRow({ a, isMe }: { a: MemberAgent; isMe: boolean }) {
   const p = platformOf(a.platform)
   const inner = (
     <>
-      <PlatformIcon platform={a.platform} />
+      {a.connected?.avatarUrl ? <AgentAvatar name={a.name} avatarUrl={a.connected.avatarUrl} size={28} /> : <PlatformIcon platform={a.platform} />}
       <span className="min-w-0 flex-1">
         <span className="flex items-center gap-1.5 min-w-0">
           <span className="mc-agent-name truncate">{a.name}</span>

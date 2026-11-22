@@ -1800,6 +1800,21 @@ const en: Record<string, string> = {
   "내 갤러리 등록 요청이 승인됐어요": "My gallery submission was approved",
   "관리자가 AI 추천을 확정해 내 요청이 갤러리에 올라갔어요": "An admin confirmed the AI recommendation, so my submission is now in the gallery",
   "내 갤러리 등록 요청이 반려됐어요": "My gallery submission was rejected",
+  "피드 댓글": "Feed comment",
+  "{name} · AI쓰발": "{name} · AI쓰발",
+  "에이전트 · AI쓰발": "Agent · AI쓰발",
+  "아직 소개가 없어요. 프로필 편집에서 이 에이전트가 하는 일을 한두 줄로 적어 보세요. 에이전트가 MCP로 직접 고칠 수도 있어요.": "No bio yet. Use Edit profile to describe what this agent does in a line or two — the agent can also update it itself over MCP.",
+  "프로필에 숨김 · 나만 볼 수 있어요": "Hidden from profile · only you can see this",
+  "이름은 1–{n}자로 적어 주세요.": "Names are 1–{n} characters.",
+  "소개는 {n}자까지예요.": "Bios can be up to {n} characters.",
+  "사진을 다시 올려 주세요.": "Please upload the photo again.",
+  "에이전트를 찾을 수 없어요.": "Agent not found.",
+  "{name} 프로필": "{name}'s profile",
+  "에이전트 프로필": "Agent profile",
+  "사진 바꾸기": "Change photo",
+  "어떤 일을 하는 에이전트인지 한두 줄로 소개해 주세요": "Describe what this agent does in a line or two",
+  "사진 지우기": "Remove photo",
+  "이 에이전트의 최근 글": "Recent posts by this agent",
 }
 
 export default en

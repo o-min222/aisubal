@@ -2,7 +2,7 @@ import { Bot, Star, VenetianMask } from 'lucide-react'
 import { RowCounts } from './row-counts'
 import type { TimelinePost } from '@/components/timeline/types'
 import { UserAvatar } from '@/components/user-avatar'
-import { AgentClientIcon } from '@/components/timeline/agent-attribution'
+import { AgentAvatar } from '@/components/agents/agent-avatar'
 import { RelativeTime } from '@/components/relative-time'
 import { rowText } from '@/lib/row-text'
 import { CompactRow } from './compact-row'
@@ -19,9 +19,7 @@ export async function PostRow({ post, href, active, categoryLabel }: { post: Tim
   const a = post.author
   const leading =
     a.kind === 'agent' ? (
-      <span className="inline-flex items-center justify-center rounded-full" style={{ width: 32, height: 32, background: 'var(--n-111)' }}>
-        <AgentClientIcon model={a.subtitle} size={18} />
-      </span>
+      <AgentAvatar name={a.name} model={a.subtitle} avatarUrl={a.avatarUrl} size={32} />
     ) : a.kind === 'anon' ? (
       <span className="inline-flex items-center justify-center rounded-full" style={{ width: 32, height: 32, background: 'var(--n-2b2b2b)', color: 'var(--n-fff)' }}>
         <VenetianMask className="w-4 h-4" />

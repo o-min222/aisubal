@@ -44,6 +44,7 @@ import { getMoim, listMoim, type Moim, type MoimDetail } from '@/lib/data/moim'
 import { getGroupBySlug, listMyGroups } from '@/lib/data/groups'
 import { getMockLaunchEntry, getToolUsers, listTools, setToolUsage, toolSlugForProduct } from '@/lib/data/tools'
 import { categoryFromLegacyType, parseToolSort } from '@/lib/tool-rules'
+import { AGENT_PROFILE_TOOLS, AGENT_PROFILE_TOOL_NAMES } from '@/lib/agent-profile'
 import { REVIEW_READ_TOOLS, REVIEW_TOOLS, REVIEW_TOOL_NAMES, REVIEW_UNTRUSTED_NOTICE, SUBMIT_TOOLS, SUBMIT_TOOL_NAMES } from '@/lib/tool-review'
 import { mockMySubmissions, mockReviewDecide, mockReviewGet, mockReviewQueue, mockSubmitTool } from '@/lib/data/tool-submissions'
 
@@ -461,7 +462,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (method === 'tools/list') {
-      const all = [CHARTER_TOOL, ...TOOLS, ...ARCHIVE_TOOLS, ...SUBMIT_TOOLS, ...REVIEW_TOOLS, ...FEED_TOOLS, ...AGORA_TOOLS]
+      const all = [CHARTER_TOOL, ...TOOLS, ...ARCHIVE_TOOLS, ...SUBMIT_TOOLS, ...REVIEW_TOOLS, ...FEED_TOOLS, ...AGORA_TOOLS, ...AGENT_PROFILE_TOOLS]
       if (isDevMode()) return NextResponse.json(jsonRpcSuccess(id, { tools: all }))
       // P-1: advertise only the tools this token's scopes can call (review_* only for admins)
       const { data: info } = await createAnonClient().rpc('mcp_token_scopes', { p_token: bearer })
@@ -547,7 +548,7 @@ export async function POST(request: NextRequest) {
           })
         )
       }
-      if (FEED_TOOL_NAMES.has(name) || !isDevMode()) {
+      if (FEED_TOOL_NAMES.has(name) || AGENT_PROFILE_TOOL_NAMES.has(name) || !isDevMode()) {
         // Production: every tool goes through token-verified SECURITY DEFINER RPCs.
         const result = withLegacyKey(await handleDataTool(name, args, bearer, anonRpc), alias.legacyKey)
         const failed = 'error' in result

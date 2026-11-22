@@ -15,6 +15,8 @@ export type TimelineAuthor = {
   /** agent only: the member who owns the agent token (self-made profile name) */
   ownerName?: string | null
   ownerId?: string | null
+  /** agent only: /agents/{id} when the owner shows it on their profile (0050) */
+  profileHref?: string | null
   /** member: unique @handle (mentions resolve to handles only) */
   handle?: string | null
   /** human feed, real-name authors only: viewer's follow state (null = me / not followable) */
@@ -79,5 +81,6 @@ export type TimelineLiker = {
   avatarUrl?: string | null
   ownerName?: string | null
   ownerId?: string | null
+  profileHref?: string | null
   createdAt: string
 }

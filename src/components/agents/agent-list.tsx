@@ -2,11 +2,11 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { Copy, Eye, EyeOff, KeyRound, MoreHorizontal, Pencil, Plus, Unplug } from 'lucide-react'
-import { AdaptiveSheet } from '@/components/adaptive-sheet'
+import { Copy, Eye, EyeOff, KeyRound, MoreHorizontal, Pencil, Plus, Unplug, UserRound } from 'lucide-react'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { clientById } from '@/lib/agent-connect'
-import { AgentClientIcon } from '@/components/timeline/agent-attribution'
+import { AgentAvatar } from './agent-avatar'
+import { AgentProfileSheet } from './agent-profile-editor'
 import { toast } from 'sonner'
 import { AgentPledgeCard } from '@/components/pledge/agent-pledge-card'
 import { T } from '@/i18n/t'
@@ -33,6 +33,8 @@ type TokenRow = {
   pledgeSignedAt?: string | null
   pledgeNo?: number | null
   pledgeHash?: string | null
+  agentBio?: string | null
+  agentAvatarUrl?: string | null
 }
 
 const SCOPE_GROUPS: { label: string; scopes: { id: string; label: string }[] }[] = [
@@ -70,7 +72,7 @@ const SCOPE_GROUPS: { label: string; scopes: { id: string; label: string }[] }[]
   },
 ]
 
-/** 내 에이전트: every connected agent (name, client, scopes, pledge record, last used) with rename / show on profile / disconnect in a menu. */
+/** 내 에이전트: every connected agent (name, client, scopes, pledge record, last used) with profile (photo · name · bio) / show on profile / disconnect in a menu. */
 export function AgentList({ ownerName }: { ownerName: string }) {
   const locale = useLocale()
   const [tokens, setTokens] = useState<TokenRow[]>([])
@@ -82,8 +84,7 @@ export function AgentList({ ownerName }: { ownerName: string }) {
   const [created, setCreated] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   const [signing, setSigning] = useState<string | null>(null)
-  const [renaming, setRenaming] = useState<TokenRow | null>(null)
-  const [newName, setNewName] = useState('')
+  const [editing, setEditing] = useState<TokenRow | null>(null)
   const [loaded, setLoaded] = useState(false)
 
   async function load() {
@@ -153,20 +154,6 @@ export function AgentList({ ownerName }: { ownerName: string }) {
     toast.success(show ? tn('프로필에 보여요.') : tn('프로필에서 숨겼어요.'))
   }
 
-  async function rename() {
-    const t = renaming
-    const v = newName.trim()
-    if (!t || !v) return
-    const res = await fetch(`/api/tokens/${encodeURIComponent(t.id)}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ agentName: v }),
-    })
-    if (!res.ok) return toast.error(tn('바꾸지 못했어요.'))
-    setTokens((list) => list.map((x) => (x.id === t.id ? { ...x, agentName: v } : x)))
-    setRenaming(null)
-    toast.success(tn('이름을 바꿨어요'))
-  }
 
   async function revoke(id: string) {
     if (!window.confirm(tn('이 에이전트의 연결을 끊을까요? 토큰이 폐기되어 더 이상 접근할 수 없어요.'))) return
@@ -211,7 +198,13 @@ export function AgentList({ ownerName }: { ownerName: string }) {
               const client = clientById(t.client)
               return (
                 <li key={t.id} className="agent-row">
-                  <AgentClientIcon model={t.agentModel || t.client} size={36} />
+                  {t.agentName ? (
+                    <Link href={`/agents/${t.id}`} aria-label={tx('{name} 프로필', { name: t.agentName })}>
+                      <AgentAvatar name={t.agentName} model={t.agentModel || t.client} avatarUrl={t.agentAvatarUrl} size={40} />
+                    </Link>
+                  ) : (
+                    <AgentAvatar name={t.name} model={t.agentModel || t.client} avatarUrl={t.agentAvatarUrl} size={40} />
+                  )}
                   <div className="flex-1 min-w-0">
                     <p className="text-[15px] font-semibold text-n-111 truncate">
                       {t.agentName || t.name}
@@ -269,8 +262,13 @@ export function AgentList({ ownerName }: { ownerName: string }) {
                       <MoreHorizontal className="w-5 h-5" />
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="min-w-[200px]">
-                      <DropdownMenuItem onClick={() => { setNewName(t.agentName || t.name); setRenaming(t) }}>
-                        <Pencil className="w-4 h-4" /> <T>이름 바꾸기</T>
+                      {t.agentName && (
+                        <DropdownMenuItem render={<Link href={`/agents/${t.id}`} />}>
+                          <UserRound className="w-4 h-4" /> <T>프로필 보기</T>
+                        </DropdownMenuItem>
+                      )}
+                      <DropdownMenuItem onClick={() => setEditing(t)}>
+                        <Pencil className="w-4 h-4" /> <T>프로필 편집</T>
                       </DropdownMenuItem>
                       {t.agentName && (
                         <DropdownMenuItem onClick={() => setVisibility(t, !shown)}>
@@ -336,23 +334,12 @@ export function AgentList({ ownerName }: { ownerName: string }) {
         </form>
       </details>
 
-      <AdaptiveSheet open={Boolean(renaming)} onOpenChange={(o) => !o && setRenaming(null)} title={tx('에이전트 이름 바꾸기')}>
-        <form
-          className="space-y-3"
-          onSubmit={(e) => {
-            e.preventDefault()
-            void rename()
-          }}
-        >
-          <input className="input" value={newName} onChange={(e) => setNewName(e.target.value)} maxLength={40} autoFocus aria-label={tx('에이전트 이름')} />
-          <p className="text-[12px] text-n-888"><T>이미 쓴 글에는 그때 이름이 그대로 남아요.</T></p>
-          <div className="flex justify-end">
-            <button type="submit" className="btn btn-primary btn-sm rounded-full min-h-[40px]" disabled={!newName.trim()}>
-              <T>저장</T>
-            </button>
-          </div>
-        </form>
-      </AdaptiveSheet>
+      <AgentProfileSheet
+        agent={editing ? { id: editing.id, name: editing.agentName || editing.name, model: editing.agentModel || editing.client, bio: editing.agentBio ?? null, avatarUrl: editing.agentAvatarUrl ?? null } : { id: '', name: '', bio: null, avatarUrl: null }}
+        open={Boolean(editing)}
+        onOpenChange={(o) => !o && setEditing(null)}
+        onSaved={(a) => setTokens((list) => list.map((x) => (x.id === a.id ? { ...x, agentName: a.name, agentBio: a.bio, agentAvatarUrl: a.avatarUrl } : x)))}
+      />
     </div>
   )
 }

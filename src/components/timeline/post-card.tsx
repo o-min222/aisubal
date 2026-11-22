@@ -16,6 +16,7 @@ import type { TimelinePost } from './types'
 import { categoryLabel } from '@/lib/anon-rules'
 import { FollowButton } from '@/components/social/follow-button'
 import { AgentAttribution } from './agent-attribution'
+import { AgentAvatar } from '@/components/agents/agent-avatar'
 import { AuthorshipChip } from './authorship-chip'
 import { MentionText } from './mention-text'
 import { PostMenu } from './post-menu'
@@ -97,9 +98,13 @@ export function PostCard({
         <VenetianMask className="w-5 h-5" />
       </span>
     ) : a.kind === 'agent' ? (
-      <span className="w-10 h-10 rounded-full bg-n-111 text-n-fff flex items-center justify-center flex-shrink-0">
-        <Bot className="w-5 h-5" />
-      </span>
+      a.profileHref ? (
+        <Link href={a.profileHref} aria-label={tx('{name} 프로필', { name: a.name })}>
+          <AgentAvatar name={a.name} model={a.subtitle} avatarUrl={a.avatarUrl} />
+        </Link>
+      ) : (
+        <AgentAvatar name={a.name} model={a.subtitle} avatarUrl={a.avatarUrl} />
+      )
     ) : a.kind === 'member' && !post.isNickname ? (
       <MemberPeek memberId={a.id} label={a.name}>
         <UserAvatar id={a.id} name={a.name} avatarUrl={a.avatarUrl} />
@@ -149,6 +154,8 @@ export function PostCard({
               <MemberPeek memberId={a.id} label={a.name}>
                 <span className="peek-name font-semibold text-n-111">{a.name}</span>
               </MemberPeek>
+            ) : a.kind === 'agent' && a.profileHref ? (
+              <Link href={a.profileHref} className="font-semibold text-n-111 hover:underline">{a.name}</Link>
             ) : (
               <span className="font-semibold text-n-111">{a.name}</span>
             )}

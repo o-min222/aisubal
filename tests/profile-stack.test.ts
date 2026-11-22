@@ -24,7 +24,7 @@ describe('profile stack rules', () => {
     })
     const [other] = agentsFromConnected('m1', [tok(true)], false)
     expect(other).toMatchObject({ name: 'Claude Code', platform: 'claude_code', model: 'opus', visibility: null })
-    expect(other.connected).toMatchObject({ lastActiveAt: '2026-11-22T08:00:00.000Z', activityCount: 6, href: '/members/m1#agents' })
+    expect(other.connected).toMatchObject({ lastActiveAt: '2026-11-22T08:00:00.000Z', activityCount: 6, href: '/agents/t1' })
     expect(JSON.stringify(other)).not.toContain('scopes')
     expect(agentsFromConnected('m1', [tok(false)], false)).toEqual([])
     const [mine] = agentsFromConnected('m1', [tok(false, 'claude_desktop')], true)

@@ -1,4 +1,5 @@
 import { msg } from '@/i18n/translate'
+import { withAgentCards, withAgentLikerCards } from './agent-profiles'
 import type { TimelineLiker, TimelinePost } from '@/components/timeline/types'
 import { MOCK_AGORA_LIKERS, MOCK_AGORA_POSTS, MOCK_AGORA_REPLIES } from '@/lib/mock-agora'
 import { sb, useMockData as isMock } from './client'
@@ -72,7 +73,7 @@ async function likedSet(memberId: string, ids: string[]): Promise<Set<string>> {
   return new Set((data || []).map((d: { post_id: string }) => d.post_id))
 }
 
-export async function listAgoraTimeline(
+async function listAgoraTimeline__raw(
   viewerId: string,
   opts: { limit?: number; tool?: string; q?: string } = {}
 ): Promise<TimelinePost[]> {
@@ -108,7 +109,7 @@ export const AGORA_TABS: Array<{ id: AgoraTab; label: string }> = [
 export const parseAgoraTab = (v: string | null | undefined): AgoraTab => (AGORA_TABS.some((t) => t.id === v) ? (v as AgoraTab) : 'all')
 
 /** One numbered page of Agora root posts (no infinite scroll). 인기 = last 14 days. */
-export async function listAgoraPage(
+async function listAgoraPage__raw(
   viewerId: string,
   opts: { tool?: string; tab?: AgoraTab; page: number; pageSize?: number }
 ): Promise<{ posts: TimelinePost[]; total: number; totalPages: number }> {
@@ -139,7 +140,7 @@ export async function listAgoraPage(
   return { posts: rows.map((r) => toTimeline(r, liked, viewerId)), total, totalPages: Math.max(1, Math.ceil(total / size)) }
 }
 
-export async function getAgoraThread(
+async function getAgoraThread__raw(
   id: string,
   viewerId: string
 ): Promise<{ root: TimelinePost; replies: TimelinePost[] } | null> {
@@ -172,7 +173,7 @@ export async function getAgoraThread(
   return { root: toTimeline(root, liked, viewerId), replies: replies.map((r) => toTimeline(r, liked, viewerId)) }
 }
 
-export async function listAgoraLikers(postId: string): Promise<TimelineLiker[]> {
+async function listAgoraLikers__raw(postId: string): Promise<TimelineLiker[]> {
   if (isMock()) return MOCK_AGORA_LIKERS
   const supabase = await sb()
   const { data, error } = await supabase
@@ -263,7 +264,7 @@ export async function setAgoraHidden(postId: string, hidden: boolean) {
 export type AiRatingSummary = { avg: number; count: number; latest: TimelinePost[] }
 
 /** Aggregated "AI 평가" for a toolbox entry (agent posts with a rating). */
-export async function getToolboxAiRating(entryId: string, viewerId: string): Promise<AiRatingSummary> {
+async function getToolboxAiRating__raw(entryId: string, viewerId: string): Promise<AiRatingSummary> {
   if (isMock()) {
     const rated = MOCK_AGORA_POSTS.filter((p) => p.rating)
     return {
@@ -308,4 +309,30 @@ export async function deleteAgoraPost(postId: string): Promise<{ ok: boolean; to
   if (!data) return { ok: false, tombstone: false }
   const { data: left } = await supabase.from('agora_posts').select('id').eq('id', postId).maybeSingle()
   return { ok: true, tombstone: Boolean(left) }
+}
+
+// 0050: agent authors get their photo + /agents/{id} link
+export async function listAgoraTimeline(...args: Parameters<typeof listAgoraTimeline__raw>): ReturnType<typeof listAgoraTimeline__raw> {
+  return withAgentCards(await listAgoraTimeline__raw(...args))
+}
+
+export async function listAgoraPage(...args: Parameters<typeof listAgoraPage__raw>): ReturnType<typeof listAgoraPage__raw> {
+  const r = await listAgoraPage__raw(...args)
+  return { ...r, posts: await withAgentCards(r.posts) }
+}
+
+export async function getAgoraThread(...args: Parameters<typeof getAgoraThread__raw>): ReturnType<typeof getAgoraThread__raw> {
+  const r = await getAgoraThread__raw(...args)
+  if (!r) return r
+  const [root, ...replies] = await withAgentCards([r.root, ...r.replies])
+  return { ...r, root, replies }
+}
+
+export async function listAgoraLikers(...args: Parameters<typeof listAgoraLikers__raw>): ReturnType<typeof listAgoraLikers__raw> {
+  return withAgentLikerCards(await listAgoraLikers__raw(...args))
+}
+
+export async function getToolboxAiRating(...args: Parameters<typeof getToolboxAiRating__raw>): ReturnType<typeof getToolboxAiRating__raw> {
+  const r = await getToolboxAiRating__raw(...args)
+  return { ...r, latest: await withAgentCards(r.latest) }
 }

@@ -28,10 +28,13 @@ export type PublicToken = {
   /** 에이전트 입단 기록 (0020) */
   pledgeNo: number | null
   pledgeHash: string | null
+  /** 0050 agent profile */
+  agentBio?: string | null
+  agentAvatarUrl?: string | null
 }
 
 const TOKEN_COLS =
-  'id, name, agent_name, agent_model, scopes, token_prefix, created_at, last_used_at, expires_at, client, first_used_at, last_client_info, show_on_profile, pledge_signed_at, pledge_no, pledge_hash'
+  'id, name, agent_name, agent_model, scopes, token_prefix, created_at, last_used_at, expires_at, client, first_used_at, last_client_info, show_on_profile, pledge_signed_at, pledge_no, pledge_hash, agent_bio, agent_avatar_url'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function fromRow(t: any): PublicToken {
@@ -52,6 +55,8 @@ function fromRow(t: any): PublicToken {
     pledgeSignedAt: t.pledge_signed_at ?? null,
     pledgeNo: t.pledge_no ?? null,
     pledgeHash: t.pledge_hash ?? null,
+    agentBio: t.agent_bio ?? null,
+    agentAvatarUrl: t.agent_avatar_url ?? null,
   }
 }
 
@@ -294,6 +299,8 @@ export type ProfileAgent = {
   firstUsedAt: string | null
   lastUsedAt: string | null
   showOnProfile: boolean
+  avatarUrl?: string | null
+  bio?: string | null
   /** owner only */
   scopes: string[] | null
   clientInfo: string | null
@@ -377,6 +384,8 @@ export async function listProfileAgents(viewerId: string, memberId: string): Pro
     firstUsedAt: a.first_used_at ?? null,
     lastUsedAt: a.last_used_at ?? null,
     showOnProfile: a.show_on_profile !== false,
+    avatarUrl: a.avatar_url ?? null,
+    bio: a.bio ?? null,
     scopes: Array.isArray(a.scopes) ? a.scopes.map((x: string) => x.trim()) : null,
     clientInfo: a.client_info ?? null,
     counts: {

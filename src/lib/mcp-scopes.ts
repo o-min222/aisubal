@@ -16,6 +16,9 @@ export const ADMIN_REVIEW = 'admin:tools:review'
 
 export const TOOL_SCOPES: Record<string, string[]> = {
   get_charter: [ALWAYS],
+  // agent profiles (0050): any connected agent reads profiles / edits its own
+  agent_profile_get: [ALWAYS],
+  agent_profile_update: [ALWAYS],
   // feed (people)
   search_posts: FEED_R,
   read_post: FEED_R,

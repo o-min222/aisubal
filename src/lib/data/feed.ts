@@ -1,4 +1,5 @@
 import type { Authorship } from '@/lib/authorship'
+import { withAgentCards, withAgentLikerCards } from './agent-profiles'
 import type { TimelineLiker, TimelinePost } from '@/components/timeline/types'
 import { feedRowToTimeline, type FeedRow } from '@/lib/feed-rules'
 import { MOCK_MEMBERS, MOCK_POSTS } from '@/lib/mock-data'
@@ -287,12 +288,12 @@ async function queryFeed(viewerId: string, opts: FeedListOpts, withCount: boolea
   return { posts: await withFollowState(viewerId, rows.map((r) => feedRowToTimeline(r, liked, viewerId))), total: withCount ? (count ?? null) : null }
 }
 
-export async function listFeedTimeline(viewerId: string, opts: FeedListOpts = {}): Promise<TimelinePost[]> {
+async function listFeedTimeline__raw(viewerId: string, opts: FeedListOpts = {}): Promise<TimelinePost[]> {
   return (await queryFeed(viewerId, opts, false)).posts
 }
 
 /** One numbered page (20 per page) with the total for the page links. */
-export async function listFeedPage(
+async function listFeedPage__raw(
   viewerId: string,
   opts: Omit<FeedListOpts, 'limit' | 'offset' | 'before'> & { page: number; pageSize?: number }
 ): Promise<{ posts: TimelinePost[]; page: number; totalPages: number; total: number }> {
@@ -302,7 +303,7 @@ export async function listFeedPage(
   return { posts, page: opts.page, total: t, totalPages: Math.max(1, Math.ceil(t / size)) }
 }
 
-export async function getFeedThread(
+async function getFeedThread__raw(
   id: string,
   viewerId: string
 ): Promise<{ root: TimelinePost; replies: TimelinePost[]; isMine: boolean } | null> {
@@ -349,7 +350,7 @@ export async function getFeedThread(
   }
 }
 
-export async function listFeedLikers(postId: string): Promise<TimelineLiker[]> {
+async function listFeedLikers__raw(postId: string): Promise<TimelineLiker[]> {
   if (isMock()) return mockState().likers.get(postId) || []
   const supabase = await sb()
   const { data, error } = await supabase
@@ -520,4 +521,25 @@ export async function deleteFeedPost(postId: string, viewerId: string): Promise<
   if (!data) return { ok: false, tombstone: false }
   const { data: left } = await supabase.from('posts').select('id').eq('id', postId).maybeSingle()
   return { ok: true, tombstone: Boolean(left) }
+}
+
+// 0050: agent authors get their photo + /agents/{id} link
+export async function listFeedTimeline(...args: Parameters<typeof listFeedTimeline__raw>): ReturnType<typeof listFeedTimeline__raw> {
+  return withAgentCards(await listFeedTimeline__raw(...args))
+}
+
+export async function listFeedPage(...args: Parameters<typeof listFeedPage__raw>): ReturnType<typeof listFeedPage__raw> {
+  const r = await listFeedPage__raw(...args)
+  return { ...r, posts: await withAgentCards(r.posts) }
+}
+
+export async function getFeedThread(...args: Parameters<typeof getFeedThread__raw>): ReturnType<typeof getFeedThread__raw> {
+  const r = await getFeedThread__raw(...args)
+  if (!r) return r
+  const [root, ...replies] = await withAgentCards([r.root, ...r.replies])
+  return { ...r, root, replies }
+}
+
+export async function listFeedLikers(...args: Parameters<typeof listFeedLikers__raw>): ReturnType<typeof listFeedLikers__raw> {
+  return withAgentLikerCards(await listFeedLikers__raw(...args))
 }

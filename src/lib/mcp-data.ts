@@ -20,6 +20,7 @@ import {
 import { AGENT_REPLY_MAX_CHARS as FEED_MAX_CHARS } from '@/lib/feed-rules'
 import { fetchPageSnapshot } from '@/lib/safe-fetch'
 import { isStale } from '@/lib/tool-review'
+import { AGENT_BIO_MAX, AGENT_NAME_MAX, AGENT_PROFILE_NOTICE, parseAgentProfile, toAgentFacingProfile } from '@/lib/agent-profile'
 import type {
   ToolboxEnvironment,
   ToolboxType,
@@ -99,6 +100,8 @@ export function dataErrorMessage(raw: string | null | undefined): string {
   if (m.includes('api_invalid:reason_required')) return 'reason is required to reject (a sentence or two the submitter will read).'
   if (m.includes('api_invalid:no_changes')) return 'edits changed nothing.'
   if (m.includes('api_not_found')) return 'Not found.'
+  if (m.includes('api_invalid:name')) return 'name must be 1-40 characters.'
+  if (m.includes('api_invalid:bio')) return 'bio must be 300 characters or fewer.'
   if (m.includes('api_nickname_missing')) return '별명 프로필이 없어요. 설정에서 먼저 만들어 주세요.'
   if (m.includes('api_invalid')) return `Invalid input (${m.split('api_invalid:')[1]?.split(/\s/)[0] || 'payload'}).`
   return 'Request failed.'
@@ -166,7 +169,7 @@ export function toUntrustedFeedPost(p: RpcFeedPost) {
 const authorLabel = (a: RpcAuthor | null | undefined) => a?.name ?? '멤버'
 
 /** Tools whose results include human-written text → prepend the untrusted notice. */
-export const UNTRUSTED_READ_TOOLS = new Set(['feed_list', 'feed_get', 'search_posts', 'read_post', 'list_meetups', 'read_meetup', 'my_groups'])
+export const UNTRUSTED_READ_TOOLS = new Set(['feed_list', 'feed_get', 'search_posts', 'read_post', 'list_meetups', 'read_meetup', 'my_groups', 'agent_profile_get'])
 
 /**
  * Agents may READ 모임 and their own groups, but never apply to a 모임, create
@@ -592,6 +595,24 @@ export async function handleDataTool(
           await call('mcp_review_store_snapshot', { p_id: args.submissionId, p_snapshot: snap }).catch(() => null)
         }
         return r
+      }
+      // ------------------------------------------------------------ agent profiles (0050)
+      case 'agent_profile_get': {
+        if (args.agentId != null && args.agentId !== '' && !isUuid(args.agentId)) return { error: 'agentId must be an agent id (UUID), or omit it for yourself.' }
+        const raw = (await call('mcp_agent_profile_get', { p_id: isUuid(args.agentId) ? args.agentId : null })) as Record<string, unknown>
+        const p = parseAgentProfile(raw)
+        if (!p) return { error: 'Not found.' }
+        return { notice: AGENT_PROFILE_NOTICE, agent: toAgentFacingProfile(p, raw?.isMe === true) }
+      }
+      case 'agent_profile_update': {
+        const name = typeof args.name === 'string' ? args.name : null
+        const bio = typeof args.bio === 'string' ? args.bio : null
+        if (name === null && bio === null) return { error: 'Pass name and/or bio.' }
+        if (name !== null && (!name.trim() || name.trim().length > AGENT_NAME_MAX)) return { error: `name must be 1-${AGENT_NAME_MAX} characters.` }
+        if (bio !== null && bio.trim().length > AGENT_BIO_MAX) return { error: `bio must be ${AGENT_BIO_MAX} characters or fewer.` }
+        const raw = (await call('mcp_agent_profile_update', { p_name: name, p_bio: bio })) as Record<string, unknown>
+        const p = parseAgentProfile(raw)
+        return p ? { ok: true, agent: toAgentFacingProfile(p, true) } : { ok: true }
       }
       case 'review_approve':
       case 'review_edit':

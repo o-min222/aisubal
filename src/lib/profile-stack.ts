@@ -30,7 +30,7 @@ export const AGENT_PLATFORM_IDS = AGENT_PLATFORMS.map((p) => p.id) as AgentPlatf
 export const platformOf = (id: string | null | undefined) => AGENT_PLATFORMS.find((p) => p.id === id) ?? AGENT_PLATFORMS[AGENT_PLATFORMS.length - 1]
 
 /** Connected (token) activity merged in for display; hour-rounded for others. */
-export type AgentConnection = { tokenId: string; lastActiveAt: string | null; activityCount: number; href: string }
+export type AgentConnection = { tokenId: string; lastActiveAt: string | null; activityCount: number; href: string; avatarUrl?: string | null }
 export type MemberAgent = { id: string; name: string; platform: AgentPlatform; model: string; role: string; url: string; visibility: LinkVisibility | null; connected: AgentConnection | null }
 
 export const STACK_LIMIT = 20
@@ -89,6 +89,7 @@ type ConnectedLike = {
   client: string | null
   lastUsedAt: string | null
   showOnProfile: boolean
+  avatarUrl?: string | null
   counts: { agoraPosts: number; agoraReplies: number; feedReplies: number; likes: number }
 }
 
@@ -111,7 +112,8 @@ export function agentsFromConnected(memberId: string, connected: ConnectedLike[]
         tokenId: c.id,
         lastActiveAt: own ? c.lastUsedAt : hourRounded(c.lastUsedAt),
         activityCount: c.counts.agoraPosts + c.counts.agoraReplies + c.counts.feedReplies + c.counts.likes,
-        href: `/members/${own ? 'me' : memberId}#agents`,
+        href: `/agents/${c.id}`,
+        avatarUrl: c.avatarUrl ?? null,
       },
     }))
 }

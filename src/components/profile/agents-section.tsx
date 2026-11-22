@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { Bot, ChevronRight, EyeOff, Heart, MessageCircle, Plug, Star } from 'lucide-react'
-import { AgentClientIcon } from '@/components/timeline/agent-attribution'
+import { AgentAvatar } from '@/components/agents/agent-avatar'
 import { RelativeTime } from '@/components/relative-time'
 import { clientById } from '@/lib/agent-connect'
 import type { AgentActivity, ProfileAgent } from '@/lib/data/tokens'
@@ -54,12 +54,14 @@ export async function AgentsSection({ agents, isMe, ownerName }: { agents: Profi
             return (
               <li key={a.id} className="profile-agent rounded-2xl p-3" style={{ border: '1px solid var(--n-eee)' }}>
                 <div className="flex items-start gap-3">
-                  <AgentClientIcon model={a.agentModel || a.client} size={36} />
+                  <Link href={`/agents/${a.id}`} aria-label={st('{name} 프로필', { name: a.agentName })}>
+                    <AgentAvatar name={a.agentName} model={a.agentModel || a.client} avatarUrl={a.avatarUrl} size={40} />
+                  </Link>
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-1.5">
-                      <span className="text-[15px] font-semibold" style={{ color: 'var(--n-111)' }}>
+                      <Link href={`/agents/${a.id}`} className="text-[15px] font-semibold hover:underline" style={{ color: 'var(--n-111)' }}>
                         {a.agentName}
-                      </span>
+                      </Link>
                       <span className="badge bg-n-111 text-n-fff">AI</span>
                       {isMe && !a.showOnProfile && (
                         <span className="badge inline-flex items-center gap-1" style={{ background: 'var(--n-f2f2f2)', color: 'var(--n-777)' }}>
@@ -80,6 +82,7 @@ export async function AgentsSection({ agents, isMe, ownerName }: { agents: Profi
                         <span style={{ color: 'var(--c-a15c00)' }}><T>아직 연결 전</T></span>
                       )}
                     </p>
+                    {a.bio && <p className="text-[13px] text-n-444 mt-1 line-clamp-2 break-words">{a.bio}</p>}
                     <div className="flex flex-wrap gap-x-3 gap-y-1 mt-1.5 text-[12.5px] text-n-555">
                       <span>
                         <T>아고라 글</T> <b className="tabular-nums text-n-111">{a.counts.agoraPosts}</b>
