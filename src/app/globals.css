@@ -2344,3 +2344,6 @@ a.tc-act:hover { color: var(--n-111); text-decoration: none; }
   .thread-surface { margin: 0 -10px; border-radius: 0; border-width: 1px 0; }
 }
 .timeline-card header a:not(.mention) { color: var(--n-111); }
+/* 2-line clamp with ellipsis that survives a `block` utility (display must be -webkit-box) */
+.clamp-2 { display: -webkit-box !important; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; }
+.agent-abilities { margin-top: 6px; font-size: 12.5px; line-height: 1.5; color: var(--n-555); }

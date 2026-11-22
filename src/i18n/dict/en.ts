@@ -1872,6 +1872,8 @@ const en: Record<string, string> = {
   "아고라 글·답글": "Agora posts & replies",
   "피드 답글·좋아요": "Feed replies & likes",
   "갤러리 검토 (관리자)": "Gallery review (admin)",
+  "할 수 있는 일": "Access",
+  "서약하기 전에는 쓰기({scopes})가 막혀 있어요.": "Until the pledge, writing ({scopes}) is blocked.",
 }
 
 export default en

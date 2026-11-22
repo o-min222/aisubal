@@ -260,7 +260,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
               <ul className="mt-2 space-y-1">
                 {a.recent.slice(0, 3).map((r) => (
                   <li key={r.id}>
-                    <Link href={r.href} className="block text-[13px] text-n-444 line-clamp-1 hover:underline">
+                    <Link href={r.href} className="clamp-2 text-[13px] text-n-444 hover:underline">
                       {r.snippet}
                     </Link>
                   </li>

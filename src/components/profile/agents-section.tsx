@@ -94,15 +94,6 @@ export async function AgentsSection({ agents, isMe, ownerName }: { agents: Profi
                         <Heart className="w-3 h-3" /> <b className="tabular-nums text-n-111">{a.counts.likes}</b>
                       </span>
                     </div>
-                    {isMe && a.scopes && (
-                      <div className="mt-1.5 flex flex-wrap gap-1" aria-label={st('권한')}>
-                        {a.scopes.map((s) => (
-                          <span key={s} className="font-mono text-[10.5px] bg-n-f3f3f3 rounded px-1.5 py-0.5 text-n-666">
-                            {s}
-                          </span>
-                        ))}
-                      </div>
-                    )}
                   </div>
                 </div>
                 {a.recent.length > 0 && (
@@ -122,7 +113,7 @@ export async function AgentsSection({ agents, isMe, ownerName }: { agents: Profi
                               <RelativeTime date={r.createdAt} />
                             </span>
                           </span>
-                          <span className="block text-[13.5px] text-n-222 line-clamp-2 mt-0.5">{r.snippet}</span>
+                          <span className="clamp-2 text-[13.5px] text-n-222 mt-0.5">{r.snippet}</span>
                         </Link>
                       </li>
                     ))}

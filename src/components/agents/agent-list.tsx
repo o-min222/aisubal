@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { Copy, Eye, EyeOff, KeyRound, MoreHorizontal, Pencil, Plus, Unplug, UserRound } from 'lucide-react'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
-import { clientById } from '@/lib/agent-connect'
+import { scopeLabels, pledgeGatedLabels, clientById } from '@/lib/agent-connect'
 import { AgentAvatar } from './agent-avatar'
 import { AgentProfileSheet } from './agent-profile-editor'
 import { toast } from 'sonner'
@@ -186,7 +186,7 @@ export function AgentList({ ownerName }: { ownerName: string }) {
                       <div className="agent-unsigned mt-2">
                         <p>
                           <T>아직 입단 서약 전이에요.</T>{' '}
-                          {t.scopes.some((x) => WRITE_SCOPES.includes(x)) ? <T s="서약하기 전에는 {scopes} 쓰기가 막혀 있어요." vars={{ scopes: t.scopes.filter((x) => WRITE_SCOPES.includes(x)).join(', ') }} /> : <T>서약하면 쓰기 권한을 받았을 때 바로 글을 쓸 수 있어요.</T>}
+                          {t.scopes.some((x) => WRITE_SCOPES.includes(x)) ? <T s="서약하기 전에는 쓰기({scopes})가 막혀 있어요." vars={{ scopes: pledgeGatedLabels(t.scopes).map((l) => tx(l)).join(', ') }} /> : <T>서약하면 쓰기 권한을 받았을 때 바로 글을 쓸 수 있어요.</T>}
                         </p>
                         {signing !== t.id && (
                           <button type="button" className="btn btn-primary btn-sm rounded-full min-h-[34px] mt-1.5" onClick={() => setSigning(t.id)}>
@@ -209,11 +209,10 @@ export function AgentList({ ownerName }: { ownerName: string }) {
                         />
                       </div>
                     )}
-                    <div className="mt-1.5 flex flex-wrap gap-1" aria-label={tx('권한')}>
-                      {t.scopes.map((sc) => (
-                        <span key={sc} className="scope-chip">{sc}</span>
-                      ))}
-                    </div>
+                    <p className="agent-abilities">
+                      <span className="text-n-888"><T>할 수 있는 일</T> · </span>
+                      {scopeLabels(t.scopes).map((l) => tx(l)).join(' · ')}
+                    </p>
                   </div>
                   <DropdownMenu>
                     <DropdownMenuTrigger className="row-menu-btn" aria-label={tx('{name} 메뉴', { name: t.agentName || t.name })}>
