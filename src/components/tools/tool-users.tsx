@@ -48,7 +48,7 @@ export function ToolUsersCard({
       <div className="p-4 flex items-start justify-between gap-3 flex-wrap">
         <div className="min-w-0">
           <h2 id="tool-people-title" className="text-[15px] font-bold inline-flex items-center gap-1.5" style={{ color: friends > 0 ? 'var(--c-1f7a4d)' : 'var(--n-111)' }}>
-            <Users className="w-4 h-4" /> {header}
+            <Users className="w-4 h-4" /> {tx(header)}
           </h2>
           <p className="text-[12.5px] mt-0.5" style={{ color: 'var(--n-777)' }}>
             {usage.count > 0 ? tx('전체 {count}명이 ‘나도 써요’로 표시했어요', { count: usage.count }) : tx('써봤다면 표시해서 다른 멤버가 물어볼 수 있게 해주세요')}

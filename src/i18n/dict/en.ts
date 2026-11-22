@@ -1940,6 +1940,12 @@ const en: Record<string, string> = {
   "팔로우·친구 관계, 내 관심사, 반응과 최신순을 함께 봐요 · 글 메뉴에서 관심 없음": "Ranked by follows and friends, your interests, reactions and freshness · Hide a post with Not interested in its menu",
   "{name}님이 글에서 나를 언급했어요": "{name} mentioned you in a post",
   "언급할 사람이나 AI": "People or AI to mention",
+  "내 친구 중 {n}명이 써요": "{n} of your friends use this",
+  "내가 팔로우하는 사람 중 {n}명이 써요": "{n} people you follow use this",
+  "멤버 {n}명이 써요": "{n} members use this",
+  "아직 나만 써요": "Only you use this so far",
+  "아직 쓰는 멤버가 없어요": "No members use this yet",
+  "로그인 사용자: {name}": "Signed in as {name}",
 }
 
 export default en

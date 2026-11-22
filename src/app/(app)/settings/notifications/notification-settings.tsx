@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { toast } from 'sonner'
 import { NOTIFY_CATEGORIES, type NotifyCategory, type NotifyPrefs } from '@/lib/notifications'
 import { T } from '@/i18n/t'
-import { tn } from '@/i18n/client'
+import { tn, tx } from '@/i18n/client'
 
 /** Server-backed toggles (0048 notification_prefs): off = no new notifications of that kind. */
 export function NotificationSettings({ initial }: { initial: NotifyPrefs }) {
@@ -37,7 +37,7 @@ export function NotificationSettings({ initial }: { initial: NotifyPrefs }) {
               <span className="block text-sm font-medium text-n-333"><T>{o.title}</T></span>
               <span className="block text-xs text-n-888"><T>{o.hint}</T></span>
             </span>
-            <button type="button" role="switch" aria-checked={on} aria-label={o.title} disabled={busy === o.id} onClick={() => toggle(o.id)} className={`switch ${on ? 'on' : ''}`}>
+            <button type="button" role="switch" aria-checked={on} aria-label={tx(o.title)} disabled={busy === o.id} onClick={() => toggle(o.id)} className={`switch ${on ? 'on' : ''}`}>
               <span />
             </button>
           </div>

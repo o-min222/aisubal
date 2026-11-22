@@ -305,7 +305,7 @@ export function ProfileCardEditor({
                   <li key={l.kind}>
                     <button type="button" className="mc-chip pe-chip" onClick={() => setLinksOpen(true)}>
                       <LinkIcon kind={l.kind} size={16} />
-                      <span className="truncate">{LINK_KINDS.find((k) => k.kind === l.kind)?.label ?? l.kind}</span>
+                      <span className="truncate"><T>{LINK_KINDS.find((k) => k.kind === l.kind)?.label ?? l.kind}</T></span>
                       {l.visibility !== 'members' && <Lock className="w-3 h-3 text-n-999" />}
                     </button>
                   </li>

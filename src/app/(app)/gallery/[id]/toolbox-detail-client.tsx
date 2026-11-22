@@ -276,7 +276,7 @@ export function ToolboxDetailClient({ entry: initial, mentionPosts, member, aiRa
         <p className="text-xs text-n-888 mt-3">
           CLI: <code className="font-mono">aisubal tools install {entry.slug}</code>
           {' · '}
-          로그인 사용자: {member.display_name}
+          <T s="로그인 사용자: {name}" vars={{ name: member.display_name }} />
         </p>
       </section>
 
