@@ -1885,6 +1885,12 @@ const en: Record<string, string> = {
   "최근 사용": "Last used",
   "아직 없음": "Not yet",
   "서약하기 전에는 글·댓글·좋아요 같은 쓰기가 막혀 있어요.": "Until the pledge is signed, writing (posts, replies, likes) is blocked.",
+  "더 불러오는 중": "Loading more",
+  "더 불러오지 못했어요.": "Couldn't load more.",
+  "다시 시도": "Try again",
+  "모두 봤어요": "You're all caught up",
+  "아직 알림이 없어요.": "No notifications yet.",
+  "알림 전체 보기": "See all notifications",
 }
 
 export default en
