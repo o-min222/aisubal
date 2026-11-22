@@ -1,5 +1,4 @@
 import { msg } from '@/i18n/translate'
-import { pledgedAgents } from './tokens'
 import type { TimelineLiker, TimelinePost } from '@/components/timeline/types'
 import { MOCK_AGORA_LIKERS, MOCK_AGORA_POSTS, MOCK_AGORA_REPLIES } from '@/lib/mock-agora'
 import { sb, useMockData as isMock } from './client'
@@ -30,7 +29,7 @@ type Row = {
   toolbox: { slug: string; name: string } | null
 }
 
-function toTimeline(r: Row, liked: Set<string>, pledged: Set<string> = new Set()): TimelinePost {
+function toTimeline(r: Row, liked: Set<string>): TimelinePost {
   const toolName = r.tool_name || r.toolbox?.name || null
   return {
     id: r.id,
@@ -44,7 +43,6 @@ function toTimeline(r: Row, liked: Set<string>, pledged: Set<string> = new Set()
       subtitle: r.agent_model,
       ownerName: r.owner?.display_name ?? null,
       ownerId: r.owner?.id ?? null,
-      pledged: r.token_id ? pledged.has(r.token_id) : false,
     },
     body: r.body,
     linkUrl: r.link_url,
@@ -92,8 +90,8 @@ export async function listAgoraTimeline(
   const { data, error } = await q
   if (error) throw error
   const rows = (data || []) as unknown as Row[]
-  const [liked, pledged] = await Promise.all([likedSet(viewerId, rows.map((r) => r.id)), pledgedAgents(rows.map((r) => r.token_id || ''))])
-  return rows.map((r) => toTimeline(r, liked, pledged))
+  const liked = await likedSet(viewerId, rows.map((r) => r.id))
+  return rows.map((r) => toTimeline(r, liked))
 }
 
 export type AgoraTab = 'all' | 'reviews' | 'tips' | 'popular'
@@ -132,9 +130,9 @@ export async function listAgoraPage(
   const { data, error, count } = await q.range(from, from + size - 1)
   if (error) throw error
   const rows = (data || []) as unknown as Row[]
-  const [liked, pledged] = await Promise.all([likedSet(viewerId, rows.map((r) => r.id)), pledgedAgents(rows.map((r) => r.token_id || ''))])
+  const liked = await likedSet(viewerId, rows.map((r) => r.id))
   const total = count ?? rows.length
-  return { posts: rows.map((r) => toTimeline(r, liked, pledged)), total, totalPages: Math.max(1, Math.ceil(total / size)) }
+  return { posts: rows.map((r) => toTimeline(r, liked)), total, totalPages: Math.max(1, Math.ceil(total / size)) }
 }
 
 export async function getAgoraThread(
@@ -166,8 +164,8 @@ export async function getAgoraThread(
     .eq('root_id', root.id)
     .order('created_at', { ascending: true })
   const replies = (rep || []) as unknown as Row[]
-  const [liked, pledged] = await Promise.all([likedSet(viewerId, [root.id, ...replies.map((r) => r.id)]), pledgedAgents([root, ...replies].map((r) => r.token_id || ''))])
-  return { root: toTimeline(root, liked, pledged), replies: replies.map((r) => toTimeline(r, liked, pledged)) }
+  const liked = await likedSet(viewerId, [root.id, ...replies.map((r) => r.id)])
+  return { root: toTimeline(root, liked), replies: replies.map((r) => toTimeline(r, liked)) }
 }
 
 export async function listAgoraLikers(postId: string): Promise<TimelineLiker[]> {
@@ -289,10 +287,10 @@ export async function getToolboxAiRating(entryId: string, viewerId: string): Pro
   ])
   const ratings = ((all || []) as { rating: number }[]).map((r) => r.rating)
   const rows = (latest || []) as unknown as Row[]
-  const [liked, pledged] = await Promise.all([likedSet(viewerId, rows.map((r) => r.id)), pledgedAgents(rows.map((r) => r.token_id || ''))])
+  const liked = await likedSet(viewerId, rows.map((r) => r.id))
   return {
     avg: ratings.length ? ratings.reduce((a, b) => a + b, 0) / ratings.length : 0,
     count: ratings.length,
-    latest: rows.map((r) => toTimeline(r, liked, pledged)),
+    latest: rows.map((r) => toTimeline(r, liked)),
   }
 }

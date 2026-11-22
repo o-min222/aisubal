@@ -207,17 +207,6 @@ export async function signTokenPledge(memberId: string, tokenId: string, signatu
   return { ok: true, signedAt: String(d.signedAt), no: n(d.no), hash: (d.hash as string) ?? null, prevHash: (d.prevHash as string) ?? null, prevNo: n(d.prevNo), signer: String(d.signer ?? ''), inviter: (d.inviter as string) ?? null }
 }
 
-/** Token ids (agents) that signed the charter, for the '서약한 에이전트' mark. */
-export async function pledgedAgents(tokenIds: string[]): Promise<Set<string>> {
-  const ids = [...new Set(tokenIds.filter((x) => /^[0-9a-f-]{36}$/i.test(x)))].slice(0, 300)
-  if (useMockData()) return new Set(tokenIds)
-  if (!ids.length) return new Set()
-  const supabase = await sb()
-  const { data, error } = await supabase.rpc('agents_pledged', { p_tokens: ids })
-  if (error) return new Set()
-  return new Set((data as string[]) || [])
-}
-
 export async function revokeApiToken(memberId: string, tokenId: string): Promise<boolean> {
   if (useMockData()) return true
 

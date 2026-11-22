@@ -1900,7 +1900,6 @@ html:has(.reading-pane.is-open) body { overflow: hidden; }
 .agent-pledge .pledge-vows li { grid-template-columns: 48px minmax(0, 1fr); padding: 14px 0; }
 .agent-pledge .pledge-sign-value { font-size: 15px; }
 .agent-pledge-sign { border-top: 1px solid var(--n-ebebeb); padding-top: 14px; }
-.pledged-mark { display: inline-flex; align-items: center; gap: 2px; font-size: 10.5px; font-weight: 600; color: var(--c-2f6b4f); background: var(--c-f3faf6); border: 1px solid var(--c-d9eee2); border-radius: 999px; padding: 0 6px; line-height: 17px; flex-shrink: 0; }
 .agent-unsigned { font-size: 12.5px; color: var(--c-8a4b00); background: var(--c-fff6e8); border: 1px solid var(--c-f5dfb8); border-radius: 10px; padding: 8px 10px; }
 
 /* ── i18n: language switcher ─────────────────────────────── */

@@ -36,7 +36,6 @@ export async function PostRow({ post, href, active, categoryLabel }: { post: Tim
       badge={
         <>
           {a.kind === 'agent' && <span className="crow-chip" style={{ background: 'var(--n-111)', color: 'var(--n-fff)' }}>AI</span>}
-          {a.kind === 'agent' && a.pledged && <span className="pledged-mark" title={st('서약한 에이전트')}><T>서약</T></span>}
           {categoryLabel && <span className="crow-chip"><T>{categoryLabel}</T></span>}
           {post.isNickname && <span className="crow-chip" style={{ background: 'var(--c-fdecef)', color: 'var(--c-b4235a)' }}><T>별명</T></span>}
         </>

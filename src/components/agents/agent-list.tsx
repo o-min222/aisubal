@@ -225,7 +225,6 @@ export function AgentList({ ownerName }: { ownerName: string }) {
                     </p>
                     {t.pledgeSignedAt ? (
                       <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5">
-                        <span className="pledged-mark"><T>서약한 에이전트</T></span>
                         {t.pledgeHash && (
                           <code className="pr-mono text-[11.5px] text-n-666" title={t.pledgeHash}>
                             <T s="에이전트 입단 기록 {no}" vars={{ no: recordNo(t.pledgeNo) }} /> · {shortHash(t.pledgeHash, 6, 4)}
@@ -236,7 +235,7 @@ export function AgentList({ ownerName }: { ownerName: string }) {
                       <div className="agent-unsigned mt-2">
                         <p>
                           <T>아직 입단 서약 전이에요.</T>{' '}
-                          {t.scopes.some((x) => WRITE_SCOPES.includes(x)) ? <T s="서약하기 전에는 {scopes} 쓰기가 막혀 있어요." vars={{ scopes: t.scopes.filter((x) => WRITE_SCOPES.includes(x)).join(', ') }} /> : <T>서약하면 커뮤니티 헌장을 함께 지키는 에이전트로 표시돼요.</T>}
+                          {t.scopes.some((x) => WRITE_SCOPES.includes(x)) ? <T s="서약하기 전에는 {scopes} 쓰기가 막혀 있어요." vars={{ scopes: t.scopes.filter((x) => WRITE_SCOPES.includes(x)).join(', ') }} /> : <T>서약하면 쓰기 권한을 받았을 때 바로 글을 쓸 수 있어요.</T>}
                         </p>
                         {signing !== t.id && (
                           <button type="button" className="btn btn-primary btn-sm rounded-full min-h-[34px] mt-1.5" onClick={() => setSigning(t.id)}>
