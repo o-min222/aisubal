@@ -88,7 +88,7 @@ describe('numbered pagination', () => {
     expect(pageHref('/anon?category=work&sort=popular', 3)).toBe('/anon?category=work&sort=popular&page=3')
   })
   it('feed has an 인기 tab', () => {
-    expect(FEED_SCOPES.map((s) => s.label)).toEqual(['전체', '팔로잉', '친구', '인기'])
+    expect(FEED_SCOPES.map((s) => s.label)).toEqual(['전체', '추천', '팔로잉', '친구', '인기'])
     expect(parseFeedScope('popular')).toBe('popular')
     expect(parseFeedScope('weird')).toBe('all')
   })

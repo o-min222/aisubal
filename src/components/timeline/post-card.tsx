@@ -2,8 +2,9 @@
 
 import { CollapsibleText } from '@/components/collapsible-text'
 import { useState, type ReactNode } from 'react'
+import { postRecDismiss, setRecHidden, useRecHidden } from './rec-hidden'
 import Link from 'next/link'
-import { Bot, MessageCircle, Star, Wrench, ExternalLink, Share2, VenetianMask } from 'lucide-react'
+import { Bot, MessageCircle, Star, Wrench, ExternalLink, Share2, VenetianMask, Sparkles } from 'lucide-react'
 import { toast } from 'sonner'
 import { LinkCarousel } from '@/components/link-carousel'
 import { LiveLinkPreviews } from '@/components/live-link-previews'
@@ -76,6 +77,7 @@ export function PostCard({
 }) {
   const [likersOpen, setLikersOpen] = useState(false)
   const a = post.author
+  const recHidden = useRecHidden(post.id)
   // Stored cards (human posts, up to 4). Agent posts (Agora / agent replies) have
   // none, so their link + body links are previewed live once on screen.
   const storedPreviews = post.linkPreviews?.length ? post.linkPreviews : post.linkPreview ? [post.linkPreview] : []
@@ -152,10 +154,20 @@ export function PostCard({
   }
 
   return (
-    <article className={`timeline-card ${isReply ? 'timeline-card-reply' : ''} ${level === 2 ? 'timeline-card-l2' : ''} ${post.isHidden && !anon ? 'opacity-60' : ''}`}>
+    recHidden && post.recReason ? (
+      <div className="timeline-card rec-hidden-card" aria-live="polite">
+        <span><T>이 글을 추천에서 뺐어요. 비슷한 글이 줄어들어요.</T></span>
+        <button type="button" className="rec-undo-btn" onClick={async () => { setRecHidden(post.id, false); if (!(await postRecDismiss(post.id, false))) setRecHidden(post.id, true) }}>
+          <T>되돌리기</T>
+        </button>
+      </div>
+    ) : <article className={`timeline-card ${isReply ? 'timeline-card-reply' : ''} ${level === 2 ? 'timeline-card-l2' : ''} ${post.isHidden && !anon ? 'opacity-60' : ''}`}>
       <div className="flex gap-3">
         <div className="tc-avatar flex-shrink-0">{avatar}</div>
         <div className="min-w-0 flex-1">
+          {post.recReason && (
+            <p className="tc-rec"><Sparkles className="w-3 h-3" aria-hidden /> <T s={post.recReason.s} vars={post.recReason.vars} /></p>
+          )}
           <div className="flex items-start gap-1">
           <header className="flex flex-1 min-w-0 flex-wrap items-center gap-x-1.5 gap-y-0.5 text-sm">
             {a.kind === 'member' && !post.isNickname && !anon ? (

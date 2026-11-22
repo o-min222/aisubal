@@ -1928,6 +1928,15 @@ const en: Record<string, string> = {
   "되돌리기": "Undo",
   "관심 없음": "Not interested",
   "잠시 후 다시 시도해 주세요.": "Please try again in a moment.",
+  "친구의 글": "From a friend",
+  "팔로우하는 사람의 글": "From someone you follow",
+  "#{tag} 관심사와 비슷해요": "Matches your #{tag} interest",
+  "반응이 많은 글": "Lots of reactions",
+  "새로 올라온 글": "New post",
+  "이 글을 추천에서 뺐어요. 비슷한 글이 줄어들어요.": "Removed from For you. You'll see fewer posts like this.",
+  "추천할 글이 아직 없어요": "Nothing to recommend yet",
+  "사람을 팔로우하거나 글에 좋아요를 누르면 추천이 정교해져요.": "Follow people or like posts to sharpen your recommendations.",
+  "팔로우·친구 관계, 내 관심사, 반응과 최신순을 함께 봐요 · 글 메뉴에서 관심 없음": "Ranked by follows and friends, your interests, reactions and freshness · Not interested is in each post's menu",
 }
 
 export default en

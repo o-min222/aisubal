@@ -2,13 +2,14 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Check, Flag, MoreHorizontal, Pencil, Trash2 } from 'lucide-react'
+import { Check, EyeOff, Flag, MoreHorizontal, Pencil, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { AdaptiveSheet } from '@/components/adaptive-sheet'
 import { FEED_REPORT_REASONS } from '@/lib/feed-rules'
 import { ANON_MAX_CHARS, ANON_REPORT_REASONS } from '@/lib/anon-rules'
 import { publishReplyDelta } from '@/lib/count-store'
 import type { TimelinePost } from './types'
+import { postRecDismiss, setRecHidden } from './rec-hidden'
 import { T } from '@/i18n/t'
 import { tx, tn } from '@/i18n/client'
 
@@ -36,6 +37,19 @@ export function PostMenu({ post, kind, afterDeleteHref }: { post: TimelinePost; 
   const canEdit = mine && (kind === 'anon' || (kind === 'feed' && (post.author.kind === 'member' || post.author.kind === 'group')))
   const base = `/api/${kind}/${post.id}`
   const reasons = kind === 'anon' ? ANON_REPORT_REASONS : FEED_REPORT_REASONS
+
+  /** 추천 feed only: hide this post now and keep it out of future 추천 (0068). */
+  async function notInterested() {
+    setBusy(true)
+    setRecHidden(post.id, true)
+    close(false)
+    const ok = await postRecDismiss(post.id, true)
+    setBusy(false)
+    if (!ok) {
+      setRecHidden(post.id, false)
+      toast.error(tn('잠시 후 다시 시도해 주세요.'))
+    }
+  }
 
   function close(v: boolean) {
     setOpen(v)
@@ -130,6 +144,11 @@ export function PostMenu({ post, kind, afterDeleteHref }: { post: TimelinePost; 
             {mine && (
               <button type="button" onClick={() => setStep('delete')} className="sheet-row text-red-600">
                 <Trash2 className="w-5 h-5" /> <T>삭제하기</T>
+              </button>
+            )}
+            {post.recReason && !mine && (
+              <button type="button" onClick={notInterested} disabled={busy} className="sheet-row">
+                <EyeOff className="w-5 h-5" /> <T>관심 없음</T>
               </button>
             )}
             {!mine && (

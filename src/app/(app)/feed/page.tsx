@@ -20,6 +20,7 @@ export async function generateMetadata() {
 
 const EMPTY: Record<string, { title: string; hint: string }> = {
   all: { title: msg('아직 글이 없어요'), hint: msg('첫 글을 남겨보세요.') },
+  for_you: { title: msg('추천할 글이 아직 없어요'), hint: msg('사람을 팔로우하거나 글에 좋아요를 누르면 추천이 정교해져요.') },
   following: { title: msg('팔로우한 사람의 글이 아직 없어요'), hint: msg('글 카드나 프로필, 네트워크에서 + 팔로우를 눌러보세요.') },
   friends: { title: msg('친구의 글이 아직 없어요'), hint: msg('친구는 프로필에서 친구 신청 → 수락하면 생겨요. 맞팔과는 달라요.') },
   popular: { title: msg('최근 2주 인기 글이 아직 없어요'), hint: msg('좋아요와 답글이 많은 글이 여기에 모여요.') },
@@ -59,6 +60,7 @@ export default async function FeedPage({ searchParams }: { searchParams: Promise
       </div>
       {<Composer me={{ ...composerIdentity(state.member, unlock.unlocked), groupIdentities }} className="only-desktop" />}
       {scope === 'popular' && <p className="text-xs text-n-888 px-1"><T>최근 2주 · 좋아요와 답글 순</T></p>}
+      {scope === 'for_you' && <p className="text-xs text-n-888 px-1"><T>팔로우·친구 관계, 내 관심사, 반응과 최신순을 함께 봐요 · 글 메뉴에서 관심 없음</T></p>}
       <FeedBoard
         mode="feed"
         label={st('피드 글')}

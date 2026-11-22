@@ -10,6 +10,8 @@ import { POPULAR_DAYS, relationBadge, type FeedScope } from '@/lib/social-rules'
 import { PAGE_SIZE } from '@/lib/paging'
 import { sb, useMockData as isMock } from './client'
 import { getRelations, socialAuthorIds } from './social'
+import { listDismissed } from './rec-dismissals'
+import { pickInterestTags, rankFeedPosts } from '@/lib/recommend-rules'
 
 const FEED_SELECT =
   'id, parent_id, root_id, reply_to_id, title, content, url, link_title, link_description, link_image, link_site_name, link_favicon, link_type, link_previews, posted_as, author_kind, agent_name, agent_model, agent_token_id, agent_interaction, like_count, reply_count, is_hidden, created_at, group_id, deleted_at, edited_at, public_author_id, author:members!posts_public_author_id_fkey(id, display_name, handle, avatar_url), nick:nickname_profiles!posts_nickname_id_fkey(id, nickname, avatar_url), as_group_id, grp:groups!posts_as_group_id_fkey(id, slug, name)'
@@ -277,6 +279,7 @@ export type FeedListOpts = {
 
 async function queryFeed(viewerId: string, opts: FeedListOpts, withCount: boolean): Promise<{ posts: TimelinePost[]; total: number | null }> {
   const scope = opts.scope ?? 'all'
+  if (scope === 'for_you') return queryForYou(viewerId, opts)
   const popular = scope === 'popular'
   const authorIds = scope === 'following' || scope === 'friends' ? await socialAuthorIds(viewerId, scope) : null
   const limit = Math.min(opts.limit ?? 30, 100)
@@ -322,6 +325,44 @@ async function queryFeed(viewerId: string, opts: FeedListOpts, withCount: boolea
   const [liked, nickId] = await Promise.all([likedSet(viewerId, rows.map((r) => r.id)), myNicknameId()])
   const posts = await withFollowState(viewerId, rows.map((r) => feedRowToTimeline(r, liked, viewerId, nickId)))
   return { posts: await withGroupIdentity(viewerId, posts), total: withCount ? (count ?? null) : null }
+}
+
+/** 추천 pool size: the newest top-level posts (same filters as 전체) re-ranked per viewer. */
+const FOR_YOU_POOL = 100
+
+async function viewerInterestTags(viewerId: string): Promise<string[]> {
+  if (isMock()) return pickInterestTags([['mcp', 'agent'], ['cursor', 'mcp'], ['prompt']])
+  const supabase = await sb()
+  const { data } = await supabase.from('archive_entries').select('tags').eq('owner_id', viewerId).limit(300)
+  return pickInterestTags(((data || []) as Array<{ tags: string[] | null }>).map((r) => r.tags))
+}
+
+/** 추천: relationship + interests + engagement with recency decay (lib/recommend-rules); 관심 없음 posts and my own are skipped. */
+async function queryForYou(viewerId: string, opts: FeedListOpts): Promise<{ posts: TimelinePost[]; total: number | null }> {
+  const limit = Math.min(opts.limit ?? 30, 100)
+  const offset = Math.max(0, opts.offset ?? 0)
+  const [{ posts: pool }, following, friends, interestTags, dismissed] = await Promise.all([
+    queryFeed(viewerId, { ...opts, scope: 'all', limit: FOR_YOU_POOL, offset: 0 }, false),
+    socialAuthorIds(viewerId, 'following').catch(() => [] as string[]),
+    socialAuthorIds(viewerId, 'friends').catch(() => [] as string[]),
+    viewerInterestTags(viewerId).catch(() => [] as string[]),
+    listDismissed(viewerId).catch(() => null),
+  ])
+  const candidates = pool.filter((p) => !p.isMine && !dismissed?.post.has(p.id))
+  const ranked = rankFeedPosts(
+    candidates,
+    (p) => ({
+      authorId: p.author.id,
+      realName: p.author.kind === 'member' && !p.isNickname,
+      text: `${p.title ?? ''} ${p.body}`,
+      toolName: p.tool?.name ?? null,
+      likeCount: p.likeCount,
+      replyCount: p.replyCount,
+      createdAt: p.createdAt,
+    }),
+    { following: new Set(following), friends: new Set(friends), interestTags }
+  )
+  return { posts: ranked.slice(offset, offset + limit), total: ranked.length }
 }
 
 async function listFeedTimeline__raw(viewerId: string, opts: FeedListOpts = {}): Promise<TimelinePost[]> {

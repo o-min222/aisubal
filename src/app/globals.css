@@ -2428,3 +2428,8 @@ a.notif-pop-all:hover { background: var(--n-fafafa); }
 .rec-undo { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 12px; color: var(--n-888); padding: 6px 0; }
 .rec-undo-btn { font-size: 12px; font-weight: 600; color: var(--c-06c); }
 .rec-undo-btn:hover { text-decoration: underline; }
+
+/* C: 추천 feed — why-recommended line above the card header, and the 관심 없음 stub */
+.tc-rec { display: flex; align-items: center; gap: 4px; font-size: 12px; line-height: 16px; color: var(--n-888); margin-bottom: 2px; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tc-rec svg { flex: 0 0 auto; color: var(--c-06c); }
+.rec-hidden-card { display: flex; align-items: center; justify-content: space-between; gap: 12px; font-size: 13px; color: var(--n-888); }

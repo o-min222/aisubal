@@ -64,6 +64,8 @@ export type TimelinePost = {
   groupWriter?: { id: string; name: string; handle: string | null } | null
   /** group timeline post (never shown in the main feed / to agents) */
   groupId?: string | null
+  /** 추천 feed scope only: why this post was recommended (i18n key + vars); enables 관심 없음 */
+  recReason?: { s: string; vars?: Record<string, string> } | null
 }
 
 export type TimelineLinkPreview = {

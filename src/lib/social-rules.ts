@@ -76,15 +76,16 @@ export function friendActionLabel(state: FriendState): string {
   }
 }
 
-export type FeedScope = 'all' | 'following' | 'friends' | 'popular'
+export type FeedScope = 'all' | 'for_you' | 'following' | 'friends' | 'popular'
 export const FEED_SCOPES: Array<{ id: FeedScope; label: string }> = [
   { id: 'all', label: M('전체') },
+  { id: 'for_you', label: M('추천') },
   { id: 'following', label: M('팔로잉') },
   { id: 'friends', label: M('친구') },
   { id: 'popular', label: M('인기') },
 ]
 export function parseFeedScope(v: string | null | undefined): FeedScope {
-  return v === 'following' || v === 'friends' || v === 'popular' ? v : 'all'
+  return v === 'for_you' || v === 'following' || v === 'friends' || v === 'popular' ? v : 'all'
 }
 /** 인기: last 14 days, most liked/replied first. */
 export const POPULAR_DAYS = 14

@@ -1,4 +1,4 @@
-import { interpolate, type T } from '@/i18n/translate'
+import { interpolate, msg, type T } from '@/i18n/translate'
 /** Pure helpers for the right-rail recommendations (tested in tests/shell.test.ts). */
 
 /** Most frequent tags across the member's archive / reviewed tools / liked posts. */
@@ -67,4 +67,67 @@ export function toolReason(
   if (t.matchedTag) return tr('#{tag} 관심사 기반', { tag: t.matchedTag })
   if ((t.user_count ?? 0) > 0) return tr('{n}명이 사용 중', { n: t.user_count ?? 0 })
   return null
+}
+
+/* ---- C: 추천 feed scope -------------------------------------------------------------- */
+
+export type FeedRecSignals = {
+  authorId: string
+  /** real-name member post (relationship boosts apply only to these) */
+  realName: boolean
+  text: string
+  toolName: string | null
+  likeCount: number
+  replyCount: number
+  createdAt: string
+}
+export type FeedRecReason = { s: string; vars?: Record<string, string> }
+
+/** An interest tag "matches" a post when the post names it as #tag, as its tool, or (≥3 chars) in the text. */
+export function matchInterest(sig: Pick<FeedRecSignals, 'text' | 'toolName'>, interestTags: string[]): string | null {
+  const text = sig.text.toLowerCase()
+  const tool = (sig.toolName || '').toLowerCase()
+  for (const tag of interestTags) {
+    const t = tag.toLowerCase()
+    if (!t) continue
+    if (text.includes(`#${t}`) || (tool && tool.includes(t)) || (t.length >= 3 && text.includes(t))) return tag
+  }
+  return null
+}
+
+/**
+ * 추천 score: relationship (friend > following) + interest-tag match + engagement (log),
+ * all decayed by age so fresh posts surface. The dominant signal becomes the shown reason.
+ */
+export function scoreFeedPost(
+  sig: FeedRecSignals,
+  ctx: { friends: Set<string>; following: Set<string>; interestTags: string[]; now?: number }
+): { score: number; reason: FeedRecReason } {
+  const now = ctx.now ?? Date.now()
+  const rel = sig.realName && ctx.friends.has(sig.authorId) ? 3 : sig.realName && ctx.following.has(sig.authorId) ? 2 : 0
+  const tag = matchInterest(sig, ctx.interestTags)
+  const interest = tag ? 1.5 : 0
+  const eng = Math.log2(1 + 2 * Math.max(0, sig.likeCount) + Math.max(0, sig.replyCount))
+  const ageH = Math.max(0, (now - new Date(sig.createdAt).getTime()) / 3600_000)
+  const decay = 1 / Math.pow(1 + ageH / 24, 0.8)
+  const score = (1 + rel + interest + eng) * decay
+  const reason: FeedRecReason =
+    rel === 3 ? { s: msg('친구의 글') }
+    : rel === 2 ? { s: msg('팔로우하는 사람의 글') }
+    : tag ? { s: msg('#{tag} 관심사와 비슷해요'), vars: { tag } }
+    : eng >= Math.log2(11) ? { s: msg('반응이 많은 글') }
+    : { s: msg('새로 올라온 글') }
+  return { score, reason }
+}
+
+/** Rank a candidate pool: highest score first, ties → newest. */
+export function rankFeedPosts<P extends { id: string; createdAt: string }>(
+  pool: P[],
+  signals: (p: P) => FeedRecSignals,
+  ctx: { friends: Set<string>; following: Set<string>; interestTags: string[]; now?: number }
+): Array<P & { recReason: FeedRecReason }> {
+  return pool
+    .map((p) => ({ p, ...scoreFeedPost(signals(p), ctx) }))
+    .sort((a, b) => b.score - a.score || b.p.createdAt.localeCompare(a.p.createdAt))
+    .map(({ p, reason }) => ({ ...p, recReason: reason }))
 }
