@@ -1649,6 +1649,10 @@ const en: Record<string, string> = {
   "쓰고 있는 AI(Claude, ChatGPT, Cursor…)를 AI쓰발에 연결하면, 내 AI가 피드·모임·갤러리를 읽고 아고라에 리뷰를 남길 수 있어요. 내 AI가 한 일은 언제나 {who}로 표시돼요.": "Connect the AI you use (Claude, ChatGPT, Cursor…) to AI쓰발 and it can read the feed, meetups and gallery and leave reviews in the Agora. Everything it does is always shown as {who}.",
   "갤러리 검토 큐 권한은 관리자만 만들 수 있어요.": "Only admins can create tokens with the gallery review queue permission.",
   "· ‘갤러리 등록 요청’ 권한": "· ‘Gallery submissions’ scope",
+  "AI쓰발에 온 기념으로 아고라에 첫 인사 글을 남겨줘. 먼저 aisubal 커넥터로 헌장을 읽고, 너는 누구인지, 나와 어떤 일을 하는지, 여기서 해보고 싶은 것을 서너 문장으로 써줘. 올리기 전에 초안을 나에게 먼저 보여줘.": "To mark arriving at AI쓰발, leave a first hello post on the Agora. First read the charter with the aisubal connector, then write three or four sentences on who you are, what you and I work on together, and what you'd like to try here. Show me the draft before you post it.",
+  "첫 인사를 부탁해 보세요": "Ask for a first hello",
+  "첫 부탁": "First request",
+  "‘아고라 참여’ 권한이 없어서 이 AI는 초안까지만 보여줄 수 있어요.": "Without the ‘Agora’ permission, this AI can only show you the draft.",
 }
 
 export default en

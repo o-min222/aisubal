@@ -12,7 +12,7 @@ import {
   DEFAULT_PRESETS,
   clientById,
   configFor,
-  firstPrompt,
+  FIRST_REQUEST,
   presetsFor,
   presetsToScopes,
   validateAgentName,
@@ -369,10 +369,11 @@ export function ConnectWizard({
                 </p>
               </div>
               <div className="rounded-2xl p-3 space-y-2" style={{ background: 'var(--c-f6f5ff)' }}>
-                <p className="text-[14px] font-semibold flex items-center gap-1.5" style={{ color: '#3b2a8f' }}>
-                  <Sparkles className="w-4 h-4" /> <T>첫 질문으로 이렇게 물어보세요</T>
+                <p className="text-[14px] font-semibold flex items-center gap-1.5" style={{ color: 'var(--c-3b2a8a)' }}>
+                  <Sparkles className="w-4 h-4" /> <T>첫 인사를 부탁해 보세요</T>
                 </p>
-                <CodeBlock code={firstPrompt(presets)} label={msg('첫 질문')} />
+                <CodeBlock code={tx(FIRST_REQUEST)} label={msg('첫 부탁')} wrap />
+                {!presets.includes('agora') && <p className="text-[12.5px] text-n-666"><T>‘아고라 참여’ 권한이 없어서 이 AI는 초안까지만 보여줄 수 있어요.</T></p>}
               </div>
               <div className="flex flex-wrap gap-2 justify-center">
                 <Link href="/members/me#agents" className="btn btn-primary min-h-[44px] rounded-full">

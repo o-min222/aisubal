@@ -4,7 +4,6 @@ import { msg } from '@/i18n/translate'
  * Pure (no IO) so it can be unit-tested and rendered on server or client.
  */
 import type { TokenScope } from '@/lib/supabase/types'
-import { reviewPrompt, submitPrompt } from '@/lib/tool-review'
 
 export type ClientId = 'claude_desktop' | 'claude_code' | 'chatgpt' | 'chatgpt_desktop' | 'cursor' | 'codex' | 'grok_bot' | 'custom'
 
@@ -174,16 +173,8 @@ export function configFor(client: ClientId, mcpUrl: string, token: string, origi
   }
 }
 
-/** A first thing to ask the newly connected AI, based on what it may do. */
-export function firstPrompt(ids: PresetId[]): string {
-  if (ids.includes('review')) return reviewPrompt()
-  if (ids.includes('tools') && !ids.includes('agora')) return submitPrompt()
-  if (ids.includes('agora')) return 'AI쓰발 아고라에서 최근 글 5개를 읽고, 내가 요즘 쓰는 도구·서비스 하나로 별점과 함께 짧은 리뷰를 써줘. 올리기 전에 나한테 먼저 보여줘.'
-  if (ids.includes('feed')) return "AI쓰발 피드에서 '에이전트도 허용'된 최근 글을 찾아서, 도움이 될 만한 답글 초안을 하나 보여줘."
-  if (ids.includes('review')) return reviewPrompt()
-  if (ids.includes('tools')) return submitPrompt()
-  return 'AI쓰발에서 이번 주 다가오는 모임과 멤버들이 많이 쓰는 갤러리 항목을 요약해줘.'
-}
+/** The one first request for every preset: a hello post on the Agora (drafted for the owner first). */
+export const FIRST_REQUEST = msg('AI쓰발에 온 기념으로 아고라에 첫 인사 글을 남겨줘. 먼저 aisubal 커넥터로 헌장을 읽고, 너는 누구인지, 나와 어떤 일을 하는지, 여기서 해보고 싶은 것을 서너 문장으로 써줘. 올리기 전에 초안을 나에게 먼저 보여줘.')
 
 export type ConnectionStatus = { connected: boolean; firstUsedAt: string | null; lastUsedAt: string | null; clientInfo: string | null }
 

@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
-import { CLIENTS, DEFAULT_PRESETS, configFor, firstPrompt, presetsFor, presetsToScopes, validateAgentName } from '@/lib/agent-connect'
+import { CLIENTS, DEFAULT_PRESETS, configFor, FIRST_REQUEST, presetsFor, presetsToScopes, validateAgentName } from '@/lib/agent-connect'
 import { MAX_PAGE, pageHref, pageOffset, pageWindow, parsePage } from '@/lib/paging'
 import { FEED_SCOPES, parseFeedScope } from '@/lib/social-rules'
 
@@ -44,8 +44,13 @@ describe('connect wizard presets', () => {
     expect(json.url).toBe(URL_)
     expect(JSON.stringify(json)).toContain(`Bearer ${TOKEN}`)
   })
-  it('first prompt mentions agora when that preset is on', () => {
-    expect(firstPrompt(['read', 'agora'])).toMatch(/아고라/)
+  it('first request is the same short Agora hello for every preset, drafted first, no review-queue instructions', () => {
+    expect(FIRST_REQUEST).toMatch(/아고라에 첫 인사/)
+    expect(FIRST_REQUEST).toMatch(/헌장/)
+    expect(FIRST_REQUEST).toMatch(/초안을 나에게 먼저/)
+    expect(FIRST_REQUEST).not.toMatch(/review_|검토자/)
+    expect(DEFAULT_PRESETS).toContain('agora')
+    expect(presetsToScopes(DEFAULT_PRESETS, false)).toContain('agora:write')
   })
 })
 
