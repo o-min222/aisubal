@@ -1,7 +1,5 @@
-import { randomBytes } from 'crypto'
 import type { Member } from '@/lib/supabase/types'
 import {
-  ARCHIVE_BUNDLE_MAX,
   ARCHIVE_KINDS,
   ARCHIVE_PAGE_SIZE,
   archiveKey,
@@ -16,13 +14,18 @@ import { sb, useMockData as isMock } from './client'
 
 const fromRow = archiveFromRow
 
-const COLS = 'id, kind, ref, title, excerpt, source_url, author_label, author_kind, image_url, memo, tags, source_created_at, created_at, updated_at'
+const COLS = 'id, ref_no, kind, ref, title, excerpt, source_url, author_label, author_kind, image_url, memo, tags, source_created_at, created_at, updated_at'
 
 // ------------------------------------------------------------------ DEV mock store
 type MockStore = Map<string, ArchiveItem[]>
-const g = globalThis as unknown as { __aisubalArchive?: MockStore; __aisubalBundles?: Map<string, { owner: string; ids: string[] }> }
+const g = globalThis as unknown as { __aisubalArchive?: MockStore; __aisubalArchiveSeq?: Map<string, number> }
 const store = (): MockStore => (g.__aisubalArchive ??= new Map())
-const bundles = () => (g.__aisubalBundles ??= new Map())
+const nextRef = (memberId: string) => {
+  const m = (g.__aisubalArchiveSeq ??= new Map())
+  const n = (m.get(memberId) ?? 0) + 1
+  m.set(memberId, n)
+  return n
+}
 function mockItems(memberId: string): ArchiveItem[] {
   if (!store().has(memberId)) {
     const now = Date.now()
@@ -35,9 +38,10 @@ function mockItems(memberId: string): ArchiveItem[] {
       { kind: 'moim', ref: 'moim-1', title: '성수 프롬프트 엔지니어링 번개', excerpt: '각자 쓰는 시스템 프롬프트를 들고 와서 같이 고쳐봐요.', sourceUrl: '/moim/moim-1', authorLabel: '@dev', authorKind: 'member', tags: ['prompt'] },
       { kind: 'anon', ref: 'anon-1', title: '회사에서 AI 쓰는 거 눈치 보이는 사람?', excerpt: '팀장님은 쓰지 말라는데 다들 몰래 쓰는 분위기…', sourceUrl: '/anon/anon-1', authorKind: 'anon', tags: [] },
     ]
+    ;(g.__aisubalArchiveSeq ??= new Map()).set(memberId, seed.length)
     store().set(
       memberId,
-      seed.map((s, i) => ({ id: `arc-${i + 1}`, excerpt: '', sourceUrl: null, authorLabel: null, authorKind: null, imageUrl: null, memo: '', tags: [], sourceCreatedAt: null, createdAt: at(i * 7 + 1), updatedAt: at(i * 7 + 1), ...s }) as ArchiveItem),
+      seed.map((s, i) => ({ id: `arc-${i + 1}`, refNo: seed.length - i, excerpt: '', sourceUrl: null, authorLabel: null, authorKind: null, imageUrl: null, memo: '', tags: [], sourceCreatedAt: null, createdAt: at(i * 7 + 1), updatedAt: at(i * 7 + 1), ...s }) as ArchiveItem),
     )
   }
   return store().get(memberId)!
@@ -58,7 +62,14 @@ function facet(rows: Array<Pick<ArchiveItem, 'kind' | 'tags'>>) {
   return { kindCounts, tags }
 }
 
+const refQuery = (q: string | null | undefined) => {
+  const m = /^#?a(\d{1,7})$/i.exec(q?.trim() ?? '')
+  return m ? Number(m[1]) : null
+}
+
 const matches = (it: ArchiveItem, q: ArchiveQuery) => {
+  const ref = refQuery(q.q)
+  if (ref) return it.refNo === ref
   const needle = q.q?.trim().toLowerCase()
   return (!q.kind || it.kind === q.kind) && (!q.tag || it.tags.includes(q.tag)) && (!needle || [it.title, it.excerpt, it.memo, it.authorLabel ?? ''].some((s) => s.toLowerCase().includes(needle)))
 }
@@ -75,7 +86,9 @@ export async function listArchive(memberId: string, q: ArchiveQuery = {}): Promi
   let query = supabase.from('archive_entries').select(COLS, { count: 'exact' }).eq('owner_id', memberId)
   if (q.kind) query = query.eq('kind', q.kind)
   if (q.tag) query = query.contains('tags', [q.tag])
-  const needle = q.q?.trim().replace(/[%,()]/g, ' ').slice(0, 100)
+  const ref = refQuery(q.q)
+  const needle = ref ? null : q.q?.trim().replace(/[%,()]/g, ' ').slice(0, 100)
+  if (ref) query = query.eq('ref_no', ref)
   if (needle) query = query.or(`title.ilike.%${needle}%,excerpt.ilike.%${needle}%,memo.ilike.%${needle}%`)
   const [{ data, count, error }, facets] = await Promise.all([
     query.order('created_at', { ascending: false }).range(from, from + ARCHIVE_PAGE_SIZE - 1),
@@ -95,7 +108,7 @@ export async function savedArchiveKeys(memberId: string): Promise<string[]> {
 }
 
 export async function getArchiveItems(memberId: string, ids: string[]): Promise<ArchiveItem[]> {
-  const want = [...new Set(ids)].slice(0, ARCHIVE_BUNDLE_MAX)
+  const want = [...new Set(ids)].slice(0, 50)
   if (!want.length) return []
   if (isMock()) return mockItems(memberId).filter((i) => want.includes(i.id))
   const supabase = await sb()
@@ -134,6 +147,7 @@ export async function addToArchive(member: Member, input: AddInput): Promise<Add
     }
     const item: ArchiveItem = {
       id: `arc-${Date.now()}`,
+      refNo: nextRef(member.id),
       kind: input.kind,
       ref,
       title: (title ?? input.hint?.title ?? ref).slice(0, 300),
@@ -210,37 +224,6 @@ export async function removeArchiveByRef(memberId: string, kind: ArchiveKind, re
   return !error
 }
 
-// ------------------------------------------------------------------ bundle links
-/** Stable link for a selection (same selection → same token). Anon items are never included. */
-export async function createArchiveBundle(memberId: string, ids: string[]): Promise<string | null> {
-  const token = randomBytes(18).toString('base64url')
-  if (isMock()) {
-    const keep = mockItems(memberId).filter((i) => ids.includes(i.id) && i.kind !== 'anon').map((i) => i.id).sort()
-    if (!keep.length) return null
-    for (const [t, b] of bundles()) if (b.owner === memberId && b.ids.join() === keep.join()) return t
-    bundles().set(token, { owner: memberId, ids: keep })
-    return token
-  }
-  const supabase = await sb()
-  const { data, error } = await supabase.rpc('archive_bundle_create', { p_ids: ids.slice(0, ARCHIVE_BUNDLE_MAX), p_token: token })
-  if (error) return null
-  return String(data)
-}
-
-export async function getPublicBundle(token: string): Promise<{ owner: string; createdAt: string; items: ArchiveItem[] } | null> {
-  if (!/^[A-Za-z0-9_-]{24,64}$/.test(token)) return null
-  if (isMock()) {
-    const b = bundles().get(token)
-    if (!b) return null
-    return { owner: '@dev', createdAt: new Date().toISOString(), items: mockItems(b.owner).filter((i) => b.ids.includes(i.id)) }
-  }
-  const { createAnonClient } = await import('@/lib/supabase/anon')
-  const { data, error } = await createAnonClient().rpc('archive_bundle_public', { p_token: token })
-  if (error || !data) return null
-  const d = data as { owner: string; createdAt: string; items: unknown[] }
-  return { owner: d.owner, createdAt: d.createdAt, items: (d.items ?? []).map(fromRow) }
-}
-
 /** 'n saved' counts without exposing who (posts' archive_count). */
 export async function archiveSaveCounts(kind: ArchiveKind, refs: string[]): Promise<Record<string, number>> {
   if (!refs.length || isMock()) return {}
@@ -260,6 +243,9 @@ export function devArchiveBackend(member: Member): import('@/lib/archive-mcp').A
     },
     async get(id) {
       return mockItems(member.id).find((i) => i.id === id) ?? null
+    },
+    async getByRef(refNo) {
+      return mockItems(member.id).find((i) => i.refNo === refNo) ?? null
     },
     async add(input) {
       const r = await addToArchive(member, { kind: input.kind, ref: input.ref, memo: input.memo, tags: input.tags, hint: input.title ? { title: input.title } : undefined })

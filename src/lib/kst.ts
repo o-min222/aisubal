@@ -7,6 +7,12 @@ export function kstDateTime(iso: string, intl = 'ko-KR') {
 export function kstTime(iso: string, intl = 'ko-KR') {
   return new Intl.DateTimeFormat(intl, { hour: 'numeric', minute: '2-digit', timeZone: TZ }).format(new Date(iso))
 }
+/** Short date for list rows: '11월 22일', with the year when it isn't this (KST) year. */
+export function kstShortDate(iso: string, intl = 'ko-KR', now = new Date()) {
+  const d = new Date(iso)
+  const y = (x: Date) => new Intl.DateTimeFormat('en', { year: 'numeric', timeZone: TZ }).format(x)
+  return new Intl.DateTimeFormat(intl, { ...(y(d) !== y(now) && { year: 'numeric' }), month: 'short', day: 'numeric', timeZone: TZ }).format(d)
+}
 export function kstDayBadge(iso: string, intl = 'ko-KR') {
   const d = new Date(iso)
   return {

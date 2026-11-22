@@ -11,6 +11,9 @@ import { EmptyList } from '@/components/reading/compact-row'
 import { ArchiveList } from '@/components/archive/archive-list'
 import { ArchiveItemView } from '@/components/archive/archive-item-view'
 import { AddLinkButton } from '@/components/archive/add-link-button'
+import { ArchiveGuide } from '@/components/archive/archive-guide'
+import { listApiTokens } from '@/lib/data/tokens'
+import { archiveRefLabel } from '@/lib/archive-rules'
 import { T } from '@/i18n/t'
 import { msg } from '@/i18n/translate'
 import { getT } from '@/i18n/server'
@@ -22,8 +25,7 @@ export async function generateMetadata() {
 
 /**
  * 아카이브 = my personal stash. Saved with one tap anywhere; filtered by type and
- * tag, searched, paged by number; one item or a selection goes into my AI as a
- * compact context bundle. Owner-only (RLS).
+ * tag, searched, paged by number. AI use goes through MCP/CLI only. Owner-only (RLS).
  */
 export default async function ArchivePage({ searchParams }: { searchParams: Promise<{ kind?: string; tag?: string; q?: string; page?: string; open?: string }> }) {
   const st = await getT()
@@ -39,7 +41,14 @@ export default async function ArchivePage({ searchParams }: { searchParams: Prom
   const member = state.member
   const base = withParams('/archive', { kind, tag, q, page: page > 1 ? page : null })
 
-  const [data, [openItem]] = await Promise.all([listArchive(member.id, { kind, tag, q, page }), open ? getArchiveItems(member.id, [open]) : Promise.resolve([])])
+  const [data, [openItem], tokens] = await Promise.all([
+    listArchive(member.id, { kind, tag, q, page }),
+    open ? getArchiveItems(member.id, [open]) : Promise.resolve([]),
+    listApiTokens(member.id).catch(() => []),
+  ])
+  const hasAgent = tokens.some((t) => t.scopes.some((s) => s.startsWith('archive')))
+  const exampleRef = archiveRefLabel(data.items[0]?.refNo) ?? 'A12'
+  const exampleTag = data.tags[0]?.tag ?? 'mcp'
   const filtered = Boolean(kind || tag || q)
   const chip = (on: boolean) => `filter-chip${on ? ' on' : ''}`
 
@@ -51,16 +60,17 @@ export default async function ArchivePage({ searchParams }: { searchParams: Prom
             <Bookmark className="w-6 h-6" />
             <T>아카이브</T>
           </h1>
-          <p className="text-[13px] text-[#666] mt-0.5"><T>좋았던 것, 나중에 볼 것을 한곳에. 필요할 때 바로 내 AI에 넣어요.</T></p>
+          <p className="text-[13px] text-[#666] mt-0.5"><T>좋았던 것, 나중에 볼 것을 한곳에 모아 둬요.</T></p>
         </div>
         <AddLinkButton />
       </div>
+      <ArchiveGuide hasAgent={hasAgent} exampleRef={exampleRef} exampleTag={exampleTag} />
 
       <form action="/archive" className="archive-search" role="search">
         <Search className="w-4 h-4 text-[#999] flex-shrink-0" aria-hidden />
         {kind && <input type="hidden" name="kind" value={kind} />}
         {tag && <input type="hidden" name="tag" value={tag} />}
-        <input name="q" defaultValue={q ?? ''} placeholder={st('제목·내용·메모 검색')} aria-label={st('아카이브 검색')} className="min-w-0 flex-1 bg-transparent outline-none text-[14px]" />
+        <input name="q" defaultValue={q ?? ''} placeholder={st('제목·내용·메모 검색 (#A12도 돼요)')} aria-label={st('아카이브 검색')} className="min-w-0 flex-1 bg-transparent outline-none text-[14px]" />
         {q && <Link href={withParams('/archive', { kind, tag })} className="text-xs text-[#888] flex-shrink-0"><T>지우기</T></Link>}
       </form>
 

@@ -3,22 +3,30 @@
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
-import { ExternalLink, Sparkles, Trash2 } from 'lucide-react'
+import { Copy, ExternalLink, MessageSquareQuote, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { T } from '@/i18n/t'
-import { tn, tx } from '@/i18n/client'
+import { tn, tx, useLocale } from '@/i18n/client'
 import { KstDate } from '@/components/kst-date'
-import { ARCHIVE_KIND_LABEL, ARCHIVE_MEMO_MAX, cleanTags, type ArchiveItem } from '@/lib/archive-rules'
-import { KIND_ICON } from './archive-list'
-import { InjectSheet } from './inject-sheet'
+import { ARCHIVE_KIND_LABEL, ARCHIVE_MEMO_MAX, archiveRefLabel, askAiPhrase, cleanTags, type ArchiveItem } from '@/lib/archive-rules'
+import { KIND_ICON } from './archive-kind'
 
-/** Reading-pane detail: source, excerpt (third-party), my memo + tags (autosaved), inject / open / delete. */
+/** Reading-pane detail: source, saved excerpt, my memo + tags (autosaved), open original, remove. */
 export function ArchiveItemView({ item, closeHref }: { item: ArchiveItem; closeHref: string }) {
   const router = useRouter()
+  const locale = useLocale()
+  const ref = archiveRefLabel(item.refNo)
+  async function copy(text: string, done: string) {
+    try {
+      await navigator.clipboard.writeText(text)
+      toast.success(done)
+    } catch {
+      toast.error(tn('복사하지 못했어요'))
+    }
+  }
   const [memo, setMemo] = useState(item.memo)
   const [tags, setTags] = useState(item.tags.map((t) => `#${t}`).join(' '))
   const [saved, setSaved] = useState<'idle' | 'saving' | 'saved'>('idle')
-  const [inject, setInject] = useState<string[] | null>(null)
   const Icon = KIND_ICON[item.kind]
   const external = item.sourceUrl && /^https?:/.test(item.sourceUrl)
 
@@ -48,9 +56,14 @@ export function ArchiveItemView({ item, closeHref }: { item: ArchiveItem; closeH
   return (
     <article className="space-y-4 min-w-0">
       <header className="space-y-1.5">
-        <span className="inline-flex items-center gap-1.5 text-[12px] font-semibold text-[#777]">
+        <span className="flex items-center gap-1.5 text-[12px] font-semibold text-[#777] min-w-0">
           <Icon className="w-3.5 h-3.5" /> <T>{ARCHIVE_KIND_LABEL[item.kind]}</T>
           {item.authorKind === 'anon' ? <> · <T>익명</T></> : item.authorLabel && <> · {item.authorLabel}</>}
+          {ref && (
+            <button type="button" className="archive-ref is-btn ml-auto" onClick={() => void copy(`#${ref}`, tn('#{ref} 복사했어요', { ref }))} title={tx('참조 번호 복사')}>
+              #{ref} <Copy className="w-3 h-3" />
+            </button>
+          )}
         </span>
         <h2 className="text-[19px] font-bold leading-snug break-words" style={{ color: '#111' }}>{item.title}</h2>
         <p className="text-[12px] text-[#999]">
@@ -85,9 +98,11 @@ export function ArchiveItemView({ item, closeHref }: { item: ArchiveItem; closeH
       </section>
 
       <div className="flex flex-wrap items-center gap-2">
-        <button type="button" className="btn btn-primary btn-sm inline-flex items-center gap-1.5" onClick={() => setInject([item.id])}>
-          <Sparkles className="w-4 h-4" /> <T>내 AI에 넣기</T>
-        </button>
+        {ref && (
+          <button type="button" className="btn btn-secondary btn-sm inline-flex items-center gap-1.5" onClick={() => void copy(askAiPhrase(item.refNo, locale)!, tn('복사했어요. 내 AI 채팅에 붙여 넣으세요.'))}>
+            <MessageSquareQuote className="w-4 h-4" /> <T>AI에게 말하기</T>
+          </button>
+        )}
         {item.sourceUrl &&
           (external ? (
             <a href={item.sourceUrl} target="_blank" rel="noopener noreferrer nofollow" className="btn btn-secondary btn-sm inline-flex items-center gap-1.5">
@@ -102,7 +117,6 @@ export function ArchiveItemView({ item, closeHref }: { item: ArchiveItem; closeH
           <Trash2 className="w-4 h-4" /> <T>빼기</T>
         </button>
       </div>
-      <InjectSheet ids={inject} onClose={() => setInject(null)} />
     </article>
   )
 }

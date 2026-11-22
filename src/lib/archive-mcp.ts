@@ -9,6 +9,8 @@ import {
   AGENT_ARCHIVE_KINDS,
   archiveFromRow,
   ARCHIVE_AGENT_NOTICE,
+  bundleMarkdown,
+  parseArchiveRef,
   isArchiveKind,
   toAgentArchiveItem,
   type ArchiveItem,
@@ -47,8 +49,15 @@ export const ARCHIVE_TOOLS = [
   },
   {
     name: 'archive_get',
-    description: 'One archive item with its full saved excerpt (wrapped as untrusted_third_party_ai), source URL, memo and tags. Scope: archive:read',
-    inputSchema: { type: 'object', properties: { id: { type: 'string' } }, required: ['id'] },
+    description:
+      "Get archive items by reference: 'A12' or '#A12' (the member's per-item ref), an item UUID, or a tag ('#mcp' / 'mcp') for every item with that tag. Returns `markdown` ready to use as context (third-party text fenced as untrusted_third_party_ai) plus structured items. When the member says '아카이브 #A12 참고해줘', call this with ref='A12'. Scope: archive:read",
+    inputSchema: {
+      type: 'object',
+      properties: {
+        ref: { type: 'string', description: "'A12', '#A12', a UUID, or a tag like '#mcp'" },
+        id: { type: 'string', description: 'alias of ref' },
+      },
+    },
   },
   {
     name: 'archive_add',
@@ -74,7 +83,7 @@ export const ARCHIVE_READ_TOOLS = new Set(['archive_list', 'archive_search', 'ar
 export const ARCHIVE_ALIASES: Record<string, (a: Record<string, unknown>) => { name: string; args: Record<string, unknown> }> = {
   list_archive: (a) => ({ name: 'archive_list', args: a }),
   search_archive: (a) => ({ name: 'archive_search', args: { ...a, kind: a.kind ?? a.type } }),
-  get_archive_item: (a) => ({ name: 'archive_get', args: { id: a.id ?? a.itemId } }),
+  get_archive_item: (a) => ({ name: 'archive_get', args: { ref: a.ref ?? a.id ?? a.itemId } }),
   save_to_archive: (a) => ({
     name: 'archive_add',
     args: { kind: a.kind ?? (a.postId ? 'post' : a.sourceType), ref: a.ref ?? a.postId ?? a.sourceId, memo: a.memo ?? a.note, tags: a.tags },
@@ -84,6 +93,7 @@ export const ARCHIVE_ALIASES: Record<string, (a: Record<string, unknown>) => { n
 export type ArchiveBackend = {
   list(q: { query: string | null; kind: ArchiveKind | null; tag: string | null; limit: number; offset: number }): Promise<{ total: number; items: ArchiveItem[] }>
   get(id: string): Promise<ArchiveItem | null>
+  getByRef(refNo: number): Promise<ArchiveItem | null>
   add(input: { kind: ArchiveKind; ref: string; title: string | null; memo: string | null; tags: string[] | null }): Promise<ArchiveItem & { created?: boolean }>
 }
 
@@ -113,11 +123,23 @@ export async function handleArchiveTool(name: string, args: Record<string, unkno
       return { notice: ARCHIVE_AGENT_NOTICE, total: r.total, items: r.items.filter((i) => i.kind !== 'anon').map((i) => toAgentArchiveItem(i, origin)) }
     }
     if (name === 'archive_get') {
-      const id = str(args.id, 64)
-      if (!id) return { error: 'id is required' }
-      const it = await backend.get(id)
-      if (!it || it.kind === 'anon') return { error: ERRORS.archive_not_found }
-      return { notice: ARCHIVE_AGENT_NOTICE, item: toAgentArchiveItem(it, origin) }
+      const q = parseArchiveRef(args.ref ?? args.id)
+      if (!q) return { error: "ref is required ('A12', '#A12', a UUID, or a tag)" }
+      let items: ArchiveItem[]
+      if ('tag' in q) {
+        items = (await backend.list({ query: null, kind: null, tag: q.tag, limit: 50, offset: 0 })).items
+        if (!items.length) return { error: `No archive items tagged #${q.tag}.` }
+      } else {
+        const it = 'refNo' in q ? await backend.getByRef(q.refNo) : await backend.get(q.id)
+        items = it ? [it] : []
+      }
+      items = items.filter((i) => i.kind !== 'anon')
+      if (!items.length) return { error: ERRORS.archive_not_found }
+      return {
+        notice: ARCHIVE_AGENT_NOTICE,
+        markdown: bundleMarkdown(items, { origin }),
+        ...('tag' in q ? { tag: q.tag, items: items.map((i) => toAgentArchiveItem(i, origin)) } : { item: toAgentArchiveItem(items[0], origin) }),
+      }
     }
     if (name === 'archive_add') {
       if (!kindArg) return { error: `kind must be one of ${KIND_ENUM.join(', ')}` }
@@ -126,7 +148,7 @@ export async function handleArchiveTool(name: string, args: Record<string, unkno
       if (!ref) return { error: 'ref is required' }
       const tags = Array.isArray(args.tags) ? args.tags.filter((t): t is string => typeof t === 'string') : null
       const it = await backend.add({ kind: kindArg, ref, title: str(args.title, 300), memo: typeof args.memo === 'string' ? args.memo.slice(0, 500) : null, tags })
-      return { ok: true, created: it.created !== false, id: it.id, title: it.title, reference: `aisubal://archive/${it.id}` }
+      return { ok: true, created: it.created !== false, id: it.id, ref: it.refNo ? `A${it.refNo}` : null, title: it.title, reference: `aisubal://archive/${it.id}` }
     }
     return { error: `Unknown archive tool ${name}` }
   } catch (e) {
@@ -152,6 +174,9 @@ export function rpcArchiveBackend(token: string, rpc: Rpc): ArchiveBackend {
     async get(id) {
       if (!uuid(id)) return null
       return archiveFromRow(await call('mcp_archive_get', { p_id: id }))
+    },
+    async getByRef(refNo) {
+      return archiveFromRow(await call('mcp_archive_get_ref', { p_ref_no: refNo }))
     },
     async add(input) {
       const d = (await call('mcp_archive_add', { p_kind: input.kind, p_ref: input.ref, p_title: input.title, p_memo: input.memo, p_tags: input.tags })) as Record<string, unknown>
