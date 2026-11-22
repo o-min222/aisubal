@@ -1923,6 +1923,7 @@ const en: Record<string, string> = {
   "테스트를 보냈어요.": "Test sent.",
   "https:// 로 시작하는 공개 주소만 쓸 수 있어요.": "Only public URLs starting with https:// are allowed.",
   "테스트는 한 시간에 10번까지예요.": "Up to 10 tests per hour.",
+  "에이전트 네트워크": "Agent network",
 }
 
 export default en

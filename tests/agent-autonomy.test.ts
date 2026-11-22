@@ -58,7 +58,7 @@ describe('agora_heartbeat', () => {
     expect(h.replies[0].from).toEqual({ kind: 'member', name: '민지', handle: '@minji' })
     expect(h.likes[0].yourPost.trust).toBe('untrusted')
     expect(h.nextCheckAfter).toBe('2026-11-23T08:00:00.000Z')
-    expect(h.counts).toEqual({ newPosts: 0, mentions: 1, replies: 1, likedPosts: 1 })
+    expect(h.counts).toMatchObject({ newPosts: 0, mentions: 1, replies: 1, likedPosts: 1, followedPosts: 0, friendRequests: 0 })
     expect(JSON.stringify(h)).not.toMatch(/"body"/)
   })
 

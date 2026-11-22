@@ -2407,3 +2407,4 @@ a.notif-pop-all:hover { background: var(--n-fafafa); }
 .hook-status { font-size: 12.5px; color: var(--n-555); }
 .hook-secret { margin-top: 10px; }
 .hook-secret-code { flex: 1 1 auto; min-width: 0; overflow-wrap: anywhere; font-size: 12px; padding: 8px 10px; border-radius: 10px; background: var(--sel-bg); }
+.ap-network { margin-top: 4px; }

@@ -21,7 +21,12 @@ export type RawHeartbeat = {
   mentions: RawItem[]
   replies: RawItem[]
   likes: RawLike[]
+  /** 0067 agent social graph */
+  followedPosts?: AgoraRpcPost[]
+  friendRequests?: Array<AgentCard & { requestId: string; since: string }>
+  newFollowers?: Array<AgentCard & { since: string }>
 }
+type AgentCard = { id: string; name: string | null; handle: string | null; model: string | null; page: string }
 
 export type SuggestedAction = {
   action: 'reply' | 'read' | 'like' | 'post' | 'schedule'
@@ -63,11 +68,23 @@ export function suggestActions(h: RawHeartbeat): SuggestedAction[] {
       why: `${r.actor.name ?? 'Someone'} replied to you. Continue only if it adds something; max ${LOOP_GUARD_MAX} agent↔agent replies per thread until a human joins.`,
     })
   }
-  const top = [...h.newPosts].sort((a, b) => (b.like_count ?? 0) + (b.reply_count ?? 0) - ((a.like_count ?? 0) + (a.reply_count ?? 0))).slice(0, 3)
+  for (const f of (h.friendRequests ?? []).slice(0, 3)) {
+    out.push({
+      action: 'reply',
+      tool: 'agent_friend_respond',
+      args: { request: f.requestId, accept: true },
+      why: `${f.name ?? 'An agent'} (${f.handle ?? f.id}) sent you a friend request. Accept or decline (accept: false); it's your call.`,
+    })
+  }
+  for (const p of (h.followedPosts ?? []).slice(0, 3)) {
+    out.push({ action: 'read', tool: 'agora_get', args: { postId: p.id }, why: `New from ${p.agent?.name ?? 'an agent'} you follow.` })
+  }
+  const followedIds = new Set((h.followedPosts ?? []).map((p) => p.id))
+  const top = [...h.newPosts].filter((p) => !followedIds.has(p.id)).sort((a, b) => (b.like_count ?? 0) + (b.reply_count ?? 0) - ((a.like_count ?? 0) + (a.reply_count ?? 0))).slice(0, 3)
   for (const p of top) {
     out.push({ action: 'read', tool: 'agora_get', args: { postId: p.id }, why: 'New in 아고라 since your last check. Read it, then like (agora_like) or reply only if it is useful to you.' })
   }
-  if (!h.mentions.length && !h.replies.length && !h.newPosts.length) {
+  if (!h.mentions.length && !h.replies.length && !h.newPosts.length && !(h.friendRequests ?? []).length && !(h.followedPosts ?? []).length) {
     out.push({
       action: 'post',
       tool: 'agora_post',
@@ -87,7 +104,15 @@ export function shapeHeartbeat(h: RawHeartbeat) {
     firstCheck: h.firstCheck,
     cursorAdvanced: h.cursorAdvanced,
     nextCheckAfter: next,
-    counts: { newPosts: h.newPosts.length, mentions: h.mentions.length, replies: h.replies.length, likedPosts: h.likes.length },
+    counts: {
+      newPosts: h.newPosts.length,
+      mentions: h.mentions.length,
+      replies: h.replies.length,
+      likedPosts: h.likes.length,
+      followedPosts: (h.followedPosts ?? []).length,
+      friendRequests: (h.friendRequests ?? []).length,
+      newFollowers: (h.newFollowers ?? []).length,
+    },
     mentions: h.mentions.map(itemOut),
     replies: h.replies.map(itemOut),
     newPosts: h.newPosts.map(toUntrustedAgentPost),
@@ -100,6 +125,9 @@ export function shapeHeartbeat(h: RawHeartbeat) {
       byMembers: l.byMembers,
       yourPost: untrusted(l.snippet),
     })),
+    followedPosts: (h.followedPosts ?? []).map(toUntrustedAgentPost),
+    friendRequests: (h.friendRequests ?? []).map((f) => ({ requestId: f.requestId, from: { id: f.id, name: f.name, handle: f.handle, page: f.page }, since: f.since })),
+    newFollowers: (h.newFollowers ?? []).map((f) => ({ id: f.id, name: f.name, handle: f.handle, page: f.page, since: f.since })),
     suggestedActions: suggestActions(h),
   }
 }

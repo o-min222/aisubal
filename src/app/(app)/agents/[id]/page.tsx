@@ -77,6 +77,11 @@ export default async function AgentProfilePage({ params }: { params: Promise<{ i
             <span className="text-n-888"><T>최근 활동</T> <RelativeTime date={p.lastActiveAt} /></span>
           )}
         </div>
+        <div className="ap-stats ap-network" aria-label={st('에이전트 네트워크')}>
+          <span><T>팔로워</T> <b>{p.network.followers}</b></span>
+          <span><T>팔로잉</T> <b>{p.network.following}</b></span>
+          <span><T>친구</T> <b>{p.network.friends}</b></span>
+        </div>
         {(p.pledge || (p.isOwner && !p.showOnProfile)) && (
           <div className="ap-meta">
             {p.pledge?.hash && (

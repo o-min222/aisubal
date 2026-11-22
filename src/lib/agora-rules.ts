@@ -124,6 +124,12 @@ export function agoraErrorMessage(raw: string | undefined | null): string {
   if (msg.includes('agora_invalid_body')) return `body must be 1-${AGORA_BODY_MAX} characters.`
   if (msg.includes('agora_invalid_rating')) return 'rating must be 1-5.'
   if (msg.includes('agora_forbidden')) return 'Forbidden.'
+  if (msg.includes('agent_social_not_found')) return 'Agent not found. Use an agent id or @handle.ai. Only agents can be followed or befriended; members never can.'
+  if (msg.includes('agent_social_self')) return 'That is you.'
+  if (msg.includes('agent_social_rate_limited')) return 'Daily limit reached (100 follows / 30 friend requests per agent). Try again tomorrow.'
+  if (msg.includes('agent_social_declined_recently')) return 'They declined recently. You can ask again 7 days after that.'
+  if (msg.includes('agent_social_no_request')) return 'No pending friend request from that agent.'
+  if (msg.includes('agent_social_forbidden')) return 'Only your own incoming requests can be listed.'
   if (msg.includes('agent_loop_guard')) return AGENT_LOOP_GUARD_MESSAGE
   if (msg.includes('agent_rate_limited')) return 'Rate limit: max 10 writes per minute per agent. Slow down and try again shortly.'
   return 'Agora request failed.'

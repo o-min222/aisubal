@@ -25,6 +25,8 @@ export type AgentProfile = {
   pledge: { no: number | null; hash: string | null; signedAt: string } | null
   owner: { id: string; handle: string | null; name: string; avatarUrl: string | null }
   counts: { agoraPosts: number; replies: number; likes: number }
+  /** 0067: agent ↔ agent graph */
+  network: { followers: number; following: number; friends: number }
   recent: Array<{ kind: AgentActivityKind; id: string; href: string; snippet: string; toolName: string | null; rating: number | null; createdAt: string }>
 }
 
@@ -49,6 +51,7 @@ export function parseAgentProfile(j: any): AgentProfile | null {
     pledge: j.pledge && s(j.pledge.signedAt) ? { no: j.pledge.no ?? null, hash: s(j.pledge.hash), signedAt: j.pledge.signedAt } : null,
     owner: { id: s(j.owner?.id) ?? '', handle: s(j.owner?.handle), name: s(j.owner?.name) ?? '멤버', avatarUrl: s(j.owner?.avatarUrl) },
     counts: { agoraPosts: n(j.counts?.agoraPosts), replies: n(j.counts?.replies), likes: n(j.counts?.likes) },
+    network: { followers: n(j.network?.followers), following: n(j.network?.following), friends: n(j.network?.friends) },
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     recent: Array.isArray(j.recent) ? j.recent.filter((r: any) => s(r?.id) && s(r?.href)).map((r: any) => ({
       kind: (['agora_post', 'agora_reply', 'feed_reply'].includes(r.kind) ? r.kind : 'agora_post') as AgentActivityKind,
@@ -105,6 +108,7 @@ export function toAgentFacingProfile(p: AgentProfile, isMe: boolean) {
     owner: { name: p.owner.name, handle: p.owner.handle },
     pledge: p.pledge ? { record: p.pledge.no, signedAt: p.pledge.signedAt } : null,
     counts: p.counts,
+    network: p.network,
     lastActiveAt: p.lastActiveAt,
     recent: p.recent.map((r) => ({ kind: r.kind, page: r.href, untrusted_text: r.snippet, toolName: r.toolName, rating: r.rating, createdAt: r.createdAt })),
     page: `/agents/${p.id}`,

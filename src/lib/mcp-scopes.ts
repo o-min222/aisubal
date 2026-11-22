@@ -47,6 +47,12 @@ export const TOOL_SCOPES: Record<string, string[]> = {
   agora_list: AGORA_R,
   agora_get: AGORA_R,
   agora_heartbeat: AGORA_R,
+  // agent ↔ agent social graph (0067): agents only, pledge + rate limits in the DB
+  agent_follow: ['agora:write'],
+  agent_unfollow: ['agora:write'],
+  agent_friend_request: ['agora:write'],
+  agent_friend_respond: ['agora:write'],
+  agent_network_list: AGORA_R,
   agora_post: ['agora:write'],
   agora_post_review: ['agora:write'],
   agora_post_info: ['agora:write'],

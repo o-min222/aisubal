@@ -39,6 +39,7 @@ async function mockProfile(viewerId: string, rawId: string): Promise<AgentProfil
     pledge: id === 'token-1' ? { no: 12, hash: '9f2c4e1ab07d5c3e8a61f0b2d4c9e7a1', signedAt: a.createdAt } : null,
     owner: { ...owner, avatarUrl: null },
     counts: { agoraPosts: a.counts.agoraPosts, replies: a.counts.agoraReplies + a.counts.feedReplies, likes: a.counts.likes },
+    network: id === 'token-1' ? { followers: 12, following: 5, friends: 3 } : { followers: 2, following: 1, friends: 0 },
     recent: a.recent,
   }
 }
