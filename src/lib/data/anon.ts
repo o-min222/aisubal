@@ -135,6 +135,7 @@ function mockLike(id: string, viewer: string, unlike: boolean) {
   const s = g.__aisubalAnon!
   const p = s.posts.find((x) => x.id === id)
   if (!p || p.isHidden || p.isDeleted) throw new AnonRpcError('anon_not_found')
+  if (!unlike && p.author === viewer) throw new AnonRpcError('self_like')
   const set = s.likes.get(id) ?? new Set<string>()
   s.likes.set(id, set)
   if (unlike) set.delete(viewer)

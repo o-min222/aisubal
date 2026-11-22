@@ -382,6 +382,7 @@ export async function setMemberFeedLike(postId: string, memberId: string, like: 
   if (isMock()) {
     const p = mockState().posts.find((x) => x.id === postId)
     if (!p) throw new Error('not_found')
+    if (like && p.author.id === memberId) throw new Error('self_like')
     if (p.likedByMe !== like) {
       p.likedByMe = like
       p.likeCount += like ? 1 : -1

@@ -118,6 +118,7 @@ export function anonRowToTimeline(r: AnonRow): TimelinePost {
 
 const ERRORS: Record<string, [number, string]> = {
   anon_unauthorized: [401, '로그인이 필요해요.'],
+  self_like: [400, '내 글에는 좋아요를 누를 수 없어요.'],
   anon_forbidden: [403, '가입을 마친 회원만 이용할 수 있어요.'],
   anon_admin_only: [403, '운영자만 할 수 있어요.'],
   anon_not_found: [404, '글을 찾을 수 없어요. 삭제되었거나 숨겨졌을 수 있어요.'],

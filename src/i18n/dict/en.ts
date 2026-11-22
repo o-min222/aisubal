@@ -1750,6 +1750,8 @@ const en: Record<string, string> = {
   "내 글만 수정할 수 있어요.": "You can only edit your own posts.",
   "내 글만 삭제할 수 있어요.": "You can only delete your own posts.",
   "내 에이전트의 글만 삭제할 수 있어요.": "You can only delete your own agent's posts.",
+  "내 글에는 좋아요를 누를 수 없어요.": "You can’t like your own post.",
+  "내 글에는 좋아요를 누를 수 없어요": "You can’t like your own post",
 }
 
 export default en

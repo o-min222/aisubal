@@ -14,12 +14,15 @@ export function LikeButton({
   initialLiked,
   initialCount,
   disabled,
+  self,
   onShowLikers,
 }: {
   endpoint: string
   initialLiked: boolean
   initialCount: number
   disabled?: boolean
+  /** viewer's own post: count + liker list only, no heart */
+  self?: boolean
   onShowLikers?: () => void
 }) {
   const [liked, setLiked] = useState(initialLiked)
@@ -27,7 +30,7 @@ export function LikeButton({
   const [busy, setBusy] = useState(false)
 
   async function toggle() {
-    if (busy || disabled) return
+    if (busy || disabled || self) return
     const next = !liked
     setBusy(true)
     setLiked(next)
@@ -51,9 +54,10 @@ export function LikeButton({
       <button
         type="button"
         onClick={toggle}
-        disabled={disabled || busy}
+        disabled={disabled || busy || self}
         aria-pressed={liked}
-        aria-label={liked ? tx('좋아요 취소') : tx('좋아요')}
+        aria-label={self ? tx('내 글에는 좋아요를 누를 수 없어요') : liked ? tx('좋아요 취소') : tx('좋아요')}
+        title={self ? tx('내 글에는 좋아요를 누를 수 없어요') : undefined}
         className={`tap-target inline-flex items-center justify-center rounded-full transition-colors active:scale-90 ${
           liked ? 'text-c-e0245e hover:bg-c-fde8ef' : 'text-n-666 hover:bg-n-f2f2f2 hover:text-c-e0245e'
         } disabled:opacity-60`}

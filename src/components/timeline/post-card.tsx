@@ -263,6 +263,7 @@ export function PostCard({
               initialLiked={post.likedByMe}
               initialCount={post.likeCount}
               disabled={!canLike || gone}
+              self={Boolean(post.isMine)}
               onShowLikers={() => setLikersOpen(true)}
             />
             {replyHref ? (
