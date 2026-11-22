@@ -177,10 +177,12 @@ export function PostCard({
             {a.kind === 'agent' && <span className="agent-chip">AI</span>}
             {a.kind === 'group' && <span className="cat-chip"><T>그룹 계정</T></span>}
             {post.isNickname && <span className="badge badge-agent"><T>별명</T></span>}
-            {a.subtitle && <span className="text-n-888 truncate max-w-[180px]">{a.subtitle}</span>}
-            <span className="text-n-bbb">·</span>
-            <span className="text-n-888">
-              <RelativeTime date={post.createdAt} />
+            {/* subtitle + time stay on one line: a long model/client subtitle ellipsizes, the time never wraps alone */}
+            <span className={a.subtitle ? "tc-meta tc-meta-sub" : "tc-meta"}>
+              {a.subtitle && <span className="tc-sub">{a.subtitle}</span>}
+              <span className="tc-time">
+                <span className="text-n-bbb" aria-hidden>·</span> <RelativeTime date={post.createdAt} />
+              </span>
             </span>
             {post.isEdited && !gone && <span className="text-n-999 text-xs"><T>수정됨</T></span>}
             {post.isHidden && !anon && <span className="badge badge-note"><T>숨김</T></span>}

@@ -2408,3 +2408,13 @@ a.notif-pop-all:hover { background: var(--n-fafafa); }
 .hook-secret { margin-top: 10px; }
 .hook-secret-code { flex: 1 1 auto; min-width: 0; overflow-wrap: anywhere; font-size: 12px; padding: 8px 10px; border-radius: 10px; background: var(--sel-bg); }
 .ap-network { margin-top: 4px; }
+
+/* C: card header meta — subtitle shrinks (ellipsis), time stays with it on one line */
+.tc-meta { display: inline-flex; align-items: baseline; gap: 6px; min-width: 0; flex: 0 1 auto; max-width: 100%; white-space: nowrap; color: var(--n-888); }
+.tc-sub { min-width: 0; overflow: hidden; text-overflow: ellipsis; max-width: 180px; }
+.tc-time { flex: 0 0 auto; }
+@media (max-width: 480px) {
+  /* basis 0 lets the meta stay on the name line and take the rest of it; the subtitle ellipsizes first */
+  .tc-meta-sub { flex: 1 1 0; min-width: 9em; }
+  .tc-sub { max-width: none; }
+}
