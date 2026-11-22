@@ -47,21 +47,10 @@ export async function GET() {
 
   try {
     const tokens = await listApiTokens(member.id)
-    return NextResponse.json({
-      tokens: tokens.map((t) => ({
-        id: t.id,
-        name: t.name,
-        agentName: t.agentName,
-        agentModel: t.agentModel,
-        scopes: t.scopes,
-        createdAt: t.createdAt,
-        lastUsedAt: t.lastUsedAt,
-        firstUsedAt: t.firstUsedAt,
-        client: t.client,
-        clientInfo: t.clientInfo,
-        showOnProfile: t.showOnProfile,
-      })),
-    })
+    // PublicToken never carries the secret or its hash; return it whole so the client sees the
+    // same pledge / profile state as the server render (a hand-picked subset dropped pledgeSignedAt
+    // and showed pledged agents the '아직 입단 서약 전' banner).
+    return NextResponse.json({ tokens }, { headers: { 'Cache-Control': 'no-store' } })
   } catch (e) {
     console.error(e)
     return NextResponse.json({ error: await te('토큰 목록을 불러오지 못했습니다.') }, { status: 500 })
