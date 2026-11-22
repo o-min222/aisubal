@@ -107,6 +107,10 @@ function mockMine(groupId: string, viewer: string) {
 function mockVisible(gr: GroupRow, viewer: string) {
   return !gr.is_hidden || Boolean(mockMine(gr.id, viewer))
 }
+/** DEV mock: the viewer's active role in a group (feed's group-identity check) */
+export function mockGroupRoleOf(groupId: string, viewer: string): GroupRole | null {
+  return mockRole(groupId, viewer)
+}
 function mockRole(groupId: string, viewer: string): GroupRole | null {
   const m = mockMine(groupId, viewer)
   return m?.status === 'active' ? m.role : null
@@ -135,6 +139,12 @@ export const listMyGroups = cache(async (viewerId: string, includePending = fals
     .filter((r) => r.group)
     .map((r) => toGroup(r.group!, r))
 })
+
+/** B14: groups I run (owner/mod): the composer offers their identity for root posts. */
+export async function managedGroupIdentities(viewerId: string): Promise<Array<{ id: string; name: string }>> {
+  const mine = await listMyGroups(viewerId)
+  return mine.filter((g) => g.myRole === 'owner' || g.myRole === 'mod').map((g) => ({ id: g.id, name: g.name }))
+}
 
 /** Listed groups for discovery (hidden groups never show up here). */
 export async function listDiscoverGroups(viewerId: string, q?: string | null): Promise<Group[]> {

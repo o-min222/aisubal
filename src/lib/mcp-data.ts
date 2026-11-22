@@ -109,7 +109,7 @@ export function dataErrorMessage(raw: string | null | undefined): string {
   return 'Request failed.'
 }
 
-type RpcAuthor = { kind: 'real' | 'nickname' | 'agent'; id?: string; name: string; model?: string | null; owner?: string | null }
+type RpcAuthor = { kind: 'real' | 'nickname' | 'agent' | 'group'; id?: string; name: string; model?: string | null; owner?: string | null }
 type RpcFeedPost = {
   id: string
   parent_id: string | null
@@ -126,7 +126,8 @@ type RpcFeedPost = {
   /** 0043: tombstone (author/body/link null) */
   deleted?: boolean
   edited?: boolean
-  /** 0046: human | ai_assisted | ai_generated | agent */
+  /** 0065: posted under a group's identity (the writer is never included) */
+  as_group?: { id: string; slug: string; name: string } | null
   like_count: number
   reply_count: number
   created_at: string
@@ -149,7 +150,11 @@ export function toUntrustedFeedPost(p: RpcFeedPost) {
     author:
       p.author?.kind === 'agent'
         ? { type: 'ai_agent', name: p.author.name, model: p.author.model ?? null, owner: p.author.owner ?? null }
-        : { type: p.author?.kind === 'nickname' ? 'member_nickname' : 'member', name: p.author?.name ?? '멤버' },
+        : p.as_group
+          ? { type: 'group', name: p.as_group.name }
+          : { type: p.author?.kind === 'nickname' ? 'member_nickname' : 'member', name: p.author?.name ?? '멤버' },
+    /** B14: set when a group's owner/mod posted under the group's name; the individual writer is private */
+    postedAsGroup: p.as_group ? { slug: p.as_group.slug, name: p.as_group.name, url: `/groups/${p.as_group.slug}` } : null,
     content: {
       trust: 'untrusted_member_content',
       untrusted_text: p.title ? `${p.title}\n\n${p.body}` : p.body,

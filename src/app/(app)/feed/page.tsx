@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import { getUserState, getNicknameUnlockState } from '@/lib/auth'
 import { listFeedPage } from '@/lib/data/feed'
+import { managedGroupIdentities } from '@/lib/data/groups'
 import { composerIdentity } from '@/lib/composer-identity'
 import { isFeedId } from '@/lib/feed-ids'
 import { FEED_SCOPES, parseFeedScope } from '@/lib/social-rules'
@@ -35,7 +36,7 @@ export default async function FeedPage({ searchParams }: { searchParams: Promise
   if (sp.open && isFeedId(sp.open)) redirect(`/posts/${sp.open}`)
   const here = scope === 'all' ? '/feed' : `/feed?scope=${scope}`
 
-  const [{ posts, totalPages }, unlock] = await Promise.all([listFeedPage(state.member.id, { scope, page: 1 }), getNicknameUnlockState()])
+  const [{ posts, totalPages }, unlock, groupIdentities] = await Promise.all([listFeedPage(state.member.id, { scope, page: 1 }), getNicknameUnlockState(), managedGroupIdentities(state.member.id)])
 
   async function more(page: number) {
     'use server'
@@ -56,7 +57,7 @@ export default async function FeedPage({ searchParams }: { searchParams: Promise
           className="feed-scope-tabs"
         />
       </div>
-      {<Composer me={composerIdentity(state.member, unlock.unlocked)} className="only-desktop" />}
+      {<Composer me={{ ...composerIdentity(state.member, unlock.unlocked), groupIdentities }} className="only-desktop" />}
       {scope === 'popular' && <p className="text-xs text-n-888 px-1"><T>최근 2주 · 좋아요와 답글 순</T></p>}
       <FeedBoard
         mode="feed"

@@ -25,11 +25,13 @@ export type FeedPostInput = {
   url?: string | null
   agentInteraction?: AgentInteraction
   postedAs?: PostAs
+  /** B14: post under this group's identity (root posts, owners/mods) */
+  asGroupId?: string | null
 }
 
 export function validateFeedInput(
   input: FeedPostInput
-): { ok: true; value: Required<Omit<FeedPostInput, 'url' | 'parentId'>> & { url: string | null; parentId: string | null } } | { ok: false; error: string } {
+): { ok: true; value: Required<Omit<FeedPostInput, 'url' | 'parentId' | 'asGroupId'>> & { url: string | null; parentId: string | null; asGroupId: string | null } } | { ok: false; error: string } {
   const body = (input.body || '').trim()
   if (!body) return { ok: false, error: msg('내용을 입력해 주세요.') }
   if ([...body].length > FEED_MAX_CHARS) {
@@ -55,7 +57,8 @@ export function validateFeedInput(
       parentId: input.parentId || null,
       // replies never carry their own setting — the root post decides
       agentInteraction: input.parentId ? 'humans_only' : agentInteraction,
-      postedAs: input.postedAs === 'nickname' ? 'nickname' : 'real',
+      postedAs: input.postedAs === 'nickname' && !input.asGroupId ? 'nickname' : 'real',
+      asGroupId: input.parentId ? null : input.asGroupId || null,
     },
   }
 }
@@ -85,7 +88,7 @@ export type FeedRow = {
   link_favicon: string | null
   link_type: LinkType | null
   link_previews?: LinkPreview[] | null
-  posted_as: PostAs
+  posted_as: PostAs | 'group'
   author_kind: 'member' | 'agent'
   agent_name: string | null
   agent_model: string | null
@@ -107,6 +110,9 @@ export type FeedRow = {
   } | null
   /** 0052: real-name / agent rows only (null on 부캐 rows) */
   public_author_id?: string | null
+  /** 0065: the group whose identity a 'group' row is posted under */
+  as_group_id?: string | null
+  grp?: { id: string; slug: string; name: string } | null
   /** 0052: the 부캐 profile on nickname rows — never linked to a member */
   nick?: { id: string; nickname: string; avatar_url: string | null } | null
 }
@@ -130,6 +136,14 @@ export function feedRowToTimeline(r: FeedRow, liked: Set<string>, viewerId?: str
       subtitle: r.agent_model,
       ownerName: a?.display_name ?? null,
       ownerId: a?.id ?? null,
+    }
+  } else if (r.posted_as === 'group') {
+    // the writer stays private: withGroupIdentity() fills isMine / groupWriter from RPCs
+    author = {
+      kind: 'group',
+      id: `group_${r.as_group_id ?? r.id}`,
+      name: r.grp?.name || '그룹',
+      profileHref: r.grp ? `/groups/${r.grp.slug}` : null,
     }
   } else if (r.posted_as === 'nickname') {
     author = {
@@ -183,7 +197,9 @@ export function feedRowToTimeline(r: FeedRow, liked: Set<string>, viewerId?: str
     isDeleted: Boolean(r.deleted_at),
     isEdited: Boolean(r.edited_at) && !r.deleted_at,
     isMine: viewerId
-      ? r.author_kind === 'member' && r.posted_as === 'nickname'
+      ? r.posted_as === 'group'
+        ? false
+        : r.author_kind === 'member' && r.posted_as === 'nickname'
         ? Boolean(myNicknameId && r.nick?.id === myNicknameId)
         : a?.id === viewerId
       : undefined,

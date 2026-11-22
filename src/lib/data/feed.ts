@@ -12,7 +12,7 @@ import { sb, useMockData as isMock } from './client'
 import { getRelations, socialAuthorIds } from './social'
 
 const FEED_SELECT =
-  'id, parent_id, root_id, reply_to_id, title, content, url, link_title, link_description, link_image, link_site_name, link_favicon, link_type, link_previews, posted_as, author_kind, agent_name, agent_model, agent_token_id, agent_interaction, like_count, reply_count, is_hidden, created_at, group_id, deleted_at, edited_at, public_author_id, author:members!posts_public_author_id_fkey(id, display_name, handle, avatar_url), nick:nickname_profiles!posts_nickname_id_fkey(id, nickname, avatar_url)'
+  'id, parent_id, root_id, reply_to_id, title, content, url, link_title, link_description, link_image, link_site_name, link_favicon, link_type, link_previews, posted_as, author_kind, agent_name, agent_model, agent_token_id, agent_interaction, like_count, reply_count, is_hidden, created_at, group_id, deleted_at, edited_at, public_author_id, author:members!posts_public_author_id_fkey(id, display_name, handle, avatar_url), nick:nickname_profiles!posts_nickname_id_fkey(id, nickname, avatar_url), as_group_id, grp:groups!posts_as_group_id_fkey(id, slug, name)'
 
 // ---------------------------------------------------------------- mock (DEV)
 type MockState = { posts: TimelinePost[]; likers: Map<string, TimelineLiker[]> }
@@ -212,6 +212,42 @@ async function likedSet(memberId: string, ids: string[]): Promise<Set<string>> {
   return new Set((data || []).map((d: { post_id: string }) => d.post_id))
 }
 
+/** DEV mock: who wrote each group-identity post (the DB keeps it in posts.author_id) */
+const mockGroupWriters = (globalThis as unknown as { __aisubalGroupWriters?: Map<string, string> }).__aisubalGroupWriters ??= new Map<string, string>()
+export function mockRecordGroupWriter(postId: string, writerId: string) {
+  mockGroupWriters.set(postId, writerId)
+}
+
+/**
+ * Group-identity rows (B14) hide their writer: mark the viewer's own (⋯ menu) and,
+ * only for that group's owner/mods, attach who wrote it. Both come from SECURITY DEFINER RPCs.
+ */
+export async function withGroupIdentity(viewerId: string, posts: TimelinePost[]): Promise<TimelinePost[]> {
+  const ids = posts.filter((p) => p.author.kind === 'group').map((p) => p.id)
+  if (!ids.length) return posts
+  let mine: Set<string>
+  let writers: Record<string, { id: string; name: string; handle: string | null }>
+  if (isMock()) {
+    const { mockGroupRoleOf } = await import('./groups')
+    mine = new Set(ids.filter((id) => mockGroupWriters.get(id) === viewerId))
+    writers = {}
+    for (const p of posts) {
+      const w = mockGroupWriters.get(p.id)
+      const gid = p.author.id.replace(/^group_/, '')
+      if (w && ['owner', 'mod'].includes(mockGroupRoleOf(gid, viewerId) ?? '')) {
+        const m = MOCK_MEMBERS.find((x) => x.id === w)
+        writers[p.id] = { id: w, name: m?.display_name ?? (w === viewerId ? '개발자' : '멤버'), handle: m?.handle ?? (w === viewerId ? 'dev' : null) }
+      }
+    }
+  } else {
+    const supabase = await sb()
+    const [a, b] = await Promise.all([supabase.rpc('posts_mine', { p_ids: ids }), supabase.rpc('group_post_authors', { p_ids: ids })])
+    mine = new Set(((a.data || []) as string[]).map(String))
+    writers = (b.data || {}) as typeof writers
+  }
+  return posts.map((p) => (p.author.kind === 'group' ? { ...p, isMine: mine.has(p.id), groupWriter: writers[p.id] ?? null } : p))
+}
+
 /** Attach the viewer's follow state to real-name member authors (follow chip on cards). */
 export async function withFollowState(viewerId: string, posts: TimelinePost[]): Promise<TimelinePost[]> {
   const ids = posts.filter((p) => p.author.kind === 'member' && !p.isNickname).map((p) => p.author.id)
@@ -259,7 +295,7 @@ async function queryFeed(viewerId: string, opts: FeedListOpts, withCount: boolea
     )
     if (popular) rows = [...rows].sort((a, b) => b.likeCount * 2 + b.replyCount - (a.likeCount * 2 + a.replyCount) || b.createdAt.localeCompare(a.createdAt))
     rows = rows.filter((p) => !p.isDeleted).map((p) => ({ ...p, isMine: p.author.id === viewerId }))
-    return { posts: await withFollowState(viewerId, rows.slice(offset, offset + limit)), total: rows.length }
+    return { posts: await withGroupIdentity(viewerId, await withFollowState(viewerId, rows.slice(offset, offset + limit))), total: rows.length }
   }
   if (authorIds && authorIds.length === 0) return { posts: [], total: 0 }
   const supabase = await sb()
@@ -284,7 +320,8 @@ async function queryFeed(viewerId: string, opts: FeedListOpts, withCount: boolea
   if (error) throw error
   const rows = (data || []) as unknown as FeedRow[]
   const [liked, nickId] = await Promise.all([likedSet(viewerId, rows.map((r) => r.id)), myNicknameId()])
-  return { posts: await withFollowState(viewerId, rows.map((r) => feedRowToTimeline(r, liked, viewerId, nickId))), total: withCount ? (count ?? null) : null }
+  const posts = await withFollowState(viewerId, rows.map((r) => feedRowToTimeline(r, liked, viewerId, nickId)))
+  return { posts: await withGroupIdentity(viewerId, posts), total: withCount ? (count ?? null) : null }
 }
 
 async function listFeedTimeline__raw(viewerId: string, opts: FeedListOpts = {}): Promise<TimelinePost[]> {
@@ -313,7 +350,8 @@ async function getFeedThread__raw(
     const root = first.rootId ? st.posts.find((p) => p.id === first.rootId) : first
     if (!root) return null
     const mine = (p: TimelinePost) => ({ ...p, isMine: p.author.id === viewerId })
-    return { root: mine(root), replies: st.posts.filter((p) => p.rootId === root.id).map(mine), isMine: root.author.id === viewerId }
+    const [r0] = await withGroupIdentity(viewerId, [mine(root)])
+    return { root: r0, replies: st.posts.filter((p) => p.rootId === root.id).map(mine), isMine: Boolean(r0.isMine) }
   }
   const supabase = await sb()
   const { data: first, error } = await supabase
@@ -342,7 +380,7 @@ async function getFeedThread__raw(
     .limit(500)
   const replies = (rep || []) as unknown as FeedRow[]
   const [liked, nickId] = await Promise.all([likedSet(viewerId, [root.id, ...replies.map((r) => r.id)]), myNicknameId()])
-  const rootPost = feedRowToTimeline(root, liked, viewerId, nickId)
+  const [rootPost] = await withGroupIdentity(viewerId, [feedRowToTimeline(root, liked, viewerId, nickId)])
   return {
     root: rootPost,
     replies: replies.map((r) => feedRowToTimeline(r, liked, viewerId, nickId)),

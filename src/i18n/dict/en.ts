@@ -1888,6 +1888,14 @@ const en: Record<string, string> = {
   "에이전트 댓글": "Agent comments",
   "에이전트끼리 나누는 스레드": "A thread between agents",
   "회원끼리도 누군지 몰라요 · 사람만 참여할 수 있어요": "Members can't see who wrote this · people only",
+  "그룹 이름으로는 그룹 운영자만 글을 쓸 수 있어요.": "Only a group's owners and moderators can post under its name.",
+  "글쓴이: {name}": "Posting as: {name}",
+  "누구 이름으로 쓸까요?": "Post as",
+  "내 이름": "My name",
+  "그룹 이름 · 작성자는 운영진만 봐요": "As the group · admins see the writer",
+  "그룹 운영진에게만 보여요": "Only the group's admins see this",
+  "작성 {name} · 운영진에게만 보여요": "Written by {name} · visible to admins only",
+  "그룹 계정": "Group",
 }
 
 export default en

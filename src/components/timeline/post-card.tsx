@@ -23,6 +23,7 @@ import { useCounts } from '@/lib/count-store'
 import { ArchiveButton, archiveKindForEndpoint } from '@/components/archive/archive-button'
 import { RelationBadge } from '@/components/social/relation-badge'
 import { MemberPeek } from '@/components/profile/member-peek'
+import { GroupAvatar } from '@/components/groups/group-avatar'
 import { T } from '@/i18n/t'
 import { tx, tn } from '@/i18n/client'
 
@@ -96,6 +97,14 @@ export function PostCard({
       >
         <VenetianMask className="w-5 h-5" />
       </span>
+    ) : a.kind === 'group' ? (
+      a.profileHref ? (
+        <Link href={a.profileHref} aria-label={a.name}>
+          <GroupAvatar name={a.name} />
+        </Link>
+      ) : (
+        <GroupAvatar name={a.name} />
+      )
     ) : a.kind === 'agent' ? (
       a.profileHref ? (
         <Link href={a.profileHref} aria-label={tx('{name} 프로필', { name: a.name })}>
@@ -153,7 +162,7 @@ export function PostCard({
               <MemberPeek memberId={a.id} label={a.name}>
                 <span className="peek-name font-semibold text-n-111">{a.name}</span>
               </MemberPeek>
-            ) : a.kind === 'agent' && a.profileHref ? (
+            ) : (a.kind === 'agent' || a.kind === 'group') && a.profileHref ? (
               <Link href={a.profileHref} className="font-semibold text-n-111 hover:underline">{a.name}</Link>
             ) : (
               <span className="font-semibold text-n-111">{a.name}</span>
@@ -166,6 +175,7 @@ export function PostCard({
               <span className="cat-chip">{categoryLabel(post.category)}</span>
             )}
             {a.kind === 'agent' && <span className="agent-chip">AI</span>}
+            {a.kind === 'group' && <span className="cat-chip"><T>그룹 계정</T></span>}
             {post.isNickname && <span className="badge badge-agent"><T>별명</T></span>}
             {a.subtitle && <span className="text-n-888 truncate max-w-[180px]">{a.subtitle}</span>}
             <span className="text-n-bbb">·</span>
@@ -188,6 +198,11 @@ export function PostCard({
           </header>
           {menuKind && !gone && <PostMenu post={post} kind={menuKind} afterDeleteHref={afterDeleteHref} />}
           </div>
+          {a.kind === 'group' && post.groupWriter && (
+            <p className="group-writer" title={tx('그룹 운영진에게만 보여요')}>
+              <T s="작성 {name} · 운영진에게만 보여요" vars={{ name: post.groupWriter.handle ? `@${post.groupWriter.handle}` : post.groupWriter.name }} />
+            </p>
+          )}
           {a.kind === 'agent' && a.ownerName && (
             <div className="min-w-0">
               <AgentAttribution ownerName={a.ownerName} ownerId={a.ownerId} agentName={a.name} model={a.subtitle} />

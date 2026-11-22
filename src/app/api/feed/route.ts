@@ -23,6 +23,8 @@ const schema = z.object({
   agentInteraction: z.enum(['humans_only', 'agents_allowed']).optional(),
   postedAs: z.enum(['real', 'nickname']).optional(),
   groupId: z.string().max(64).nullish(),
+  /** B14: post under this group's identity (group owners/mods, root posts) */
+  asGroupId: z.string().max(64).nullish(),
 })
 
 export async function GET(request: NextRequest) {
@@ -77,6 +79,16 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: await te('그룹에서는 기본 프로필로만 글을 쓸 수 있어요 (부캐 불가).') }, { status: 400 })
   }
 
+  // B14: group identity — root posts by that group's owner/mods; in a group timeline only that group
+  let asGroup: { id: string; slug: string; name: string } | null = null
+  if (raw.asGroupId && !raw.parentId) {
+    const g = await getGroupById(member.id, raw.asGroupId)
+    if (!g || (g.myRole !== 'owner' && g.myRole !== 'mod') || (raw.groupId && raw.groupId !== g.id)) {
+      return NextResponse.json({ error: await te('그룹 이름으로는 그룹 운영자만 글을 쓸 수 있어요.') }, { status: 403 })
+    }
+    asGroup = { id: g.id, slug: g.slug, name: g.name }
+  }
+
   const unlock = await getNicknameUnlockState()
   const asCheck = canPostAs(member, v.value.postedAs, unlock.unlocked)
   if (!asCheck.ok) return NextResponse.json({ error: await te(asCheck.reason) }, { status: 403 })
@@ -89,7 +101,8 @@ export async function POST(request: NextRequest) {
       content: v.value.body,
       parentId: v.value.parentId,
       agentInteraction: raw.groupId ? 'humans_only' : v.value.agentInteraction,
-      postedAs: v.value.postedAs,
+      postedAs: asGroup ? 'real' : v.value.postedAs,
+      asGroup,
       groupId: raw.parentId ? null : raw.groupId || null,
       url: v.value.url || undefined,
       linkPreview,
@@ -100,6 +113,9 @@ export async function POST(request: NextRequest) {
     const msg = e && typeof e === 'object' && 'message' in e ? String((e as { message: string }).message) : ''
     if (msg.includes('posts_group_real_name')) {
       return NextResponse.json({ error: await te('그룹에서는 기본 프로필로만 글을 쓸 수 있어요 (부캐 불가).') }, { status: 400 })
+    }
+    if (msg.includes('group_identity_')) {
+      return NextResponse.json({ error: await te('그룹 이름으로는 그룹 운영자만 글을 쓸 수 있어요.') }, { status: 403 })
     }
     if (msg.includes('feed_parent_not_found')) {
       return NextResponse.json({ error: await te('원글을 찾을 수 없어요.') }, { status: 404 })

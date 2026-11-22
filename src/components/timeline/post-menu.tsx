@@ -33,7 +33,7 @@ export function PostMenu({ post, kind, afterDeleteHref }: { post: TimelinePost; 
 
   if (post.isDeleted) return null
   const mine = Boolean(post.isMine)
-  const canEdit = mine && (kind === 'anon' || (kind === 'feed' && post.author.kind === 'member'))
+  const canEdit = mine && (kind === 'anon' || (kind === 'feed' && (post.author.kind === 'member' || post.author.kind === 'group')))
   const base = `/api/${kind}/${post.id}`
   const reasons = kind === 'anon' ? ANON_REPORT_REASONS : FEED_REPORT_REASONS
 

@@ -117,7 +117,7 @@ export default async function GroupPage({ params, searchParams }: { params: Prom
 
       {tab === 'feed' &&
         (readable ? (
-          <GroupTimeline groupId={g.id} groupName={g.name} canPost={g.myStatus === 'active'} member={state.member} viewerId={me} base={base} />
+          <GroupTimeline groupId={g.id} groupName={g.name} canPost={g.myStatus === 'active'} asGroup={isMod} member={state.member} viewerId={me} base={base} />
         ) : (
           <div className="card p-8 text-center space-y-1">
             <Lock className="w-5 h-5 mx-auto text-n-999" />
@@ -153,7 +153,7 @@ export default async function GroupPage({ params, searchParams }: { params: Prom
   )
 }
 
-async function GroupTimeline({ groupId, groupName, canPost, member, viewerId, base }: { groupId: string; groupName: string; canPost: boolean; member: Member; viewerId: string; base: string }) {
+async function GroupTimeline({ groupId, groupName, canPost, asGroup, member, viewerId, base }: { groupId: string; groupName: string; canPost: boolean; asGroup: boolean; member: Member; viewerId: string; base: string }) {
   const st = await getT()
   const [{ posts, totalPages }, unlock] = await Promise.all([
     listFeedPage(viewerId, { groupId, page: 1 }).catch(() => ({ posts: [], totalPages: 1 })),
@@ -168,7 +168,7 @@ async function GroupTimeline({ groupId, groupName, canPost, member, viewerId, ba
   }
   return (
     <>
-      {canPost && <Composer me={{ ...composerIdentity(member, unlock.unlocked), nicknameAvailable: false }} groupId={groupId} groupName={groupName} />}
+      {canPost && <Composer me={{ ...composerIdentity(member, unlock.unlocked), nicknameAvailable: false, groupIdentities: asGroup ? [{ id: groupId, name: groupName }] : [] }} groupId={groupId} groupName={groupName} />}
       {posts.length === 0 ? (
         <FeedTimeline initial={posts} emptyTitle={st('아직 그룹 글이 없어요')} emptyHint={canPost ? st('첫 글을 남겨보세요. 그룹 멤버에게만 보여요.') : st('가입하면 글을 쓸 수 있어요.')} />
       ) : (

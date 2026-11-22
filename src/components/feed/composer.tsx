@@ -10,6 +10,8 @@ import { toast } from 'sonner'
 import { UserAvatar } from '@/components/user-avatar'
 import { ComposerFrame, ComposerTextarea } from '@/components/composer/composer-frame'
 import { AgentReactionPicker } from '@/components/composer/agent-reaction-picker'
+import { IdentityPicker, type IdentityOption } from '@/components/composer/identity-picker'
+import { GroupAvatar } from '@/components/groups/group-avatar'
 import { LinkCarousel } from '@/components/link-carousel'
 import { useLinkPreviews } from '@/hooks/use-link-previews'
 import type { AgentInteraction, PostAs } from '@/lib/supabase/types'
@@ -22,6 +24,8 @@ export type ComposerIdentity = {
   nickname: string | null
   nicknameAvatarUrl: string | null
   nicknameAvailable: boolean
+  /** B14: groups this member runs (owner/mod) — they may post under the group's name */
+  groupIdentities?: Array<{ id: string; name: string }>
 }
 
 /**
@@ -61,9 +65,12 @@ export function Composer({
   const tr = useT()
   const [body, setBody] = useState(initialBody)
   const [postedAs, setPostedAs] = useState<PostAs>('real')
+  // 'real' | 'nickname' | 'group:<id>' (group identities only on root posts)
+  const [who, setWho] = useState('real')
   const [interaction, setInteraction] = useState<AgentInteraction>('humans_only')
   const [busy, setBusy] = useState(false)
   const isReply = Boolean(parentId)
+  const asGroup = !isReply && who.startsWith('group:') ? (me.groupIdentities ?? []).find((g) => `group:${g.id}` === who) ?? null : null
   // live link previews (top-level posts only; replies never get cards)
   const previews = useLinkPreviews(body, !isReply)
   // PII guard: warn before publishing; a second press posts anyway (the poster decides).
@@ -86,7 +93,8 @@ export function Composer({
         body: JSON.stringify({
           body,
           parentId,
-          postedAs,
+          postedAs: asGroup ? 'real' : postedAs,
+          asGroupId: asGroup?.id,
           agentInteraction: groupId ? 'humans_only' : interaction,
           groupId,
           ...(isReply ? {} : { urls: previews.urls }),
@@ -107,26 +115,37 @@ export function Composer({
     }
   }
 
-  const asNick = postedAs === 'nickname' && me.nickname
+  const asNick = !asGroup && postedAs === 'nickname' && me.nickname
+  const options: IdentityOption[] = [
+    { key: 'real', label: me.displayName, hint: tx('내 이름'), avatar: <UserAvatar id={me.id} name={me.displayName} avatarUrl={me.avatarUrl} size="sm" /> },
+    ...(me.nicknameAvailable && me.nickname
+      ? [{ key: 'nickname', label: me.nickname, hint: tx('부캐'), avatar: <UserAvatar id={`nick-${me.id}`} name={me.nickname} avatarUrl={me.nicknameAvatarUrl} size="sm" /> }]
+      : []),
+    ...(isReply ? [] : (me.groupIdentities ?? []).map((g) => ({ key: `group:${g.id}`, label: g.name, hint: tx('그룹 이름 · 작성자는 운영진만 봐요'), avatar: <GroupAvatar name={g.name} size={32} /> }))),
+  ]
   return (
     <ComposerFrame
       className={className}
       avatar={
-        <UserAvatar
+        asGroup ? <GroupAvatar name={asGroup.name} /> : <UserAvatar
           id={asNick ? `nick-${me.id}` : me.id}
           name={asNick ? me.nickname! : me.displayName}
           avatarUrl={asNick ? me.nicknameAvatarUrl : me.avatarUrl}
         />
       }
       head={
-        <>
-          <span className="font-semibold text-n-111 truncate">{asNick ? me.nickname : me.displayName}</span>
-          {me.nicknameAvailable && (
-            <button type="button" className="composer-link" onClick={() => setPostedAs(postedAs === 'real' ? 'nickname' : 'real')}>
-              {postedAs === 'real' ? <T>부캐로 쓰기</T> : <T>기본 프로필로 쓰기</T>}
-            </button>
-          )}
-        </>
+        options.length > 1 ? (
+          <IdentityPicker
+            options={options}
+            value={asGroup ? who : postedAs}
+            onChange={(k) => {
+              setWho(k)
+              setPostedAs(k === 'nickname' ? 'nickname' : 'real')
+            }}
+          />
+        ) : (
+          <span className="font-semibold text-n-111 truncate">{me.displayName}</span>
+        )
       }
       tools={
         isReply ? null : (

@@ -7,7 +7,7 @@ import { nicknameProfilePublicId, toPublicAuthor, toPublicPost, toPublicPostView
 import { aggregateMentionsFromPosts } from '@/lib/data/toolbox'
 import { archiveSaveCounts } from '@/lib/data/archive'
 import type { AgentInteraction, Asset, LinkPreview, Member, Post, PostAs } from '@/lib/supabase/types'
-import { mockAppendFeedPost, mockFeedGroupOf } from './feed'
+import { mockAppendFeedPost, mockFeedGroupOf, mockRecordGroupWriter } from './feed'
 import { sb, useMockData as isMock } from './client'
 import { MEMBER_EMBED, MEMBER_PUBLIC_COLUMNS } from './member-columns'
 import type { PostWithDetails } from './types'
@@ -33,6 +33,8 @@ type CreatePostInput = {
   /** every preview, first = linkPreview (posts.link_previews, max 4) */
   linkPreviews?: LinkPreview[]
   postedAs: PostAs
+  /** B14: publish under this group's identity (root posts; the DB checks owner/mod) */
+  asGroup?: { id: string; slug: string; name: string } | null
   assets?: Array<{
     type: Asset['type']
     name: string
@@ -205,7 +207,9 @@ export async function createPost(
       id: post.id,
       parentId,
       rootId: parentId,
-      author: { kind: 'member', id: pub.author.id, name: pub.author.kind === 'nickname' ? pub.author.nickname : pub.author.display_name, avatarUrl: pub.author.avatar_url },
+      author: input.asGroup
+        ? { kind: 'group', id: `group_${input.asGroup.id}`, name: input.asGroup.name, profileHref: `/groups/${input.asGroup.slug}` }
+        : { kind: 'member', id: pub.author.id, name: pub.author.kind === 'nickname' ? pub.author.nickname : pub.author.display_name, avatarUrl: pub.author.avatar_url },
       title: post.title || null,
       body: post.content,
       linkUrl: post.url,
@@ -221,7 +225,8 @@ export async function createPost(
       agentsAllowed: !parentId && input.agentInteraction === 'agents_allowed',
       isNickname: input.postedAs === 'nickname',
     })
-    if (parentId || input.groupId) return { post: pub, details }
+    if (input.asGroup) mockRecordGroupWriter(post.id, member.id)
+    if (parentId || input.groupId || input.asGroup) return { post: pub, details }
     MOCK_POSTS.unshift(details)
     await aggregateMentionsFromPosts([details])
     return { post: pub, details }
@@ -246,7 +251,8 @@ export async function createPost(
       link_type: lp?.link_type || null,
       link_previews: input.linkPreviews?.length ? input.linkPreviews.slice(0, 4) : null,
       author_id: member.id,
-      posted_as: input.postedAs,
+      posted_as: input.asGroup && !input.parentId ? 'group' : input.postedAs,
+      as_group_id: input.asGroup && !input.parentId ? input.asGroup.id : null,
     })
     .select(POST_COLUMNS)
     .single()

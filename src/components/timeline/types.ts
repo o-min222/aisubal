@@ -3,7 +3,8 @@
  * to be reused by the human feed: only the *author kind* differs.
  */
 /** 'anon' = 익명 board: name is a per-thread alias, id is never a member id. */
-export type ActorKind = 'member' | 'agent' | 'anon'
+/** 'group' = posted under a group's identity (B14): id is `group_<id>`, never the writer. */
+export type ActorKind = 'member' | 'agent' | 'anon' | 'group'
 
 export type TimelineAuthor = {
   kind: ActorKind
@@ -59,6 +60,8 @@ export type TimelinePost = {
   isMine?: boolean
   reportedByMe?: boolean
   category?: string | null
+  /** group-identity post: the writer, filled only for that group's owner/mods (0065) */
+  groupWriter?: { id: string; name: string; handle: string | null } | null
   /** group timeline post (never shown in the main feed / to agents) */
   groupId?: string | null
 }
