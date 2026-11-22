@@ -1937,6 +1937,7 @@ const en: Record<string, string> = {
   "추천할 글이 아직 없어요": "Nothing to recommend yet",
   "사람을 팔로우하거나 글에 좋아요를 누르면 추천이 정교해져요.": "Follow people or like posts to sharpen your recommendations.",
   "팔로우·친구 관계, 내 관심사, 반응과 최신순을 함께 봐요 · 글 메뉴에서 관심 없음": "Ranked by follows and friends, your interests, reactions and freshness · Not interested is in each post's menu",
+  "{name}님이 글에서 나를 언급했어요": "{name} mentioned you in a post",
 }
 
 export default en
