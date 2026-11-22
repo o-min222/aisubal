@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getMember } from '@/lib/auth'
 import { fetchLinkPreview } from '@/lib/link-preview-server'
-import { checkFetchUrl } from '@/lib/safe-fetch'
+import { BlockedUrlError, checkFetchUrl } from '@/lib/safe-fetch'
 import { te } from '@/i18n/server'
 
 /**
@@ -20,6 +20,9 @@ async function handle(raw: unknown) {
     const preview = await fetchLinkPreview(raw)
     return NextResponse.json({ preview }, { headers: { 'Cache-Control': 'private, max-age=3600' } })
   } catch (error) {
+    if (error instanceof BlockedUrlError) {
+      return NextResponse.json({ error: await te('미리보기를 만들 수 없는 주소예요.'), reason: error.reason }, { status: 422 })
+    }
     console.error('OG preview error:', error)
     return NextResponse.json({ error: await te('미리보기 실패') }, { status: 500 })
   }

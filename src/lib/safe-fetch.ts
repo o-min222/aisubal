@@ -168,6 +168,17 @@ function requestOnce(u: URL, accept: string): Promise<Raw> {
   })
 }
 
+/** Errors meaning "this URL points somewhere we must never fetch" (→ HTTP 422). */
+export const BLOCKED_FETCH_ERRORS = new Set([
+  'blocked_address', 'blocked_host', 'scheme_not_allowed', 'credentials_in_url', 'port_not_allowed', 'invalid_url',
+])
+export class BlockedUrlError extends Error {
+  constructor(public reason: string) {
+    super(reason)
+    this.name = 'BlockedUrlError'
+  }
+}
+
 export type SafeFetchResult =
   | { ok: true; finalUrl: string; status: number; contentType: string; text: string; truncated: boolean; redirects: string[] }
   | { ok: false; error: string; finalUrl?: string; redirects: string[] }

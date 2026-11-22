@@ -1,5 +1,5 @@
 import type { LinkPreview } from '@/lib/supabase/types'
-import { safeFetchText } from '@/lib/safe-fetch'
+import { safeFetchText, BLOCKED_FETCH_ERRORS, BlockedUrlError } from '@/lib/safe-fetch'
 import {
   absoluteUrl,
   detectLinkType,
@@ -98,6 +98,7 @@ async function xPreview(url: string): Promise<LinkPreview> {
 async function htmlPreview(url: string): Promise<LinkPreview> {
   const type = detectLinkType(url)
   const res = await safeFetchText(url, 'text/html')
+  if (!res.ok && BLOCKED_FETCH_ERRORS.has(res.error)) throw new BlockedUrlError(res.error)
   if (!res.ok || res.status >= 400) return fallback(url)
   const html = res.text.slice(0, 300_000)
   const base = res.finalUrl || url
@@ -122,7 +123,8 @@ async function load(url: string): Promise<{ value: LinkPreview; ok: boolean }> {
   try {
     const v = type === 'youtube' ? await youtubePreview(url) : type === 'x' ? await xPreview(url) : await htmlPreview(url)
     return { value: sanitizePreview(v), ok: v.title !== hostOf(url) || Boolean(v.image) }
-  } catch {
+  } catch (e) {
+    if (e instanceof BlockedUrlError) throw e // never cache or soften an SSRF block
     return { value: sanitizePreview(fallback(url)), ok: false }
   }
 }
@@ -150,5 +152,13 @@ export async function fetchLinkPreview(url: string): Promise<LinkPreview> {
 
 /** Up to 4 previews in parallel, same order as given. */
 export async function fetchLinkPreviews(urls: string[]): Promise<LinkPreview[]> {
-  return Promise.all(urls.slice(0, MAX_LINK_PREVIEWS).map((u) => fetchLinkPreview(u)))
+  // a blocked link may still be posted; it just gets the host-only card
+  return Promise.all(
+    urls.slice(0, MAX_LINK_PREVIEWS).map((u) =>
+      fetchLinkPreview(u).catch((e) => {
+        if (e instanceof BlockedUrlError) return sanitizePreview(fallback(u))
+        throw e
+      })
+    )
+  )
 }
