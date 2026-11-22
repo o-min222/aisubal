@@ -3,7 +3,7 @@ import { agentSigner } from '@/lib/pledge'
 import { createHash, randomBytes } from 'crypto'
 import type { TokenScope } from '@/lib/supabase/types'
 import type { ClientId, ConnectionStatus } from '@/lib/agent-connect'
-import { sb, useMockData } from './client'
+import { sb, useMockData as isMock } from './client'
 
 const gAgents = globalThis as unknown as { __aisubalAgentNames?: Map<string, string> }
 /** DEV mock: agent names of tokens issued in this process */
@@ -72,7 +72,7 @@ function parseScopes(scopes: string): string[] {
 }
 
 export async function listApiTokens(memberId: string): Promise<PublicToken[]> {
-  if (useMockData()) {
+  if (isMock()) {
     return [
       {
         id: 'token-1',
@@ -137,7 +137,7 @@ export async function issueApiToken(
   const tokenHash = hashToken(raw)
   const tokenPrefix = raw.slice(0, 12)
 
-  if (useMockData()) {
+  if (isMock()) {
     const id = `token-${Date.now()}`
     mockAgentNames().set(id, agentName || name)
     return {
@@ -192,7 +192,7 @@ export type AgentPledgeResult = { ok: true; signedAt: string; no: number | null;
 
 /** Owner signs for the agent; returns the agent's sealed record (prev = the owner's block). */
 export async function signTokenPledge(memberId: string, tokenId: string, signature: string, ownerName: string): Promise<AgentPledgeResult | { ok: false; error: 'signature_mismatch' | 'token_not_found' | 'failed' }> {
-  if (useMockData()) {
+  if (isMock()) {
     if (signature.replace(/\s+/g, ' ').trim().toLowerCase() !== ownerName.replace(/\s+/g, ' ').trim().toLowerCase()) return { ok: false, error: 'signature_mismatch' }
     const at = mockPledged().get(tokenId) ?? new Date().toISOString()
     mockPledged().set(tokenId, at)
@@ -214,7 +214,7 @@ export async function signTokenPledge(memberId: string, tokenId: string, signatu
 }
 
 export async function revokeApiToken(memberId: string, tokenId: string): Promise<boolean> {
-  if (useMockData()) return true
+  if (isMock()) return true
 
   const supabase = await sb()
   const { data, error } = await supabase
@@ -232,7 +232,7 @@ export async function revokeApiToken(memberId: string, tokenId: string): Promise
 
 /** Wizard step 4: has the client made its first MCP call yet? (own tokens only, via RLS) */
 export async function getTokenStatus(memberId: string, tokenId: string): Promise<ConnectionStatus | null> {
-  if (useMockData()) {
+  if (isMock()) {
     // Local review: tokens minted in mock mode "connect" ~6s after creation.
     const ts = Number(tokenId.replace(/^token-/, ''))
     const connected = Number.isFinite(ts) ? Date.now() - ts > 6000 : true
@@ -253,7 +253,7 @@ export async function getTokenStatus(memberId: string, tokenId: string): Promise
 }
 
 export async function setTokenVisibility(memberId: string, tokenId: string, show: boolean): Promise<boolean> {
-  if (useMockData()) return true
+  if (isMock()) return true
   const supabase = await sb()
   const { data, error } = await supabase
     .from('api_tokens')
@@ -268,7 +268,7 @@ export async function setTokenVisibility(memberId: string, tokenId: string, show
 
 /** 내 에이전트 › 이름 바꾸기 (owner only; posts keep their snapshot name). */
 export async function renameToken(memberId: string, tokenId: string, agentName: string): Promise<boolean> {
-  if (useMockData()) return true
+  if (isMock()) return true
   const supabase = await sb()
   const { data, error } = await supabase
     .from('api_tokens')
@@ -370,7 +370,7 @@ function mockAgents(viewerId: string, memberId: string): ProfileAgent[] {
 }
 
 export async function listProfileAgents(viewerId: string, memberId: string): Promise<ProfileAgent[]> {
-  if (useMockData()) return mockAgents(viewerId, memberId)
+  if (isMock()) return mockAgents(viewerId, memberId)
   const supabase = await sb()
   const { data, error } = await supabase.rpc('profile_agents', { p_member: memberId })
   if (error) throw error
@@ -413,7 +413,7 @@ export async function listProfileAgents(viewerId: string, memberId: string): Pro
  */
 export async function rotateApiToken(tokenId: string): Promise<{ token: string; rotatedAt: string; forced: boolean }> {
   const raw = `aisubal_${randomBytes(24).toString('hex')}`
-  if (useMockData()) return { token: raw, rotatedAt: new Date().toISOString(), forced: false }
+  if (isMock()) return { token: raw, rotatedAt: new Date().toISOString(), forced: false }
   const supabase = await sb()
   const { data, error } = await supabase.rpc('api_token_rotate', { p_token: tokenId, p_hash: hashToken(raw), p_prefix: raw.slice(0, 12) })
   if (error) throw new Error(error.message)
