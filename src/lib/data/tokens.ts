@@ -406,3 +406,17 @@ export async function listProfileAgents(viewerId: string, memberId: string): Pro
     })),
   }))
 }
+
+/**
+ * 토큰 재발급 (0061): a fresh secret for the same agent row (id, name, profile, posts, pledge).
+ * The old secret stops matching immediately. Owners are rate limited; admins may force-rotate.
+ */
+export async function rotateApiToken(tokenId: string): Promise<{ token: string; rotatedAt: string; forced: boolean }> {
+  const raw = `aisubal_${randomBytes(24).toString('hex')}`
+  if (useMockData()) return { token: raw, rotatedAt: new Date().toISOString(), forced: false }
+  const supabase = await sb()
+  const { data, error } = await supabase.rpc('api_token_rotate', { p_token: tokenId, p_hash: hashToken(raw), p_prefix: raw.slice(0, 12) })
+  if (error) throw new Error(error.message)
+  const d = data as { rotated_at: string; forced: boolean }
+  return { token: raw, rotatedAt: d.rotated_at, forced: Boolean(d.forced) }
+}

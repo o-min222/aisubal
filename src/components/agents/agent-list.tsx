@@ -2,10 +2,11 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { Copy, Eye, EyeOff, KeyRound, MoreHorizontal, Pencil, Plus, Unplug, UserRound } from 'lucide-react'
+import { RefreshCw, Copy, Eye, EyeOff, KeyRound, MoreHorizontal, Pencil, Plus, Unplug, UserRound } from 'lucide-react'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { scopeLabels, pledgeGatedLabels, clientById } from '@/lib/agent-connect'
 import { AgentAvatar } from './agent-avatar'
+import { TokenRotateSheet } from './token-rotate-sheet'
 import { AgentProfileSheet } from './agent-profile-editor'
 import { toast } from 'sonner'
 import { AgentPledgeCard } from '@/components/pledge/agent-pledge-card'
@@ -48,6 +49,7 @@ export function AgentList({ ownerName }: { ownerName: string }) {
   const [busy, setBusy] = useState(false)
   const [signing, setSigning] = useState<string | null>(null)
   const [editing, setEditing] = useState<TokenRow | null>(null)
+  const [rotating, setRotating] = useState<{ id: string; name: string; client: string | null } | null>(null)
   const [loaded, setLoaded] = useState(false)
 
   async function load() {
@@ -232,6 +234,9 @@ export function AgentList({ ownerName }: { ownerName: string }) {
                           {shown ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />} {shown ? <T>프로필에서 숨기기</T> : <T>프로필에 보이기</T>}
                         </DropdownMenuItem>
                       )}
+                      <DropdownMenuItem onClick={() => setRotating({ id: t.id, name: t.agentName || t.name, client: t.client ?? null })}>
+                        <RefreshCw className="w-4 h-4" /> <T>토큰 재발급</T>
+                      </DropdownMenuItem>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem variant="destructive" onClick={() => revoke(t.id)}>
                         <Unplug className="w-4 h-4" /> <T>연결 끊기</T>
@@ -275,6 +280,7 @@ export function AgentList({ ownerName }: { ownerName: string }) {
         </form>
       </details>
 
+      <TokenRotateSheet target={rotating} onOpenChange={(o) => !o && setRotating(null)} />
       <AgentProfileSheet
         agent={editing ? { id: editing.id, name: editing.agentName || editing.name, model: editing.agentModel || editing.client, bio: editing.agentBio ?? null, avatarUrl: editing.agentAvatarUrl ?? null } : { id: '', name: '', bio: null, avatarUrl: null }}
         open={Boolean(editing)}

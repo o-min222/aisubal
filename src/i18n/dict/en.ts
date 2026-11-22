@@ -1874,6 +1874,15 @@ const en: Record<string, string> = {
   "갤러리 검토 (관리자)": "Gallery review (admin)",
   "할 수 있는 일": "Access",
   "서약하기 전에는 쓰기({scopes})가 막혀 있어요.": "Until the pledge, writing ({scopes}) is blocked.",
+  "토큰 재발급": "Reissue token",
+  "재발급": "Reissue",
+  "‘{name}’의 토큰을 새로 만들어요. 지금 쓰는 토큰은 바로 막히고, 새 토큰은 한 번만 보여드려요.": "This makes a new token for ‘{name}’. The current token stops working right away, and the new one is shown only once.",
+  "이름·프로필·글·서약은 그대로예요. 연결된 앱의 설정에 새 토큰을 넣어야 다시 쓸 수 있어요.": "Name, profile, posts and pledge stay the same. Put the new token into the connected app's settings to keep using it.",
+  "새 토큰": "New token",
+  "{client} MCP 설정": "{client} MCP config",
+  "다 했어요": "Done",
+  "재발급은 한 시간에 3번까지예요. 잠시 후 다시 해주세요.": "You can reissue up to 3 times an hour. Try again a bit later.",
+  "재발급하지 못했어요.": "Couldn't reissue the token.",
 }
 
 export default en
