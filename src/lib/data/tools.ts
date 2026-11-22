@@ -1,9 +1,8 @@
 import { cache } from 'react'
-import type { Member, PublicAuthor, ToolboxEntry } from '@/lib/supabase/types'
+import type { Member, ToolboxEntry } from '@/lib/supabase/types'
 import { MOCK_MEMBERS } from '@/lib/mock-data'
 import { MOCK_PRODUCTS, MUTABLE_UPVOTES } from '@/lib/mock-products'
 import { MUTABLE_TOOLBOX } from '@/lib/mock-toolbox'
-import { toPublicAuthor } from '@/lib/profile'
 import {
   coUsage,
   filterTools,
@@ -106,12 +105,6 @@ function mockEntries(): ToolboxEntry[] {
   return [...tools, ...launches]
 }
 
-function mockAuthor(id: string): PublicAuthor {
-  const m =
-    MOCK_MEMBERS.find((x) => x.id === id) ||
-    ({ ...MOCK_MEMBERS[0], id, display_name: id === DEV_VIEWER ? '개발자' : id, avatar_url: null } as Member)
-  return toPublicAuthor(m, 'real')
-}
 
 /** Test hook */
 export function __resetToolUsageMock() {

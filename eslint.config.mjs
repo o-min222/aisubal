@@ -6,6 +6,8 @@ const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
   // Override default ignores of eslint-config-next.
+  // `{ dropped: _x, ...rest }` is how we omit a field; don't flag the dropped binding
+  { rules: { "@typescript-eslint/no-unused-vars": ["warn", { ignoreRestSiblings: true }] } },
   globalIgnores([
     // Default ignores of eslint-config-next:
     ".next/**",

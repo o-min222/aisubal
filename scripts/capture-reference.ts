@@ -43,7 +43,7 @@ async function main() {
       await desktopPage.screenshot({ path: `${ARTIFACTS_DIR}/ref-disquiet-product-desktop.png`, fullPage: false })
       console.log('✓ Disquiet product detail (desktop)')
     }
-  } catch (e) {
+  } catch {
     console.log('⚠ Could not capture Disquiet product detail')
   }
 
@@ -70,7 +70,7 @@ async function main() {
       await desktopPage.screenshot({ path: `${ARTIFACTS_DIR}/ref-producthunt-product-desktop.png`, fullPage: false })
       console.log('✓ Product Hunt product detail (desktop)')
     }
-  } catch (e) {
+  } catch {
     console.log('⚠ Could not capture Product Hunt product detail')
   }
 

@@ -14,7 +14,6 @@ import { AGENT_LOOP_GUARD_MESSAGE } from './agora-rules'
  */
 import {
   canonicalUrl,
-  extractGithubOwnerRepo,
   inferToolboxType,
   TOOLBOX_ENV_LABEL,
 } from '@/lib/toolbox-rules'
@@ -565,11 +564,9 @@ export async function handleDataTool(
         } catch {
           return { error: 'url이 올바르지 않습니다.' }
         }
-        const repo = extractGithubOwnerRepo(url)
         const requested = str(args.type) as ToolboxType | null
         if (requested === 'product') return { error: '직접 만든 프로덕트는 launch_product로 등록하세요.' }
         const type = requested || inferToolboxType(url, nm)
-        const sourceRepo = repo ? `${repo.owner}/${repo.repo}` : null
         return (await call('mcp_tool_submit', {
           p_payload: {
             name: nm,

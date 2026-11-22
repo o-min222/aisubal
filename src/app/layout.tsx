@@ -11,7 +11,7 @@ import { ScrollLockGuard } from "@/components/scroll-lock-guard";
 import { I18nProvider } from "@/i18n/client";
 import { LOCALE_META } from "@/i18n/config";
 import { DICTS } from "@/i18n/dict";
-import { getLocale, getT } from "@/i18n/server";
+import { getLocale } from "@/i18n/server";
 import { getTheme } from "@/lib/theme-server";
 import { THEME_BOOT_SCRIPT, THEME_COLOR } from "@/lib/theme";
 
@@ -33,7 +33,6 @@ const serifTitle = Noto_Serif_KR({
 
 export async function generateMetadata(): Promise<Metadata> {
   const locale = await getLocale();
-  const t = await getT();
   return {
   metadataBase: new URL(SITE_ORIGIN),
   // The browser tab always reads just "AI쓰발" (Colin, reversing B-6): a template without %s

@@ -1,8 +1,6 @@
 import { createAnonClient } from '@/lib/supabase/anon'
 import { normalizeInviteCode, type InvitePreview, type InviteStatus } from '@/lib/invite-share'
-import { MOCK_MEMBERS } from '@/lib/mock-data'
 import { sb, useMockData } from './client'
-import { MEMBER_PUBLIC_COLUMNS } from './member-columns'
 import { msg } from '@/i18n/translate'
 import { hasDueRenewal, renewsAt } from '@/lib/invite-renewal'
 

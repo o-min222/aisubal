@@ -11,7 +11,6 @@ import {
   nicknameProfilePublicId,
 } from '@/lib/profile'
 import { MOCK_MEMBERS, MOCK_POSTS, MOCK_SITE_SETTINGS } from '@/lib/mock-data'
-import type { Member, Post } from '@/lib/supabase/types'
 
 const realMember = MOCK_MEMBERS[0] // has nickname
 const noNickMember = MOCK_MEMBERS[2]

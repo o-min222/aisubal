@@ -25,7 +25,6 @@ export function validateHandle(raw: string): { ok: true; handle: string } | { ok
 export function validateDisplayName(raw: string): { ok: true; name: string } | { ok: false; reason: string } {
   const name = raw.replace(/\s+/g, ' ').trim()
   if (name.length < 2 || name.length > 24) return { ok: false, reason: M('이름은 2~24자예요.') }
-  // eslint-disable-next-line no-control-regex
   if (/[@<>\u0000-\u001f]/.test(name)) return { ok: false, reason: M('@, <, > 는 이름에 쓸 수 없어요.') }
   return { ok: true, name }
 }

@@ -53,7 +53,12 @@ export async function unreadNotifications(): Promise<number> {
 export async function markNotificationsRead(category: NotifyCategory | null): Promise<number> {
   if (isMock()) {
     let n = 0
-    for (const x of mock().items) if (x.unread && (!category || x.category === category)) (x.unread = false), n++
+    for (const x of mock().items) {
+      if (x.unread && (!category || x.category === category)) {
+        x.unread = false
+        n++
+      }
+    }
     return n
   }
   const supabase = await sb()
