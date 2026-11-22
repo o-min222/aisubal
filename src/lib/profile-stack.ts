@@ -37,7 +37,7 @@ export const STACK_LIMIT = 20
 
 /** Quick picks for the pickers (free text is always allowed too). */
 export const AI_SUGGESTIONS = ['Claude', 'ChatGPT', 'Gemini', 'Grok', 'Cursor', 'Perplexity', 'GitHub Copilot', 'Claude Code', 'Codex', 'Midjourney', 'NotebookLM', 'v0']
-export const SUB_SUGGESTIONS = ['ChatGPT Plus', 'ChatGPT Pro', 'Claude Pro', 'Claude Max', 'Cursor Pro', 'Gemini Advanced', 'SuperGrok', 'Perplexity Pro', 'GitHub Copilot Pro', 'Midjourney']
+export const SUB_SUGGESTIONS = ['ChatGPT Plus', 'ChatGPT Pro', 'Claude Pro', 'Claude Max', 'Cursor Pro', 'Cursor Ultra', 'Google AI Pro', 'Google AI Ultra', 'SuperGrok', 'SuperGrok Heavy', 'Perplexity Pro', 'Perplexity Max', 'GitHub Copilot Pro', 'Midjourney', 'ZCRE (지크)']
 /** catalog types that count as 스킬·플러그인·MCP (from '사용 중' tool usage) */
 export const SKILL_TYPES: ReadonlyArray<string> = ['agent_skill', 'mcp_server', 'cli_tool', 'cursor_rules', 'prompt']
 

@@ -1,4 +1,4 @@
-/** Invite links (/i/{code}) and the short invite text (works in any messenger, SMS, DM or email). Pure: unit-tested. */
+/** Invite links (/i/{code}) and the ready-to-paste 초대장 (works in any messenger, SMS, DM or email). Pure: unit-tested. */
 
 export const INVITE_COOKIE = 'aisubal_invite'
 /** short-lived: long enough for Google login + coming back (30 min) */
@@ -22,11 +22,13 @@ export function inviteUrl(code: string, origin: string = SITE_ORIGIN, lang?: str
 
 import { interpolate, msg } from '@/i18n/translate'
 
-/** One-line description for the invite link preview and landing page. */
-export const INVITE_TAGLINE = msg('초대받은 자만 들어올 수 있습니다.')
+/** What AI쓰발 is, in the 초대장's voice (invite text, landing page, link preview). */
+export const SITE_INTRO = msg('AI쓰발은 초대받은 사람만 들어올 수 있는 AI 결사입니다. 가장 어두운 가능성까지 외면하지 않고, AI와 함께 다음 장을 엽니다.')
+/** How joining works, said to the one person the link was opened for. */
+export const INVITE_HOW = msg('이 링크는 당신 한 사람을 위해 열렸습니다. Google로 들어오면 초대 코드가 자동으로 입력되고, 이름을 정한 뒤 입단 서약에 서명하면 합류가 끝납니다.')
+export const INVITE_MOTTO = 'From the Shadows, Toward the Light.'
 
-/** Two lines: who invited you, then the link on its own line (it gets the OG preview card).
- * The code is already in the URL, so there's no separate code line. */
+/** The 초대장. The link sits on its own line so messengers attach the OG preview card. */
 export function inviteShareText(
   inviterName: string,
   code: string,
@@ -35,8 +37,13 @@ export function inviteShareText(
   lang?: string,
 ): string {
   return [
-    t(msg('{name}님이 당신을 AI쓰발에 초대했습니다. 초대받은 자만 들어올 수 있습니다.'), { name: inviterName }),
+    t(msg('[AI쓰발 · 초대장]')),
+    t(msg('{name}님이 당신을 지목했습니다.'), { name: inviterName }),
+    t(SITE_INTRO),
+    t(INVITE_HOW),
     inviteUrl(code, origin, lang),
+    t(msg('(초대 코드 {code} · 1회용)'), { code }),
+    INVITE_MOTTO,
   ].join('\n')
 }
 
