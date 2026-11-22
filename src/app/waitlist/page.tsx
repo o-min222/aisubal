@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
-import { createClient } from '@/lib/supabase/client'
 import { T } from '@/i18n/t'
 import { tx } from '@/i18n/client'
 
@@ -60,8 +59,7 @@ export default function WaitlistPage() {
   }
 
   async function handleLogout() {
-    const supabase = createClient()
-    await supabase.auth.signOut()
+    await fetch('/api/auth/signout', { method: 'POST' }).catch(() => null)
     router.push('/login')
     router.refresh()
   }

@@ -1,9 +1,7 @@
 'use client'
 
-import { createClient } from '@/lib/supabase/client'
-
+/** Session cookies are httpOnly (S-2), so the server clears them. */
 export async function signOut() {
-  const supabase = createClient()
-  await supabase.auth.signOut()
+  await fetch('/api/auth/signout', { method: 'POST' }).catch(() => null)
   window.location.href = '/login'
 }
