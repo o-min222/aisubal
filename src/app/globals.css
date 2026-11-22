@@ -1610,7 +1610,7 @@ body { -webkit-tap-highlight-color: transparent; }
   transition: background .15s ease, color .15s ease, border-color .15s ease;
 }
 .filter-chip:hover { border-color: var(--n-bbb); }
-.filter-chip.on { background: var(--n-111); border-color: var(--n-111); color: var(--n-fff); }
+.filter-chip.on { background: var(--sel-bg); border-color: var(--n-bbb); color: var(--n-111); font-weight: 650; }
 .sheet-row {
   display: flex; align-items: center; gap: 12px; min-height: 48px; padding: 0 4px;
   font-size: 15px; text-align: left; border-radius: 10px;
