@@ -1,7 +1,13 @@
+import { pledgeDigest } from '@/lib/pledge-record'
+import { agentSigner } from '@/lib/pledge'
 import { createHash, randomBytes } from 'crypto'
 import type { TokenScope } from '@/lib/supabase/types'
 import type { ClientId, ConnectionStatus } from '@/lib/agent-connect'
 import { sb, useMockData } from './client'
+
+const gAgents = globalThis as unknown as { __aisubalAgentNames?: Map<string, string> }
+/** DEV mock: agent names of tokens issued in this process */
+const mockAgentNames = (): Map<string, string> => (gAgents.__aisubalAgentNames ??= new Map())
 
 export type PublicToken = {
   id: string
@@ -19,10 +25,13 @@ export type PublicToken = {
   showOnProfile: boolean
   /** 에이전트 서약 (0018): null = not signed yet → write tools are refused */
   pledgeSignedAt: string | null
+  /** 에이전트 입단 기록 (0020) */
+  pledgeNo: number | null
+  pledgeHash: string | null
 }
 
 const TOKEN_COLS =
-  'id, name, agent_name, agent_model, scopes, token_prefix, created_at, last_used_at, expires_at, client, first_used_at, last_client_info, show_on_profile, pledge_signed_at'
+  'id, name, agent_name, agent_model, scopes, token_prefix, created_at, last_used_at, expires_at, client, first_used_at, last_client_info, show_on_profile, pledge_signed_at, pledge_no, pledge_hash'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function fromRow(t: any): PublicToken {
@@ -41,6 +50,8 @@ function fromRow(t: any): PublicToken {
     clientInfo: t.last_client_info ?? null,
     showOnProfile: t.show_on_profile !== false,
     pledgeSignedAt: t.pledge_signed_at ?? null,
+    pledgeNo: t.pledge_no ?? null,
+    pledgeHash: t.pledge_hash ?? null,
   }
 }
 
@@ -73,6 +84,8 @@ export async function listApiTokens(memberId: string): Promise<PublicToken[]> {
         clientInfo: 'claude-code 2.1.4',
         showOnProfile: true,
         pledgeSignedAt: mockPledged().get('token-1') ?? new Date(Date.now() - 13 * 24 * 60 * 60 * 1000).toISOString(),
+        pledgeNo: null,
+        pledgeHash: null,
       },
       {
         id: 'token-2',
@@ -89,6 +102,8 @@ export async function listApiTokens(memberId: string): Promise<PublicToken[]> {
         clientInfo: null,
         showOnProfile: true,
         pledgeSignedAt: mockPledged().get('token-2') ?? null,
+        pledgeNo: null,
+        pledgeHash: null,
       },
     ]
   }
@@ -118,9 +133,11 @@ export async function issueApiToken(
   const tokenPrefix = raw.slice(0, 12)
 
   if (useMockData()) {
+    const id = `token-${Date.now()}`
+    mockAgentNames().set(id, agentName || name)
     return {
       token: {
-        id: `token-${Date.now()}`,
+        id,
         name,
         agentName,
         agentModel,
@@ -135,6 +152,8 @@ export async function issueApiToken(
         clientInfo: null,
         showOnProfile: true,
         pledgeSignedAt: null,
+        pledgeNo: null,
+        pledgeHash: null,
       },
     }
   }
@@ -163,12 +182,19 @@ const gp = globalThis as unknown as { __aisubalTokenPledge?: Map<string, string>
 const mockPledged = (): Map<string, string> => (gp.__aisubalTokenPledge ??= new Map())
 
 /** Owner signs the 입단 서약 on the agent's behalf (signature = owner's own nickname). */
-export async function signTokenPledge(memberId: string, tokenId: string, signature: string, ownerName: string): Promise<{ ok: true; signedAt: string } | { ok: false; error: 'signature_mismatch' | 'token_not_found' | 'failed' }> {
+export type AgentPledgeResult = { ok: true; signedAt: string; no: number | null; hash: string | null; prevHash: string | null; prevNo: number | null; signer: string; inviter: string | null }
+
+/** Owner signs for the agent; returns the agent's sealed record (prev = the owner's block). */
+export async function signTokenPledge(memberId: string, tokenId: string, signature: string, ownerName: string): Promise<AgentPledgeResult | { ok: false; error: 'signature_mismatch' | 'token_not_found' | 'failed' }> {
   if (useMockData()) {
     if (signature.replace(/\s+/g, ' ').trim().toLowerCase() !== ownerName.replace(/\s+/g, ' ').trim().toLowerCase()) return { ok: false, error: 'signature_mismatch' }
     const at = mockPledged().get(tokenId) ?? new Date().toISOString()
     mockPledged().set(tokenId, at)
-    return { ok: true, signedAt: at }
+    const agent = mockAgentNames().get(tokenId) || (await listApiTokens(memberId)).find((t) => t.id === tokenId)?.agentName || 'agent'
+    const signer = agentSigner(ownerName, agent)
+    const prevHash = await pledgeDigest({ kind: 'member', signer: ownerName, inviter: '에이전트덕후', prevHash: null, signedAt: '2026-11-01T12:00:00.000Z' })
+    const hash = await pledgeDigest({ kind: 'agent', signer, inviter: ownerName, prevHash, signedAt: at })
+    return { ok: true, signedAt: at, no: 3, hash, prevHash, prevNo: 2, signer, inviter: ownerName }
   }
   const supabase = await sb()
   const { data, error } = await supabase.rpc('token_pledge_sign', { p_token_id: tokenId, p_version: 1, p_signature: signature })
@@ -176,7 +202,9 @@ export async function signTokenPledge(memberId: string, tokenId: string, signatu
     const m = error.message || ''
     return { ok: false, error: m.includes('signature_mismatch') ? 'signature_mismatch' : m.includes('token_not_found') ? 'token_not_found' : 'failed' }
   }
-  return { ok: true, signedAt: String((data as Record<string, unknown>).signedAt) }
+  const d = data as Record<string, unknown>
+  const n = (v: unknown) => (v == null ? null : Number(v))
+  return { ok: true, signedAt: String(d.signedAt), no: n(d.no), hash: (d.hash as string) ?? null, prevHash: (d.prevHash as string) ?? null, prevNo: n(d.prevNo), signer: String(d.signer ?? ''), inviter: (d.inviter as string) ?? null }
 }
 
 /** Token ids (agents) that signed the charter, for the '서약한 에이전트' mark. */

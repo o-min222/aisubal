@@ -10,6 +10,7 @@ import { tx, tn } from '@/i18n/client'
 import { msg } from '@/i18n/translate'
 import { useLocale } from '@/i18n/client'
 import { LOCALE_META } from '@/i18n/config'
+import { recordNo, shortHash } from '@/lib/pledge-record'
 
 const WRITE_SCOPES = ['agora:write', 'feed:interact', 'tools:submit']
 
@@ -26,6 +27,8 @@ type TokenRow = {
   clientInfo?: string | null
   showOnProfile?: boolean
   pledgeSignedAt?: string | null
+  pledgeNo?: number | null
+  pledgeHash?: string | null
 }
 
 const SCOPE_GROUPS: { label: string; scopes: { id: string; label: string }[] }[] = [
@@ -263,6 +266,11 @@ export function ApiTokensSection({ ownerName }: { ownerName: string }) {
                 {t.pledgeSignedAt ? (
                   <p className="mt-1">
                     <span className="pledged-mark"><T>서약한 에이전트</T></span>
+                    {t.pledgeHash && (
+                      <code className="pr-mono ml-2 text-[11.5px] text-[#666]" title={t.pledgeHash}>
+                        <T s="에이전트 입단 기록 {no}" vars={{ no: recordNo(t.pledgeNo) }} /> · {shortHash(t.pledgeHash, 6, 4)}
+                      </code>
+                    )}
                   </p>
                 ) : (
                   <div className="agent-unsigned mt-2">

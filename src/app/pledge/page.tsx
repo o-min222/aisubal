@@ -2,7 +2,8 @@ import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { getUserState } from '@/lib/auth'
 import { getPledgeStatus } from '@/lib/data/pledge'
-import { pledgeTextFor } from '@/lib/pledge'
+import { kstYear, pledgeTextFor } from '@/lib/pledge'
+import { PledgeBlock, PledgeVerify } from '@/components/pledge/pledge-record'
 import { PledgeForm, PledgeOriginal } from '@/components/pledge/pledge-form'
 import { LOCALE_META } from '@/i18n/config'
 import { getLocale, getT } from '@/i18n/server'
@@ -30,15 +31,24 @@ export default async function PledgePage({ searchParams }: { searchParams: Promi
   const next = fromSignup ? '/connect?from=signup' : '/feed'
   const locale = await getLocale()
   const t = await getT()
-  const doc = pledgeTextFor(locale)
+  // a signed pledge shows the year it was signed (KST); a new one, this year
+  const year = kstYear(status.signedAt)
+  const doc = pledgeTextFor(locale, year)
 
   return (
     <main className="pledge-page min-h-dvh px-5 pt-10 pb-16 sm:pt-20 sm:pb-24">
       <div className="mx-auto w-full max-w-[600px] space-y-6">
         {status.signedAt ? (
           <>
-            <PledgeDocument t={doc} inviter={status.inviter} foundingLabel={t('창립 멤버')} signature={<span className="pledge-signed-name">{status.signer}</span>} seal={<PledgeSeal label={t('입단')} />} />
-            {locale !== 'ko' && <PledgeOriginal />}
+            <PledgeDocument t={doc} inviter={status.inviter} foundingLabel={t('창립 멤버')} signature={<span className="pledge-signed-name">{status.signer}</span>} seal={status.hash ? null : <PledgeSeal label={t('입단')} />} />
+            {status.hash && (
+              <section className="pledge-record-section" aria-labelledby="pledge-record-h">
+                <h2 id="pledge-record-h">{t('입단 기록')}</h2>
+                <PledgeBlock r={{ kind: 'member', no: status.no, hash: status.hash, prevHash: status.prevHash, prevNo: status.prevNo, signedAt: status.signedAt, signer: status.signer, inviter: status.inviter }} />
+                <PledgeVerify r={{ kind: 'member', no: status.no, hash: status.hash, prevHash: status.prevHash, prevNo: status.prevNo, signedAt: status.signedAt, signer: status.signer, inviter: status.inviter }} />
+              </section>
+            )}
+            {locale !== 'ko' && <PledgeOriginal year={year} />}
             <p className="text-[13px] text-[#8a8a8a]">{t('{date}에 서약했어요.', { date: fmt(status.signedAt, LOCALE_META[locale].intl) })}</p>
             <div>
               <Link href="/me" className="btn btn-secondary rounded-xl min-h-[44px] px-5">

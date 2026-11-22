@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { PLEDGE_KO, PLEDGE_VERSION, SLOGAN, pledgePlainText, signatureMatches } from '@/lib/pledge'
+import { PLEDGE_KO, PLEDGE_VERSION, SLOGAN, kstYear, pledgePlainText, signatureMatches, withYear } from '@/lib/pledge'
 
 const AUTHORED = `[AI쓰발 선언 및 입단 서약]
 
@@ -22,9 +22,16 @@ const AUTHORED = `[AI쓰발 선언 및 입단 서약]
 서약자: 0mins / 초대인: 에이전트덕후`
 
 describe('입단 서약', () => {
+  it('dates the pledge in the signing year, in KST', () => {
+    expect(PLEDGE_KO.dateline).toBe('{year}년, 새로운 시대의 경계 위에서')
+    expect(withYear(PLEDGE_KO, 2031).dateline).toBe('2031년, 새로운 시대의 경계 위에서')
+    expect(kstYear('2027-12-31T15:30:00.000Z')).toBe(2028) // 00:30 KST on Jan 1
+    expect(kstYear('2027-12-31T14:59:59.999Z')).toBe(2027)
+  })
+
   it('renders the authored text verbatim with the footer filled in', () => {
-    expect(pledgePlainText(PLEDGE_KO, '0mins', '에이전트덕후')).toBe(AUTHORED)
-    expect(pledgePlainText(PLEDGE_KO, 'a', null)).toMatch(/초대인: 창립 멤버$/)
+    expect(pledgePlainText(withYear(PLEDGE_KO, 2026), '0mins', '에이전트덕후')).toBe(AUTHORED)
+    expect(pledgePlainText(withYear(PLEDGE_KO), 'a', null)).toMatch(/초대인: 창립 멤버$/)
     expect(PLEDGE_VERSION).toBe(1)
   })
   it('signature must be the own nickname (case/space-insensitive, never empty)', () => {

@@ -5,6 +5,7 @@ import { Bot, Heart, MessageCircle, Pencil, ScrollText, Settings } from 'lucide-
 import { getUserState } from '@/lib/auth'
 import { getProfileStats } from '@/lib/data/shell'
 import { getPledgeStatus } from '@/lib/data/pledge'
+import { recordNo, shortHash } from '@/lib/pledge-record'
 import { getDashboardStats, listMyComments, listMyLikedPosts, type DashItem } from '@/lib/data/dashboard'
 import { listFeedPage } from '@/lib/data/feed'
 import { listMemberTools } from '@/lib/data/tools'
@@ -399,9 +400,14 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
             <Link href="/pledge" className="pledge-chip mt-2" title={t('내가 서명한 선언 및 입단 서약 보기')}>
               <ScrollText className="w-3.5 h-3.5" />
               <T s="{date} 입단 서약" vars={{ date: new Intl.DateTimeFormat(LOCALE_META[locale].intl, { dateStyle: 'medium', timeZone: 'Asia/Seoul' }).format(new Date(pledge.signedAt)) }} />
-              <span className="text-[#9a8a66]">
+              <span className="text-[#888]">
                 <T s="· 초대인 {name}" vars={{ name: pledge.inviter ?? t('창립 멤버') }} />
               </span>
+              {pledge.hash && (
+                <code className="pr-mono text-[11px] text-[#555]" title={pledge.hash}>
+                  {recordNo(pledge.no)} · {shortHash(pledge.hash, 6, 4)}
+                </code>
+              )}
             </Link>
           )}
         </div>

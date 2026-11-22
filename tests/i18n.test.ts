@@ -101,8 +101,9 @@ describe('pledge and slogan in English', () => {
   it('the translation mirrors the authored structure; Korean stays canonical', () => {
     expect(PLEDGE_EN.preamble).toHaveLength(PLEDGE_KO.preamble.length)
     expect(PLEDGE_EN.vows).toHaveLength(PLEDGE_KO.vows.length)
-    expect(pledgeTextFor('ko')).toBe(PLEDGE_KO)
-    expect(pledgeTextFor('en')).toBe(PLEDGE_EN)
+    expect(pledgeTextFor('ko', 2026).dateline).toBe('2026년, 새로운 시대의 경계 위에서')
+    expect(pledgeTextFor('en', 2026).dateline).toBe('2026, on the frontier of a new era')
+    expect(pledgeTextFor('en', 2026).vows).toBe(PLEDGE_EN.vows)
     expect(PLEDGE_EN.vows[0]).toMatch(/^First,/)
     expect(SLOGAN.en).toBe('From the Shadows, Toward the Light.')
     expect(SLOGAN.koTranslated).toMatch(/next chapter of truth and humanity/)
