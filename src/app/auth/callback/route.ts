@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
+import { INVITE_COOKIE } from '@/lib/invite-share'
 
 /**
  * OAuth callback.
@@ -39,11 +40,14 @@ export async function GET(request: Request) {
   }
 
   if (member?.signup_completed_at && !member.is_banned) {
-    return NextResponse.redirect(`${origin}${next}`)
+    // already a member: an invite link they followed has nothing left to do
+    const res = NextResponse.redirect(`${origin}${next}`)
+    res.cookies.delete(INVITE_COOKIE)
+    return res
   }
 
   // Not a completed member yet: make sure the waitlist row exists, then send
-  // them to the invite-code screen.
+  // them to the invite-code screen (it fills in a code saved by /i/{code}).
   const { error: waitlistError } = await supabase.rpc('ensure_waitlist')
   if (waitlistError) {
     console.error('[auth/callback] ensure_waitlist failed', waitlistError.message)

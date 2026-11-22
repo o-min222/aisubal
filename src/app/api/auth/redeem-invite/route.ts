@@ -1,6 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { useMockData } from '@/lib/data/client'
+import { INVITE_COOKIE } from '@/lib/invite-share'
+
+/** Successful redeem: the /i/{code} cookie has done its job. */
+function withClearedInvite(body: unknown) {
+  const res = NextResponse.json(body)
+  res.cookies.delete(INVITE_COOKIE)
+  return res
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -12,7 +20,7 @@ export async function POST(request: NextRequest) {
 
     // Dev bypass: accept any 8-char code for local review
     if (useMockData()) {
-      return NextResponse.json({
+      return withClearedInvite({
         success: true,
         member: {
           id: 'dev-user-id',
@@ -54,7 +62,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    return NextResponse.json({
+    return withClearedInvite({
       success: true,
       member: result.member,
       needsProfile: result.needs_profile !== false,

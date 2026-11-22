@@ -1,3 +1,5 @@
+import { createAnonClient } from '@/lib/supabase/anon'
+import { normalizeInviteCode, type InvitePreview, type InviteStatus } from '@/lib/invite-share'
 import { MOCK_MEMBERS } from '@/lib/mock-data'
 import { sb, useMockData } from './client'
 import { MEMBER_PUBLIC_COLUMNS } from './member-columns'
@@ -90,6 +92,29 @@ export async function validateInviteCode(code: string): Promise<{
   return {
     valid: true,
     inviter: { displayName: result.inviter_display_name || '멤버' },
+  }
+}
+
+/**
+ * Public invite landing (/i/{code}): status + inviter's self-made name/avatar.
+ * Session-less on purpose (anonymous visitors and link crawlers).
+ */
+export async function getInvitePreview(rawCode: string): Promise<InvitePreview> {
+  const code = normalizeInviteCode(rawCode)
+  if (!code) return { status: 'invalid', inviter: null }
+  if (useMockData()) {
+    const inviter = { displayName: '개발자', avatarUrl: null }
+    if (code === 'B7NJ4TRW') return { status: 'used', inviter }
+    if (code === 'AXK8M2PQ' || code.startsWith('TEST')) return { status: 'valid', inviter }
+    return { status: 'invalid', inviter: null }
+  }
+  const { data, error } = await createAnonClient().rpc('invite_preview', { p_code: code })
+  if (error || !data) return { status: 'invalid', inviter: null }
+  const r = data as { status?: InviteStatus; inviter?: { display_name?: string; avatar_url?: string | null } | null }
+  const status: InviteStatus = r.status === 'valid' || r.status === 'used' || r.status === 'inactive' ? r.status : 'invalid'
+  return {
+    status,
+    inviter: r.inviter?.display_name ? { displayName: r.inviter.display_name, avatarUrl: r.inviter.avatar_url ?? null } : null,
   }
 }
 

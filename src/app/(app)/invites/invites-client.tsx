@@ -1,158 +1,156 @@
 'use client'
 
-import { useState } from 'react'
-import { Users, Copy, Check, AlertCircle, User } from 'lucide-react'
-import type { Member } from '@/lib/supabase/types'
-import { RelativeTime } from '@/components/relative-time'
+import { useEffect, useState } from 'react'
+import { Users, Copy, Check, AlertCircle, User, Share2, ChevronDown } from 'lucide-react'
 import { toast } from 'sonner'
+import type { InviteCodeRow } from '@/lib/data/invites'
+import { RelativeTime } from '@/components/relative-time'
+import { inviteShareText, inviteUrl } from '@/lib/invite-share'
 
-interface InvitesClientProps {
-  member: Member
-}
+/** Real invite codes (no mock data) with a KakaoTalk-ready copy and the Web Share sheet. */
+export function InvitesClient({ inviterName, codes, codesActive, loadFailed }: { inviterName: string; codes: InviteCodeRow[]; codesActive: boolean; loadFailed: boolean }) {
+  const [copied, setCopied] = useState<string | null>(null)
+  const [canShare, setCanShare] = useState(false)
+  const [origin, setOrigin] = useState('https://aisubal.vercel.app')
+  const [open, setOpen] = useState<string | null>(null)
 
-// Mock invite codes
-const MOCK_CODES = [
-  { code: 'AXK8M2PQ', isUsed: false, usedBy: null, usedAt: null },
-  { code: 'B7NJ4TRW', isUsed: true, usedBy: { display_name: '새벽CTO' }, usedAt: '2026-11-18T12:00:00.000Z' },
-]
+  useEffect(() => {
+    // client-only capabilities (avoid hydration mismatch)
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setCanShare(typeof navigator !== 'undefined' && typeof navigator.share === 'function')
+    setOrigin(window.location.origin)
+  }, [])
 
-export function InvitesClient({ member }: InvitesClientProps) {
-  const [copiedCode, setCopiedCode] = useState<string | null>(null)
-  
-  // Codes become active only after the creator completed signup
-  const codesActive = !!member.signup_completed_at
-
-  function copyCode(code: string) {
-    navigator.clipboard.writeText(code)
-    setCopiedCode(code)
-    toast.success('초대 코드가 복사되었습니다.')
-    setTimeout(() => setCopiedCode(null), 2000)
+  async function copy(text: string, key: string, label: string) {
+    try {
+      await navigator.clipboard.writeText(text)
+      setCopied(key)
+      toast.success(label)
+      setTimeout(() => setCopied((k) => (k === key ? null : k)), 2000)
+    } catch {
+      toast.error('복사하지 못했어요. 길게 눌러 직접 복사해 주세요.')
+      setOpen(key.replace(/^(msg|code):/, ''))
+    }
   }
 
-  function copyInviteLink(code: string) {
-    const link = `${window.location.origin}/waitlist?code=${code}`
-    navigator.clipboard.writeText(link)
-    setCopiedCode(code)
-    toast.success('초대 링크가 복사되었습니다.')
-    setTimeout(() => setCopiedCode(null), 2000)
+  async function share(code: string) {
+    try {
+      await navigator.share({ title: 'AI쓰발 초대장', text: inviteShareText(inviterName, code, origin) })
+    } catch (e) {
+      if ((e as Error)?.name !== 'AbortError') toast.error('공유하지 못했어요. 복사해서 보내 주세요.')
+    }
   }
+
+  const available = codes.filter((c) => !c.isUsed).length
 
   return (
-    <div className="max-w-2xl mx-auto">
-      {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-[#111] flex items-center gap-2">
-          <Users className="w-6 h-6" />
-          초대하기
+    <div className="max-w-2xl mx-auto space-y-4">
+      <div>
+        <h1 className="text-2xl font-bold flex items-center gap-2" style={{ color: '#111' }}>
+          <Users className="w-6 h-6" /> 초대하기
         </h1>
         <p className="text-sm text-[#666] mt-1">
-          AI쓰발 멤버는 2개의 초대 코드를 받습니다
+          링크를 카카오톡으로 보내면 받은 분이 Google로 로그인하는 것만으로 가입돼요. 남은 초대 <b className="text-[#111]">{available}</b>장
         </p>
       </div>
 
-      {/* Code Status */}
       {!codesActive && (
-        <div className="card p-4 mb-4 border-l-4 border-l-amber-400 bg-amber-50/50">
-          <div className="flex items-start gap-3">
-            <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
-            <div>
-              <p className="font-medium text-amber-800">초대 코드가 아직 활성화되지 않았습니다</p>
-              <p className="text-sm text-amber-700 mt-1">
-                초대 코드를 받아 가입을 완료하면 내 초대 코드가 활성화됩니다.
-              </p>
-            </div>
+        <div className="card p-4 border-l-4 border-l-amber-400 bg-amber-50/50 flex items-start gap-3">
+          <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+          <div>
+            <p className="font-medium text-amber-800">초대 코드가 아직 활성화되지 않았어요</p>
+            <p className="text-sm text-amber-700 mt-1">가입을 완료하면 내 초대 코드가 활성화돼요.</p>
           </div>
         </div>
       )}
 
-      {/* Invite Codes */}
-      <div className="card">
+      <div className="card overflow-hidden">
         <div className="p-4 border-b border-[#e5e5e5]">
-          <h2 className="font-semibold text-[#111]">내 초대 코드</h2>
-          <p className="text-xs text-[#888] mt-0.5">
-            각 코드는 1회만 사용할 수 있습니다
-          </p>
+          <h2 className="font-semibold" style={{ color: '#111' }}>
+            내 초대 코드
+          </h2>
+          <p className="text-xs text-[#888] mt-0.5">각 코드는 1회만 쓸 수 있어요</p>
         </div>
-        
-        <div className="divide-y divide-[#eee]">
-          {MOCK_CODES.map((item) => (
-            <div key={item.code} className="p-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <div className={`font-mono text-lg tracking-wider ${
-                    item.isUsed || !codesActive ? 'text-[#aaa]' : 'text-[#111]'
-                  }`}>
-                    {item.code}
+        {loadFailed && <p className="p-6 text-center text-sm text-[#888]">초대 코드를 불러오지 못했어요. 잠시 후 다시 시도해 주세요.</p>}
+        {!loadFailed && codes.length === 0 && <p className="p-6 text-center text-sm text-[#888]">아직 받은 초대 코드가 없어요.</p>}
+        <ul className="divide-y divide-[#eee]">
+          {codes.map((c) => {
+            const usable = !c.isUsed && codesActive
+            const msg = inviteShareText(inviterName, c.code, origin)
+            return (
+              <li key={c.code} className="p-4">
+                <div className="flex items-center justify-between gap-3 flex-wrap">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <span className={`font-mono text-lg tracking-wider ${usable ? 'text-[#111]' : 'text-[#aaa]'}`}>{c.code}</span>
+                    {c.isUsed ? (
+                      <span className="badge bg-green-100 text-green-700">사용됨</span>
+                    ) : !codesActive ? (
+                      <span className="badge bg-gray-100 text-gray-500">비활성</span>
+                    ) : (
+                      <span className="badge bg-blue-100 text-blue-700">사용 가능</span>
+                    )}
                   </div>
-                  
-                  {item.isUsed ? (
-                    <span className="badge bg-green-100 text-green-700">사용됨</span>
-                  ) : !codesActive ? (
-                    <span className="badge bg-gray-100 text-gray-500">비활성</span>
-                  ) : (
-                    <span className="badge bg-blue-100 text-blue-700">사용 가능</span>
+                  {usable && (
+                    <div className="flex gap-2 ml-auto">
+                      <button type="button" onClick={() => copy(msg, `msg:${c.code}`, '카카오톡에 붙여넣을 초대 메시지를 복사했어요')} className="btn btn-primary btn-sm min-h-[40px] rounded-full">
+                        {copied === `msg:${c.code}` ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />} 복사
+                      </button>
+                      {canShare && (
+                        <button type="button" onClick={() => share(c.code)} className="btn btn-secondary btn-sm min-h-[40px] rounded-full" aria-label="공유하기">
+                          <Share2 className="w-4 h-4" /> 공유
+                        </button>
+                      )}
+                    </div>
                   )}
                 </div>
-                
-                {!item.isUsed && codesActive && (
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => copyCode(item.code)}
-                      className="btn btn-secondary btn-sm"
-                    >
-                      {copiedCode === item.code ? (
-                        <Check className="w-4 h-4" />
-                      ) : (
-                        <Copy className="w-4 h-4" />
-                      )}
-                      코드 복사
+                {usable && (
+                  <div className="mt-2">
+                    <button type="button" className="text-xs text-[#666] inline-flex items-center gap-1 min-h-[32px]" aria-expanded={open === c.code} onClick={() => setOpen(open === c.code ? null : c.code)}>
+                      보낼 메시지 보기 <ChevronDown className={`w-3.5 h-3.5 transition-transform ${open === c.code ? 'rotate-180' : ''}`} />
                     </button>
-                    <button
-                      onClick={() => copyInviteLink(item.code)}
-                      className="btn btn-primary btn-sm"
-                    >
-                      링크 복사
-                    </button>
+                    {open === c.code && (
+                      <div className="mt-1 rounded-xl bg-[#f6f6f6] p-3 text-[13px] text-[#333] whitespace-pre-wrap break-all select-all">
+                        {msg}
+                        <div className="mt-2 flex gap-3 text-xs">
+                          <button type="button" className="text-[#0066cc]" onClick={() => copy(inviteUrl(c.code, origin), `link:${c.code}`, '초대 링크만 복사했어요')}>
+                            링크만 복사
+                          </button>
+                          <button type="button" className="text-[#0066cc]" onClick={() => copy(c.code, `code:${c.code}`, '초대 코드만 복사했어요')}>
+                            코드만 복사
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
-              </div>
-              
-              {item.isUsed && item.usedBy && item.usedAt && (
-                <div className="flex items-center gap-2 mt-3 text-sm text-[#666]">
-                  <User className="w-4 h-4" />
-                  <span>{item.usedBy.display_name}</span>
-                  <span>·</span>
-                  <span><RelativeTime date={item.usedAt} /> 사용</span>
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
+                {c.isUsed && (
+                  <div className="flex items-center gap-2 mt-2 text-sm text-[#666]">
+                    <User className="w-4 h-4" />
+                    <span>{c.usedBy?.displayName ?? '가입 완료'}</span>
+                    {c.usedAt && (
+                      <>
+                        <span>·</span>
+                        <span>
+                          <RelativeTime date={c.usedAt} /> 사용
+                        </span>
+                      </>
+                    )}
+                  </div>
+                )}
+              </li>
+            )
+          })}
+        </ul>
       </div>
 
-      {/* How it works */}
-      <div className="card mt-4">
-        <div className="p-4 border-b border-[#e5e5e5]">
-          <h2 className="font-semibold text-[#111]">초대는 어떻게 작동하나요?</h2>
-        </div>
-        <div className="p-4 space-y-3 text-sm text-[#555]">
-          <div className="flex gap-3">
-            <span className="w-6 h-6 rounded-full bg-[#111] text-white flex items-center justify-center text-xs flex-shrink-0">1</span>
-            <p>AI쓰발에 가입하면 2개의 초대 코드를 받습니다.</p>
-          </div>
-          <div className="flex gap-3">
-            <span className="w-6 h-6 rounded-full bg-[#111] text-white flex items-center justify-center text-xs flex-shrink-0">2</span>
-            <p>초대 코드는 초대한 멤버가 가입을 완료한 후에만 활성화됩니다.</p>
-          </div>
-          <div className="flex gap-3">
-            <span className="w-6 h-6 rounded-full bg-[#111] text-white flex items-center justify-center text-xs flex-shrink-0">3</span>
-            <p>활성화된 코드를 공유하면 다른 사람이 가입할 수 있습니다.</p>
-          </div>
-          <div className="flex gap-3">
-            <span className="w-6 h-6 rounded-full bg-[#111] text-white flex items-center justify-center text-xs flex-shrink-0">4</span>
-            <p>각 코드는 1회만 사용할 수 있으며, 사용 후 누가 사용했는지 볼 수 있습니다.</p>
-          </div>
-        </div>
+      <div className="card p-4 space-y-2 text-sm text-[#555]">
+        <h2 className="font-semibold mb-1" style={{ color: '#111' }}>
+          초대는 이렇게 동작해요
+        </h2>
+        <p>1. ‘복사’를 눌러 카카오톡에 붙여넣으면 링크 미리보기 카드와 함께 전송돼요.</p>
+        <p>2. 받은 분이 링크를 열면 누가 초대했는지와 코드 상태를 보고 Google로 로그인해요.</p>
+        <p>3. 로그인 후 가입 화면에 코드가 자동으로 들어가 있어요. 버튼 한 번이면 가입 완료.</p>
+        <p>4. 이미 쓰인 코드면 받은 분은 웨이트리스트로 가요. 각 코드는 1회용이에요.</p>
       </div>
     </div>
   )

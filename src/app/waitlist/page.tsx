@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { createClient } from '@/lib/supabase/client'
@@ -10,6 +10,23 @@ export default function WaitlistPage() {
   const [inviteCode, setInviteCode] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  // code saved by the /i/{code} invite link (httpOnly cookie → /api/invites/pending)
+  const [fromLink, setFromLink] = useState<{ code: string; valid: boolean; message: string; inviter: string | null } | null>(null)
+
+  useEffect(() => {
+    let alive = true
+    fetch('/api/invites/pending')
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (!alive || !d?.code) return
+        setFromLink({ code: d.code, valid: Boolean(d.valid), message: d.message, inviter: d.inviter?.displayName ?? null })
+        if (d.valid) setInviteCode(d.code)
+      })
+      .catch(() => {})
+    return () => {
+      alive = false
+    }
+  }, [])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -71,6 +88,23 @@ export default function WaitlistPage() {
           <br />
           초대 코드를 입력하면 가입이 완료됩니다.
         </p>
+
+        {fromLink && (
+          <div
+            role="status"
+            className={`mb-4 p-3 rounded-lg text-sm text-center ${fromLink.valid ? 'bg-green-50 border border-green-200 text-green-800' : 'bg-amber-50 border border-amber-200 text-amber-800'}`}
+          >
+            {fromLink.valid ? (
+              <>
+                {fromLink.inviter ? <b>{fromLink.inviter}</b> : '멤버'}님의 초대 링크로 왔어요. 코드가 확인됐어요 — 아래 버튼을 눌러 가입을 마치세요.
+              </>
+            ) : (
+              <>
+                초대 링크의 코드 <span className="font-mono">{fromLink.code}</span>: {fromLink.message} 웨이트리스트에 등록돼 있으니, 다른 코드를 받으면 아래에 입력하세요.
+              </>
+            )}
+          </div>
+        )}
 
         <form onSubmit={handleSubmit}>
           {error && (
