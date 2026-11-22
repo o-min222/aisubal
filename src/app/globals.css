@@ -1257,6 +1257,8 @@ a.tool-chip:hover { border-color: var(--n-111); color: var(--n-111); }
  * scroll. `clip` cuts horizontal overflow without creating a scroll container.
  */
 html, body { overflow-x: clip; }
+/* the scrollbar appearing/disappearing between pages must not shift the layout */
+html { scrollbar-gutter: stable; }
 @supports not (overflow: clip) { html { overflow-x: hidden; } }
 html { overscroll-behavior-y: none; }
 body { -webkit-tap-highlight-color: transparent; }
@@ -1295,22 +1297,36 @@ body { -webkit-tap-highlight-color: transparent; }
 .tap-target { min-width: 44px; min-height: 44px; }
 @media (min-width: 768px) { .tap-target { min-width: 36px; min-height: 36px; } }
 
+/*
+ * One shell grid per breakpoint, identical on every route, so switching tabs never
+ * moves the center column (checked by `npm run check:overflow`, layout stability):
+ *   <768      center only
+ *   768–1279  left 220 | center
+ *   ≥1280     left 230 | center | rail (340, 380 from 1440), max-width 1440
+ * List + reading-pane pages don't change the grid: they span center + rail and split
+ * it with the same track sizes (see .reading-layout), so the list sits exactly on
+ * the center track and the pane takes the rail's place. The center never sizes to
+ * its content (minmax(0, 1fr) + min-width: 0).
+ */
 .app-grid {
-  max-width: 1200px; margin: 0 auto;
-  display: grid; grid-template-columns: minmax(0, 1fr); gap: 20px;
+  --grid-gap: 20px; --left-w: 220px; --rail-w: 0px;
+  width: 100%; max-width: 1200px; margin: 0 auto;
+  display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--grid-gap);
   padding: 12px 0 calc(76px + env(safe-area-inset-bottom));
 }
-.app-left, .app-right { display: none; }
-.app-center { min-width: 0; padding: 0 10px; }
+.app-left, .app-right { display: none; min-width: 0; }
+.app-center { min-width: 0; width: 100%; padding: 0 10px; min-height: calc(100dvh - 140px); }
 @media (min-width: 768px) {
-  .app-grid { grid-template-columns: 220px minmax(0, 1fr); padding: 20px 24px 48px; }
+  .app-grid { grid-template-columns: var(--left-w) minmax(0, 1fr); padding: 20px 24px 48px; }
   .app-left { display: block; }
   .app-center { padding: 0; }
 }
-/* the right rail only when the center keeps ≥ ~600px (1280 − 48 − 230 − 300 − 40 gaps) */
 @media (min-width: 1280px) {
-  .app-grid { grid-template-columns: 230px minmax(0, 1fr) 300px; }
+  .app-grid { --left-w: 230px; --rail-w: 340px; max-width: 1440px; grid-template-columns: var(--left-w) minmax(0, 1fr) var(--rail-w); }
   .app-right { display: block; }
+}
+@media (min-width: 1440px) {
+  .app-grid { --rail-w: 380px; }
 }
 .app-sticky { position: sticky; top: 80px; display: flex; flex-direction: column; gap: 12px; }
 
@@ -1749,9 +1765,10 @@ html:has(.reading-pane.is-open) body { overflow: hidden; }
 .reading-empty { display: none; }
 /* list + pane side by side only when the list keeps ≥560px; narrower → full-screen push */
 @media (min-width: 1280px) {
-  .app-grid:has(.reading-layout) { grid-template-columns: 230px minmax(0, 1fr); max-width: 1440px; }
+  /* same grid as every other page: span center + rail, split with the same tracks */
+  .app-grid:has(.reading-layout) .app-center { grid-column: 2 / 4; }
   .app-grid:has(.reading-layout) .app-right { display: none; }
-  .reading-layout { display: grid; grid-template-columns: minmax(560px, 1fr) minmax(360px, 520px); gap: 16px; align-items: start; }
+  .reading-layout { display: grid; grid-template-columns: minmax(0, 1fr) var(--rail-w); gap: var(--grid-gap); align-items: start; }
   .reading-pane, .reading-pane.is-open {
     display: flex; flex-direction: column; position: sticky; top: 80px; inset: auto; z-index: 1;
     height: calc(100dvh - 104px); background: var(--n-fff); border: 1px solid var(--n-e5e5e5); border-radius: 14px; overflow: hidden; animation: none;
