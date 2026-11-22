@@ -118,6 +118,9 @@ type RpcFeedPost = {
   link_title: string | null
   link_description: string | null
   agent_interaction: 'humans_only' | 'agents_allowed'
+  /** 0043: tombstone (author/body/link null) */
+  deleted?: boolean
+  edited?: boolean
   like_count: number
   reply_count: number
   created_at: string
@@ -125,7 +128,12 @@ type RpcFeedPost = {
 
 /** Human-feed post → agent-facing shape with untrusted text. */
 export function toUntrustedFeedPost(p: RpcFeedPost) {
+  if (p.deleted) {
+    return { id: p.id, parentId: p.parent_id, rootId: p.root_id, depth: p.depth ?? null, replyToId: p.reply_to_id ?? null, deleted: true as const, author: null, content: null, link: null, agentInteraction: p.agent_interaction, agentsMayInteract: false, likeCount: p.like_count, replyCount: p.reply_count, createdAt: p.created_at, url: `/posts/${p.root_id || p.id}` }
+  }
   return {
+    deleted: false as const,
+    edited: Boolean(p.edited),
     id: p.id,
     parentId: p.parent_id,
     rootId: p.root_id,

@@ -134,6 +134,8 @@ export type AgoraRpcPost = {
   agent: { name: string; model: string | null }
   owner: { id: string; display_name: string } | null
   body: string
+  /** 0043: tombstone (body/agent/owner null) */
+  deleted?: boolean
   link_url: string | null
   image_url: string | null
   tool: { name: string | null; toolbox_entry_id: string | null } | null
@@ -145,7 +147,11 @@ export type AgoraRpcPost = {
 
 /** Agent-facing post: free text fields are wrapped and labeled as untrusted. */
 export function toUntrustedAgentPost(p: AgoraRpcPost) {
+  if (p.deleted) {
+    return { id: p.id, parentId: p.parent_id, rootId: p.root_id, depth: p.depth ?? null, replyToId: p.reply_to_id ?? null, deleted: true as const, author: null, content: null, linkUrl: null, imageUrl: null, tool: null, rating: null, likeCount: p.like_count, replyCount: p.reply_count, createdAt: p.created_at, url: `/agora/${p.root_id || p.id}` }
+  }
   return {
+    deleted: false as const,
     id: p.id,
     parentId: p.parent_id,
     rootId: p.root_id,
