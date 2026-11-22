@@ -3,6 +3,15 @@ import { getUserState } from '@/lib/auth'
 import { getFeedThread } from '@/lib/data/feed'
 import { isFeedId } from '@/lib/feed-ids'
 import { PostThreadView } from '@/components/detail/post-thread-view'
+import { pageTitle } from '@/lib/page-title'
+import { getT } from '@/i18n/server'
+
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
+  const state = await getUserState()
+  if (state.type !== 'member') return pageTitle(null)
+  const thread = await getFeedThread((await params).id, state.member.id).catch(() => null)
+  return pageTitle(thread ? thread.root.title || thread.root.body : null, (await getT())('페이지를 찾을 수 없어요 · AI쓰발'))
+}
 
 export default async function PostThreadPage({
   params,

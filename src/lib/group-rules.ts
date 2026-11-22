@@ -14,7 +14,15 @@ export function slugify(name: string): string {
     .replace(/\s+/g, '-')
     .replace(/-+/g, '-')
     .slice(0, 40)
-  return GROUP_SLUG_RE.test(ascii) ? ascii : ''
+    .replace(/^-+|-+$/g, '')
+  if (GROUP_SLUG_RE.test(ascii)) return ascii
+  // names without latin letters (e.g. '실전 모임') still get a usable address to start from
+  const t = name.trim()
+  if (!t) return ''
+  let h = 0
+  for (const c of t) h = (h * 31 + c.codePointAt(0)!) >>> 0
+  const fallback = `group-${h.toString(36).slice(0, 6)}`
+  return GROUP_SLUG_RE.test(fallback) ? fallback : ''
 }
 
 export const ROLE_LABEL: Record<GroupRole, string> = { owner: M('소유자'), mod: M('매니저'), member: M('멤버') }

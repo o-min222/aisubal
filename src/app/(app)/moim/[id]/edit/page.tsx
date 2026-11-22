@@ -2,6 +2,12 @@ import { notFound, redirect } from 'next/navigation'
 import { getUserState } from '@/lib/auth'
 import { getMoim } from '@/lib/data/moim'
 import { MoimForm } from '@/components/moim/moim-form'
+import { getT } from '@/i18n/server'
+
+export async function generateMetadata() {
+  const t = await getT()
+  return { title: t('모임 수정 · AI쓰발') }
+}
 
 export default async function EditMoimPage({ params }: { params: Promise<{ id: string }> }) {
   const state = await getUserState()

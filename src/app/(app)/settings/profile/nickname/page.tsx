@@ -4,6 +4,12 @@ import { memberHasNicknameProfile } from '@/lib/profile'
 import { SubPageHeader } from '@/components/shell/sub-nav-layout'
 import { NicknameSettings } from '../../profile-settings'
 import { msg } from '@/i18n/translate'
+import { getT } from '@/i18n/server'
+
+export async function generateMetadata() {
+  const t = await getT()
+  return { title: t('부캐 프로필 · AI쓰발') }
+}
 
 export default async function NicknameSettingsPage({ searchParams }: { searchParams: Promise<{ preview?: string }> }) {
   const state = await getUserState()

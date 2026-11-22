@@ -5,6 +5,12 @@ import { SubPageHeader } from '@/components/shell/sub-nav-layout'
 import { InviteTree, type TreeNode } from './invite-tree'
 import { T } from '@/i18n/t'
 import { msg } from '@/i18n/translate'
+import { getT } from '@/i18n/server'
+
+export async function generateMetadata() {
+  const t = await getT()
+  return { title: t('관리 · 초대 · AI쓰발') }
+}
 
 export default async function AdminInvitesPage() {
   const state = await getUserState()

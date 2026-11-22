@@ -8,6 +8,11 @@ import { T } from '@/i18n/t'
 import { msg } from '@/i18n/translate'
 import { getT } from '@/i18n/server'
 
+export async function generateMetadata() {
+  const t = await getT()
+  return { title: t('관리 · 개요 · AI쓰발') }
+}
+
 export default async function AdminOverviewPage() {
   const st = await getT()
   const state = await getUserState()

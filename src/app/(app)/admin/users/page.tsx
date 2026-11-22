@@ -6,6 +6,11 @@ import { UsersAdmin } from './users-admin'
 import { msg } from '@/i18n/translate'
 import { getT } from '@/i18n/server'
 
+export async function generateMetadata() {
+  const t = await getT()
+  return { title: t('관리 · 멤버 · AI쓰발') }
+}
+
 export default async function AdminUsersPage() {
   const st = await getT()
   const state = await getUserState()

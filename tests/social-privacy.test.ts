@@ -135,6 +135,10 @@ describe('groups', () => {
     expect(canReadTimeline({ joinPolicy: 'approval', isHidden: false }, null)).toBe(false)
     expect(canReadTimeline({ joinPolicy: 'approval', isHidden: false }, 'active')).toBe(true)
     expect(slugify('AI Builders!')).toMatch(/^[a-z0-9-]+$/)
+    // Korean-only names get a starter address instead of an empty field (QA B-2)
+    expect(slugify('실전 모임')).toMatch(/^group-[a-z0-9]+$/)
+    expect(slugify('실전 모임')).toBe(slugify('실전 모임'))
+    expect(slugify('Claude Code 실전')).toBe('claude-code')
   })
 })
 

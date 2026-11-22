@@ -83,7 +83,7 @@ export function GroupForm({ edit }: { edit?: Group }) {
         </div>
       </div>
       <div>
-        <label htmlFor="g-slug" className="block text-[13px] font-semibold mb-1" style={{ color: 'var(--n-111)' }}><T s="주소 {v}" vars={{ v: edit && <span className="font-normal text-n-888"><T>(바꿀 수 없어요)</T></span> }} /></label>
+        <label htmlFor="g-slug" className="block text-[13px] font-semibold mb-1" style={{ color: 'var(--n-111)' }}><T>주소</T>{edit && <> <span className="font-normal text-n-888"><T>(바꿀 수 없어요)</T></span></>}</label>
         <div className="flex items-center gap-1 text-[14px] text-n-777">
           <span className="whitespace-nowrap">/groups/</span>
           <input

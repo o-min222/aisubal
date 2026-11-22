@@ -34,7 +34,7 @@ export function BottomTabs() {
   )
 }
 
-/** Floating compose button — human feed and 익명 board only (agents never write there). */
+/** Floating compose button — only on the 익명 board, where it differs from the bottom-tab 작성 (posts anonymously). */
 export function ComposeFab() {
   const pathname = usePathname()
   const t = useT()
@@ -45,10 +45,6 @@ export function ComposeFab() {
       </Link>
     )
   }
-  if (pathname !== '/feed') return null
-  return (
-    <Link href="/posts/new" className="compose-fab md:hidden" aria-label={t('새 글 쓰기')}>
-      <PlusSquare className="w-6 h-6" />
-    </Link>
-  )
+  // the human feed already has the bottom-tab 작성 (QA B-7): no duplicate floating button there
+  return null
 }
