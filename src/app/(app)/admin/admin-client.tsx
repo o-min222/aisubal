@@ -1,7 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { Shield, Users, FileText, Flag, ChevronRight, ChevronDown, User, Ban, Trash2 } from 'lucide-react'
+import Link from 'next/link'
+import { Shield, Users, FileText, Flag, ChevronRight, ChevronDown, User, Ban, Trash2, VenetianMask } from 'lucide-react'
 import type { Member } from '@/lib/supabase/types'
 import { RelativeTime } from '@/components/relative-time'
 import { toast } from 'sonner'
@@ -142,6 +143,10 @@ export function AdminClient({ member }: AdminClientProps) {
             </span>
           )}
         </button>
+        <Link href="/admin/anon" className="tab-filter">
+          <VenetianMask className="w-4 h-4" />
+          익명 관리
+        </Link>
       </div>
 
       {/* Tab Content */}

@@ -2,7 +2,7 @@
 
 import { useState, type ReactNode } from 'react'
 import Link from 'next/link'
-import { Bot, MessageCircle, Star, Wrench, ExternalLink, Share2 } from 'lucide-react'
+import { Bot, MessageCircle, Star, Wrench, ExternalLink, Share2, VenetianMask } from 'lucide-react'
 import { toast } from 'sonner'
 import { LinkCard } from '@/components/link-card'
 import { UserAvatar } from '@/components/user-avatar'
@@ -10,6 +10,14 @@ import { RelativeTime } from '@/components/relative-time'
 import { LikeButton } from './like-button'
 import { LikerList } from './liker-list'
 import type { TimelinePost } from './types'
+import { categoryLabel } from '@/lib/anon-rules'
+
+const ANON_COLORS = ['#6d5bd0', '#2f7d6d', '#c2581f', '#3466b8', '#a23d7a', '#5b6b2f', '#7a4b2b', '#1f7a94']
+function anonColor(seed: string) {
+  let h = 0
+  for (const ch of seed) h = (h * 31 + ch.charCodeAt(0)) | 0
+  return ANON_COLORS[Math.abs(h) % ANON_COLORS.length]
+}
 
 function hostOf(url: string) {
   try {
@@ -45,8 +53,17 @@ export function PostCard({
   const [likersOpen, setLikersOpen] = useState(false)
   const a = post.author
 
-  const avatar =
-    a.kind === 'agent' ? (
+  const anon = a.kind === 'anon'
+  const gone = Boolean(post.isDeleted || (anon && post.isHidden))
+  const avatar = anon ? (
+      <span
+        className="w-10 h-10 rounded-full text-white flex items-center justify-center flex-shrink-0"
+        style={{ background: gone ? '#c9c9c9' : anonColor(a.name) }}
+        aria-hidden="true"
+      >
+        <VenetianMask className="w-5 h-5" />
+      </span>
+    ) : a.kind === 'agent' ? (
       <span className="w-10 h-10 rounded-full bg-[#111] text-white flex items-center justify-center flex-shrink-0">
         <Bot className="w-5 h-5" />
       </span>
@@ -57,9 +74,15 @@ export function PostCard({
   const body = (
     <>
       {post.title && <h3 className="mt-1 text-[15px] font-semibold text-[#111] break-words">{post.title}</h3>}
-      <p className="mt-1 text-[15px] leading-relaxed text-[#111] whitespace-pre-wrap break-words">
-        {post.body}
-      </p>
+      {gone ? (
+        <p className="mt-1 text-[15px] text-[#999] italic">
+          {post.isDeleted ? '작성자가 삭제한 글이에요.' : '신고가 누적되어 숨겨진 글이에요.'}
+        </p>
+      ) : (
+        <p className="mt-1 text-[15px] leading-relaxed text-[#111] whitespace-pre-wrap break-words">
+          {post.body}
+        </p>
+      )}
     </>
   )
 
@@ -78,12 +101,17 @@ export function PostCard({
   }
 
   return (
-    <article className={`timeline-card ${isReply ? 'timeline-card-reply' : ''} ${post.isHidden ? 'opacity-60' : ''}`}>
+    <article className={`timeline-card ${isReply ? 'timeline-card-reply' : ''} ${post.isHidden && !anon ? 'opacity-60' : ''}`}>
       <div className="flex gap-3">
         {avatar}
         <div className="min-w-0 flex-1">
           <header className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-sm">
             <span className="font-semibold text-[#111]">{a.name}</span>
+            {anon && post.isOp && isReply && <span className="op-chip">글쓴이</span>}
+            {anon && post.isMine && <span className="text-xs text-[#888]">(나)</span>}
+            {anon && !isReply && categoryLabel(post.category) && (
+              <span className="cat-chip">{categoryLabel(post.category)}</span>
+            )}
             {a.kind === 'agent' && <span className="agent-chip">AI</span>}
             {post.isNickname && <span className="badge badge-agent">별명</span>}
             {a.subtitle && <span className="text-[#888] truncate max-w-[180px]">{a.subtitle}</span>}
@@ -91,7 +119,7 @@ export function PostCard({
             <span className="text-[#888]">
               <RelativeTime date={post.createdAt} />
             </span>
-            {post.isHidden && <span className="badge badge-note">숨김</span>}
+            {post.isHidden && !anon && <span className="badge badge-note">숨김</span>}
             {post.agentsAllowed && (
               <span className="agents-ok-chip" title="작성자가 에이전트의 답글·좋아요를 허용했어요">
                 <Bot className="w-3 h-3" />
@@ -179,7 +207,7 @@ export function PostCard({
               endpoint={likeEndpoint}
               initialLiked={post.likedByMe}
               initialCount={post.likeCount}
-              disabled={!canLike}
+              disabled={!canLike || gone}
               onShowLikers={() => setLikersOpen(true)}
             />
             {replyHref ? (
@@ -213,7 +241,7 @@ export function PostCard({
           </footer>
         </div>
       </div>
-      <LikerList endpoint={likersEndpoint} open={likersOpen} onOpenChange={setLikersOpen} />
+      <LikerList endpoint={likersEndpoint} open={likersOpen} onOpenChange={setLikersOpen} anonymous={anon} />
     </article>
   )
 }

@@ -6,17 +6,23 @@ import { AdaptiveSheet } from '@/components/adaptive-sheet'
 import { UserAvatar } from '@/components/user-avatar'
 import type { TimelineLiker } from './types'
 
-/** "좋아요한 사람" dialog. GET `endpoint` → { likers: TimelineLiker[] } */
+/**
+ * "좋아요한 사람" dialog. GET `endpoint` → { likers: TimelineLiker[] }.
+ * `anonymous` (익명 board): the endpoint returns only { anonymousCount } and no one is named.
+ */
 export function LikerList({
   endpoint,
   open,
   onOpenChange,
+  anonymous = false,
 }: {
   endpoint: string
   open: boolean
   onOpenChange: (open: boolean) => void
+  anonymous?: boolean
 }) {
   const [likers, setLikers] = useState<TimelineLiker[] | null>(null)
+  const [anonCount, setAnonCount] = useState<number | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
@@ -26,21 +32,24 @@ export function LikerList({
       .then(async (res) => {
         const data = await res.json().catch(() => ({}))
         if (!res.ok) throw new Error(data.error || '불러오지 못했어요')
-        if (!cancelled) setLikers(data.likers || [])
+        if (cancelled) return
+        if (anonymous) setAnonCount(typeof data.anonymousCount === 'number' ? data.anonymousCount : 0)
+        else setLikers(data.likers || [])
       })
       .catch((e) => !cancelled && setError(e instanceof Error ? e.message : '불러오지 못했어요'))
     return () => {
       cancelled = true
     }
-  }, [open, endpoint])
+  }, [open, endpoint, anonymous])
 
   return (
     <AdaptiveSheet
-      title="좋아요한 사람"
+      title={anonymous ? '좋아요' : '좋아요한 사람'}
       open={open}
       onOpenChange={(next) => {
         if (!next) {
           setLikers(null)
+          setAnonCount(null)
           setError(null)
         }
         onOpenChange(next)
@@ -48,7 +57,19 @@ export function LikerList({
     >
         <div className="max-h-[60vh] overflow-y-auto -mx-1">
           {error && <p className="text-sm text-red-600 px-1">{error}</p>}
-          {!error && likers === null && (
+          {anonymous && !error && (
+            <div className="px-1 py-3">
+              {anonCount === null ? (
+                <span className="skeleton h-4 w-40 rounded block" aria-busy="true" />
+              ) : (
+                <p className="text-[15px] text-[#111]">
+                  익명 <b className="tabular-nums">{anonCount}</b>명이 좋아했어요
+                </p>
+              )}
+              <p className="mt-2 text-xs text-[#888]">익명 게시판에서는 누가 좋아요를 눌렀는지 공개하지 않아요.</p>
+            </div>
+          )}
+          {!anonymous && !error && likers === null && (
             <ul aria-busy="true" aria-label="불러오는 중">
               {[0, 1, 2].map((i) => (
                 <li key={i} className="flex items-center gap-3 px-1 py-2">

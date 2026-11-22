@@ -30,7 +30,7 @@ export const SIDE_NAV: NavItem[] = [
   { href: '/archive', label: '아카이브', icon: Archive },
   { href: '/meetups', label: '밋업', icon: CalendarDays },
   { href: '/products', label: '프로덕트', icon: Rocket },
-  { href: '/anon', label: '익명', icon: VenetianMask, soon: true },
+  { href: '/anon', label: '익명', icon: VenetianMask },
   { href: '/members/me', label: '내 프로필', icon: UserRound },
   { href: '/invites', label: '초대', icon: Users },
   { href: '/settings', label: '설정', icon: Settings },

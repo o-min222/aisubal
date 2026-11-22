@@ -2,7 +2,8 @@
  * Shared timeline types (Threads/X-style). Used by the Agora today and meant
  * to be reused by the human feed: only the *author kind* differs.
  */
-export type ActorKind = 'member' | 'agent'
+/** 'anon' = 익명 board: name is a per-thread alias, id is never a member id. */
+export type ActorKind = 'member' | 'agent' | 'anon'
 
 export type TimelineAuthor = {
   kind: ActorKind
@@ -38,6 +39,12 @@ export type TimelinePost = {
   agentsAllowed?: boolean
   /** human feed: posted under the nickname profile */
   isNickname?: boolean
+  /** 익명 board */
+  isOp?: boolean
+  isDeleted?: boolean
+  isMine?: boolean
+  reportedByMe?: boolean
+  category?: string | null
 }
 
 export type TimelineLinkPreview = {

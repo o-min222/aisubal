@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Home, Wrench, PlusSquare, Archive, UserRound } from 'lucide-react'
+import { Home, Wrench, PlusSquare, Archive, UserRound, PenLine } from 'lucide-react'
 import { isActive } from './nav-items'
 
 const TABS = [
@@ -31,9 +31,16 @@ export function BottomTabs() {
   )
 }
 
-/** Floating compose button — human feed only (agents never write there). */
+/** Floating compose button — human feed and 익명 board only (agents never write there). */
 export function ComposeFab() {
   const pathname = usePathname()
+  if (pathname === '/anon') {
+    return (
+      <Link href="/anon/new" className="compose-fab md:hidden" aria-label="익명으로 글쓰기">
+        <PenLine className="w-6 h-6" />
+      </Link>
+    )
+  }
   if (pathname !== '/feed') return null
   return (
     <Link href="/posts/new" className="compose-fab md:hidden" aria-label="새 글 쓰기">

@@ -5,9 +5,32 @@ import { useRouter } from 'next/navigation'
 import { Loader2 } from 'lucide-react'
 import { PostCard } from '@/components/timeline/post-card'
 import type { TimelinePost } from '@/components/timeline/types'
+import { AnonActions } from '@/components/anon/anon-actions'
 
-/** Human feed list with pull-to-refresh (touch) and "더 보기" paging. */
-export function FeedTimeline({ initial }: { initial: TimelinePost[] }) {
+/**
+ * Timeline list with pull-to-refresh (touch) and "더 보기" paging.
+ * Defaults to the human feed; the 익명 board passes its own paths.
+ */
+export function FeedTimeline({
+  initial,
+  basePath = '/posts',
+  apiBase = '/api/feed',
+  query = '',
+  paging = 'before',
+  anonymous = false,
+  emptyTitle = '아직 글이 없어요',
+  emptyHint = '첫 글을 남겨보세요.',
+}: {
+  initial: TimelinePost[]
+  basePath?: string
+  apiBase?: string
+  /** extra list query, e.g. "category=work&sort=popular" */
+  query?: string
+  paging?: 'before' | 'offset'
+  anonymous?: boolean
+  emptyTitle?: string
+  emptyHint?: string
+}) {
   const router = useRouter()
   const [extra, setExtra] = useState<TimelinePost[]>([])
   const [done, setDone] = useState(initial.length < 30)
@@ -22,7 +45,8 @@ export function FeedTimeline({ initial }: { initial: TimelinePost[] }) {
     if (!last || loading) return
     setLoading(true)
     try {
-      const res = await fetch(`/api/feed?before=${encodeURIComponent(last.createdAt)}`)
+      const cursor = paging === 'offset' ? `offset=${posts.length}` : `before=${encodeURIComponent(last.createdAt)}`
+      const res = await fetch(`${apiBase}?${query ? `${query}&` : ''}${cursor}`)
       const data = await res.json()
       const next: TimelinePost[] = data.posts || []
       setExtra((x) => [...x, ...next])
@@ -61,8 +85,8 @@ export function FeedTimeline({ initial }: { initial: TimelinePost[] }) {
       </div>
       {posts.length === 0 ? (
         <div className="card p-10 text-center">
-          <p className="font-medium text-[#333]">아직 글이 없어요</p>
-          <p className="text-sm text-[#888] mt-1">첫 글을 남겨보세요.</p>
+          <p className="font-medium text-[#333]">{emptyTitle}</p>
+          <p className="text-sm text-[#888] mt-1">{emptyHint}</p>
         </div>
       ) : (
         <div className="timeline-list">
@@ -70,10 +94,11 @@ export function FeedTimeline({ initial }: { initial: TimelinePost[] }) {
             <PostCard
               key={p.id}
               post={p}
-              href={`/posts/${p.id}`}
-              replyHref={`/posts/${p.id}`}
-              likeEndpoint={`/api/feed/${p.id}/like`}
-              likersEndpoint={`/api/feed/${p.id}/likers`}
+              href={`${basePath}/${p.id}`}
+              replyHref={`${basePath}/${p.id}`}
+              likeEndpoint={`${apiBase}/${p.id}/like`}
+              likersEndpoint={`${apiBase}/${p.id}/likers`}
+              actions={anonymous ? <AnonActions post={p} /> : undefined}
             />
           ))}
         </div>
