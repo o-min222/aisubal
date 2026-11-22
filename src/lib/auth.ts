@@ -1,7 +1,7 @@
 import { cache } from 'react'
 import { createClient } from '@/lib/supabase/server'
 import type { Member, WaitlistEntry, UserState } from '@/lib/supabase/types'
-import { useMockData } from '@/lib/data/client'
+import { useMockData as isMock } from '@/lib/data/client'
 import { getNicknameUnlockFromConfig } from '@/lib/data/members'
 import { mockProfileOf } from '@/lib/data/profile'
 
@@ -36,7 +36,7 @@ const DEV_MEMBER: Member = {
 // Deduped per request: layouts/pages/components can all call this without
 // repeating the Supabase auth + member round trips.
 export const getUserState = cache(async function getUserState(): Promise<UserState> {
-  if (useMockData()) {
+  if (isMock()) {
     const saved = mockProfileOf(DEV_MEMBER.id)
     return {
       type: 'member',
@@ -62,12 +62,12 @@ export const getUserState = cache(async function getUserState(): Promise<UserSta
     const { data: fallback } = await supabase
       .from('members')
       .select(
-        'id, auth_id, display_name, handle, bio, avatar_url, show_real_name, public_real_name, profile_completed_at, nickname, nickname_bio, nickname_avatar_url, nickname_created_at, is_admin, is_banned, banned_at, invited_by_id, invite_code_used, signup_completed_at, created_at, updated_at'
+        'id, auth_id, display_name, handle, bio, avatar_url, show_real_name, public_real_name, profile_completed_at, is_admin, is_banned, banned_at, invited_by_id, invite_code_used, signup_completed_at, created_at, updated_at'
       )
       .eq('auth_id', user.id)
       .maybeSingle()
     member = fallback
-      ? ({ ...fallback, email: user.email || '' } as Member)
+      ? ({ ...fallback, email: user.email || '', nickname: null, nickname_bio: null, nickname_avatar_url: null, nickname_created_at: null } as Member)
       : null
   }
 
@@ -139,7 +139,7 @@ export async function requireAdmin(): Promise<Member> {
 }
 
 export function isDevMode(): boolean {
-  return useMockData()
+  return isMock()
 }
 
 /** Nickname unlock — reads site_config + active member count when not in mock mode. */

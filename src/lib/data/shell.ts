@@ -1,4 +1,5 @@
 import { cache } from 'react'
+import { ownPostsFilter } from './own-posts'
 import type { Member, ToolboxEntry } from '@/lib/supabase/types'
 import { pickInterestTags, rankToolsForMember, toolReason } from '@/lib/recommend-rules'
 import { coUsage } from '@/lib/tool-rules'
@@ -28,7 +29,7 @@ export const getProfileStats = cache(async (member: Member): Promise<ProfileStat
   const { data } = await supabase
     .from('posts')
     .select('like_count')
-    .eq('author_id', member.id)
+    .or(ownPostsFilter(member.id, member.nickname_id))
     .eq('author_kind', 'member')
     .is('parent_id', null)
     .limit(1000)
@@ -77,7 +78,7 @@ export const getRailData = cache(async (member: Member): Promise<RailData> => {
     if (likedIds.length) {
       const { data: authors } = await supabase
         .from('posts')
-        .select('author:members!posts_author_id_fkey(id, display_name, avatar_url)')
+        .select('author:members!posts_public_author_id_fkey(id, display_name, avatar_url)')
         .in('id', likedIds.slice(0, 100))
         .eq('posted_as', 'real')
         .eq('author_kind', 'member')
@@ -91,7 +92,7 @@ export const getRailData = cache(async (member: Member): Promise<RailData> => {
     if (people.length < 3) {
       const { data: recent } = await supabase
         .from('posts')
-        .select('author:members!posts_author_id_fkey(id, display_name, avatar_url)')
+        .select('author:members!posts_public_author_id_fkey(id, display_name, avatar_url)')
         .eq('posted_as', 'real')
         .eq('author_kind', 'member')
         .is('parent_id', null)

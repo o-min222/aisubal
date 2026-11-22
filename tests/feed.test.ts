@@ -36,7 +36,7 @@ const baseRow: FeedRow = {
   reply_count: 1,
   is_hidden: false,
   created_at: '2026-11-22T00:00:00Z',
-  author: { id: MEMBER, display_name: '콜린', avatar_url: null, nickname: 'ghost', nickname_avatar_url: null },
+  author: { id: MEMBER, display_name: '콜린', avatar_url: null },
 }
 
 describe('feed rules', () => {
@@ -68,8 +68,12 @@ describe('feed rules', () => {
   })
 
   it('nickname posts never expose the member id', () => {
-    const t = feedRowToTimeline({ ...baseRow, posted_as: 'nickname' }, new Set())
+    // 0052: 부캐 rows come without the member embed (public_author_id is null) — only the nickname profile
+    const NICK = '0b5e2a8c-7f43-4c1d-9e6a-2d8f1b3c4a59'
+    const t = feedRowToTimeline({ ...baseRow, posted_as: 'nickname', author: null, public_author_id: null, nick: { id: NICK, nickname: 'ghost', avatar_url: null } }, new Set(), MEMBER, NICK)
     expect(t.author.name).toBe('ghost')
+    expect(t.isMine).toBe(true)
+    expect(feedRowToTimeline({ ...baseRow, posted_as: 'nickname', author: null, nick: { id: NICK, nickname: 'ghost', avatar_url: null } }, new Set(), 'someone-else', null).isMine).toBe(false)
     expect(t.author.id).not.toContain(MEMBER)
     expect(JSON.stringify(t)).not.toContain(MEMBER)
     expect(t.isNickname).toBe(true)

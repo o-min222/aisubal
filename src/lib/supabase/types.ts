@@ -24,6 +24,8 @@ export type Member = {
   nickname_bio: string | null
   nickname_avatar_url: string | null
   nickname_created_at: string | null
+  /** 0052: the signed-in member's own nickname_profiles.id (only on their own row) */
+  nickname_id?: string | null
   is_admin: boolean
   is_banned: boolean
   banned_at: string | null

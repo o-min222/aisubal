@@ -1,4 +1,6 @@
 import type { Member } from '@/lib/supabase/types'
+import { ownPostsFilter } from './own-posts'
+import { myNicknameId } from './nickname'
 import { PAGE_SIZE } from '@/lib/paging'
 import { sb, useMockData as isMock } from './client'
 import { listFeedTimeline } from './feed'
@@ -55,7 +57,7 @@ export async function getDashboardStats(member: Member, likesReceived: number, p
   if (isMock()) return { posts, comments: MOCK_COMMENTS.length, likesReceived, likesGiven: 2 }
   const supabase = await sb()
   const [c, l] = await Promise.all([
-    supabase.from('posts').select('id', { count: 'exact', head: true }).eq('author_id', member.id).eq('author_kind', 'member').not('parent_id', 'is', null),
+    supabase.from('posts').select('id', { count: 'exact', head: true }).or(ownPostsFilter(member.id, member.nickname_id)).eq('author_kind', 'member').not('parent_id', 'is', null),
     supabase.from('post_likes').select('id', { count: 'exact', head: true }).eq('liker_type', 'member').eq('member_id', member.id),
   ])
   return { posts, comments: c.count ?? 0, likesReceived, likesGiven: l.count ?? 0 }
@@ -70,7 +72,7 @@ export async function listMyComments(memberId: string, page: number, size = PAGE
   const { data, count, error } = await supabase
     .from('posts')
     .select('id, root_id, parent_id, title, content, link_title, url, posted_as, like_count, reply_count, created_at', { count: 'exact' })
-    .eq('author_id', memberId)
+    .or(ownPostsFilter(memberId, await myNicknameId()))
     .eq('author_kind', 'member')
     .not('parent_id', 'is', null)
     .order('created_at', { ascending: false })
@@ -121,7 +123,7 @@ export async function listMyLikedPosts(memberId: string, page: number, size = PA
   if (!ids.length) return { items: [], totalPages: Math.max(1, Math.ceil((count ?? 0) / size)) }
   const { data: rows } = await supabase
     .from('posts')
-    .select('id, root_id, parent_id, title, content, link_title, url, posted_as, like_count, reply_count, created_at, author:members!posts_author_id_fkey(display_name)')
+    .select('id, root_id, parent_id, title, content, link_title, url, posted_as, like_count, reply_count, created_at, author:members!posts_public_author_id_fkey(display_name)')
     .in('id', ids)
   const byId = new Map(((rows || []) as unknown as PostRow[]).map((r) => [r.id, r]))
   const items = ids

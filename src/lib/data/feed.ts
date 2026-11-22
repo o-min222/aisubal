@@ -1,4 +1,6 @@
 import type { Authorship } from '@/lib/authorship'
+import { ownPostsFilter } from './own-posts'
+import { myNicknameId } from './nickname'
 import { withAgentCards, withAgentLikerCards } from './agent-profiles'
 import type { TimelineLiker, TimelinePost } from '@/components/timeline/types'
 import { feedRowToTimeline, type FeedRow } from '@/lib/feed-rules'
@@ -11,7 +13,7 @@ import { sb, useMockData as isMock } from './client'
 import { getRelations, socialAuthorIds } from './social'
 
 const FEED_SELECT =
-  'id, parent_id, root_id, reply_to_id, title, content, url, link_title, link_description, link_image, link_site_name, link_favicon, link_type, link_previews, posted_as, author_kind, agent_name, agent_model, agent_token_id, agent_interaction, authorship, like_count, reply_count, is_hidden, created_at, group_id, deleted_at, edited_at, author:members!posts_author_id_fkey(id, display_name, handle, avatar_url, nickname, nickname_avatar_url)'
+  'id, parent_id, root_id, reply_to_id, title, content, url, link_title, link_description, link_image, link_site_name, link_favicon, link_type, link_previews, posted_as, author_kind, agent_name, agent_model, agent_token_id, agent_interaction, authorship, like_count, reply_count, is_hidden, created_at, group_id, deleted_at, edited_at, public_author_id, author:members!posts_public_author_id_fkey(id, display_name, handle, avatar_url), nick:nickname_profiles!posts_nickname_id_fkey(id, nickname, avatar_url)'
 
 // ---------------------------------------------------------------- mock (DEV)
 type MockState = { posts: TimelinePost[]; likers: Map<string, TimelineLiker[]> }
@@ -275,17 +277,16 @@ async function queryFeed(viewerId: string, opts: FeedListOpts, withCount: boolea
   q = opts.groupId ? q.eq('group_id', opts.groupId) : q.is('group_id', null)
   if (opts.before) q = q.lt('created_at', opts.before)
   if (opts.q) q = q.or(`title.ilike.%${opts.q}%,content.ilike.%${opts.q}%`)
-  if (authorIds) q = q.in('author_id', authorIds.slice(0, 500)).eq('posted_as', 'real').eq('author_kind', 'member')
+  if (authorIds) q = q.in('public_author_id', authorIds.slice(0, 500)).eq('posted_as', 'real').eq('author_kind', 'member')
   if (opts.authorId) {
-    q = q.eq('author_id', opts.authorId)
-    // other people's profile pages must never reveal their nickname posts
-    if (!opts.includeNickname) q = q.eq('posted_as', 'real')
+    // other people's profile pages never include 부캐 posts; my own may (0052: by my nickname_id)
+    q = opts.includeNickname && opts.authorId === viewerId ? q.or(ownPostsFilter(viewerId, await myNicknameId())) : q.eq('public_author_id', opts.authorId).eq('posted_as', 'real')
   }
   const { data, error, count } = await q.range(offset, offset + limit - 1)
   if (error) throw error
   const rows = (data || []) as unknown as FeedRow[]
-  const liked = await likedSet(viewerId, rows.map((r) => r.id))
-  return { posts: await withFollowState(viewerId, rows.map((r) => feedRowToTimeline(r, liked, viewerId))), total: withCount ? (count ?? null) : null }
+  const [liked, nickId] = await Promise.all([likedSet(viewerId, rows.map((r) => r.id)), myNicknameId()])
+  return { posts: await withFollowState(viewerId, rows.map((r) => feedRowToTimeline(r, liked, viewerId, nickId))), total: withCount ? (count ?? null) : null }
 }
 
 async function listFeedTimeline__raw(viewerId: string, opts: FeedListOpts = {}): Promise<TimelinePost[]> {
@@ -319,20 +320,20 @@ async function getFeedThread__raw(
   const supabase = await sb()
   const { data: first, error } = await supabase
     .from('posts')
-    .select(`${FEED_SELECT}, author_id`)
+    .select(FEED_SELECT)
     .eq('id', id)
     .maybeSingle()
   if (error) throw error
   if (!first) return null
-  let root = first as unknown as FeedRow & { author_id: string }
+  let root = first as unknown as FeedRow
   if (root.root_id) {
     const { data: r } = await supabase
       .from('posts')
-      .select(`${FEED_SELECT}, author_id`)
+      .select(FEED_SELECT)
       .eq('id', root.root_id)
       .maybeSingle()
     if (!r) return null
-    root = r as unknown as FeedRow & { author_id: string }
+    root = r as unknown as FeedRow
   }
   const { data: rep } = await supabase
     .from('posts')
@@ -342,11 +343,12 @@ async function getFeedThread__raw(
     .order('created_at', { ascending: true })
     .limit(500)
   const replies = (rep || []) as unknown as FeedRow[]
-  const liked = await likedSet(viewerId, [root.id, ...replies.map((r) => r.id)])
+  const [liked, nickId] = await Promise.all([likedSet(viewerId, [root.id, ...replies.map((r) => r.id)]), myNicknameId()])
+  const rootPost = feedRowToTimeline(root, liked, viewerId, nickId)
   return {
-    root: feedRowToTimeline(root, liked, viewerId),
-    replies: replies.map((r) => feedRowToTimeline(r, liked, viewerId)),
-    isMine: root.author_id === viewerId,
+    root: rootPost,
+    replies: replies.map((r) => feedRowToTimeline(r, liked, viewerId, nickId)),
+    isMine: Boolean(rootPost.isMine),
   }
 }
 
@@ -428,7 +430,7 @@ export async function setFeedAuthorship(postId: string, memberId: string, value:
     .from('posts')
     .update({ authorship: value })
     .eq('id', postId)
-    .eq('author_id', memberId)
+    .or(ownPostsFilter(memberId, await myNicknameId()))
     .eq('author_kind', 'member')
     .is('deleted_at', null)
     .select('id')
@@ -452,7 +454,7 @@ export async function setFeedAgentInteraction(
     .from('posts')
     .update({ agent_interaction: value })
     .eq('id', postId)
-    .eq('author_id', member.id)
+    .or(ownPostsFilter(member.id, member.nickname_id))
     .is('parent_id', null)
     .select('id')
   if (error) throw error

@@ -2,7 +2,6 @@ import { parseAuthorship } from '@/lib/authorship'
 import { msg } from '@/i18n/translate'
 import type { TimelineLinkPreview, TimelinePost } from '@/components/timeline/types'
 import type { AgentInteraction, LinkPreview, LinkType, PostAs } from '@/lib/supabase/types'
-import { nicknameProfilePublicId } from '@/lib/profile'
 
 /** Human feed rules — shared by the API, the DB-backed data layer and tests. */
 /** Human posts: no product limit, just the server-side sanity cap (DB posts_content_len). */
@@ -107,17 +106,22 @@ export type FeedRow = {
     handle?: string | null
     bio?: string | null
     avatar_url: string | null
-    nickname: string | null
-    nickname_avatar_url: string | null
   } | null
+  /** 0052: real-name / agent rows only (null on 부캐 rows) */
+  public_author_id?: string | null
+  /** 0052: the 부캐 profile on nickname rows — never linked to a member */
+  nick?: { id: string; nickname: string; avatar_url: string | null } | null
 }
 
 /**
  * DB row → shared TimelinePost. Nickname posts never expose the member id;
  * agent replies are labelled AI and show the owning member.
  */
-/** viewerId: marks the viewer's own rows (⋯ menu). Agent rows carry their token owner as author. */
-export function feedRowToTimeline(r: FeedRow, liked: Set<string>, viewerId?: string): TimelinePost {
+/**
+ * viewerId: marks the viewer's own rows (⋯ menu); myNicknameId marks my own 부캐 rows.
+ * Agent rows carry their token owner as author.
+ */
+export function feedRowToTimeline(r: FeedRow, liked: Set<string>, viewerId?: string, myNicknameId?: string | null): TimelinePost {
   const a = r.author
   let author: TimelinePost['author']
   if (r.author_kind === 'agent') {
@@ -129,12 +133,12 @@ export function feedRowToTimeline(r: FeedRow, liked: Set<string>, viewerId?: str
       ownerName: a?.display_name ?? null,
       ownerId: a?.id ?? null,
     }
-  } else if (r.posted_as === 'nickname' && a?.nickname) {
+  } else if (r.posted_as === 'nickname') {
     author = {
       kind: 'member',
-      id: nicknameProfilePublicId(a.id),
-      name: a.nickname,
-      avatarUrl: a.nickname_avatar_url,
+      id: r.nick ? `nick_${r.nick.id}` : `nick_${r.id}`,
+      name: r.nick?.nickname || '별명',
+      avatarUrl: r.nick?.avatar_url ?? null,
     }
   } else {
     author = {
@@ -176,12 +180,16 @@ export function feedRowToTimeline(r: FeedRow, liked: Set<string>, viewerId?: str
     createdAt: r.created_at,
     isHidden: r.is_hidden,
     agentsAllowed: !r.parent_id && r.agent_interaction === 'agents_allowed',
-    isNickname: r.author_kind === 'member' && r.posted_as === 'nickname' && Boolean(a?.nickname),
+    isNickname: r.author_kind === 'member' && r.posted_as === 'nickname',
     authorship: r.author_kind === 'member' ? parseAuthorship(r.authorship) : undefined,
     groupId: r.group_id ?? null,
     isDeleted: Boolean(r.deleted_at),
     isEdited: Boolean(r.edited_at) && !r.deleted_at,
-    isMine: viewerId ? a?.id === viewerId : undefined,
+    isMine: viewerId
+      ? r.author_kind === 'member' && r.posted_as === 'nickname'
+        ? Boolean(myNicknameId && r.nick?.id === myNicknameId)
+        : a?.id === viewerId
+      : undefined,
   }
 }
 

@@ -9,13 +9,13 @@ import { aggregateMentionsFromPosts } from '@/lib/data/toolbox'
 import { archiveSaveCounts } from '@/lib/data/archive'
 import type { AgentInteraction, Asset, LinkPreview, Member, Post, PostAs } from '@/lib/supabase/types'
 import { mockAppendFeedPost, mockFeedGroupOf } from './feed'
-import { sb, useMockData } from './client'
+import { sb, useMockData as isMock } from './client'
 import { MEMBER_EMBED, MEMBER_PUBLIC_COLUMNS } from './member-columns'
 import type { PostWithDetails } from './types'
 
-/** posts columns readable by members (0036): no nickname_profile_id / agent_token_name. */
+/** posts columns readable by members (0036/0052): author_id is the PUBLIC author (null on 부캐 rows); no agent_token_name. */
 export const POST_COLUMNS =
-  'id, title, content, url, link_title, link_description, link_image, link_site_name, link_favicon, link_type, link_previews, author_id, posted_as, is_hidden, is_agent_posted, created_at, updated_at, parent_id, root_id, reply_to_id, thread_depth, like_count, reply_count, agent_interaction, author_kind, agent_token_id, agent_name, agent_model, group_id, source_note'
+  'id, title, content, url, link_title, link_description, link_image, link_site_name, link_favicon, link_type, link_previews, author_id:public_author_id, posted_as, is_hidden, is_agent_posted, created_at, updated_at, parent_id, root_id, reply_to_id, thread_depth, like_count, reply_count, agent_interaction, author_kind, agent_token_id, agent_name, agent_model, group_id, source_note'
 
 export type { PostWithDetails } from './types'
 
@@ -48,6 +48,19 @@ async function archiveCountForPost(postId: string): Promise<number> {
   return (await archiveSaveCounts('post', [postId]).catch(() => ({} as Record<string, number>)))[postId] ?? 0
 }
 
+const NICK_EMBED = 'id, nickname, bio, avatar_url, created_at'
+type NickRow = { id: string; nickname: string; bio: string | null; avatar_url: string | null; created_at: string }
+
+/** Real-name rows embed the member; 부캐 rows (0052) only their nickname profile — never the member. */
+function authorOf(author: Member | null, nick: NickRow | null): Member | null {
+  if (author) return author
+  if (!nick) return null
+  return {
+    id: nick.id, auth_id: '', email: '', display_name: nick.nickname, handle: null, bio: null, avatar_url: null,
+    nickname: nick.nickname, nickname_bio: nick.bio, nickname_avatar_url: nick.avatar_url, nickname_created_at: nick.created_at,
+  } as unknown as Member
+}
+
 async function hydratePost(
   post: Post,
   author: Member,
@@ -63,12 +76,12 @@ async function hydratePost(
 }
 
 export async function listPosts(): Promise<PostWithDetails[]> {
-  if (useMockData()) return [...MOCK_POSTS]
+  if (isMock()) return [...MOCK_POSTS]
 
   const supabase = await sb()
   const { data: rows, error } = await supabase
     .from('posts')
-    .select(`${POST_COLUMNS}, assets(*), author:members!posts_author_id_fkey(${MEMBER_EMBED})`)
+    .select(`${POST_COLUMNS}, assets(*), author:members!posts_public_author_id_fkey(${MEMBER_EMBED}), nick:nickname_profiles!posts_nickname_id_fkey(${NICK_EMBED})`)
     .eq('is_hidden', false)
     .is('parent_id', null)
     .order('created_at', { ascending: false })
@@ -76,39 +89,42 @@ export async function listPosts(): Promise<PostWithDetails[]> {
 
   if (error) throw error
 
-  const typed = (rows || []) as unknown as Array<Post & { assets: Asset[]; author: Member }>
-  return Promise.all(
-    typed
-      .filter((row) => row.author)
-      .map(({ assets, author, ...post }) => hydratePost(post as Post, author, assets || []))
-  )
+  const typed = (rows || []) as unknown as Array<Post & { assets: Asset[]; author: Member | null; nick: NickRow | null }>
+  const out: Array<Promise<PostWithDetails>> = []
+  for (const { assets, author, nick, ...post } of typed) {
+    const a = authorOf(author, nick)
+    if (a) out.push(hydratePost(post as Post, a, assets || []))
+  }
+  return Promise.all(out)
 }
 
 export async function getPost(id: string): Promise<PostWithDetails | null> {
-  if (useMockData()) {
+  if (isMock()) {
     return MOCK_POSTS.find((p) => p.id === id) ?? null
   }
 
   const supabase = await sb()
   const { data: row, error } = await supabase
     .from('posts')
-    .select(`${POST_COLUMNS}, assets(*), author:members!posts_author_id_fkey(${MEMBER_EMBED})`)
+    .select(`${POST_COLUMNS}, assets(*), author:members!posts_public_author_id_fkey(${MEMBER_EMBED}), nick:nickname_profiles!posts_nickname_id_fkey(${NICK_EMBED})`)
     .eq('id', id)
     .maybeSingle()
 
   if (error) throw error
   if (!row) return null
 
-  const { assets, author, ...post } = row as unknown as Post & {
+  const { assets, author, nick, ...post } = row as unknown as Post & {
     assets: Asset[]
-    author: Member
+    author: Member | null
+    nick: NickRow | null
   }
-  if (!author) return null
-  return hydratePost(post, author, assets || [])
+  const a = authorOf(author, nick)
+  if (!a) return null
+  return hydratePost(post, a, assets || [])
 }
 
 export async function listTrendingPosts(limit = 5): Promise<PostWithDetails[]> {
-  if (useMockData()) return MOCK_TRENDING.slice(0, limit)
+  if (isMock()) return MOCK_TRENDING.slice(0, limit)
 
   const posts = await listPosts()
   return posts
@@ -121,7 +137,7 @@ export async function getPostAsset(
   postId: string,
   assetId: string
 ): Promise<Asset | null> {
-  if (useMockData()) {
+  if (isMock()) {
     const post = MOCK_POSTS.find((p) => p.id === postId)
     return post?.assets.find((a) => a.id === assetId) ?? null
   }
@@ -143,7 +159,7 @@ export async function createPost(
 ): Promise<{ post: ReturnType<typeof toPublicPost>; details: PostWithDetails }> {
   const lp = input.linkPreview
 
-  if (useMockData()) {
+  if (isMock()) {
     const post: Post = {
       id: `post-${Date.now()}`,
       title: input.title || '',
@@ -235,8 +251,6 @@ export async function createPost(
       link_previews: input.linkPreviews?.length ? input.linkPreviews.slice(0, 4) : null,
       author_id: member.id,
       posted_as: input.postedAs,
-      nickname_profile_id:
-        input.postedAs === 'nickname' ? nicknameProfilePublicId(member.id) : null,
     })
     .select(POST_COLUMNS)
     .single()
@@ -274,7 +288,7 @@ export async function createPost(
 }
 
 export async function deletePost(id: string, memberId: string): Promise<boolean> {
-  if (useMockData()) {
+  if (isMock()) {
     const idx = MOCK_POSTS.findIndex((p) => p.id === id)
     if (idx < 0) return false
     if (MOCK_POSTS[idx].author_id !== memberId) return false
@@ -291,8 +305,9 @@ export async function deletePost(id: string, memberId: string): Promise<boolean>
 }
 
 /** Resolve author Member for a post (mock or supabase). */
-export async function getPostAuthorMember(authorId: string): Promise<Member | null> {
-  if (useMockData()) {
+export async function getPostAuthorMember(authorId: string | null): Promise<Member | null> {
+  if (!authorId) return null // 0052: 부캐 rows carry no public author
+  if (isMock()) {
     return MOCK_MEMBERS.find((m) => m.id === authorId) ?? null
   }
   const supabase = await sb()
