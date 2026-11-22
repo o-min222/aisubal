@@ -23,6 +23,8 @@ import { LINK_KINDS, LINK_VISIBILITY } from '@/lib/profile-rules'
 import { LinkIcon } from '@/components/profile/link-icon'
 import { AgentsSection } from '@/components/profile/agents-section'
 import { listProfileAgents } from '@/lib/data/tokens'
+import { getProfileStack } from '@/lib/data/profile-stack'
+import { AgentList, StackChips } from '@/components/profile/member-card'
 
 export const metadata = { title: '프로필 · AI쓰발' }
 
@@ -41,13 +43,15 @@ export default async function MemberProfilePage({ params, searchParams }: { para
   if (!member || !member.signup_completed_at) notFound()
 
   // Other members' pages only list real-name posts: nickname posts stay unlinkable.
-  const [{ posts, totalPages }, stats, tools, social, agents] = await Promise.all([
+  const [{ posts, totalPages }, stats, tools, social, agents, stack] = await Promise.all([
     listFeedPage(viewer.id, { authorId: member.id, includeNickname: isMe, page }),
     isMe ? getProfileStats(viewer) : Promise.resolve(null),
     listMemberTools(member.id).catch(() => []),
     getSocialSummary(viewer.id, member.id).catch(() => null),
     listProfileAgents(viewer.id, member.id).catch(() => []),
+    getProfileStack(viewer.id, member.id).catch(() => null),
   ])
+  const stackShown = stack && ((['ai', 'subs', 'skills'] as const).some((g) => (stack[g]?.items.length ?? 0) > 0) || stack.agents.length > 0)
   // SNS links: filtered server-side by each link's visibility (전체 회원 / 친구만 / 비공개).
   const links = await getProfileLinks(viewer.id, member.id, social?.relation.friend === 'friends').catch(() => [])
   const socialHref = (tab: string) => `/members/${isMe ? 'me' : member.id}/social?tab=${tab}`
@@ -135,6 +139,33 @@ export default async function MemberProfilePage({ params, searchParams }: { para
           )}
         </div>
       </section>
+
+      {(stackShown || isMe) && (
+        <section id="stack" className="card p-4 scroll-mt-20" aria-labelledby="stack-title">
+          <div className="flex items-center justify-between gap-2 mb-3">
+            <h2 id="stack-title" className="text-sm font-semibold text-[#111]">
+              {isMe ? '내 AI 스택' : `${member.display_name}님의 AI 스택`}
+            </h2>
+            {isMe && (
+              <Link href="/settings/profile#stack" className="text-xs text-[#0066cc] inline-flex items-center min-h-[32px]">
+                편집 <ChevronRight className="w-3.5 h-3.5" />
+              </Link>
+            )}
+          </div>
+          {stackShown && stack ? (
+            <div className="flex flex-col gap-3">
+              <StackChips group="ai" data={stack.ai} max={40} />
+              <StackChips group="subs" data={stack.subs} max={40} />
+              <StackChips group="skills" data={stack.skills} max={40} />
+              <AgentList agents={stack.agents} isMe={isMe} max={40} title={isMe ? '내 에이전트' : '에이전트'} />
+            </div>
+          ) : (
+            <p className="text-sm text-[#888]">
+              쓰는 AI, 구독 중인 서비스, 에이전트를 <Link href="/settings/profile#stack" className="text-[#0066cc]">프로필 편집</Link>에서 추가해 보세요.
+            </p>
+          )}
+        </section>
+      )}
 
       <section className="card p-4" aria-labelledby="my-tools">
         <div className="flex items-center justify-between gap-2 mb-3">

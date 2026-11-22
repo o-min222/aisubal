@@ -1,7 +1,8 @@
 import { Suspense } from 'react'
 import { redirect } from 'next/navigation'
 import { getUserState } from '@/lib/auth'
-import { getProfileStats, getRailData } from '@/lib/data/shell'
+import { getRailData } from '@/lib/data/shell'
+import { getMemberCard } from '@/lib/data/member-card'
 import type { Member } from '@/lib/supabase/types'
 import { TopBar } from '@/components/shell/top-bar'
 import { SideNav } from '@/components/shell/side-nav'
@@ -13,8 +14,8 @@ import { BottomTabs, ComposeFab } from '@/components/shell/bottom-tabs'
 import type { ShellMember } from '@/components/shell/nav-items'
 
 async function ProfileCardLoader({ member, me }: { member: Member; me: ShellMember }) {
-  const stats = await getProfileStats(member).catch(() => null)
-  return <ProfileCard me={me} stats={stats} />
+  const card = await getMemberCard(member, member.id).catch(() => null)
+  return <ProfileCard me={me} card={card} />
 }
 
 async function MyGroupsLoader({ memberId }: { memberId: string }) {
@@ -54,7 +55,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       <div className="app-grid">
         <aside className="app-left">
           <div className="app-sticky">
-            <Suspense fallback={<ProfileCard me={me} stats={null} />}>
+            <Suspense fallback={<ProfileCard me={me} card={null} />}>
               <ProfileCardLoader member={member} me={me} />
             </Suspense>
             <SideNav isAdmin={me.isAdmin} />

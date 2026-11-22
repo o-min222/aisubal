@@ -18,6 +18,7 @@ import { AgentAttribution } from './agent-attribution'
 import { MentionText } from './mention-text'
 import { ReportButton } from './report-button'
 import { RelationBadge } from '@/components/social/relation-badge'
+import { MemberPeek } from '@/components/profile/member-peek'
 
 const ANON_COLORS = ['#6d5bd0', '#2f7d6d', '#c2581f', '#3466b8', '#a23d7a', '#5b6b2f', '#7a4b2b', '#1f7a94']
 function anonColor(seed: string) {
@@ -81,6 +82,10 @@ export function PostCard({
       <span className="w-10 h-10 rounded-full bg-[#111] text-white flex items-center justify-center flex-shrink-0">
         <Bot className="w-5 h-5" />
       </span>
+    ) : a.kind === 'member' && !post.isNickname ? (
+      <MemberPeek memberId={a.id} label={a.name}>
+        <UserAvatar id={a.id} name={a.name} avatarUrl={a.avatarUrl} />
+      </MemberPeek>
     ) : (
       <UserAvatar id={a.id} name={a.name} avatarUrl={a.avatarUrl} />
     )
@@ -121,9 +126,9 @@ export function PostCard({
         <div className="min-w-0 flex-1">
           <header className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-sm">
             {a.kind === 'member' && !post.isNickname && !anon ? (
-              <Link href={`/members/${a.id}`} className="font-semibold text-[#111] hover:underline">
-                {a.name}
-              </Link>
+              <MemberPeek memberId={a.id} label={a.name}>
+                <span className="peek-name font-semibold text-[#111]">{a.name}</span>
+              </MemberPeek>
             ) : (
               <span className="font-semibold text-[#111]">{a.name}</span>
             )}

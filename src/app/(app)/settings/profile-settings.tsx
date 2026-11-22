@@ -9,6 +9,9 @@ import { validateNickname } from '@/lib/profile'
 import { UserAvatar } from '@/components/user-avatar'
 import { ProfileForm, type ProfileFormMember } from '@/components/profile/profile-form'
 import { LinksEditor } from '@/components/profile/links-editor'
+import { StackEditor, type StackEditorInitial } from '@/components/profile/stack-editor'
+import { AgentsEditor } from '@/components/profile/agents-editor'
+import type { MemberAgentInput } from '@/lib/profile-stack'
 
 type Nick = { id: string; nickname: string | null; nicknameBio: string | null; nicknameAvatarUrl: string | null; hasNick: boolean }
 
@@ -19,9 +22,12 @@ interface ProfileSettingsProps {
   nicknameUnlocked: boolean
   activeMemberCount: number
   unlockThreshold: number
+  stack: StackEditorInitial
+  agents: MemberAgentInput[]
+  connectedAgentNames: string[]
 }
 
-export function ProfileSettings({ me, nick, links, nicknameUnlocked, activeMemberCount, unlockThreshold }: ProfileSettingsProps) {
+export function ProfileSettings({ me, nick, links, nicknameUnlocked, activeMemberCount, unlockThreshold, stack, agents, connectedAgentNames }: ProfileSettingsProps) {
   const router = useRouter()
   const [nickname, setNickname] = useState(nick.nickname || '')
   const [nicknameBio, setNicknameBio] = useState(nick.nicknameBio || '')
@@ -48,6 +54,8 @@ export function ProfileSettings({ me, nick, links, nicknameUnlocked, activeMembe
     <div className="space-y-6">
       <ProfileForm me={me} mode="settings" />
       <LinksEditor initial={links} />
+      <StackEditor initial={stack} />
+      <AgentsEditor initial={agents} connectedNames={connectedAgentNames} />
 
       <section className="card">
         <div className="p-4 border-b border-[#e5e5e5]">
