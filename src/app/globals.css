@@ -4,6 +4,7 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
+  /* Pretendard Variable is self-hosted (src/app/fonts/pretendard.css, public/fonts/pretendard, OFL) */
   --font-sans: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
   
   /* Disquiet-inspired palette */
@@ -49,6 +50,8 @@ body {
   color: var(--text-primary);
   font-size: 15px;
   line-height: 1.6;
+  font-feature-settings: "ss06";
+  text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -89,10 +92,13 @@ a:hover {
 /* Typography */
 h1, h2, h3, h4, h5, h6 {
   font-weight: 700;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.015em;
   color: var(--text-primary);
   line-height: 1.3;
 }
+/* Hangul sets wide in Pretendard: headings read tighter with a touch more negative tracking */
+:lang(ko) :is(h1, h2, h3) { letter-spacing: -0.025em; }
+:lang(ko) :is(h1, h2, h3, h4) { word-break: keep-all; overflow-wrap: break-word; }
 
 h1 { font-size: 28px; }
 h2 { font-size: 22px; }
@@ -1252,45 +1258,45 @@ body { -webkit-tap-highlight-color: transparent; }
 .stack-pick-menu button { display: flex; align-items: center; gap: 8px; width: 100%; min-height: 40px; padding: 6px 10px; border-radius: 8px; font-size: 14px; color: #222; text-align: left; }
 .stack-pick-menu button:hover { background: #f5f5f5; }
 
-/* Slogan (logged-out first screens) */
-.slogan-en { font-family: ui-serif, Georgia, 'Times New Roman', serif; font-style: italic; font-size: 19px; letter-spacing: .01em; line-height: 1.35; }
-.slogan-ko { margin-top: 8px; font-size: 13.5px; line-height: 1.6; word-break: keep-all; }
+/* Slogan (logged-out first screens) — same serif voice as the pledge title */
+.slogan-en { font-family: var(--font-serif-title), 'Noto Serif KR', Georgia, serif; font-weight: 600; font-size: 20px; letter-spacing: -0.01em; line-height: 1.4; text-wrap: balance; }
+.slogan-ko { margin-top: 10px; font-size: 14px; line-height: 1.6; letter-spacing: -0.005em; word-break: keep-all; text-wrap: pretty; }
 
-/* 선언 및 입단 서약 */
-.pledge-page { background: radial-gradient(1200px 500px at 50% -10%, #fff8e8 0%, #f4f2ee 55%, #efece6 100%); }
-.pledge-doc { position: relative; background: #fffdf8; border: 1px solid #e8dfcc; border-radius: 18px; padding: 28px 22px 24px; box-shadow: 0 1px 0 #fff inset, 0 18px 50px rgba(80, 60, 20, .08); font-family: ui-serif, 'Noto Serif KR', 'Nanum Myeongjo', 'AppleMyungjo', Georgia, serif; color: #2a2620; word-break: keep-all; }
-.pledge-doc::before { content: ''; position: absolute; inset: 7px; border: 1px solid #efe6d2; border-radius: 13px; pointer-events: none; }
-.pledge-title { text-align: center; font-size: 19px; font-weight: 700; letter-spacing: -.01em; }
-.pledge-rule { width: 56px; height: 2px; background: #b8913f; margin: 14px auto 18px; border-radius: 2px; }
-.pledge-p { font-size: 15px; line-height: 1.85; margin: 0 0 14px; }
-.pledge-vows { margin: 4px 0 16px; padding: 14px 14px; background: #faf5ea; border-radius: 12px; display: flex; flex-direction: column; gap: 10px; }
-.pledge-vows li { font-size: 15px; line-height: 1.8; padding-left: 14px; position: relative; }
-.pledge-vows li::before { content: ''; position: absolute; left: 0; top: .78em; width: 5px; height: 5px; border-radius: 99px; background: #b8913f; }
-.pledge-dateline { text-align: center; font-style: italic; color: #6b5f4b; font-size: 14px; margin: 20px 0 16px; }
-.pledge-sign-row { display: flex; align-items: flex-end; gap: 10px; flex-wrap: wrap; border-top: 1px dashed #e2d6bd; padding-top: 16px; }
-.pledge-sign-cell { display: flex; align-items: baseline; gap: 8px; flex: 1 1 200px; min-width: 0; }
-.pledge-sign-label { font-size: 13px; color: #6b5f4b; flex-shrink: 0; }
-.pledge-sign-value { flex: 1; min-width: 0; font-size: 16px; }
-.pledge-sign-sep { color: #c9b98f; padding-bottom: 6px; }
-.pledge-inviter { font-weight: 600; border-bottom: 1px solid #e2d6bd; padding-bottom: 4px; display: inline-block; }
-.pledge-signature { width: 100%; background: transparent; border: 0; border-bottom: 1.5px solid #b8913f; font-family: inherit; font-style: italic; font-size: 20px; padding: 2px 2px 4px; color: #1d1a15; outline: none; min-height: 40px; }
-.pledge-signature::placeholder { color: #cdbf9f; }
+/* 선언 및 입단 서약 — a plain, quiet document: one reading column, clear hierarchy, thin rules */
+.pledge-page { background: #fff; }
+html:has(.pledge-page), body:has(.pledge-page) { background: #fff; }
+.pledge-doc { position: relative; color: #1a1a1a; word-break: keep-all; overflow-wrap: break-word; }
+.pledge-kicker { font-size: 12.5px; font-weight: 600; letter-spacing: .04em; color: #8a8a8a; margin: 0 0 12px; }
+.pledge-title { font-family: var(--font-serif-title), 'Noto Serif KR', Georgia, serif; font-weight: 600; font-size: 25px; line-height: 1.4; letter-spacing: -0.02em; color: #111; margin: 0 0 28px; text-wrap: balance; }
+.pledge-doc:lang(en) .pledge-title { letter-spacing: -0.01em; }
+.pledge-p { font-size: 16px; line-height: 1.8; color: #333; margin: 0 0 16px; text-wrap: pretty; }
+.pledge-vows { list-style: none; margin: 32px 0; padding: 0; border-top: 1px solid #ebebeb; }
+.pledge-vows li { display: grid; grid-template-columns: 56px minmax(0, 1fr); gap: 0 12px; padding: 18px 0; border-bottom: 1px solid #ebebeb; }
+.pledge-vow-no { font-size: 13px; font-weight: 600; color: #9a9a9a; line-height: 1.75; padding-top: 1px; }
+.pledge-vow-body { font-size: 16px; line-height: 1.75; color: #1a1a1a; margin: 0; text-wrap: pretty; }
+.pledge-closing { font-size: 16px; line-height: 1.8; font-weight: 600; color: #111; margin: 0 0 6px; text-wrap: pretty; }
+.pledge-dateline { font-size: 14px; color: #8a8a8a; margin: 0 0 44px; }
+.pledge-sign { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px; border-top: 1px solid #1a1a1a; padding-top: 14px; }
+.pledge-sign-label { display: block; font-size: 12px; font-weight: 500; letter-spacing: .03em; color: #8a8a8a; margin-bottom: 6px; }
+.pledge-sign-value { display: block; min-width: 0; font-size: 17px; font-weight: 600; color: #111; line-height: 1.5; }
+.pledge-inviter { overflow-wrap: anywhere; }
+.pledge-signature { width: 100%; background: transparent; border: 0; border-bottom: 1px solid #cfcfcf; border-radius: 0; font: inherit; font-size: 17px; font-weight: 600; padding: 2px 0 6px; color: #111; outline: none; min-height: 40px; transition: border-color .15s; }
+.pledge-signature::placeholder { color: #c4c4c4; font-weight: 500; }
 .pledge-signature:focus { border-bottom-color: #111; }
 .pledge-signature.is-ok { border-bottom-color: #0a7a3d; }
-.pledge-signed-name { font-style: italic; font-size: 20px; border-bottom: 1.5px solid #b8913f; padding-bottom: 2px; display: inline-block; }
-.pledge-cta { display: flex; width: 100%; align-items: center; justify-content: center; min-height: 52px; border-radius: 999px; background: #111; color: #fff; font-weight: 700; font-size: 16px; letter-spacing: .01em; transition: transform .15s, opacity .15s; }
-.pledge-cta:disabled { opacity: .35; cursor: not-allowed; }
-.pledge-cta:not(:disabled):active { transform: scale(.98); }
-.pledge-seal { position: absolute; right: 18px; bottom: 58px; width: 74px; height: 74px; border-radius: 999px; border: 2.5px solid #c0392b; color: #c0392b; display: flex; flex-direction: column; align-items: center; justify-content: center; transform: rotate(-12deg); font-weight: 800; font-size: 13px; line-height: 1.1; background: rgba(255, 253, 248, .6); opacity: .88; font-family: system-ui, sans-serif; pointer-events: none; }
-.pledge-seal small { font-size: 11px; font-weight: 700; letter-spacing: .2em; }
-.pledge-seal-in { animation: pledge-stamp .55s cubic-bezier(.2, 1.4, .4, 1) both; }
-@keyframes pledge-stamp { 0% { transform: rotate(-30deg) scale(2.2); opacity: 0; } 100% { transform: rotate(-12deg) scale(1); opacity: .88; } }
+.pledge-signed-name { font-weight: 600; }
+.pledge-seal-row { display: flex; justify-content: flex-end; margin-top: 16px; min-height: 0; }
+.pledge-seal { display: inline-flex; align-items: center; gap: 6px; padding: 5px 11px; border-radius: 999px; border: 1px solid #b9dcc8; background: #f3faf6; color: #0a7a3d; font-size: 12.5px; font-weight: 600; }
+.pledge-seal-in { animation: pledge-seal-in .35s ease-out both; }
+@keyframes pledge-seal-in { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
 @media (prefers-reduced-motion: reduce) { .pledge-seal-in { animation: none; } }
-@media (min-width: 640px) { .pledge-doc { padding: 40px 44px 32px; } .pledge-title { font-size: 21px; } .pledge-p, .pledge-vows li { font-size: 15.5px; } }
-.pledge-chip { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 5px; min-height: 30px; padding: 3px 11px; border-radius: 999px; background: #faf5ea; border: 1px solid #ecdfc3; color: #6b5f4b; font-size: 12px; }
-.pledge-chip:hover { background: #f5ecd8; text-decoration: none; }
-@media (max-width: 639px) { .pledge-sign-sep { display: none; } }
-html:has(.pledge-page), body:has(.pledge-page) { background: #efece6; }
+.pledge-cta { display: flex; width: 100%; align-items: center; justify-content: center; gap: 6px; min-height: 50px; border-radius: 12px; background: #111; color: #fff; font-weight: 600; font-size: 15.5px; letter-spacing: -0.005em; transition: transform .15s, opacity .15s; }
+.pledge-cta:disabled { opacity: .3; cursor: not-allowed; }
+.pledge-cta:not(:disabled):active { transform: scale(.99); }
+.pledge-chip { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 5px; min-height: 30px; padding: 3px 11px; border-radius: 999px; background: #f5f5f5; border: 1px solid #e8e8e8; color: #555; font-size: 12px; }
+.pledge-chip:hover { background: #efefef; text-decoration: none; }
+@media (min-width: 640px) { .pledge-title { font-size: 30px; margin-bottom: 32px; } .pledge-vows li { grid-template-columns: 72px minmax(0, 1fr); gap: 0 16px; } .pledge-p, .pledge-vow-body, .pledge-closing { font-size: 16.5px; } }
+@media (max-width: 380px) { .pledge-sign { grid-template-columns: 1fr; gap: 18px; } }
 /* ---------- reading pane + compact rows (no infinite scroll) ---------- */
 .reading-layout { display: block; }
 .reading-list { min-width: 0; display: flex; flex-direction: column; gap: 10px; }
@@ -1373,14 +1379,19 @@ html:has(.reading-pane.is-open) body { overflow: hidden; }
 .moim-date-tile b { font-size: 18px; font-weight: 800; color: #3b2a8a; }
 .moim-date-tile small { font-size: 10.5px; font-weight: 600; }
 .sub-pinned { border-color: #c9bdf5; box-shadow: 0 0 0 3px #f1edff; }
-.agent-pledge-head { text-align: center; padding: 14px 12px; border-radius: 14px; background: #fffdf8; border: 1px solid #e8dfcc; }
+.agent-pledge-head { padding: 4px 0 14px; border-bottom: 1px solid #ebebeb; }
 .agent-values { display: grid; gap: 6px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 210px), 1fr)); }
-.agent-values li { display: flex; flex-direction: column; gap: 2px; padding: 9px 11px; border-radius: 12px; background: #faf5ea; font-size: 12.5px; color: #5e5443; word-break: keep-all; }
-.agent-values b { font-size: 13.5px; color: #2a2620; }
-.agent-safety { display: flex; gap: 8px; font-size: 12.5px; line-height: 1.6; color: #1f4d3a; background: #eef8f2; border: 1px solid #d3ecdd; border-radius: 12px; padding: 10px 12px; word-break: keep-all; }
-.agent-pledge .pledge-doc { padding: 22px 18px 20px; }
-.agent-pledge .pledge-p, .agent-pledge .pledge-vows li { font-size: 14px; }
-.agent-pledge-sign { background: #fffdf8; border: 1px solid #e8dfcc; border-radius: 14px; padding: 14px; }
+.agent-values li { display: flex; flex-direction: column; gap: 2px; padding: 10px 12px; border-radius: 10px; background: #f7f7f7; font-size: 12.5px; line-height: 1.55; color: #666; word-break: keep-all; }
+.agent-values b { font-size: 13.5px; font-weight: 600; color: #111; letter-spacing: -0.01em; }
+.agent-safety { display: flex; gap: 8px; font-size: 12.5px; line-height: 1.6; color: #1f4d3a; background: #f3faf6; border: 1px solid #d9eee2; border-radius: 10px; padding: 10px 12px; word-break: keep-all; }
+.agent-pledge .pledge-doc { padding: 20px 0 4px; }
+.agent-pledge .pledge-title { font-size: 21px; margin-bottom: 20px; }
+.agent-pledge .pledge-vows { margin: 22px 0; }
+.agent-pledge .pledge-dateline { margin-bottom: 28px; }
+.agent-pledge .pledge-p, .agent-pledge .pledge-vow-body, .agent-pledge .pledge-closing { font-size: 14.5px; line-height: 1.75; }
+.agent-pledge .pledge-vows li { grid-template-columns: 48px minmax(0, 1fr); padding: 14px 0; }
+.agent-pledge .pledge-sign-value { font-size: 15px; }
+.agent-pledge-sign { border-top: 1px solid #ebebeb; padding-top: 14px; }
 .pledged-mark { display: inline-flex; align-items: center; gap: 2px; font-size: 10.5px; font-weight: 600; color: #8a6d3b; background: #faf5ea; border: 1px solid #ecdfc3; border-radius: 999px; padding: 0 6px; line-height: 17px; flex-shrink: 0; }
 .agent-unsigned { font-size: 12.5px; color: #8a4b00; background: #fff6e8; border: 1px solid #f5dfb8; border-radius: 10px; padding: 8px 10px; }
 
@@ -1398,6 +1409,6 @@ html:has(.reading-pane.is-open) body { overflow: hidden; }
 .locale-on-dark .locale-seg button { color: rgba(255,255,255,.7); }
 .locale-on-dark .locale-seg button.on { background: #fff; color: #111; }
 .pledge-original { max-width: 600px; margin: 0 auto; font-size: 13px; color: #666; }
-.pledge-original summary { cursor: pointer; text-align: center; color: #8a6d3b; font-weight: 500; padding: 6px 0; min-height: 36px; }
-.pledge-original div { margin-top: 8px; padding: 14px 16px; background: #fffdf8; border: 1px solid #eadfc8; border-radius: 12px; line-height: 1.75; }
+.pledge-original summary { cursor: pointer; text-align: center; color: #666; font-weight: 500; padding: 6px 0; min-height: 36px; }
+.pledge-original div { margin-top: 8px; padding: 16px 0 0; border-top: 1px solid #ebebeb; line-height: 1.8; word-break: keep-all; }
 .pledge-original p + p { margin-top: 8px; }

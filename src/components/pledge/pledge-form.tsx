@@ -8,7 +8,7 @@ import { useLocale, useT, tn } from '@/i18n/client'
 import { PledgeDocument, PledgeSeal } from './pledge-document'
 
 /** Type your own nickname as the signature, then '서약하고 입단하기'. */
-export function PledgeForm({ signer, inviter, next }: { signer: string; inviter: string | null; next: string }) {
+export function PledgeForm({ signer, inviter, next, kicker, intro }: { signer: string; inviter: string | null; next: string; kicker?: string; intro?: string }) {
   const router = useRouter()
   const [typed, setTyped] = useState('')
   const [busy, setBusy] = useState(false)
@@ -43,10 +43,11 @@ export function PledgeForm({ signer, inviter, next }: { signer: string; inviter:
         e.preventDefault()
         sign()
       }}
-      className="space-y-4"
+      className="space-y-5"
     >
       <PledgeDocument
         t={doc}
+        kicker={kicker ? <>{kicker}{intro ? <span className="block mt-1 font-normal tracking-normal text-[13.5px] text-[#666]">{intro}</span> : null}</> : undefined}
         inviter={inviter}
         foundingLabel={t('창립 멤버')}
         seal={sealed ? <PledgeSeal animate label={t('입단')} /> : null}
@@ -66,7 +67,7 @@ export function PledgeForm({ signer, inviter, next }: { signer: string; inviter:
           />
         }
       />
-      <p id="pledge-sign-hint" className="text-center text-[12.5px]" style={{ color: ok ? '#0a7a3d' : '#888' }}>
+      <p id="pledge-sign-hint" className="text-[13px] leading-relaxed" style={{ color: ok ? '#0a7a3d' : '#8a8a8a', wordBreak: 'keep-all' }}>
         {ok ? t('서명이 확인됐어요.') : t('서약자 칸에 내 닉네임 ‘{name}’을 그대로 적으면 서명돼요. 실명은 쓰지 않아요.', { name: signer })}
       </p>
       <button type="submit" disabled={!ok || busy} className="pledge-cta">

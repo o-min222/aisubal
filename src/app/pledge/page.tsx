@@ -33,28 +33,22 @@ export default async function PledgePage({ searchParams }: { searchParams: Promi
   const doc = pledgeTextFor(locale)
 
   return (
-    <main className="pledge-page min-h-dvh px-4 py-8 sm:py-12">
-      <div className="mx-auto w-full max-w-[600px] space-y-5">
+    <main className="pledge-page min-h-dvh px-5 pt-10 pb-16 sm:pt-20 sm:pb-24">
+      <div className="mx-auto w-full max-w-[600px] space-y-6">
         {status.signedAt ? (
           <>
             <PledgeDocument t={doc} inviter={status.inviter} foundingLabel={t('창립 멤버')} signature={<span className="pledge-signed-name">{status.signer}</span>} seal={<PledgeSeal label={t('입단')} />} />
             {locale !== 'ko' && <PledgeOriginal />}
-            <p className="text-center text-[13px] text-[#777]">{t('{date}에 서약했어요.', { date: fmt(status.signedAt, LOCALE_META[locale].intl) })}</p>
-            <div className="flex justify-center">
-              <Link href="/me" className="btn btn-secondary rounded-full min-h-[44px] px-5">
+            <p className="text-[13px] text-[#8a8a8a]">{t('{date}에 서약했어요.', { date: fmt(status.signedAt, LOCALE_META[locale].intl) })}</p>
+            <div>
+              <Link href="/me" className="btn btn-secondary rounded-xl min-h-[44px] px-5">
                 {t('내 대시보드로')}
               </Link>
             </div>
           </>
         ) : (
           <>
-            <header className="text-center space-y-1">
-              <p className="text-[12.5px] font-semibold tracking-wide" style={{ color: '#8a6d3b' }}>
-                {t('마지막 단계 · 입단 서약')}
-              </p>
-              <p className="text-[13.5px] text-[#666]">{t('아래 선언을 읽고 서명하면 가입이 끝나요.')}</p>
-            </header>
-            <PledgeForm signer={status.signer} inviter={status.inviter} next={next} />
+            <PledgeForm signer={status.signer} inviter={status.inviter} next={next} kicker={t('마지막 단계 · 입단 서약')} intro={t('아래 선언을 읽고 서명하면 가입이 끝나요.')} />
           </>
         )}
       </div>

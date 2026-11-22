@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
-import { JetBrains_Mono } from "next/font/google";
+import { JetBrains_Mono, Noto_Serif_KR } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
+import "./fonts/pretendard.css";
 import "./globals.css";
 import { SLOGAN } from "@/lib/pledge";
 import { Suspense } from "react";
@@ -14,6 +15,16 @@ const mono = JetBrains_Mono({
   variable: "--font-mono",
   subsets: ["latin"],
   display: "swap",
+});
+
+/** Pledge title only. Korean glyphs come in unicode-range slices, so a page
+ * downloads just the few slices its title needs (no preload). */
+const serifTitle = Noto_Serif_KR({
+  variable: "--font-serif-title",
+  weight: ["600"],
+  subsets: ["latin"],
+  display: "swap",
+  preload: false,
 });
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -50,15 +61,7 @@ export const viewport: Viewport = {
 export default async function RootLayout({ children }: LayoutProps<"/">) {
   const locale = await getLocale();
   return (
-    <html lang={LOCALE_META[locale].htmlLang} className={mono.variable}>
-      <head>
-        <link
-          rel="stylesheet"
-          as="style"
-          crossOrigin="anonymous"
-          href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css"
-        />
-      </head>
+    <html lang={LOCALE_META[locale].htmlLang} className={`${mono.variable} ${serifTitle.variable}`}>
       <body className="min-h-screen antialiased">
         <I18nProvider locale={locale} dict={DICTS[locale]}>
         {children}

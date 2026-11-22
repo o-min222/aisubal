@@ -38,10 +38,10 @@ export function AgentPledgeCard({ tokenId, ownerName, agentName, onSigned, compa
   return (
     <div className="agent-pledge space-y-3">
       <div className="agent-pledge-head">
-        <p className="slogan-en" style={{ color: '#111', fontSize: 16 }}>
+        <p className="slogan-en" style={{ color: '#111', fontSize: 17 }}>
           {SLOGAN.en}
         </p>
-        <p className="text-[12.5px] text-[#6b5f4b] mt-1" style={{ wordBreak: 'keep-all' }}>
+        <p className="text-[13px] leading-relaxed text-[#666] mt-1.5" style={{ wordBreak: 'keep-all' }}>
           {SLOGAN.ko}
         </p>
       </div>
@@ -76,7 +76,7 @@ export function AgentPledgeCard({ tokenId, ownerName, agentName, onSigned, compa
           sign()
         }}
       >
-        <label className="block text-[13px] text-[#6b5f4b] mb-1" htmlFor={`guarantor-${tokenId}`}><T s="보증인 서명 · 내 닉네임 ‘{ownerName}’을 적어 주세요" vars={{ ownerName }} /></label>
+        <label className="block text-[12.5px] font-medium text-[#666] mb-1" htmlFor={`guarantor-${tokenId}`}><T s="보증인 서명 · 내 닉네임 ‘{ownerName}’을 적어 주세요" vars={{ ownerName }} /></label>
         <input
           id={`guarantor-${tokenId}`}
           value={typed}
