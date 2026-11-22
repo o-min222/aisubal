@@ -6,6 +6,7 @@ import { MessageCircleQuestion, UserRound, Users } from 'lucide-react'
 import { AdaptiveSheet } from '@/components/adaptive-sheet'
 import { Composer, type ComposerIdentity } from '@/components/feed/composer'
 import { UserAvatar } from '@/components/user-avatar'
+import { ServiceChip } from '@/components/service-chip'
 import { RelationBadge } from '@/components/social/relation-badge'
 import { FollowButton } from '@/components/social/follow-button'
 import { askPrompt } from '@/lib/ask-rules'
@@ -24,11 +25,14 @@ const COLLAPSED = 6
 export function ToolUsersCard({
   entryId,
   usage,
+  stacks = {},
   tool,
   me,
 }: {
   entryId: string
   usage: ToolUsers
+  /** member id → their 활용하는 AI (compact chips) */
+  stacks?: Record<string, Array<{ label: string; iconUrl: string | null }>>
   tool: { name: string; url: string }
   me: ComposerIdentity
 }) {
@@ -59,11 +63,19 @@ export function ToolUsersCard({
             <li key={u.id} className="tool-person flex items-center gap-3 px-4 py-2.5">
               <Link href={`/members/${u.id}`} className="flex items-center gap-3 min-w-0 flex-1">
                 <UserAvatar id={u.id} name={u.name} avatarUrl={u.avatarUrl} size="sm" />
-                <span className="flex items-center gap-1.5 min-w-0">
-                  <span className="font-medium text-[14.5px] truncate" style={{ color: '#111' }}>
-                    {u.name}
+                <span className="min-w-0 flex-1">
+                  <span className="flex items-center gap-1.5 min-w-0">
+                    <span className="font-medium text-[14.5px] truncate" style={{ color: '#111' }}>
+                      {u.name}
+                    </span>
+                    {u.relation.isMe ? <span className="text-xs text-[#888]"><T>(나)</T></span> : <RelationBadge relation={u.relation} />}
                   </span>
-                  {u.relation.isMe ? <span className="text-xs text-[#888]"><T>(나)</T></span> : <RelationBadge relation={u.relation} />}
+                  {(stacks[u.id]?.length ?? 0) > 0 && (
+                    <span className="svc-chips mt-1" aria-label={tx('활용하는 AI')}>
+                      {stacks[u.id].slice(0, 3).map((c) => <ServiceChip key={c.label} label={c.label} iconUrl={c.iconUrl} />)}
+                      {stacks[u.id].length > 3 && <span className="svc-chip mc-more">+{stacks[u.id].length - 3}</span>}
+                    </span>
+                  )}
                 </span>
               </Link>
               {!u.relation.isMe && (

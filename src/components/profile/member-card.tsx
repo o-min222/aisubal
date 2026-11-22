@@ -5,30 +5,15 @@ import Link from 'next/link'
 import { useState } from 'react'
 import { ExternalLink, Lock, Users } from 'lucide-react'
 import { UserAvatar } from '@/components/user-avatar'
+import { ServiceChip } from '@/components/service-chip'
 import { RelativeTime } from '@/components/relative-time'
 import { FollowButton } from '@/components/social/follow-button'
 import { FriendButton } from '@/components/social/friend-button'
 import type { MemberCardData } from '@/lib/data/member-card'
 import { LINK_VISIBILITY, type LinkVisibility } from '@/lib/profile-rules'
-import { STACK_GROUP_LABEL, chipOverflow, platformOf, type MemberAgent, type StackGroup, type StackGroupData, type StackItem } from '@/lib/profile-stack'
+import { STACK_GROUP_LABEL, chipOverflow, platformOf, type MemberAgent, type StackGroup, type StackGroupData } from '@/lib/profile-stack'
 import { T } from '@/i18n/t'
 import { tx } from '@/i18n/client'
-
-const HUES = ['#d97757', '#10a37f', '#4f7cff', '#111111', '#8b5cf6', '#e5484d', '#0f766e', '#c2410c']
-const hue = (s: string) => HUES[[...s].reduce((a, c) => (a * 31 + c.charCodeAt(0)) >>> 0, 7) % HUES.length]
-
-function ChipIcon({ item }: { item: StackItem }) {
-  const url = item.entry?.iconUrl
-  if (url) {
-    // eslint-disable-next-line @next/next/no-img-element
-    return <img src={url} alt="" className="mc-chip-icon" style={{ objectFit: 'cover' }} />
-  }
-  return (
-    <span className="mc-chip-icon" style={{ background: hue(item.label) }} aria-hidden>
-      {item.label.charAt(0).toUpperCase()}
-    </span>
-  )
-}
 
 function VisNote({ vis }: { vis: LinkVisibility | null }) {
   if (!vis || vis === 'members') return null
@@ -54,17 +39,12 @@ export function StackChips({ group, data, max = 6 }: { group: StackGroup; data: 
       <ul className="mc-chips" aria-label={tx(STACK_GROUP_LABEL[group])}>
         {shown.map((it, i) => (
           <li key={`${it.label}-${i}`}>
-            {it.entry ? (
-              <Link href={`/tools/${it.entry.slug}`} className="mc-chip mc-chip-link" title={tx('{name} — 툴 보기', { name: it.label })}>
-                <ChipIcon item={it} />
-                <span className="truncate"><T>{it.label}</T></span>
-              </Link>
-            ) : (
-              <span className="mc-chip" title={it.label}>
-                <ChipIcon item={it} />
-                <span className="truncate"><T>{it.label}</T></span>
-              </span>
-            )}
+            <ServiceChip
+              label={it.label}
+              iconUrl={it.entry?.iconUrl}
+              href={it.entry ? `/tools/${it.entry.slug}` : undefined}
+              title={it.entry ? tx('{name} — 툴 보기', { name: it.label }) : it.label}
+            />
           </li>
         ))}
         {more > 0 && (
@@ -147,7 +127,7 @@ export function AgentList({ agents, isMe, max = 3, title = tx('내 에이전트'
 export function MemberCard({ data, variant = 'side' }: { data: MemberCardData; variant?: 'side' | 'peek' }) {
   const profileHref = data.isMe ? '/me' : `/members/${data.id}`
   const s = data.stack
-  const chipMax = variant === 'side' ? 4 : 6
+  const chipMax = 6
   return (
     <section className={`profile-card member-card member-card-${variant}`} aria-label={tx('{displayName} 프로필 카드', { displayName: data.displayName })}>
       <div className="profile-card-cover" aria-hidden />

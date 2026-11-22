@@ -7,6 +7,7 @@ import { getPost } from '@/lib/data/posts'
 import { getToolboxAiRating } from '@/lib/data/agora'
 import { getProductDetails } from '@/lib/data/products'
 import { getMockLaunchEntry, getToolUsers } from '@/lib/data/tools'
+import { getProfileStack } from '@/lib/data/profile-stack'
 import { getToolProvenance } from '@/lib/data/tool-submissions'
 import type { ToolboxEntryDetails } from '@/lib/data/types'
 import type { Member } from '@/lib/supabase/types'
@@ -42,6 +43,15 @@ export async function ToolDetailView({ entry, member, variant = 'page' }: { entr
     getNicknameUnlockState(),
     getToolProvenance(entry.id).catch(() => null),
   ])
+  // each person's AI stack as compact chips (visibility enforced by profile_stack)
+  const stacks = Object.fromEntries(
+    await Promise.all(
+      usage.users.slice(0, 12).map(async (u) => {
+        const st = await getProfileStack(u.id, member.id).catch(() => null)
+        return [u.id, (st?.ai?.items ?? []).map((i) => ({ label: i.label, iconUrl: i.entry?.iconUrl ?? null }))] as const
+      }),
+    ),
+  )
   const toolUrl = `https://aisubal.vercel.app${toolHref(entry)}`
   const mentionPosts = mentionPostsRaw.filter((x): x is NonNullable<typeof x> => Boolean(x))
   return (
@@ -69,6 +79,7 @@ export async function ToolDetailView({ entry, member, variant = 'page' }: { entr
         <ToolUsersCard
           entryId={entry.id}
           usage={usage}
+          stacks={stacks}
           tool={{ name: entry.name, url: toolUrl }}
           me={{ ...composerIdentity(member, unlock.unlocked), nicknameAvailable: false }}
         />

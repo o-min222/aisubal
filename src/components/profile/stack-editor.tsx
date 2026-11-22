@@ -7,6 +7,7 @@ import { toast } from 'sonner'
 import { LINK_VISIBILITY, type LinkVisibility } from '@/lib/profile-rules'
 import { AI_SUGGESTIONS, STACK_GROUP_LABEL, STACK_LIMIT, SUB_SUGGESTIONS, SKILL_TYPES, type StackGroup } from '@/lib/profile-stack'
 import { T } from '@/i18n/t'
+import { ServiceIcon } from '@/components/service-chip'
 import { tx, tn } from '@/i18n/client'
 
 export type Item = { label: string; entryId: string | null; iconUrl?: string | null; slug?: string; visibility?: LinkVisibility | null }
@@ -73,7 +74,7 @@ export function Picker({ onPick, suggestions, skillsOnly, placeholder, disabled 
           {shownHits.map((h) => (
             <li key={h.id}>
               <button type="button" onClick={() => pick({ label: h.name, entryId: h.id, iconUrl: h.icon_url, slug: h.slug })}>
-                <span className="mc-chip-icon" style={{ background: '#111' }}>{h.name.charAt(0).toUpperCase()}</span>
+                <ServiceIcon label={h.name} iconUrl={h.icon_url} />
                 <span className="truncate">{h.name}</span>
                 <span className="ml-auto text-[11px] text-[#999]"><T>툴</T></span>
               </button>

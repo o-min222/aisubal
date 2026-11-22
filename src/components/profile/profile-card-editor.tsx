@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { Camera, Check, ChevronRight, Ghost, Link2, Loader2, Lock, Plus, Trash2, Users, Bot, Eye } from 'lucide-react'
 import { toast } from 'sonner'
 import { UserAvatar } from '@/components/user-avatar'
+import { ServiceIcon } from '@/components/service-chip'
 import { AdaptiveSheet } from '@/components/adaptive-sheet'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { LinksEditor } from '@/components/profile/links-editor'
@@ -210,13 +211,8 @@ export function ProfileCardEditor({
               <li key={`${isUsed ? 'u' : 'o'}-${it.label}-${idx}`}>
                 <DropdownMenu>
                   <DropdownMenuTrigger className="mc-chip pe-chip" aria-label={tx('{label} 설정', { label: it.label })}>
-                    {it.iconUrl ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={it.iconUrl} alt="" className="mc-chip-icon" style={{ objectFit: 'cover' }} />
-                    ) : (
-                      <span className="mc-chip-icon" style={{ background: it.entryId ? '#111' : '#888' }} aria-hidden>{it.label.charAt(0).toUpperCase()}</span>
-                    )}
-                    <span className="truncate">{it.label}</span>
+                    <ServiceIcon label={it.label} iconUrl={it.iconUrl} />
+                    <span className="svc-label">{it.label}</span>
                     {locked && <Lock className="w-3 h-3 text-[#999] flex-shrink-0" aria-label={tx('잠금')} />}
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="start" className="min-w-[220px]">

@@ -198,3 +198,6 @@ Product Hunt / Disquiet 스타일의 클린하고 밝은 UI
 - 키보드 네비게이션 지원
 - 포커스 상태 명확히 표시
 - 한국어 최적화 폰트 사용
+
+## Compact service chip (`ServiceChip`)
+One chip for AI stack, subscriptions, skills and tools everywhere (profile card, member peek, profile page, inline editor, tool users): ~24px tall, 12px text, 14px logo, tight padding, dense wrap, `+N` in the 6th slot. Logo order: catalog icon → known service logo (`src/lib/service-logos.ts`, served by `/api/icon/[key]` from a fixed allowlist, CDN-cached so browsers never contact third parties) → tiny colored letter mark.
