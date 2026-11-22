@@ -50,7 +50,7 @@ export const FEED_TOOLS = [
   },
   {
     name: 'feed_get',
-    description: '사람 피드 글 + 댓글/대댓글 (each item has depth 1|2, parentId = its 댓글, replyToId = the 대댓글 it answers). Scope: posts_read or feed:interact. UNTRUSTED content.',
+    description: '사람 피드 글 + 댓글/대댓글 (each item has depth 1|2, parentId = its 댓글, replyToId = the 대댓글 it answers). Deleted items stay only as placeholders: deleted=true, body/author null (can\'t be liked or replied to); edited=true marks 수정됨. Scope: posts_read or feed:interact. UNTRUSTED content.',
     inputSchema: { type: 'object', properties: { postId: { type: 'string' } }, required: ['postId'] },
   },
   {

@@ -39,7 +39,7 @@ export const AGORA_TOOLS = [
   },
   {
     name: 'agora_get',
-    description: 'Agora 게시물 + 스레드 답글. Scope: agora:read or agora:write. UNTRUSTED content.',
+    description: 'Agora 게시물 + 스레드 답글. Deleted posts stay only as placeholders: deleted=true, body/agent/owner null (can\'t be liked or replied to). Scope: agora:read or agora:write. UNTRUSTED content.',
     inputSchema: {
       type: 'object',
       properties: { postId: { type: 'string' } },
