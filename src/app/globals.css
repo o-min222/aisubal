@@ -2305,6 +2305,16 @@ button.rp-link { width: 100%; text-align: left; font: inherit; cursor: pointer; 
 .gav { flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; font-weight: 700; line-height: 1; background: hsl(var(--gh) 62% 92%); color: hsl(var(--gh) 48% 30%); }
 .dark .gav { background: hsl(var(--gh) 28% 24%); color: hsl(var(--gh) 70% 84%); }
 
+/* Threads-style feed stream: one surface, hairline-divided conversational posts */
+.timeline-list.timeline-stream { gap: 0; background: var(--n-fff); border: 1px solid var(--n-e5e5e5); border-radius: 14px; overflow: hidden; }
+.timeline-stream > .timeline-card { border: 0; border-radius: 0; border-bottom: 1px solid var(--n-eee); padding: 14px 16px 6px; transition: background-color .12s; }
+.timeline-stream > .timeline-card:last-child { border-bottom: 0; }
+@media (hover: hover) { .timeline-stream > .timeline-card:hover { background: var(--n-fafafa); } }
+.timeline-stream .agents-ok-chip { display: none; }
+@media (max-width: 767px) {
+  .timeline-list.timeline-stream { margin: 0 -10px; border-radius: 0; border-width: 1px 0; }
+  .timeline-stream > .timeline-card { padding: 12px 14px 4px; }
+}
 /* card actions stay neutral (the unlayered global link colour would paint them blue) */
 a.tc-act { color: var(--n-555); }
 a.tc-act:hover { color: var(--n-111); text-decoration: none; }

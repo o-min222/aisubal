@@ -17,6 +17,7 @@ export function FeedTimeline({
   anonymous = false,
   emptyTitle = tx('아직 글이 없어요'),
   emptyHint = tx('첫 글을 남겨보세요.'),
+  stream = false,
 }: {
   initial: TimelinePost[]
   basePath?: string
@@ -24,6 +25,8 @@ export function FeedTimeline({
   anonymous?: boolean
   emptyTitle?: string
   emptyHint?: string
+  /** Threads-style: one surface, posts divided by hairlines instead of separate boxes */
+  stream?: boolean
 }) {
   if (initial.length === 0)
     return (
@@ -33,7 +36,7 @@ export function FeedTimeline({
       </div>
     )
   return (
-    <div className="timeline-list">
+    <div className={`timeline-list${stream ? ' timeline-stream' : ''}`}>
       {initial.map((p) => (
         <PostCard
           key={p.id}
