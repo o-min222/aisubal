@@ -1,8 +1,5 @@
 import type {
   Asset,
-  Meetup,
-  MeetupAnnouncement,
-  MeetupRsvp,
   Post,
   Product,
   ProductComment,
@@ -19,14 +16,6 @@ export type PostWithDetails = Post & {
   author: PublicAuthor
   assets: Asset[]
   archive_count: number
-}
-
-export type MeetupWithDetails = Meetup & {
-  host: PublicAuthor
-  rsvps: MeetupRsvp[]
-  announcements: MeetupAnnouncement[]
-  confirmed_count: number
-  waitlisted_count: number
 }
 
 export type ProductWithDetails = Product & {

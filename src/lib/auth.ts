@@ -3,12 +3,19 @@ import { createClient } from '@/lib/supabase/server'
 import type { Member, WaitlistEntry, UserState } from '@/lib/supabase/types'
 import { useMockData } from '@/lib/data/client'
 import { getNicknameUnlockFromConfig } from '@/lib/data/members'
+import { mockProfileOf } from '@/lib/data/profile'
 
 const DEV_MEMBER: Member = {
   id: 'dev-user-id',
   auth_id: 'dev-auth-id',
   email: 'dev@aisubal.local',
   display_name: '개발자',
+  handle: 'dev',
+  show_real_name: false,
+  public_real_name: null,
+  profile_completed_at: '2026-10-01T00:00:00Z',
+  private_real_name: '김구글',
+  private_google_avatar_url: null,
   bio: '로컬 리뷰용 시드 멤버',
   avatar_url: null,
   nickname: 'nightowl',
@@ -30,7 +37,13 @@ const DEV_MEMBER: Member = {
 // repeating the Supabase auth + member round trips.
 export const getUserState = cache(async function getUserState(): Promise<UserState> {
   if (useMockData()) {
-    return { type: 'member', member: DEV_MEMBER }
+    const saved = mockProfileOf(DEV_MEMBER.id)
+    return {
+      type: 'member',
+      member: saved
+        ? { ...DEV_MEMBER, handle: saved.handle, display_name: saved.displayName, bio: saved.bio, avatar_url: saved.avatarUrl, show_real_name: saved.showRealName, public_real_name: saved.showRealName ? DEV_MEMBER.private_real_name : null }
+        : DEV_MEMBER,
+    }
   }
 
   const supabase = await createClient()
@@ -49,7 +62,7 @@ export const getUserState = cache(async function getUserState(): Promise<UserSta
     const { data: fallback } = await supabase
       .from('members')
       .select(
-        'id, auth_id, display_name, bio, avatar_url, nickname, nickname_bio, nickname_avatar_url, nickname_created_at, is_admin, is_banned, banned_at, banned_reason, invited_by_id, invite_code_used, signup_completed_at, created_at, updated_at'
+        'id, auth_id, display_name, handle, bio, avatar_url, show_real_name, public_real_name, profile_completed_at, nickname, nickname_bio, nickname_avatar_url, nickname_created_at, is_admin, is_banned, banned_at, banned_reason, invited_by_id, invite_code_used, signup_completed_at, created_at, updated_at'
       )
       .eq('auth_id', user.id)
       .maybeSingle()

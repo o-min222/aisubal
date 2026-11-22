@@ -3,7 +3,7 @@ import type { Member, ToolboxEntry } from '@/lib/supabase/types'
 import { pickInterestTags, rankToolsForMember, toolReason } from '@/lib/recommend-rules'
 import { coUsage } from '@/lib/tool-rules'
 import { listMyInviteCodes } from './invites'
-import { upcomingMeetups } from './meetups'
+import { upcomingMoim } from './moim'
 import { listTools, myToolIds, usagePairsAround } from './tools'
 import { listAgoraTimeline } from './agora'
 import { sb, useMockData as isMock } from './client'
@@ -14,7 +14,7 @@ export type RailData = {
   interestTags: string[]
   tools: Array<{ id: string; slug: string; name: string; oneLiner: string; reason: string | null }>
   agora: Array<{ id: string; agentName: string; body: string; toolName: string | null; rating: number | null; likeCount: number }>
-  meetups: Array<{ id: string; title: string; startsAt: string; mode: string; confirmed: number; capacity: number }>
+  meetups: Array<{ id: string; title: string; startsAt: string; mode: string; confirmed: number; capacity: number; group: string | null }>
   people: Array<{ id: string; name: string; avatarUrl: string | null; reason: string }>
 }
 
@@ -38,7 +38,7 @@ export const getRailData = cache(async (member: Member): Promise<RailData> => {
   const [toolbox, agoraPosts, meetups, mine, pairs] = await Promise.all([
     listTools(member.id, { sort: 'popular' }).catch(() => [] as ToolboxEntry[]),
     listAgoraTimeline(member.id, { limit: 30 }).catch(() => []),
-    upcomingMeetups(2).catch(() => []),
+    upcomingMoim(member.id, 2).catch(() => []),
     myToolIds(member.id).catch(() => new Set<string>()),
     usagePairsAround(member.id).catch(() => []),
   ])
@@ -50,8 +50,8 @@ export const getRailData = cache(async (member: Member): Promise<RailData> => {
   if (isMock()) {
     archiveTags = [['mcp', 'agent'], ['cursor', 'mcp'], ['prompt']]
     people = [
-      { id: 'member-2', name: '이서연', avatarUrl: null, reason: '내가 좋아한 글의 작성자' },
-      { id: 'member-3', name: '박지훈', avatarUrl: null, reason: '최근 활발히 글을 써요' },
+      { id: 'member-2', name: '프롬프트수집가', avatarUrl: null, reason: '내가 좋아한 글의 작성자' },
+      { id: 'member-3', name: 'MCP장인', avatarUrl: null, reason: '최근 활발히 글을 써요' },
     ]
   } else {
     const supabase = await sb()
@@ -140,10 +140,11 @@ export const getRailData = cache(async (member: Member): Promise<RailData> => {
     meetups: meetups.map((m) => ({
       id: m.id,
       title: m.title,
-      startsAt: m.starts_at,
+      startsAt: m.startsAt,
       mode: m.mode,
-      confirmed: m.confirmed_count,
+      confirmed: m.confirmed,
       capacity: m.capacity,
+      group: m.group?.name ?? null,
     })),
     people: people.slice(0, 3),
   }

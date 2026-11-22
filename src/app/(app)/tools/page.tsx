@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { Plus, Rocket } from 'lucide-react'
 import { getUserState } from '@/lib/auth'
-import { listTools } from '@/lib/data/tools'
+import { listTools, socialToolUsers } from '@/lib/data/tools'
 import {
   TOOL_CATEGORIES,
   TOOL_SORTS,
@@ -46,6 +46,7 @@ export default async function ToolsPage({ searchParams }: { searchParams: Promis
     listTools(state.member.id, { category }),
   ])
   const tags = topTags(forTags, 14)
+  const social = await socialToolUsers(state.member.id, tools.map((t) => t.id)).catch(() => new Map())
 
   return (
     <div className="space-y-3">
@@ -117,15 +118,15 @@ export default async function ToolsPage({ searchParams }: { searchParams: Promis
 
       {tools.length === 0 ? (
         <div className="card p-10 text-center">
-          <p className="font-medium text-[#333]">{mine ? '아직 사용 중으로 표시한 툴이 없어요' : '조건에 맞는 툴이 없어요'}</p>
+          <p className="font-medium text-[#333]">{mine ? '아직 ‘나도 써요’로 표시한 툴이 없어요' : '조건에 맞는 툴이 없어요'}</p>
           <p className="text-sm text-[#888] mt-1">
-            {mine ? '툴 옆의 ‘사용 중 표시’를 눌러 내 프로필에 모아보세요.' : '필터를 바꾸거나 직접 추가해보세요.'}
+            {mine ? '툴 옆의 ‘나도 써요’를 눌러 내 프로필에 모아보세요.' : '필터를 바꾸거나 직접 추가해보세요.'}
           </p>
         </div>
       ) : (
         <div className="tool-list">
           {tools.map((t) => (
-            <ToolCard key={t.id} tool={t} />
+            <ToolCard key={t.id} tool={t} social={social.get(t.id) || []} />
           ))}
         </div>
       )}

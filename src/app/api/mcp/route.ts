@@ -1,13 +1,10 @@
+import { maskPiiDeep } from '@/lib/pii'
 import { NextRequest, NextResponse } from 'next/server'
 import { getMember, isDevMode } from '@/lib/auth'
 import {
   listPosts,
   getPost,
   getPostAuthorMember,
-  listMeetupsDetailed,
-  getMeetupDetails,
-  createMeetup,
-  handleMeetupRsvp,
   getProductDetails,
   createProduct,
   getToolboxEntry,
@@ -38,7 +35,21 @@ import type { ArchiveSourceType, ToolboxEnvironment } from '@/lib/supabase/types
 import { AGORA_TOOLS, handleAgoraTool, isAgoraTool } from '@/lib/agora-mcp'
 import { UNTRUSTED_NOTICE } from '@/lib/agora-rules'
 import { createAnonClient } from '@/lib/supabase/anon'
-import { FEED_TOOLS, FEED_TOOL_NAMES, HUMAN_UNTRUSTED_NOTICE, UNTRUSTED_READ_TOOLS, handleDataTool, resolveToolAlias, withLegacyKey } from '@/lib/mcp-data'
+import {
+  AGENT_REFUSED_TOOLS,
+  FEED_TOOLS,
+  FEED_TOOL_NAMES,
+  HUMAN_UNTRUSTED_NOTICE,
+  MEETUP_READ_TOOLS,
+  UNTRUSTED_READ_TOOLS,
+  groupForAgent,
+  handleDataTool,
+  moimForAgent,
+  resolveToolAlias,
+  withLegacyKey,
+} from '@/lib/mcp-data'
+import { getMoim, listMoim, type Moim, type MoimDetail } from '@/lib/data/moim'
+import { getGroupBySlug, listMyGroups } from '@/lib/data/groups'
 import { getMockLaunchEntry, getToolUsers, listTools, setToolUsage, toolSlugForProduct } from '@/lib/data/tools'
 import { categoryFromLegacyType, parseToolSort } from '@/lib/tool-rules'
 
@@ -133,59 +144,8 @@ const TOOLS = [
       },
     },
   },
-  {
-    name: 'list_meetups',
-    description: '모임 목록 (tab: upcoming|past). Scope: meetups_read',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        tab: { type: 'string', enum: ['upcoming', 'past'] },
-        limit: { type: 'number' },
-      },
-    },
-  },
-  {
-    name: 'read_meetup',
-    description: '모임 상세. Scope: meetups_read',
-    inputSchema: {
-      type: 'object',
-      properties: { meetupId: { type: 'string' } },
-      required: ['meetupId'],
-    },
-  },
-  {
-    name: 'create_meetup',
-    description: '모임 생성. Scope: meetups_write',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        title: { type: 'string' },
-        description: { type: 'string' },
-        mode: { type: 'string', enum: ['offline', 'online'] },
-        startsAt: { type: 'string' },
-        capacity: { type: 'number' },
-        venueName: { type: 'string' },
-        meetingUrl: { type: 'string' },
-        requiresApproval: { type: 'boolean' },
-        postedAs: { type: 'string', enum: ['real', 'nickname'] },
-      },
-      required: ['title', 'description', 'mode', 'startsAt', 'capacity'],
-    },
-  },
-  {
-    name: 'rsvp_meetup',
-    description: '모임 신청/취소. Scope: meetups_write',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        meetupId: { type: 'string' },
-        action: { type: 'string', enum: ['apply', 'cancel'] },
-        note: { type: 'string' },
-        postedAs: { type: 'string', enum: ['real', 'nickname'] },
-      },
-      required: ['meetupId', 'action'],
-    },
-  },
+  // 모임: read-only for agents (no create / rsvp), plus my_groups
+  ...MEETUP_READ_TOOLS,
   {
     name: 'list_tools',
     description:
@@ -461,86 +421,41 @@ async function handleToolsCall(name: string, args: Record<string, unknown> = {})
     }
   }
 
-  if (name === 'list_meetups') {
-    const tab = String(args.tab || 'upcoming')
-    const limit = Number(args.limit || 20)
-    const all = await listMeetupsDetailed()
-    const filtered =
-      tab === 'past'
-        ? all.filter((m) => m.status === 'past' || m.status === 'cancelled')
-        : all.filter((m) => m.status === 'open' || m.status === 'closed')
-    return {
-      meetups: filtered.slice(0, limit).map((m) => ({
-        id: m.id,
-        title: m.title,
-        mode: m.mode,
-        startsAt: m.starts_at,
-        capacity: m.capacity,
-        confirmed: m.confirmed_count,
-        waitlisted: m.waitlisted_count,
-        host: publicAuthorLabel(m.host),
-        status: m.status,
-      })),
-    }
-  }
-
-  if (name === 'read_meetup') {
-    const meetup = await getMeetupDetails(String(args.meetupId))
-    if (!meetup) return { error: '모임을 찾을 수 없습니다.' }
-    return {
-      id: meetup.id,
-      title: meetup.title,
-      description: meetup.description,
-      mode: meetup.mode,
-      startsAt: meetup.starts_at,
-      capacity: meetup.capacity,
-      confirmed: meetup.confirmed_count,
-      requiresApproval: meetup.requires_approval,
-      host: publicAuthorLabel(meetup.host),
-      venue: meetup.venue_name,
-      status: meetup.status,
-    }
-  }
-
-  if (name === 'create_meetup') {
+  // ---- 모임 / 그룹 (DEV mock; mirrors lib/mcp-data.ts — read-only for agents)
+  if (name === 'list_meetups' || name === 'read_meetup' || name === 'my_groups') {
     const member = await getMember()
     if (!member) return { error: 'Unauthorized' }
-    const postedAs = (args.postedAs as 'real' | 'nickname') || 'real'
-    const meetup = await createMeetup(member, {
-      title: String(args.title || ''),
-      description: String(args.description || ''),
-      mode: (args.mode as 'offline' | 'online') || 'offline',
-      venue_name: (args.venueName as string) || null,
-      meeting_url: (args.meetingUrl as string) || null,
-      starts_at: String(args.startsAt || ''),
-      capacity: Number(args.capacity || 10),
-      requires_approval: Boolean(args.requiresApproval),
-      posted_as: postedAs,
-    })
-    return { id: meetup.id, title: meetup.title, mode: meetup.mode, startsAt: meetup.starts_at }
-  }
-
-  if (name === 'rsvp_meetup') {
-    const member = await getMember()
-    if (!member) return { error: 'Unauthorized' }
-    const meetupId = String(args.meetupId)
-    const action = String(args.action)
-    if (action !== 'apply' && action !== 'cancel') {
-      return { error: 'action은 apply|cancel' }
-    }
-    try {
-      const result = await handleMeetupRsvp(meetupId, member, {
-        action,
-        note: (args.note as string) || undefined,
-        posted_as: (args.postedAs as 'real' | 'nickname') || 'real',
-      })
-      if (result.rsvp) {
-        return { rsvp: { id: result.rsvp.id, status: result.rsvp.status } }
+    if (name === 'my_groups') {
+      const groups = await listMyGroups(member.id)
+      return {
+        notice: HUMAN_UNTRUSTED_NOTICE,
+        groups: groups.map((g) => groupForAgent({ ...g, role: g.myRole })),
       }
-      return { success: true }
-    } catch (error) {
-      return { error: error instanceof Error ? error.message : 'RSVP 처리 실패' }
     }
+    const toAgent = (m: Moim | MoimDetail) => ({
+      ...m,
+      host: m.host.name,
+      group: m.group ? { slug: m.group.slug, name: m.group.name } : null,
+      myStatus: m.myRsvp?.status ?? null,
+      questions: m.questions.map((q) => q.label),
+    })
+    if (name === 'read_meetup') {
+      const m = await getMoim(member.id, String(args.meetupId || ''))
+      if (!m) return { error: 'Not found.' }
+      return { notice: HUMAN_UNTRUSTED_NOTICE, meetup: moimForAgent(toAgent(m), true) }
+    }
+    const tab = args.tab === 'past' || args.tab === 'mine' ? args.tab : 'upcoming'
+    let groupId: string | null = null
+    if (args.group) {
+      const g = await getGroupBySlug(member.id, String(args.group))
+      if (!g) return { notice: HUMAN_UNTRUSTED_NOTICE, tab, meetups: [] }
+      groupId = g.id
+    }
+    const list = await listMoim(member.id, tab, groupId, Math.min(Number(args.limit) || 20, 50))
+    return { notice: HUMAN_UNTRUSTED_NOTICE, tab, meetups: list.map((m) => moimForAgent(toAgent(m))) }
+  }
+  if (name in AGENT_REFUSED_TOOLS) {
+    return { error: AGENT_REFUSED_TOOLS[name], refused: true, humanOnly: true }
   }
 
   // ---- 툴 (DEV mock; mirrors lib/mcp-data.ts list_tools/read_tool/…)
@@ -601,7 +516,7 @@ async function handleToolsCall(name: string, args: Record<string, unknown> = {})
       rating: entry.avg_rating,
       userCount: users.count,
       usedByMe: users.usedByMe,
-      users: users.users.map(publicAuthorLabel),
+      users: users.users.map((u) => u.name),
       launch: launch
         ? { productId: launch.id, tagline: launch.tagline, upvotes: launch.upvote_count, makers: launch.makers.map(publicAuthorLabel) }
         : null,
@@ -846,7 +761,7 @@ export async function POST(request: NextRequest) {
           jsonRpcSuccess(id, {
             content: [
               ...(isRead && !('error' in result) ? [{ type: 'text', text: UNTRUSTED_NOTICE }] : []),
-              { type: 'text', text: JSON.stringify(result, null, 2) },
+              { type: 'text', text: JSON.stringify(isRead ? maskPiiDeep(result) : result, null, 2) },
             ],
             ...('error' in result ? { isError: true } : {}),
           })
@@ -860,16 +775,21 @@ export async function POST(request: NextRequest) {
           jsonRpcSuccess(id, {
             content: [
               ...(UNTRUSTED_READ_TOOLS.has(name) && !failed ? [{ type: 'text', text: HUMAN_UNTRUSTED_NOTICE }] : []),
-              { type: 'text', text: JSON.stringify(result, null, 2) },
+              { type: 'text', text: JSON.stringify(UNTRUSTED_READ_TOOLS.has(name) ? maskPiiDeep(result) : result, null, 2) },
             ],
             ...(failed ? { isError: true } : {}),
           })
         )
       }
       const result = withLegacyKey(await handleToolsCall(name, args), alias.legacyKey)
+      const devFailed = 'error' in result
       return NextResponse.json(
         jsonRpcSuccess(id, {
-          content: [{ type: 'text', text: JSON.stringify(result, null, 2) }],
+          content: [
+            ...(UNTRUSTED_READ_TOOLS.has(name) && !devFailed ? [{ type: 'text', text: HUMAN_UNTRUSTED_NOTICE }] : []),
+            { type: 'text', text: JSON.stringify(UNTRUSTED_READ_TOOLS.has(name) ? maskPiiDeep(result) : result, null, 2) },
+          ],
+          ...(devFailed ? { isError: true } : {}),
         })
       )
     }

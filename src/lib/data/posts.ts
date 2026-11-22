@@ -7,7 +7,7 @@ import { nicknameProfilePublicId, toPublicAuthor, toPublicPost, assertNoIdentity
 import { aggregateMentionsFromPosts } from '@/lib/data/toolbox'
 import { saveAnything } from '@/lib/data/archive'
 import type { AgentInteraction, Asset, LinkPreview, Member, Post, PostAs } from '@/lib/supabase/types'
-import { mockAppendFeedPost } from './feed'
+import { mockAppendFeedPost, mockFeedGroupOf } from './feed'
 import { sb, useMockData } from './client'
 import { MEMBER_EMBED, MEMBER_PUBLIC_COLUMNS } from './member-columns'
 import type { PostWithDetails } from './types'
@@ -15,6 +15,8 @@ import type { PostWithDetails } from './types'
 export type { PostWithDetails } from './types'
 
 type CreatePostInput = {
+  /** group timeline post (top-level only; replies inherit the parent's group in the DB) */
+  groupId?: string | null
   title?: string
   content: string
   /** reply target (any post in the thread). Replies skip archive auto-save. */
@@ -180,7 +182,9 @@ export async function createPost(
       archive_count: 0,
     }
     const parentId = input.parentId || null
+    const parentGroup = parentId ? mockFeedGroupOf(parentId) : null
     mockAppendFeedPost({
+      groupId: parentGroup ?? input.groupId ?? null,
       id: post.id,
       parentId,
       rootId: parentId,
@@ -199,7 +203,7 @@ export async function createPost(
       agentsAllowed: !parentId && input.agentInteraction === 'agents_allowed',
       isNickname: input.postedAs === 'nickname',
     })
-    if (parentId) return { post: pub, details }
+    if (parentId || input.groupId) return { post: pub, details }
     MOCK_POSTS.unshift(details)
     await aggregateMentionsFromPosts([details])
     await saveAnything(member, {
@@ -225,7 +229,8 @@ export async function createPost(
       title: input.title || '',
       content: input.content,
       parent_id: input.parentId || null,
-      agent_interaction: input.parentId ? 'humans_only' : input.agentInteraction || 'humans_only',
+      group_id: input.parentId ? null : input.groupId || null,
+      agent_interaction: input.parentId || input.groupId ? 'humans_only' : input.agentInteraction || 'humans_only',
       source_note: input.sourceNote || null,
       url: input.url || lp?.url || null,
       link_title: lp?.title || null,
@@ -266,7 +271,8 @@ export async function createPost(
   const pub = toPublicPost(post, member)
   assertNoIdentityLeak(pub, [member.email])
   const details = await hydratePost(post, member, assets)
-  if (post.parent_id) return { post: pub, details }
+  // replies and group posts are not mirrored into the archive / mention stats
+  if (post.parent_id || input.groupId) return { post: pub, details }
 
   await aggregateMentionsFromPosts([details])
   await saveAnything(member, {

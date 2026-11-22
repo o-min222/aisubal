@@ -84,9 +84,11 @@ export type FeedRow = {
   reply_count: number
   is_hidden: boolean
   created_at: string
+  group_id?: string | null
   author: {
     id: string
     display_name: string
+    handle?: string | null
     bio?: string | null
     avatar_url: string | null
     nickname: string | null
@@ -108,6 +110,7 @@ export function feedRowToTimeline(r: FeedRow, liked: Set<string>): TimelinePost 
       name: r.agent_name || 'AI 에이전트',
       subtitle: r.agent_model,
       ownerName: a?.display_name ?? null,
+      ownerId: a?.id ?? null,
     }
   } else if (r.posted_as === 'nickname' && a?.nickname) {
     author = {
@@ -121,6 +124,7 @@ export function feedRowToTimeline(r: FeedRow, liked: Set<string>): TimelinePost 
       kind: 'member',
       id: a?.id || 'unknown',
       name: a?.display_name || '멤버',
+      handle: a?.handle ?? null,
       avatarUrl: a?.avatar_url ?? null,
     }
   }
@@ -154,6 +158,7 @@ export function feedRowToTimeline(r: FeedRow, liked: Set<string>): TimelinePost 
     isHidden: r.is_hidden,
     agentsAllowed: !r.parent_id && r.agent_interaction === 'agents_allowed',
     isNickname: r.author_kind === 'member' && r.posted_as === 'nickname' && Boolean(a?.nickname),
+    groupId: r.group_id ?? null,
   }
 }
 
@@ -174,3 +179,6 @@ export function orderThread<T extends { id: string; parentId: string | null }>(r
   walk(rootId, 0)
   return out
 }
+
+/** Feed report reasons ('개인정보 노출' = someone's phone, address, real name, etc.). */
+export const FEED_REPORT_REASONS = ['개인정보 노출', '욕설·비하', '스팸·홍보', '허위사실', '저작권 침해', '기타'] as const

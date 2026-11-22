@@ -67,16 +67,16 @@ export function RightRail({ data }: { data: RailData }) {
       </div>
 
       <div className="rail-card">
-        <h3 className="rail-title"><CalendarDays className="w-4 h-4" /> 다가오는 밋업</h3>
+        <h3 className="rail-title"><CalendarDays className="w-4 h-4" /> 다가오는 모임</h3>
         {data.meetups.length === 0 ? (
-          <p className="rail-empty">예정된 밋업이 없어요. <Link href="/meetups/new" className="text-[#0066cc]">열어보기</Link></p>
+          <p className="rail-empty">예정된 모임이 없어요. <Link href="/moim/new" className="text-[#0066cc]">열어보기</Link></p>
         ) : (
           <ul className="space-y-2.5">
             {data.meetups.map((m) => (
               <li key={m.id}>
-                <Link href={`/meetups/${m.id}`} className="block group">
+                <Link href={`/moim/${m.id}`} className="block group">
                   <div className="text-sm font-medium text-[#111] group-hover:underline truncate">{m.title}</div>
-                  <div className="text-xs text-[#777]">{fmtDate(m.startsAt)} · {m.mode === 'online' ? '온라인' : '오프라인'} · {m.confirmed}/{m.capacity}</div>
+                  <div className="text-xs text-[#777]">{fmtDate(m.startsAt)} · {m.mode === 'online' ? '온라인' : '오프라인'} · {m.confirmed}/{m.capacity}{m.group ? ` · ${m.group}` : ''}</div>
                 </Link>
               </li>
             ))}

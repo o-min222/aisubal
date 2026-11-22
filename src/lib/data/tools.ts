@@ -11,7 +11,10 @@ import {
   type ToolListItem,
   type ToolSort,
 } from '@/lib/tool-rules'
+import { mockHandle, mockPerson } from '@/lib/mock-social'
+import { sortByRelation, type Relation } from '@/lib/social-rules'
 import { sb, useMockData as isMock } from './client'
+import { getRelations, socialAuthorIds } from './social'
 import { MEMBER_PUBLIC_COLUMNS } from './member-columns'
 
 /**
@@ -19,7 +22,11 @@ import { MEMBER_PUBLIC_COLUMNS } from './member-columns'
  * plus '사용 중' (tool_users). Reads go through member RLS.
  */
 
-export type ToolUsers = { count: number; users: PublicAuthor[]; usedByMe: boolean }
+/** A member who uses a tool, with the viewer's relation (friends → following → others). */
+export type ToolUser = { id: string; name: string; handle: string | null; avatarUrl: string | null; relation: Relation }
+export type ToolUsers = { count: number; users: ToolUser[]; usedByMe: boolean }
+/** Friends / people I follow who use a tool (tool cards show these avatars first). */
+export type ToolSocialUser = { id: string; name: string; avatarUrl: string | null; kind: 'friend' | 'following' }
 
 // ------------------------------------------------------------------ mock (DEV)
 type MockState = { usage: Array<{ entry_id: string; member_id: string; created_at: string }> }
@@ -146,32 +153,90 @@ export async function listMemberTools(memberId: string): Promise<ToolboxEntry[]>
   return ((data || []) as unknown as Array<{ entry: ToolboxEntry | null }>).map((r) => r.entry).filter((e): e is ToolboxEntry => Boolean(e))
 }
 
-/** 'N명이 사용 중' with the latest users' avatars (real-name profiles only). */
-export async function getToolUsers(entryId: string, viewerId: string, limit = 12): Promise<ToolUsers> {
+/**
+ * Who uses a tool, as a people list sorted friends → people I follow → others
+ * (me last). Real-name profiles only.
+ */
+export async function getToolUsers(entryId: string, viewerId: string, limit = 100): Promise<ToolUsers> {
+  let count = 0
+  let base: Array<{ id: string; name: string; handle: string | null; avatarUrl: string | null }> = []
+  let usedByMe = false
   if (isMock()) {
     const rows = mockUsage().usage.filter((u) => u.entry_id === entryId)
-    return {
-      count: rows.length,
-      users: rows.slice(0, limit).map((r) => mockAuthor(r.member_id)),
-      usedByMe: rows.some((r) => r.member_id === viewerId),
-    }
+    count = rows.length
+    usedByMe = rows.some((r) => r.member_id === viewerId)
+    base = rows.slice(0, limit).map((r) => ({
+      id: r.member_id,
+      name: MOCK_MEMBERS.find((m) => m.id === r.member_id)?.display_name ?? mockPerson(r.member_id).name,
+      handle: MOCK_MEMBERS.find((m) => m.id === r.member_id)?.handle ?? mockHandle(r.member_id),
+      avatarUrl: null,
+    }))
+  } else {
+    const supabase = await sb()
+    const [{ count: c }, { data }, { data: mine }] = await Promise.all([
+      supabase.from('tool_users').select('entry_id', { count: 'exact', head: true }).eq('entry_id', entryId),
+      supabase
+        .from('tool_users')
+        .select(`created_at, member:members(${MEMBER_PUBLIC_COLUMNS})`)
+        .eq('entry_id', entryId)
+        .order('created_at', { ascending: false })
+        .limit(limit),
+      supabase.from('tool_users').select('entry_id').eq('entry_id', entryId).eq('member_id', viewerId).maybeSingle(),
+    ])
+    base = ((data || []) as unknown as Array<{ member: Member | null }>)
+      .map((r) => r.member)
+      .filter((m): m is Member => Boolean(m))
+      .map((m) => ({ id: m.id, name: m.display_name, handle: m.handle ?? null, avatarUrl: m.avatar_url }))
+    count = c ?? base.length
+    usedByMe = Boolean(mine)
   }
-  const supabase = await sb()
-  const [{ count }, { data }, { data: mine }] = await Promise.all([
-    supabase.from('tool_users').select('entry_id', { count: 'exact', head: true }).eq('entry_id', entryId),
-    supabase
-      .from('tool_users')
-      .select(`created_at, member:members(${MEMBER_PUBLIC_COLUMNS})`)
-      .eq('entry_id', entryId)
-      .order('created_at', { ascending: false })
-      .limit(limit),
-    supabase.from('tool_users').select('entry_id').eq('entry_id', entryId).eq('member_id', viewerId).maybeSingle(),
+  const rel = await getRelations(viewerId, base.map((u) => u.id)).catch(() => new Map<string, Relation>())
+  const users = sortByRelation(
+    base.map((u) => ({ ...u, relation: rel.get(u.id) ?? { isMe: u.id === viewerId, iFollow: false, followsMe: false, friend: 'none' as const } })),
+    (u) => u.relation
+  )
+  return { count, users, usedByMe }
+}
+
+/** Per tool: friends first, then people I follow, who marked it '나도 써요'. */
+export async function socialToolUsers(viewerId: string, entryIds: string[]): Promise<Map<string, ToolSocialUser[]>> {
+  const out = new Map<string, ToolSocialUser[]>()
+  if (!entryIds.length) return out
+  const [friends, following] = await Promise.all([
+    socialAuthorIds(viewerId, 'friends').catch(() => [] as string[]),
+    socialAuthorIds(viewerId, 'following').catch(() => [] as string[]),
   ])
-  const users = ((data || []) as unknown as Array<{ member: Member | null }>)
-    .map((r) => r.member)
-    .filter((m): m is Member => Boolean(m))
-    .map((m) => toPublicAuthor({ ...m, email: '' }, 'real'))
-  return { count: count ?? users.length, users, usedByMe: Boolean(mine) }
+  const friendSet = new Set(friends)
+  const ids = [...new Set([...friends, ...following])].filter((id) => id !== viewerId)
+  if (!ids.length) return out
+  let rows: Array<{ entry_id: string; member_id: string; name: string; avatarUrl: string | null }> = []
+  if (isMock()) {
+    const want = new Set(entryIds)
+    rows = mockUsage()
+      .usage.filter((u) => want.has(u.entry_id) && ids.includes(u.member_id))
+      .map((u) => ({ entry_id: u.entry_id, member_id: u.member_id, name: mockPerson(u.member_id).name, avatarUrl: null }))
+  } else {
+    const supabase = await sb()
+    const { data } = await supabase
+      .from('tool_users')
+      .select('entry_id, member_id, member:members(display_name, avatar_url)')
+      .in('member_id', ids.slice(0, 500))
+      .in('entry_id', entryIds.slice(0, 300))
+      .limit(2000)
+    rows = ((data || []) as unknown as Array<{ entry_id: string; member_id: string; member: { display_name: string; avatar_url: string | null } | null }>).map((r) => ({
+      entry_id: r.entry_id,
+      member_id: r.member_id,
+      name: r.member?.display_name ?? '멤버',
+      avatarUrl: r.member?.avatar_url ?? null,
+    }))
+  }
+  for (const r of rows) {
+    const list = out.get(r.entry_id) || []
+    list.push({ id: r.member_id, name: r.name, avatarUrl: r.avatarUrl, kind: friendSet.has(r.member_id) ? 'friend' : 'following' })
+    out.set(r.entry_id, list)
+  }
+  for (const [k, list] of out) out.set(k, list.sort((a, b) => (a.kind === b.kind ? 0 : a.kind === 'friend' ? -1 : 1)))
+  return out
 }
 
 export async function setToolUsage(entryId: string, memberId: string, using: boolean): Promise<number> {

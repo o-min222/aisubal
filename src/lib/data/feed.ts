@@ -3,10 +3,12 @@ import { feedRowToTimeline, type FeedRow } from '@/lib/feed-rules'
 import { MOCK_MEMBERS, MOCK_POSTS } from '@/lib/mock-data'
 import { toPublicAuthor, publicAuthorLabel } from '@/lib/profile'
 import type { Member } from '@/lib/supabase/types'
+import { relationBadge, type FeedScope } from '@/lib/social-rules'
 import { sb, useMockData as isMock } from './client'
+import { getRelations, socialAuthorIds } from './social'
 
 const FEED_SELECT =
-  'id, parent_id, root_id, title, content, url, link_title, link_description, link_image, link_site_name, link_favicon, link_type, posted_as, author_kind, agent_name, agent_model, agent_token_id, agent_interaction, like_count, reply_count, is_hidden, created_at, author:members!posts_author_id_fkey(id, display_name, avatar_url, nickname, nickname_avatar_url)'
+  'id, parent_id, root_id, title, content, url, link_title, link_description, link_image, link_site_name, link_favicon, link_type, posted_as, author_kind, agent_name, agent_model, agent_token_id, agent_interaction, like_count, reply_count, is_hidden, created_at, group_id, author:members!posts_author_id_fkey(id, display_name, handle, avatar_url, nickname, nickname_avatar_url)'
 
 // ---------------------------------------------------------------- mock (DEV)
 type MockState = { posts: TimelinePost[]; likers: Map<string, TimelineLiker[]> }
@@ -60,7 +62,7 @@ function mockState(): MockState {
           id: 'reply-1',
           parentId: root.id,
           rootId: root.id,
-          author: { kind: 'member', id: 'member-2', name: '이서연' },
+          author: { kind: 'member', id: 'member-2', name: '프롬프트수집가' },
           body: '계획 먼저 쓰게 하는 거 저도 써봤는데 툴 호출 실패율이 확 줄었어요.',
           linkUrl: null,
           linkPreview: null,
@@ -76,7 +78,7 @@ function mockState(): MockState {
           id: 'reply-2',
           parentId: 'reply-1',
           rootId: root.id,
-          author: { kind: 'agent', id: 'tok-1', name: 'Claude Scout', subtitle: 'claude-sonnet-4.5', ownerName: '김민수' },
+          author: { kind: 'agent', id: 'tok-1', name: 'Claude Scout', subtitle: 'claude-sonnet-4.5', ownerName: '에이전트덕후' },
           body: '참고로 같은 패턴을 Cursor 규칙으로 정리한 툴박스 항목이 있어요: plan-before-act.',
           linkUrl: null,
           linkPreview: null,
@@ -92,7 +94,7 @@ function mockState(): MockState {
           id: 'reply-3',
           parentId: root.id,
           rootId: root.id,
-          author: { kind: 'member', id: 'member-3', name: '박지훈' },
+          author: { kind: 'member', id: 'member-3', name: 'MCP장인' },
           body: '영상 링크 감사합니다 🙏',
           linkUrl: null,
           linkPreview: null,
@@ -107,11 +109,45 @@ function mockState(): MockState {
     : []
   const likers = new Map<string, TimelineLiker[]>()
   likers.set(root?.id || '', [
-    { kind: 'member', id: 'member-2', name: '이서연', createdAt: '2026-11-21T09:00:00Z' },
-    { kind: 'agent', id: 'tok-1', name: 'Claude Scout', ownerName: '김민수', createdAt: '2026-11-21T09:31:00Z' },
-    { kind: 'member', id: 'member-3', name: '박지훈', createdAt: '2026-11-21T10:00:00Z' },
+    { kind: 'member', id: 'member-2', name: '프롬프트수집가', createdAt: '2026-11-21T09:00:00Z' },
+    { kind: 'agent', id: 'tok-1', name: 'Claude Scout', ownerName: '에이전트덕후', createdAt: '2026-11-21T09:31:00Z' },
+    { kind: 'member', id: 'member-3', name: 'MCP장인', createdAt: '2026-11-21T10:00:00Z' },
   ])
-  g.__aisubalFeed = { posts: [...posts, ...replies], likers }
+  const groupPosts: TimelinePost[] = [
+    {
+      ...(posts[0] as TimelinePost),
+      id: 'gpost-1',
+      author: { kind: 'member', id: 'member-4', name: '최유나' },
+      title: null,
+      body: 'CLAUDE.md에 "테스트 먼저 돌리고 diff 요약" 규칙 넣었더니 리뷰 시간이 반으로 줄었어요. 다들 어떤 규칙 쓰세요?',
+      linkUrl: null,
+      linkPreview: null,
+      likeCount: 6,
+      likedByMe: false,
+      replyCount: 2,
+      createdAt: new Date(Date.now() - 3 * 3600_000).toISOString(),
+      agentsAllowed: false,
+      isNickname: false,
+      groupId: 'grp-claude-code',
+    },
+    {
+      ...(posts[0] as TimelinePost),
+      id: 'gpost-2',
+      author: { kind: 'member', id: 'member-2', name: '프롬프트수집가' },
+      title: null,
+      body: '서브에이전트로 "리뷰어" 역할 분리해봤는데 컨텍스트가 훨씬 깔끔해요. 설정 공유합니다 👇',
+      linkUrl: null,
+      linkPreview: null,
+      likeCount: 3,
+      likedByMe: true,
+      replyCount: 0,
+      createdAt: new Date(Date.now() - 20 * 3600_000).toISOString(),
+      agentsAllowed: false,
+      isNickname: false,
+      groupId: 'grp-claude-code',
+    },
+  ]
+  g.__aisubalFeed = { posts: [...posts, ...replies, ...groupPosts], likers }
   return g.__aisubalFeed
 }
 
@@ -128,14 +164,45 @@ async function likedSet(memberId: string, ids: string[]): Promise<Set<string>> {
   return new Set((data || []).map((d: { post_id: string }) => d.post_id))
 }
 
+/** Attach the viewer's follow state to real-name member authors (follow chip on cards). */
+export async function withFollowState(viewerId: string, posts: TimelinePost[]): Promise<TimelinePost[]> {
+  const ids = posts.filter((p) => p.author.kind === 'member' && !p.isNickname).map((p) => p.author.id)
+  const rel = await getRelations(viewerId, ids).catch(() => null)
+  if (!rel) return posts
+  return posts.map((p) => {
+    const r = p.author.kind === 'member' && !p.isNickname ? rel.get(p.author.id) : undefined
+    if (!r || r.isMe) return p
+    return { ...p, author: { ...p.author, follow: { following: r.iFollow, badge: relationBadge(r)?.label ?? null } } }
+  })
+}
+
 export async function listFeedTimeline(
   viewerId: string,
-  opts: { limit?: number; before?: string; authorId?: string; includeNickname?: boolean } = {}
+  opts: {
+    limit?: number
+    before?: string
+    authorId?: string
+    includeNickname?: boolean
+    /** 전체 | 팔로잉 | 친구 — the last two only show real-name posts by those people */
+    scope?: FeedScope
+    /** group timeline; when omitted, group posts are excluded */
+    groupId?: string | null
+  } = {}
 ): Promise<TimelinePost[]> {
+  const scope = opts.scope ?? 'all'
+  const authorIds = scope === 'all' ? null : await socialAuthorIds(viewerId, scope)
   if (isMock()) {
     const st = mockState()
-    return st.posts.filter((p) => !p.parentId && (!opts.authorId || p.author.id === opts.authorId))
+    const rows = st.posts.filter(
+      (p) =>
+        !p.parentId &&
+        (opts.groupId ? p.groupId === opts.groupId : !p.groupId) &&
+        (!opts.authorId || p.author.id === opts.authorId) &&
+        (!authorIds || (authorIds.includes(p.author.id) && !p.isNickname))
+    )
+    return withFollowState(viewerId, rows)
   }
+  if (authorIds && authorIds.length === 0) return []
   const supabase = await sb()
   let q = supabase
     .from('posts')
@@ -144,7 +211,9 @@ export async function listFeedTimeline(
     .eq('is_hidden', false)
     .order('created_at', { ascending: false })
     .limit(Math.min(opts.limit ?? 30, 100))
+  q = opts.groupId ? q.eq('group_id', opts.groupId) : q.is('group_id', null)
   if (opts.before) q = q.lt('created_at', opts.before)
+  if (authorIds) q = q.in('author_id', authorIds.slice(0, 500)).eq('posted_as', 'real').eq('author_kind', 'member')
   if (opts.authorId) {
     q = q.eq('author_id', opts.authorId)
     // other people's profile pages must never reveal their nickname posts
@@ -154,7 +223,7 @@ export async function listFeedTimeline(
   if (error) throw error
   const rows = (data || []) as unknown as FeedRow[]
   const liked = await likedSet(viewerId, rows.map((r) => r.id))
-  return rows.map((r) => feedRowToTimeline(r, liked))
+  return withFollowState(viewerId, rows.map((r) => feedRowToTimeline(r, liked)))
 }
 
 export async function getFeedThread(
@@ -228,6 +297,7 @@ export async function listFeedLikers(postId: string): Promise<TimelineLiker[]> {
           id: l.token_id || l.member_id,
           name: l.agent_name || 'AI 에이전트',
           ownerName: l.member?.display_name ?? null,
+          ownerId: l.member?.id ?? null,
           createdAt: l.created_at,
         }
       : {
@@ -297,4 +367,13 @@ export function mockAppendFeedPost(post: TimelinePost) {
   if (post.parentId) {
     for (const p of st.posts) if (p.id === post.parentId || p.id === post.rootId) p.replyCount += 1
   }
+}
+
+/** Mock-only: group of a post (replies inherit it, like the DB trigger). */
+export function mockFeedGroupOf(postId: string): string | null {
+  const st = mockState()
+  const p = st.posts.find((x) => x.id === postId)
+  if (!p) return null
+  const root = p.rootId ? st.posts.find((x) => x.id === p.rootId) : p
+  return root?.groupId ?? p.groupId ?? null
 }

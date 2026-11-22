@@ -575,8 +575,9 @@ export async function resolveArchiveSource(
     }
   }
   if (type === 'meetup') {
-    const { getMeetupDetails } = await import('@/lib/data/meetups')
-    const m = await getMeetupDetails(id)
+    const [{ getMoim }, { getMember }] = await Promise.all([import('@/lib/data/moim'), import('@/lib/auth')])
+    const viewer = await getMember()
+    const m = viewer ? await getMoim(viewer.id, id) : null
     if (!m) return null
     return {
       title: m.title,

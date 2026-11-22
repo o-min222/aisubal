@@ -3,12 +3,27 @@ import type { Member } from '@/lib/supabase/types'
 import { sb, useMockData } from './client'
 import { getSiteSettings } from './members'
 
-export async function adminListUsers() {
+export type AdminUserRow = {
+  id: string
+  /** self-made public name */
+  name: string
+  handle: string | null
+  /** private (Google) data — admin pages only */
+  realName: string | null
+  email: string | null
+  posts: number
+  isAdmin: boolean
+  isBanned: boolean
+}
+
+export async function adminListUsers(): Promise<AdminUserRow[]> {
   if (useMockData()) {
     return MOCK_MEMBERS.filter((m) => m.signup_completed_at).map((m) => ({
       id: m.id,
       name: m.display_name,
-      email: m.email,
+      handle: m.handle ?? null,
+      realName: m.private_real_name ?? null,
+      email: m.email ?? null,
       posts: MOCK_POSTS.filter((p) => p.author_id === m.id).length,
       isAdmin: m.is_admin,
       isBanned: m.is_banned,
@@ -18,71 +33,36 @@ export async function adminListUsers() {
   const supabase = await sb()
   const { data, error } = await supabase.rpc('admin_list_users')
   if (error) throw error
-  return (data || []) as Array<{
-    id: string
-    name: string
-    email: string
-    posts: number
-    isAdmin: boolean
-    isBanned: boolean
-  }>
+  return ((data || []) as Array<Partial<AdminUserRow> & { id: string }>).map((u) => ({
+    id: u.id,
+    name: u.name ?? '멤버',
+    handle: u.handle ?? null,
+    realName: u.realName ?? null,
+    email: u.email ?? null,
+    posts: Number(u.posts ?? 0),
+    isAdmin: Boolean(u.isAdmin),
+    isBanned: Boolean(u.isBanned),
+  }))
+}
+
+/** Ban/unban goes through the admin-checked SECURITY DEFINER RPC (members has no client UPDATE grant). */
+async function setBan(id: string, banned: boolean, reason?: string) {
+  if (useMockData()) {
+    return { id, isBanned: banned, bannedReason: banned ? (reason ?? null) : null, bannedAt: banned ? new Date().toISOString() : null }
+  }
+  const supabase = await sb()
+  const { data, error } = await supabase.rpc('admin_set_ban', { p_member: id, p_banned: banned, p_reason: reason || null })
+  if (error) throw error
+  const r = data as { id: string; is_banned: boolean; banned_reason: string | null; banned_at: string | null }
+  return { id: r.id, isBanned: r.is_banned, bannedReason: r.banned_reason, bannedAt: r.banned_at }
 }
 
 export async function adminBanUser(id: string, reason?: string) {
-  if (useMockData()) {
-    return {
-      id,
-      isBanned: true,
-      bannedReason: reason ?? null,
-      bannedAt: new Date().toISOString(),
-    }
-  }
-
-  const supabase = await sb()
-  const { data, error } = await supabase
-    .from('members')
-    .update({
-      is_banned: true,
-      banned_reason: reason || null,
-      banned_at: new Date().toISOString(),
-    })
-    .eq('id', id)
-    .select('id, is_banned, banned_reason, banned_at')
-    .single()
-
-  if (error) throw error
-  return {
-    id: data.id,
-    isBanned: data.is_banned,
-    bannedReason: data.banned_reason,
-    bannedAt: data.banned_at,
-  }
+  return setBan(id, true, reason)
 }
 
 export async function adminUnbanUser(id: string) {
-  if (useMockData()) {
-    return { id, isBanned: false, bannedReason: null, bannedAt: null }
-  }
-
-  const supabase = await sb()
-  const { data, error } = await supabase
-    .from('members')
-    .update({
-      is_banned: false,
-      banned_reason: null,
-      banned_at: null,
-    })
-    .eq('id', id)
-    .select('id, is_banned, banned_reason, banned_at')
-    .single()
-
-  if (error) throw error
-  return {
-    id: data.id,
-    isBanned: data.is_banned,
-    bannedReason: data.banned_reason,
-    bannedAt: data.banned_at,
-  }
+  return setBan(id, false)
 }
 
 export async function adminListReports() {
@@ -91,7 +71,7 @@ export async function adminListReports() {
       {
         id: 'report-1',
         postTitle: '효과적인 코드 리뷰 프롬프트',
-        reporter: '김개발',
+        reporter: '새벽CTO',
         reason: '중복 게시물',
         createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
       },

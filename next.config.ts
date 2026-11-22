@@ -10,6 +10,10 @@ const nextConfig: NextConfig = {
       { source: "/toolbox/new", destination: "/tools/new", permanent: true },
       { source: "/toolbox/:slug", destination: "/tools/:slug", permanent: true },
       { source: "/products/new", destination: "/tools/launch", permanent: true },
+      // 밋업 → 모임
+      { source: "/meetups", destination: "/moim", permanent: true },
+      { source: "/meetups/new", destination: "/moim/new", permanent: true },
+      { source: "/meetups/:id", destination: "/moim/:id", permanent: true },
     ];
   },
   turbopack: {

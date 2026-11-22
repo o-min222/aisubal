@@ -1,6 +1,7 @@
 'use client'
 
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
+import { piiWarning } from '@/lib/pii'
 import { useRouter } from 'next/navigation'
 import { VenetianMask, ShieldAlert } from 'lucide-react'
 import { toast } from 'sonner'
@@ -30,9 +31,17 @@ export function AnonComposer({
   const over = count > ANON_MAX_CHARS
   const canSubmit = body.trim().length > 0 && !over && !busy && (isReply || category)
 
+  const pii = useMemo(() => piiWarning(body), [body])
+  const [piiAckFor, setPiiAckFor] = useState<string | null>(null)
+
   async function submit() {
     if (!canSubmit) {
       if (!isReply && !category && body.trim()) toast.error('카테고리를 골라주세요.')
+      return
+    }
+    if (pii && piiAckFor !== body) {
+      setPiiAckFor(body)
+      toast.warning(`${pii} 익명이어도 신원이 드러날 수 있어요. 그래도 올리려면 한 번 더 눌러주세요.`)
       return
     }
     setBusy(true)
@@ -91,6 +100,12 @@ export function AnonComposer({
             aria-label={isReply ? '익명 답글 내용' : '익명 게시물 내용'}
             className="composer-input"
           />
+          {pii && (
+            <p role="alert" className="pii-warning flex items-start gap-1.5 rounded-lg px-2.5 py-2 text-xs mb-2" style={{ background: '#fff4e5', color: '#8a4b00' }}>
+              <ShieldAlert className="w-3.5 h-3.5 mt-px flex-shrink-0" />
+              <span>{pii} 익명 글이어도 신원이 드러날 수 있어요. 지우거나 가려주세요.</span>
+            </p>
+          )}
           <p className="flex items-start gap-1.5 text-xs text-[#777] mb-2">
             <ShieldAlert className="w-3.5 h-3.5 mt-px flex-shrink-0" />
             <span>{ANON_NOTICE}</span>

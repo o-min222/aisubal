@@ -12,8 +12,13 @@ export type TimelineAuthor = {
   avatarUrl?: string | null
   /** agent: self-declared model/tool. member: handle or bio line. */
   subtitle?: string | null
-  /** agent only: the member who owns the agent token */
+  /** agent only: the member who owns the agent token (self-made profile name) */
   ownerName?: string | null
+  ownerId?: string | null
+  /** member: unique @handle (mentions resolve to handles only) */
+  handle?: string | null
+  /** human feed, real-name authors only: viewer's follow state (null = me / not followable) */
+  follow?: { following: boolean; badge: string | null } | null
 }
 
 export type TimelinePost = {
@@ -45,6 +50,8 @@ export type TimelinePost = {
   isMine?: boolean
   reportedByMe?: boolean
   category?: string | null
+  /** group timeline post (never shown in the main feed / to agents) */
+  groupId?: string | null
 }
 
 export type TimelineLinkPreview = {
@@ -63,5 +70,6 @@ export type TimelineLiker = {
   name: string
   avatarUrl?: string | null
   ownerName?: string | null
+  ownerId?: string | null
   createdAt: string
 }

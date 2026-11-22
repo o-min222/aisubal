@@ -1,0 +1,91 @@
+import Link from 'next/link'
+import { notFound, redirect } from 'next/navigation'
+import { ChevronLeft } from 'lucide-react'
+import { getUserState } from '@/lib/auth'
+import { getMemberById } from '@/lib/data/members'
+import { getSocialSummary, listSocial, type SocialListKind } from '@/lib/data/social'
+import { isFeedId } from '@/lib/feed-ids'
+import { LinkTabs } from '@/components/link-tabs'
+import { PersonRow } from '@/components/social/person-row'
+
+export const metadata = { title: '팔로워 · 팔로잉 · 친구 · AI쓰발' }
+
+const EMPTY: Record<SocialListKind, string> = {
+  followers: '아직 팔로워가 없어요.',
+  following: '아직 팔로우한 사람이 없어요.',
+  friends: '아직 친구가 없어요. 친구는 친구 신청 → 수락으로 생겨요 (맞팔과 별개).',
+  requests: '받은 친구 요청이 없어요.',
+  sent: '보낸 친구 요청이 없어요.',
+}
+
+export default async function SocialListPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>
+  searchParams: Promise<{ tab?: string }>
+}) {
+  const state = await getUserState()
+  if (state.type === 'unauthenticated') redirect('/login')
+  if (state.type === 'waitlist') redirect('/waitlist')
+  const viewer = state.member
+  const { id: rawId } = await params
+  const id = rawId === 'me' ? viewer.id : rawId
+  if (id !== viewer.id && !isFeedId(id)) notFound()
+  const isMe = id === viewer.id
+  const member = isMe ? viewer : await getMemberById(id)
+  if (!member) notFound()
+
+  const allowed: SocialListKind[] = isMe ? ['followers', 'following', 'friends', 'requests', 'sent'] : ['followers', 'following', 'friends']
+  const raw = (await searchParams).tab as SocialListKind
+  const tab: SocialListKind = allowed.includes(raw) ? raw : 'followers'
+  const [people, summary] = await Promise.all([listSocial(viewer.id, member.id, tab).catch(() => []), getSocialSummary(viewer.id, member.id).catch(() => null)])
+  const base = `/members/${isMe ? 'me' : member.id}/social?tab=`
+  const labels: Record<SocialListKind, string> = { followers: '팔로워', following: '팔로잉', friends: '친구', requests: '받은 요청', sent: '보낸 요청' }
+  const counts: Partial<Record<SocialListKind, number | null>> = {
+    followers: summary?.followers ?? null,
+    following: summary?.following ?? null,
+    friends: summary?.friends ?? null,
+    requests: summary?.incomingRequests ?? null,
+  }
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center gap-1">
+        <Link href={`/members/${isMe ? 'me' : member.id}`} className="tap-target inline-flex items-center justify-center rounded-full hover:bg-[#f2f2f2]" aria-label="프로필로">
+          <ChevronLeft className="w-5 h-5" />
+        </Link>
+        <h1 className="text-lg font-bold" style={{ color: '#111' }}>
+          {member.display_name}
+        </h1>
+      </div>
+      <section className="card overflow-hidden">
+        <div style={{ padding: '0 8px' }}>
+          <LinkTabs
+            label="관계 목록"
+            active={tab}
+            tabs={allowed.map((k) => ({ id: k, label: labels[k], href: base + k, count: counts[k] ?? null, dot: k === 'requests' && (summary?.incomingRequests ?? 0) > 0 }))}
+          />
+        </div>
+        {tab === 'friends' || tab === 'requests' ? (
+          <p className="text-xs px-4 pt-3" style={{ color: '#888' }}>
+            친구는 서로 수락한 관계예요. 서로 팔로우하는 ‘맞팔’과는 따로예요.
+          </p>
+        ) : null}
+        {people.length === 0 ? (
+          <p className="p-8 text-center text-sm" style={{ color: '#888' }}>
+            {EMPTY[tab]}
+          </p>
+        ) : (
+          <ul className="divide-y divide-[#f0f0f0]">
+            {people.map((p) => (
+              <li key={p.id}>
+                <PersonRow person={p} showFriend={tab === 'requests' || tab === 'sent' || tab === 'friends'} />
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+    </div>
+  )
+}

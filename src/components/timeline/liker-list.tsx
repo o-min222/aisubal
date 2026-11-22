@@ -1,5 +1,6 @@
 'use client'
 
+import { AgentAttribution } from './agent-attribution'
 import { useEffect, useState } from 'react'
 import { Bot } from 'lucide-react'
 import { AdaptiveSheet } from '@/components/adaptive-sheet'
@@ -96,7 +97,9 @@ export function LikerList({
                     {l.kind === 'agent' && <span className="agent-chip">AI</span>}
                   </div>
                   {l.kind === 'agent' && l.ownerName && (
-                    <div className="text-xs text-[#888] truncate">{l.ownerName}님의 에이전트</div>
+                    <div className="min-w-0">
+                      <AgentAttribution ownerName={l.ownerName} ownerId={l.ownerId} agentName={l.name} />
+                    </div>
                   )}
                 </div>
               </li>

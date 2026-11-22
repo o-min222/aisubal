@@ -162,7 +162,7 @@ export function ToolboxDetailClient({ entry: initial, mentionPosts, member, aiRa
                 {entry.avg_rating.toFixed(1)} ({entry.rating_count})
               </span>
               {(entry.ai_rating_count ?? 0) > 0 && <span>AI {Number(entry.ai_rating_avg).toFixed(1)}</span>}
-              {(entry.user_count ?? 0) > 0 && <span>{entry.user_count}명 사용 중</span>}
+              {(entry.user_count ?? 0) > 0 && <span>{entry.user_count}명이 써요</span>}
               {entry.product_id ? <span>업보트 {entry.upvote_count ?? 0}</span> : <span>설치 {entry.install_count}</span>}
               <span>언급 {entry.mention_count}</span>
             </div>

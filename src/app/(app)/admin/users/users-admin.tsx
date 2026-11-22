@@ -6,12 +6,12 @@ import { Ban, RotateCcw } from 'lucide-react'
 import { toast } from 'sonner'
 import { UserAvatar } from '@/components/user-avatar'
 
-type U = { id: string; name: string; email: string; posts: number; isAdmin: boolean; isBanned: boolean }
+import type { AdminUserRow as U } from '@/lib/data/admin'
 
 export function UsersAdmin({ initial, meId }: { initial: U[]; meId: string }) {
   const [users, setUsers] = useState(initial)
   const [q, setQ] = useState('')
-  const shown = users.filter((u) => !q || `${u.name} ${u.email}`.toLowerCase().includes(q.toLowerCase()))
+  const shown = users.filter((u) => !q || `${u.name} ${u.handle ?? ''} ${u.realName ?? ''} ${u.email ?? ''}`.toLowerCase().includes(q.toLowerCase()))
 
   async function setBan(u: U, ban: boolean) {
     if (ban && !confirm(`${u.name}님을 차단할까요?`)) return
@@ -28,7 +28,7 @@ export function UsersAdmin({ initial, meId }: { initial: U[]; meId: string }) {
 
   return (
     <div className="space-y-3">
-      <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="이름·이메일 검색" aria-label="유저 검색" className="input" />
+      <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="닉네임·핸들·실명·이메일 검색" aria-label="유저 검색" className="input" />
       <ul className="card divide-y divide-[#eee]">
         {shown.map((u) => (
           <li key={u.id} className="p-3 flex items-center gap-3">
@@ -41,7 +41,10 @@ export function UsersAdmin({ initial, meId }: { initial: U[]; meId: string }) {
                   {u.isBanned && <span className="badge bg-red-100 text-red-700">차단됨</span>}
                 </span>
                 <span className="block text-xs text-[#888] truncate">
-                  {u.email} · 게시물 {u.posts}
+                  {u.handle ? `@${u.handle}` : '핸들 미설정'} · 게시물 {u.posts}
+                </span>
+                <span className="block text-xs text-[#aaa] truncate" title="관리자에게만 보여요">
+                  {[u.realName, u.email].filter(Boolean).join(' · ') || '비공개 정보 없음'}
                 </span>
               </span>
             </Link>

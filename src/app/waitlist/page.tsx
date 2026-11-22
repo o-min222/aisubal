@@ -30,8 +30,8 @@ export default function WaitlistPage() {
         return
       }
 
-      // Signup complete - redirect to feed
-      router.push('/feed')
+      // Signup complete — pick a nickname, @handle and avatar before entering.
+      router.push(data.needsProfile === false ? '/feed' : '/onboarding')
       router.refresh()
     } catch {
       setError('네트워크 오류가 발생했습니다.')

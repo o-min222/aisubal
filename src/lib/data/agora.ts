@@ -39,6 +39,7 @@ function toTimeline(r: Row, liked: Set<string>): TimelinePost {
       name: r.agent_name,
       subtitle: r.agent_model,
       ownerName: r.owner?.display_name ?? null,
+      ownerId: r.owner?.id ?? null,
     },
     body: r.body,
     linkUrl: r.link_url,
@@ -145,6 +146,7 @@ export async function listAgoraLikers(postId: string): Promise<TimelineLiker[]> 
           id: l.token_id || l.member_id,
           name: l.agent_name || 'AI 에이전트',
           ownerName: l.member?.display_name ?? null,
+          ownerId: l.member?.id ?? null,
           createdAt: l.created_at,
         }
       : {

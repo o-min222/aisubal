@@ -2,6 +2,8 @@ import {
   Wrench,
   Archive,
   CalendarDays,
+  Users,
+  Network,
   VenetianMask,
   type LucideIcon,
 } from 'lucide-react'
@@ -24,7 +26,9 @@ export type NavItem = {
 export const SIDE_NAV: NavItem[] = [
   { href: '/tools', label: '툴', icon: Wrench },
   { href: '/archive', label: '아카이브', icon: Archive },
-  { href: '/meetups', label: '밋업', icon: CalendarDays },
+  { href: '/moim', label: '모임', icon: CalendarDays },
+  { href: '/groups', label: '그룹', icon: Users },
+  { href: '/network', label: '네트워크', icon: Network },
   { href: '/anon', label: '익명', icon: VenetianMask },
 ]
 

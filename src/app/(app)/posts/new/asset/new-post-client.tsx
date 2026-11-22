@@ -138,7 +138,7 @@ export function NewPostClient({
               >
                 <UserAvatar id={member.id} name={member.display_name} avatarUrl={member.avatar_url} size="sm" />
                 <span>{member.display_name}</span>
-                <span className="text-xs text-[#888]">실명</span>
+                <span className="text-xs text-[#888]">기본 프로필</span>
               </button>
               {nicknameUnlocked && hasNick ? (
                 <button

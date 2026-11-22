@@ -13,9 +13,10 @@ export const MOCK_SITE_SETTINGS: SiteSettings = {
 export const MOCK_MEMBERS: Member[] = [
   {
     id: 'member-1',
+    handle: 'agent_nerd',
     auth_id: 'auth-1',
     email: 'kim.real@example.com', // never shown publicly
-    display_name: '김민수',
+    display_name: '에이전트덕후',
     bio: '프로덕트 엔지니어. Cursor와 Claude 헤비 유저.',
     avatar_url: null,
     nickname: 'voidwalker',
@@ -34,9 +35,10 @@ export const MOCK_MEMBERS: Member[] = [
   },
   {
     id: 'member-2',
+    handle: 'prompt_jar',
     auth_id: 'auth-2',
     email: 'lee.real@example.com',
-    display_name: '이서연',
+    display_name: '프롬프트수집가',
     bio: 'MCP와 툴링을 좋아합니다.',
     avatar_url: null,
     nickname: 'signal_noise',
@@ -55,9 +57,10 @@ export const MOCK_MEMBERS: Member[] = [
   },
   {
     id: 'member-3',
+    handle: 'mcp_smith',
     auth_id: 'auth-3',
     email: 'park.real@example.com',
-    display_name: '박지훈',
+    display_name: 'MCP장인',
     bio: '프롬프트 장인 지망생.',
     avatar_url: null,
     nickname: null, // has not created nickname yet

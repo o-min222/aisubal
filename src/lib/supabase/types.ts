@@ -1,10 +1,20 @@
 export type Member = {
   id: string
   auth_id: string
-  email: string // private — never shown to other members
-  display_name: string // real-name profile (from Google, editable)
+  email: string // private — only from get_my_member() for the owner; never shown to others
+  /** Self-made public name (NOT the Google name — that lives in member_private). */
+  display_name: string
+  /** Unique @handle; mentions and 모임 attendee lists use it. */
+  handle?: string | null
   bio: string | null
   avatar_url: string | null
+  /** Real name is opt-in: shown on the profile only when show_real_name is true. */
+  show_real_name?: boolean
+  public_real_name?: string | null
+  profile_completed_at?: string | null
+  /** Owner-only private prefill (get_my_member). Never render publicly. */
+  private_real_name?: string | null
+  private_google_avatar_url?: string | null
   // Optional nickname profile (one per member, after community unlock)
   nickname: string | null
   nickname_bio: string | null
@@ -221,9 +231,9 @@ export type Meetup = {
   description: string
   mode: MeetupMode
   venue_name: string | null
-  venue_address: string | null
-  map_url: string | null
-  meeting_url: string | null // only for confirmed attendees when online
+  group_id: string | null
+  members_only: boolean
+  questions: Array<{ id: string; label: string; required: boolean }>
   starts_at: string // ISO, interpret as KST display
   ends_at: string | null
   capacity: number

@@ -11,6 +11,11 @@ import { LikeButton } from './like-button'
 import { LikerList } from './liker-list'
 import type { TimelinePost } from './types'
 import { categoryLabel } from '@/lib/anon-rules'
+import { FollowButton } from '@/components/social/follow-button'
+import { AgentAttribution } from './agent-attribution'
+import { MentionText } from './mention-text'
+import { ReportButton } from './report-button'
+import { RelationBadge } from '@/components/social/relation-badge'
 
 const ANON_COLORS = ['#6d5bd0', '#2f7d6d', '#c2581f', '#3466b8', '#a23d7a', '#5b6b2f', '#7a4b2b', '#1f7a94']
 function anonColor(seed: string) {
@@ -80,7 +85,7 @@ export function PostCard({
         </p>
       ) : (
         <p className="mt-1 text-[15px] leading-relaxed text-[#111] whitespace-pre-wrap break-words">
-          {post.body}
+          {anon ? post.body : <MentionText text={post.body} />}
         </p>
       )}
     </>
@@ -106,7 +111,15 @@ export function PostCard({
         {avatar}
         <div className="min-w-0 flex-1">
           <header className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-sm">
-            <span className="font-semibold text-[#111]">{a.name}</span>
+            {a.kind === 'member' && !post.isNickname && !anon ? (
+              <Link href={`/members/${a.id}`} className="font-semibold text-[#111] hover:underline">
+                {a.name}
+              </Link>
+            ) : (
+              <span className="font-semibold text-[#111]">{a.name}</span>
+            )}
+            {a.kind === 'member' && a.handle && !post.isNickname && !anon && <span className="text-[#999] truncate max-w-[140px]">@{a.handle}</span>}
+            {a.follow?.badge && a.follow.badge !== '팔로잉' && <RelationBadge label={a.follow.badge} />}
             {anon && post.isOp && isReply && <span className="op-chip">글쓴이</span>}
             {anon && post.isMine && <span className="text-xs text-[#888]">(나)</span>}
             {anon && !isReply && categoryLabel(post.category) && (
@@ -120,6 +133,11 @@ export function PostCard({
               <RelativeTime date={post.createdAt} />
             </span>
             {post.isHidden && !anon && <span className="badge badge-note">숨김</span>}
+            {a.follow && !isReply && (
+              <span className="ml-auto">
+                <FollowButton memberId={a.id} initialFollowing={a.follow.following} variant="chip" refresh={false} />
+              </span>
+            )}
             {post.agentsAllowed && (
               <span className="agents-ok-chip" title="작성자가 에이전트의 답글·좋아요를 허용했어요">
                 <Bot className="w-3 h-3" />
@@ -128,7 +146,9 @@ export function PostCard({
             )}
           </header>
           {a.kind === 'agent' && a.ownerName && (
-            <div className="text-xs text-[#888]">{a.ownerName}님의 에이전트</div>
+            <div className="min-w-0">
+              <AgentAttribution ownerName={a.ownerName} ownerId={a.ownerId} agentName={a.name} model={a.subtitle} />
+            </div>
           )}
 
           {href ? (
@@ -237,6 +257,7 @@ export function PostCard({
             >
               <Share2 className="w-[17px] h-[17px]" />
             </button>
+            {!anon && !gone && likeEndpoint?.startsWith('/api/feed/') && <ReportButton postId={post.id} />}
             {actions && <div className="ml-auto flex items-center gap-1">{actions}</div>}
           </footer>
         </div>

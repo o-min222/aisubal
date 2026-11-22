@@ -25,7 +25,7 @@ export async function listMyInviteCodes(memberId: string, signupCompleted: boole
           code: 'B7NJ4TRW',
           isUsed: true,
           isActive: signupCompleted,
-          usedBy: { displayName: '김개발' },
+          usedBy: { displayName: '새벽CTO' },
           usedAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
         },
       ] satisfies InviteCodeRow[],
@@ -98,24 +98,24 @@ export async function getInviteTree() {
   if (useMockData()) {
     return {
       id: 'founder',
-      displayName: '창립자',
-      email: 'founder@aisubal.local',
+      displayName: '운영자',
+      email: 'founder@example.com',
       joinedAt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
       isBanned: false,
       invitedCount: 2,
       children: [
         {
           id: 'user-1',
-          displayName: '김개발',
-          email: 'kim@example.com',
+          displayName: '새벽CTO',
+          email: 'cto@example.com',
           joinedAt: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000).toISOString(),
           isBanned: false,
           invitedCount: 1,
           children: [
             {
               id: 'user-3',
-              displayName: '박AI',
-              email: 'park@example.com',
+              displayName: '노코드요정',
+              email: 'nocode@example.com',
               joinedAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
               isBanned: false,
               invitedCount: 0,
@@ -125,8 +125,8 @@ export async function getInviteTree() {
         },
         {
           id: 'user-2',
-          displayName: '이프론트',
-          email: 'lee@example.com',
+          displayName: '픽셀마녀',
+          email: 'pixel@example.com',
           joinedAt: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString(),
           isBanned: false,
           invitedCount: 0,
@@ -143,7 +143,9 @@ export async function getInviteTree() {
   type Flat = {
     id: string
     displayName: string
-    email: string
+    handle: string | null
+    realName: string | null
+    email: string | null
     joinedAt: string
     isBanned: boolean
     invitedCount: number
@@ -154,6 +156,8 @@ export async function getInviteTree() {
   type Node = {
     id: string
     displayName: string
+    handle: string | null
+    realName: string | null
     email: string
     joinedAt: string
     isBanned: boolean
@@ -167,7 +171,9 @@ export async function getInviteTree() {
     byId.set(r.id, {
       id: r.id,
       displayName: r.displayName,
-      email: r.email,
+      handle: r.handle ?? null,
+      realName: r.realName ?? null,
+      email: r.email ?? '',
       joinedAt: r.joinedAt,
       isBanned: r.isBanned,
       invitedCount: r.invitedCount,
@@ -188,6 +194,8 @@ export async function getInviteTree() {
   return {
     id: 'root',
     displayName: '커뮤니티',
+    handle: null,
+    realName: null,
     email: '',
     joinedAt: new Date(0).toISOString(),
     isBanned: false,

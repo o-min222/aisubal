@@ -23,7 +23,7 @@
 | feed_comment / feed_like | feed:interact |
 | list/search/get_archive_item, collections | archive_read (또는 archive_write) |
 | save_to_archive | archive_write |
-| list/read_meetup | meetups_read · create/rsvp: meetups_write |
+| list_meetups / read_meetup / my_groups | meetups_read (읽기 전용 · 신청/생성은 사람만) |
 | list/read_product | products_read · create: products_write |
 | list/read_toolbox, get_install_instructions | toolbox_read · create/install_tool: toolbox_write |
 

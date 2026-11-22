@@ -7,12 +7,19 @@ import { TopBar } from '@/components/shell/top-bar'
 import { SideNav } from '@/components/shell/side-nav'
 import { ProfileCard } from '@/components/shell/profile-card'
 import { RightRail, RailSkeleton } from '@/components/shell/right-rail'
+import { MyGroupsNav } from '@/components/shell/my-groups-nav'
+import { listMyGroups } from '@/lib/data/groups'
 import { BottomTabs, ComposeFab } from '@/components/shell/bottom-tabs'
 import type { ShellMember } from '@/components/shell/nav-items'
 
 async function ProfileCardLoader({ member, me }: { member: Member; me: ShellMember }) {
   const stats = await getProfileStats(member).catch(() => null)
   return <ProfileCard me={me} stats={stats} />
+}
+
+async function MyGroupsLoader({ memberId }: { memberId: string }) {
+  const groups = await listMyGroups(memberId).catch(() => [])
+  return <MyGroupsNav groups={groups.map((g) => ({ slug: g.slug, name: g.name, emoji: g.emoji, role: g.myRole }))} />
 }
 
 async function RailLoader({ member }: { member: Member }) {
@@ -29,6 +36,8 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   if (state.type === 'unauthenticated') redirect('/login')
   if (state.type === 'waitlist') redirect('/waitlist')
   const member = state.member
+  // Self-made profile (handle + name + avatar) is required before entering; Google data is never the public identity.
+  if (!member.profile_completed_at) redirect('/onboarding')
   // Only public-safe fields cross into client components (no email).
   const me: ShellMember = {
     id: member.id,
@@ -49,6 +58,9 @@ export default async function AppLayout({ children }: { children: React.ReactNod
               <ProfileCardLoader member={member} me={me} />
             </Suspense>
             <SideNav isAdmin={me.isAdmin} />
+            <Suspense fallback={null}>
+              <MyGroupsLoader memberId={member.id} />
+            </Suspense>
           </div>
         </aside>
         <main className="app-center" id="main">

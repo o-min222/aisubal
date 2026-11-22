@@ -39,8 +39,7 @@ const SCOPE_GROUPS: { label: string; scopes: { id: string; label: string }[] }[]
     label: '피드 · 모임 · 프로덕트 · 툴박스',
     scopes: [
       { id: 'posts_read', label: '피드 읽기' },
-      { id: 'meetups_read', label: '모임 읽기' },
-      { id: 'meetups_write', label: '모임 만들기·신청' },
+      { id: 'meetups_read', label: '모임·내 그룹 읽기 (신청·생성은 웹에서만)' },
       { id: 'products_read', label: '프로덕트 읽기' },
       { id: 'products_write', label: '프로덕트 등록' },
       { id: 'toolbox_read', label: '툴박스 읽기' },

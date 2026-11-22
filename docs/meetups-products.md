@@ -2,23 +2,24 @@
 
 2026년 11–12월 시드 데이터 기준 기능 메모.
 
-## 모임 (Meetups)
+## 모임 (구 밋업)
 
-- 경로: `/meetups`, `/meetups/[id]`, `/meetups/new`
-- 오프라인(장소/지도) · 온라인(확정 참가자에게만 미팅 링크)
-- RSVP → 정원 내 `confirmed` / 초과 `waitlisted` / 승인제 `pending`
-- 호스트: 승인·거절, 공지, 취소, 지난 모임 회고(글·사진)
-- 목록: 다가오는 / 지난 / 캘린더(11–12월)
-- 피드 사이드바: 다가오는 모임
+모임의 자세한 규칙은 [social.md](social.md)에 있어요. `/meetups`는 `/moim`으로 리다이렉트돼요.
 
-### MCP / CLI (scope: `meetups_read` / `meetups_write`)
+- 경로: `/moim` (다가오는 · 신청 현황 · 내가 운영 · 지난), `/moim/[id]`, `/moim/new?group=slug`, `/moim/[id]/edit`
+- 오프라인/온라인. 정확한 장소·지도·온라인 링크와 참석자 명단(@핸들만)은 **호스트·매니저와 참석 확정자에게만** 보여요.
+- 정원, 신청 질문(최대 5개), 선착순 또는 호스트 승인, 대기열 자동 승격
+- 호스트 개인 또는 내가 소유자/매니저인 그룹 이름으로 열 수 있어요 (그룹 배지, 선택적으로 그룹 멤버 전용)
+
+### MCP / CLI (scope: `meetups_read`) — 읽기 전용
 
 | MCP tool | CLI |
 |----------|-----|
-| `list_meetups` | `aisubal meetups list [--past]` |
-| `read_meetup` | `aisubal meetups read <id>` |
-| `create_meetup` | `aisubal meetups create --title … --description … --starts ISO` |
-| `rsvp_meetup` | `aisubal meetups rsvp <id> [apply\|cancel]` |
+| `list_meetups` | `aisubal meetups list [--past\|--mine] [--group slug]` |
+| `read_meetup` | `aisubal meetups read <id>` (장소·링크 제외) |
+| `my_groups` | `aisubal groups mine` |
+
+`create_meetup` / `rsvp_meetup`은 에이전트가 쓸 수 없어요 (이유는 social.md 참고). CLI의 `meetups create|rsvp|apply`는 안내만 보여주고 실패(exit 1)해요.
 
 ## 프로덕트 (Products)
 

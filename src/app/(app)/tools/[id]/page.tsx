@@ -1,5 +1,7 @@
 import { redirect, notFound } from 'next/navigation'
-import { getUserState } from '@/lib/auth'
+import { getNicknameUnlockState, getUserState } from '@/lib/auth'
+import { composerIdentity } from '@/lib/composer-identity'
+import { toolHref } from '@/lib/tool-rules'
 import { getToolboxEntry } from '@/lib/data/toolbox'
 import { getPost } from '@/lib/data/posts'
 import { getToolboxAiRating } from '@/lib/data/agora'
@@ -33,7 +35,7 @@ export default async function ToolDetailPage({ params }: PageProps) {
   const entry = await loadEntry(decodeURIComponent(id))
   if (!entry) notFound()
 
-  const [mentionPostsRaw, aiRating, usage, launch] = await Promise.all([
+  const [mentionPostsRaw, aiRating, usage, launch, unlock] = await Promise.all([
     Promise.all(
       entry.mentions.map(async (m) => {
         const post = await getPost(m.post_id)
@@ -44,7 +46,9 @@ export default async function ToolDetailPage({ params }: PageProps) {
     getToolboxAiRating(entry.id, state.member.id).catch(() => ({ avg: 0, count: 0, latest: [] })),
     getToolUsers(entry.id, state.member.id).catch(() => ({ count: entry.user_count ?? 0, users: [], usedByMe: false })),
     entry.product_id ? getProductDetails(entry.product_id, state.member.id).catch(() => null) : Promise.resolve(null),
+    getNicknameUnlockState(),
   ])
+  const toolUrl = `https://aisubal.vercel.app${toolHref(entry)}`
   const mentionPosts = mentionPostsRaw.filter((x): x is NonNullable<typeof x> => Boolean(x))
 
   return (
@@ -53,7 +57,14 @@ export default async function ToolDetailPage({ params }: PageProps) {
       mentionPosts={mentionPosts}
       member={state.member}
       aiRating={aiRating}
-      usersSlot={<ToolUsersCard entryId={entry.id} usage={usage} />}
+      usersSlot={
+        <ToolUsersCard
+          entryId={entry.id}
+          usage={usage}
+          tool={{ name: entry.name, url: toolUrl }}
+          me={{ ...composerIdentity(state.member, unlock.unlocked), nicknameAvailable: false }}
+        />
+      }
       launchSlot={launch ? <LaunchSection product={launch} /> : null}
     />
   )

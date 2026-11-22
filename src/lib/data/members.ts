@@ -99,3 +99,15 @@ export async function getNicknameUnlockFromConfig(activeCount?: number) {
     activeCount: count,
   }
 }
+
+/** Resolve a unique @handle to a member id (mentions resolve to handles only). */
+export async function getMemberIdByHandle(handle: string): Promise<string | null> {
+  if (!/^[a-z0-9_]{3,20}$/.test(handle)) return null
+  if (useMockData()) {
+    if (handle === 'dev') return 'dev-user-id'
+    return MOCK_MEMBERS.find((m) => m.handle === handle)?.id ?? null
+  }
+  const supabase = await sb()
+  const { data } = await supabase.from('members').select('id').eq('handle', handle).not('signup_completed_at', 'is', null).maybeSingle()
+  return (data as { id: string } | null)?.id ?? null
+}

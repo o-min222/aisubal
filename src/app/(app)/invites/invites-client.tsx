@@ -13,7 +13,7 @@ interface InvitesClientProps {
 // Mock invite codes
 const MOCK_CODES = [
   { code: 'AXK8M2PQ', isUsed: false, usedBy: null, usedAt: null },
-  { code: 'B7NJ4TRW', isUsed: true, usedBy: { display_name: '김개발' }, usedAt: '2026-11-18T12:00:00.000Z' },
+  { code: 'B7NJ4TRW', isUsed: true, usedBy: { display_name: '새벽CTO' }, usedAt: '2026-11-18T12:00:00.000Z' },
 ]
 
 export function InvitesClient({ member }: InvitesClientProps) {

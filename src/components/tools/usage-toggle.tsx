@@ -2,10 +2,13 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Check, Plus } from 'lucide-react'
+import { Check } from 'lucide-react'
 import { toast } from 'sonner'
 
-/** '사용 중' toggle (members mark the tools they use; shown on their profile). */
+/**
+ * '나도 써요' checkbox toggle. Marking a tool adds it to my profile and puts
+ * me in the tool's people list (friends see it first).
+ */
 export function UsageToggle({
   entryId,
   initialUsing,
@@ -37,7 +40,7 @@ export function UsageToggle({
       const data = await res.json().catch(() => ({}))
       if (!res.ok) throw new Error(data.error || '처리하지 못했어요.')
       if (typeof data.userCount === 'number') setCount(data.userCount)
-      toast.success(next ? '내가 쓰는 툴에 추가했어요' : '내가 쓰는 툴에서 뺐어요')
+      toast.success(next ? '‘나도 써요’로 표시했어요 · 내 프로필에 보여요' : '‘나도 써요’를 해제했어요')
       router.refresh()
     } catch (err) {
       setUsing(!next)
@@ -51,13 +54,30 @@ export function UsageToggle({
   return (
     <button
       type="button"
+      role="checkbox"
       onClick={toggle}
       disabled={busy}
-      aria-pressed={using}
+      aria-checked={using}
+      aria-label={using ? '나도 써요 (표시됨, 눌러서 해제)' : '나도 써요로 표시'}
       className={`usage-toggle ${using ? 'on' : ''} ${size === 'md' ? 'usage-toggle-md' : ''}`}
     >
-      {using ? <Check className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
-      <span>{using ? '사용 중' : '사용 중 표시'}</span>
+      <span
+        aria-hidden
+        style={{
+          width: 16,
+          height: 16,
+          borderRadius: 4,
+          border: using ? '1.5px solid #fff' : '1.5px solid #9a9a9a',
+          background: using ? '#fff' : 'transparent',
+          display: 'inline-flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          flexShrink: 0,
+        }}
+      >
+        {using && <Check className="w-3 h-3" strokeWidth={3.2} style={{ color: '#111' }} />}
+      </span>
+      <span>나도 써요</span>
       {showCount && <span className="tabular-nums opacity-70">· {count}</span>}
     </button>
   )

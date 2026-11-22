@@ -2,6 +2,35 @@ import Link from 'next/link'
 import { Bot, ChevronUp, Download, Star, Users } from 'lucide-react'
 import { TOOL_TYPE_CHIP, toolHref, type ToolListItem } from '@/lib/tool-rules'
 import { UsageToggle } from './usage-toggle'
+import { UserAvatar } from '@/components/user-avatar'
+import type { ToolSocialUser } from '@/lib/data/tools'
+
+/** 'friends using' avatars first, then people I follow; plain count only when none. */
+function SocialUsers({ users, total }: { users: ToolSocialUser[]; total: number }) {
+  const friends = users.filter((u) => u.kind === 'friend')
+  const following = users.filter((u) => u.kind === 'following')
+  const shown = [...friends, ...following].slice(0, 4)
+  const label = friends.length
+    ? `친구 ${friends.length}명${following.length ? ` · 팔로잉 ${following.length}명` : ''}이 써요`
+    : `팔로잉 ${following.length}명이 써요`
+  return (
+    <span className="tool-social inline-flex items-center gap-1.5 min-w-0" title={shown.map((u) => u.name).join(', ')}>
+      <span className="users-strip">
+        <span className="avatars">
+          {shown.map((u) => (
+            <span key={u.id} style={u.kind === 'friend' ? { boxShadow: '0 0 0 2px #fff, 0 0 0 3.5px #2f9e66', borderRadius: 999 } : undefined}>
+              <UserAvatar id={u.id} name={u.name} avatarUrl={u.avatarUrl} size="sm" />
+            </span>
+          ))}
+        </span>
+      </span>
+      <span className="truncate" style={{ color: friends.length ? '#1f7a4d' : '#555', fontWeight: 600 }}>
+        {label}
+      </span>
+      {total > users.length && <span className="text-[#999] whitespace-nowrap">· 전체 {total}명</span>}
+    </span>
+  )
+}
 
 export function ToolIcon({ name, iconUrl, dim = 'w-11 h-11' }: { name: string; iconUrl?: string | null; dim?: string }) {
   if (iconUrl) {
@@ -16,7 +45,7 @@ export function ToolIcon({ name, iconUrl, dim = 'w-11 h-11' }: { name: string; i
 }
 
 /** One row of the unified 툴 list: stats relevant to the kind (launch → upvotes). */
-export function ToolCard({ tool }: { tool: ToolListItem }) {
+export function ToolCard({ tool, social = [] }: { tool: ToolListItem; social?: ToolSocialUser[] }) {
   const isLaunch = Boolean(tool.product_id)
   return (
     <article className="tool-card">
@@ -30,10 +59,15 @@ export function ToolCard({ tool }: { tool: ToolListItem }) {
             {tool.featured && <span className="badge badge-agent">추천</span>}
           </div>
           <p className="text-[13.5px] text-[#555] line-clamp-2 mt-0.5">{tool.one_liner}</p>
+          {social.length > 0 && (
+            <div className="mt-1.5 text-[12.5px]">
+              <SocialUsers users={social} total={tool.user_count ?? 0} />
+            </div>
+          )}
           <div className="tool-stats">
-            {(tool.user_count ?? 0) > 0 && (
-              <span title="사용 중인 멤버">
-                <Users className="w-3.5 h-3.5" /> {tool.user_count}명 사용 중
+            {social.length === 0 && (tool.user_count ?? 0) > 0 && (
+              <span title="나도 써요 표시한 멤버">
+                <Users className="w-3.5 h-3.5" /> {tool.user_count}명이 써요
               </span>
             )}
             {tool.rating_count > 0 && (

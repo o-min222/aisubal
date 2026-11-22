@@ -7,6 +7,9 @@ import { ChevronDown, ChevronRight } from 'lucide-react'
 export type TreeNode = {
   id: string
   displayName: string
+  handle?: string | null
+  /** admin-only private data */
+  realName?: string | null
   email: string
   joinedAt: string
   isBanned: boolean
@@ -36,7 +39,12 @@ export function InviteTree({ node, level = 0 }: { node: TreeNode; level?: number
             {node.displayName}
           </Link>
         )}
-        {node.email && <span className="text-xs text-[#888] truncate ml-1">{node.email}</span>}
+        {node.handle && <span className="text-xs text-[#666] ml-1">@{node.handle}</span>}
+        {(node.realName || node.email) && (
+          <span className="text-xs text-[#888] truncate ml-1" title="관리자에게만 보여요">
+            {[node.realName, node.email].filter(Boolean).join(' · ')}
+          </span>
+        )}
         {node.invitedCount > 0 && <span className="ml-auto text-xs text-[#888] whitespace-nowrap">초대 {node.invitedCount}</span>}
       </div>
       {open && node.children.map((c) => <InviteTree key={c.id} node={c} level={level + 1} />)}

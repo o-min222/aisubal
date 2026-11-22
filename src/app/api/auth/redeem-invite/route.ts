@@ -17,8 +17,8 @@ export async function POST(request: NextRequest) {
         member: {
           id: 'dev-user-id',
           display_name: '개발자',
-          email: 'dev@aisubal.local',
         },
+        needsProfile: true,
       })
     }
 
@@ -43,7 +43,8 @@ export async function POST(request: NextRequest) {
     const result = data as {
       ok?: boolean
       error?: string
-      member?: { id: string; display_name: string; email: string }
+      member?: { id: string; display_name: string }
+      needs_profile?: boolean
     }
 
     if (!result?.ok) {
@@ -56,6 +57,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       member: result.member,
+      needsProfile: result.needs_profile !== false,
     })
   } catch (error) {
     console.error('Redeem invite error:', error)

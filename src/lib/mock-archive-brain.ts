@@ -6,7 +6,7 @@ import type {
   Member,
 } from '@/lib/supabase/types'
 import { MOCK_POSTS } from '@/lib/mock-data'
-import { MOCK_MEETUPS } from '@/lib/mock-meetups'
+import { mockMoims } from '@/lib/data/moim'
 import { MOCK_PRODUCTS } from '@/lib/mock-products'
 import { MUTABLE_TOOLBOX } from '@/lib/mock-toolbox'
 import {
@@ -141,14 +141,14 @@ export let MUTABLE_BRAIN: BrainArchiveItem[] = [
     }
   })(),
   (() => {
-    const m = MOCK_MEETUPS.find((x) => x.id === 'meetup-1')!
+    const m = mockMoims().find((x) => x.id === 'moim-1')!
     return {
       id: 'ba-meetup-1',
       owner_id: OWNER,
       source_type: 'meetup' as const,
       source_id: m.id,
       title: m.title,
-      summary: m.venue_name || m.mode,
+      summary: m.venueName || m.mode,
       content_text: m.description,
       source_url: null,
       extracted_text: null,

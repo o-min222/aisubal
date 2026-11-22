@@ -1,8 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { piiWarning } from '@/lib/pii'
+import { useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
-import { Bot, Users, Link2 } from 'lucide-react'
+import { Bot, Users, Link2, ShieldAlert } from 'lucide-react'
 import { toast } from 'sonner'
 import { UserAvatar } from '@/components/user-avatar'
 import { FEED_MAX_CHARS } from '@/lib/feed-rules'
@@ -28,16 +29,24 @@ export function Composer({
   autoFocus,
   onPosted,
   className = '',
+  groupId,
+  groupName,
+  initialBody = '',
 }: {
   me: ComposerIdentity
   parentId?: string
+  /** posting into a group timeline (always humans-only) */
+  groupId?: string
+  groupName?: string
+  /** prefilled text, e.g. '물어보기' from a tool page */
+  initialBody?: string
   placeholder?: string
   autoFocus?: boolean
   onPosted?: (id: string) => void
   className?: string
 }) {
   const router = useRouter()
-  const [body, setBody] = useState('')
+  const [body, setBody] = useState(initialBody)
   const [postedAs, setPostedAs] = useState<PostAs>('real')
   const [interaction, setInteraction] = useState<AgentInteraction>('humans_only')
   const [busy, setBusy] = useState(false)
@@ -45,15 +54,24 @@ export function Composer({
   const over = count > FEED_MAX_CHARS
   const isReply = Boolean(parentId)
   const hasLink = /https?:\/\/\S+/.test(body)
+  // PII guard: warn before publishing; a second press posts anyway (the poster decides).
+  const pii = useMemo(() => piiWarning(body), [body])
+  const [piiAckFor, setPiiAckFor] = useState<string | null>(null)
+  const piiPending = Boolean(pii) && piiAckFor !== body
 
   async function submit() {
     if (!body.trim() || over || busy) return
+    if (piiPending) {
+      setPiiAckFor(body)
+      toast.warning(`${pii} 공개 글이에요. 그래도 올리려면 한 번 더 눌러주세요.`)
+      return
+    }
     setBusy(true)
     try {
       const res = await fetch('/api/feed', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ body, parentId, postedAs, agentInteraction: interaction }),
+        body: JSON.stringify({ body, parentId, postedAs, agentInteraction: groupId ? 'humans_only' : interaction, groupId }),
       })
       const data = await res.json().catch(() => ({}))
       if (!res.ok) throw new Error(data.error || '게시하지 못했어요.')
@@ -86,7 +104,7 @@ export function Composer({
                 className="text-xs text-[#0066cc] min-h-[32px]"
                 onClick={() => setPostedAs(postedAs === 'real' ? 'nickname' : 'real')}
               >
-                {postedAs === 'real' ? '별명으로 쓰기' : '실명으로 쓰기'}
+                {postedAs === 'real' ? '부캐로 쓰기' : '기본 프로필로 쓰기'}
               </button>
             )}
           </div>
@@ -102,13 +120,26 @@ export function Composer({
             aria-label={isReply ? '답글 내용' : '게시물 내용'}
             className="composer-input"
           />
+          {pii && (
+            <div role="alert" className="pii-warning flex items-start gap-1.5 rounded-lg px-2.5 py-2 text-xs mb-2" style={{ background: '#fff4e5', color: '#8a4b00' }}>
+              <ShieldAlert className="w-3.5 h-3.5 mt-px flex-shrink-0" />
+              <span>
+                {pii} 멤버 모두가 볼 수 있어요. 지우거나 가려주세요.{piiAckFor === body ? ' (한 번 더 누르면 그대로 게시돼요)' : ''}
+              </span>
+            </div>
+          )}
           {hasLink && !isReply && (
             <div className="flex items-center gap-1.5 text-xs text-[#666] mb-2">
               <Link2 className="w-3.5 h-3.5" /> 게시하면 첫 링크의 미리보기 카드가 붙어요
             </div>
           )}
           <div className="flex flex-wrap items-center gap-2">
-            {!isReply && (
+            {!isReply && groupId && (
+              <span className="text-xs text-[#666] inline-flex items-center gap-1">
+                <Users className="w-3.5 h-3.5" /> {groupName ? `${groupName} 그룹에만 보여요 · 사람만` : '그룹에만 보여요 · 사람만'}
+              </span>
+            )}
+            {!isReply && !groupId && (
               <div className="seg" role="radiogroup" aria-label="상호작용 설정">
                 <button
                   type="button"
@@ -140,7 +171,7 @@ export function Composer({
               disabled={!body.trim() || over || busy}
               className="btn btn-primary btn-sm min-h-[40px] px-4 rounded-full"
             >
-              {busy ? '게시 중…' : isReply ? '답글' : '게시'}
+              {busy ? '게시 중…' : piiAckFor === body && pii ? '그래도 게시' : isReply ? '답글' : '게시'}
             </button>
             </div>
           </div>

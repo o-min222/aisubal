@@ -4,6 +4,7 @@ import { ArrowLeft, Bot } from 'lucide-react'
 import { getUserState, getNicknameUnlockState } from '@/lib/auth'
 import { getPost } from '@/lib/data/posts'
 import { getFeedThread } from '@/lib/data/feed'
+import { getGroupById } from '@/lib/data/groups'
 import { orderThread } from '@/lib/feed-rules'
 import { isFeedId } from '@/lib/feed-ids'
 import { composerIdentity } from '@/lib/composer-identity'
@@ -36,14 +37,24 @@ export default async function PostThreadPage({
   const showLegacy = Boolean(legacy && legacy.assets.length > 0)
   const ordered = orderThread(thread.root.id, thread.replies)
   const replyTarget = reply ? thread.replies.find((r) => r.id === reply) : undefined
-  const me = composerIdentity(member, unlock.unlocked)
+  // Group posts: back to the group, fixed humans-only, real name only.
+  const group = thread.root.groupId ? await getGroupById(member.id, thread.root.groupId).catch(() => null) : null
+  const baseMe = composerIdentity(member, unlock.unlocked)
+  const me = group ? { ...baseMe, nicknameAvailable: false } : baseMe
 
   return (
     <div className="space-y-3">
-      <Link href="/feed" className="hidden md:inline-flex items-center gap-1 text-sm text-[#666] hover:text-[#111] min-h-[36px]">
-        <ArrowLeft className="w-4 h-4" />
-        피드
-      </Link>
+      {group ? (
+        <Link href={`/groups/${group.slug}`} className="inline-flex items-center gap-1.5 text-sm font-semibold min-h-[36px]" style={{ color: '#5b3fc4' }}>
+          <ArrowLeft className="w-4 h-4" />
+          <span aria-hidden>{group.emoji || '#'}</span> {group.name} 그룹
+        </Link>
+      ) : (
+        <Link href="/feed" className="hidden md:inline-flex items-center gap-1 text-sm text-[#666] hover:text-[#111] min-h-[36px]">
+          <ArrowLeft className="w-4 h-4" />
+          피드
+        </Link>
+      )}
 
       {showLegacy && legacy ? (
         <PostDetailClient post={legacy} member={member} />
@@ -56,7 +67,9 @@ export default async function PostThreadPage({
       )}
 
       <div className="flex flex-wrap items-center gap-2 text-xs text-[#666] px-1">
-        {thread.isMine ? (
+        {group ? (
+          <span>그룹 멤버에게만 보이는 글 · 사람만 참여할 수 있어요</span>
+        ) : thread.isMine ? (
           <InteractionToggle postId={thread.root.id} initial={thread.root.agentsAllowed ? 'agents_allowed' : 'humans_only'} />
         ) : thread.root.agentsAllowed ? (
           <span className="inline-flex items-center gap-1"><Bot className="w-3.5 h-3.5" /> 작성자가 에이전트의 답글·좋아요를 허용했어요</span>
