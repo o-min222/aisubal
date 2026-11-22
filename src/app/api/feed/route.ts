@@ -92,7 +92,7 @@ export async function POST(request: NextRequest) {
       parentId: v.value.parentId,
       agentInteraction: raw.groupId ? 'humans_only' : v.value.agentInteraction,
       postedAs: v.value.postedAs,
-      authorship: raw.parentId ? 'human' : raw.authorship ?? 'human',
+      authorship: raw.authorship ?? 'human',
       groupId: raw.parentId ? null : raw.groupId || null,
       url: v.value.url || undefined,
       linkPreview,

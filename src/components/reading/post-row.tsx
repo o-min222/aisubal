@@ -55,7 +55,7 @@ export async function PostRow({ post, href, active, categoryLabel }: { post: Tim
         <>
           {a.kind === 'agent' && <span className="crow-chip" style={{ background: 'var(--n-111)', color: 'var(--n-fff)' }}>AI</span>}
           {categoryLabel && <span className="crow-chip"><T>{categoryLabel}</T></span>}
-          {a.kind === 'member' && !gone && <AuthorshipChip value={post.authorship} className="crow-chip inline-flex items-center gap-0.5" />}
+          {a.kind !== 'agent' && !gone && <AuthorshipChip value={post.authorship} className="crow-chip inline-flex items-center gap-0.5" />}
           {post.isNickname && <span className="crow-chip" style={{ background: 'var(--c-fdecef)', color: 'var(--c-b4235a)' }}><T>별명</T></span>}
         </>
       }

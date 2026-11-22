@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { getMember } from '@/lib/auth'
-import { deleteAnon, getAnonThread } from '@/lib/data/anon'
+import { deleteAnon, getAnonThread, setAnonAuthorship } from '@/lib/data/anon'
+import { AUTHORSHIPS, type Authorship } from '@/lib/authorship'
 import { anonError } from '@/lib/anon-rules'
 import { isFeedId } from '@/lib/feed-ids'
 import { te } from '@/i18n/server'
@@ -16,6 +17,24 @@ export async function GET(_req: Request, { params }: Ctx) {
     const thread = await getAnonThread(id, member.id)
     if (!thread) return NextResponse.json({ error: await te('글을 찾을 수 없어요.') }, { status: 404 })
     return NextResponse.json(thread)
+  } catch (e) {
+    const { status, error } = anonError(e)
+    return NextResponse.json({ error }, { status })
+  }
+}
+
+/** { authorship }: author re-declares 직접 씀 / AI 도움 / AI 작성 on their own post. */
+export async function PATCH(req: Request, { params }: Ctx) {
+  const member = await getMember()
+  if (!member) return NextResponse.json({ error: await te('인증이 필요합니다.') }, { status: 401 })
+  const { id } = await params
+  if (!isFeedId(id)) return NextResponse.json({ error: await te('잘못된 글입니다.') }, { status: 400 })
+  const raw = (await req.json().catch(() => ({}))) as { authorship?: unknown }
+  if (!AUTHORSHIPS.includes(raw.authorship as Authorship)) return NextResponse.json({ error: await te('잘못된 설정값입니다.') }, { status: 400 })
+  try {
+    const ok = await setAnonAuthorship(id, member.id, raw.authorship as Authorship)
+    if (!ok) return NextResponse.json({ error: await te('내 글만 바꿀 수 있어요.') }, { status: 403 })
+    return NextResponse.json({ authorship: raw.authorship })
   } catch (e) {
     const { status, error } = anonError(e)
     return NextResponse.json({ error }, { status })

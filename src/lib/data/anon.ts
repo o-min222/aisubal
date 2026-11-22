@@ -8,6 +8,7 @@ import {
   type AnonSort,
 } from '@/lib/anon-rules'
 import { sb, useMockData as isMock } from './client'
+import type { Authorship } from '@/lib/authorship'
 
 /**
  * 익명 board data access. Production goes exclusively through the anon_* RPCs
@@ -87,7 +88,7 @@ function view(p: MockPost, viewer: string): AnonRow {
   }
 }
 
-function mockCreate(author: string, input: { body: string; category: AnonCategory | null; parentId: string | null }, at = new Date()) {
+function mockCreate(author: string, input: { body: string; category: AnonCategory | null; parentId: string | null; authorship?: Authorship }, at = new Date()) {
   const s = g.__aisubalAnon!
   const parent = input.parentId ? s.posts.find((p) => p.id === input.parentId) : null
   if (input.parentId && (!parent || parent.isHidden || parent.isDeleted)) throw new AnonRpcError('anon_not_found')
@@ -112,6 +113,7 @@ function mockCreate(author: string, input: { body: string; category: AnonCategor
     body: input.body.slice(0, ANON_MAX_CHARS),
     alias,
     isOp: root ? root.author === author : true,
+    authorship: input.authorship ?? 'human',
     likeCount: 0,
     replyCount: 0,
     isHidden: false,
@@ -202,14 +204,25 @@ export async function getAnonThread(id: string, viewerId: string): Promise<AnonT
 
 export async function createAnon(
   viewerId: string,
-  input: { body: string; category: AnonCategory | null; parentId: string | null },
+  input: { body: string; category: AnonCategory | null; parentId: string | null; authorship?: Authorship },
 ): Promise<{ id: string; rootId: string; alias: string }> {
   if (isMock()) {
     mock()
     const p = mockCreate(viewerId, input)
     return { id: p.id, rootId: p.rootId ?? p.id, alias: p.alias }
   }
-  return rpc('anon_create', { p_body: input.body, p_category: input.category, p_parent_id: input.parentId })
+  return rpc('anon_create', { p_body: input.body, p_category: input.category, p_parent_id: input.parentId, p_authorship: input.authorship ?? 'human' })
+}
+
+/** Author changes the declared authorship of their own 익명 post/comment (ownership checked in the RPC). */
+export async function setAnonAuthorship(id: string, viewerId: string, value: Authorship): Promise<boolean> {
+  if (isMock()) {
+    const p = mock().posts.find((x) => x.id === id)
+    if (!p || p.author !== viewerId || p.isDeleted) return false
+    p.authorship = value
+    return true
+  }
+  return rpc<boolean>('anon_set_authorship', { p_id: id, p_authorship: value })
 }
 
 export async function likeAnon(id: string, viewerId: string, like: boolean): Promise<number> {

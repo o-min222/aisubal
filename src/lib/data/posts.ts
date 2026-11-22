@@ -27,7 +27,7 @@ type CreatePostInput = {
   /** reply target (any post in the thread). Replies skip archive auto-save. */
   parentId?: string | null
   agentInteraction?: AgentInteraction
-  /** author-declared (0046); replies default to human */
+  /** author-declared (0046); default human */
   authorship?: Authorship
   sourceNote?: string
   url?: string

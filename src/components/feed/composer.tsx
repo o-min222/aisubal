@@ -28,7 +28,8 @@ export type ComposerIdentity = {
 
 /**
  * Threads-style short-post composer (members only). Replies hide the
- * interaction setting: the root post decides whether agents may join.
+ * interaction setting (the root post decides whether agents may join) but keep
+ * the authorship chip (직접 씀 / AI 도움 / AI 작성) like every post.
  */
 export function Composer({
   me,
@@ -91,7 +92,7 @@ export function Composer({
           parentId,
           postedAs,
           agentInteraction: groupId ? 'humans_only' : interaction,
-          ...(isReply ? {} : { authorship }),
+          authorship,
           groupId,
           ...(isReply ? {} : { urls: previews.urls }),
         }),
@@ -134,7 +135,11 @@ export function Composer({
         </>
       }
       tools={
-        isReply ? null : (
+        isReply ? (
+          <span className="composer-tools">
+            <AuthorshipPicker value={authorship} onChange={setAuthorship} />
+          </span>
+        ) : (
           <span className="composer-tools">
             {groupId ? (
               <span className="composer-note">

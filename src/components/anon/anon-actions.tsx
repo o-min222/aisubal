@@ -2,11 +2,13 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { MoreHorizontal, Flag, Trash2 } from 'lucide-react'
+import { MoreHorizontal, Flag, Trash2, Check } from 'lucide-react'
 import { toast } from 'sonner'
 import { AdaptiveSheet } from '@/components/adaptive-sheet'
 import { ANON_REPORT_REASONS } from '@/lib/anon-rules'
 import type { TimelinePost } from '@/components/timeline/types'
+import { AuthorshipOptions, AUTHORSHIP_ICON } from '@/components/composer/authorship-picker'
+import { AUTHORSHIP_LABEL, parseAuthorship, type Authorship } from '@/lib/authorship'
 import { T } from '@/i18n/t'
 import { tx, tn } from '@/i18n/client'
 
@@ -14,13 +16,15 @@ import { tx, tn } from '@/i18n/client'
 export function AnonActions({ post, afterDelete }: { post: TimelinePost; afterDelete?: string }) {
   const router = useRouter()
   const [open, setOpen] = useState(false)
-  const [step, setStep] = useState<'menu' | 'report'>('menu')
+  const [step, setStep] = useState<'menu' | 'report' | 'authorship'>('menu')
+  const [authorship, setAuthorshipState] = useState<Authorship>(parseAuthorship(post.authorship))
   const [reason, setReason] = useState<string>('')
   const [detail, setDetail] = useState('')
   const [busy, setBusy] = useState(false)
   const [reported, setReported] = useState(Boolean(post.reportedByMe))
 
   if (post.isDeleted) return null
+  const AIcon = AUTHORSHIP_ICON[authorship]
 
   function close(v: boolean) {
     setOpen(v)
@@ -48,6 +52,25 @@ export function AnonActions({ post, afterDelete }: { post: TimelinePost; afterDe
       if (data.hidden) router.refresh()
     } catch (e) {
       toast.error(e instanceof Error ? e.message : tn('신고하지 못했어요.'))
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  async function setAuthorship(next: Authorship) {
+    if (busy) return
+    if (next === authorship) return close(false)
+    setBusy(true)
+    try {
+      const res = await fetch(`/api/anon/${post.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ authorship: next }) })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(data.error || '바꾸지 못했어요')
+      setAuthorshipState(next)
+      toast.success(tn('작성 방식을 바꿨어요'))
+      close(false)
+      router.refresh()
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : tn('바꾸지 못했어요'))
     } finally {
       setBusy(false)
     }
@@ -81,13 +104,19 @@ export function AnonActions({ post, afterDelete }: { post: TimelinePost; afterDe
       >
         <MoreHorizontal className="w-[18px] h-[18px]" />
       </button>
-      <AdaptiveSheet open={open} onOpenChange={close} title={step === 'report' ? tx('신고하기') : tx('글 메뉴')}>
+      <AdaptiveSheet open={open} onOpenChange={close} title={step === 'report' ? tx('신고하기') : step === 'authorship' ? tx('작성 방식') : tx('글 메뉴')}>
         {step === 'menu' ? (
           <div className="flex flex-col py-1">
             {post.isMine ? (
-              <button type="button" onClick={remove} disabled={busy} className="sheet-row text-red-600">
-                <Trash2 className="w-5 h-5" /> <T>삭제하기</T>
-              </button>
+              <>
+                <button type="button" onClick={() => setStep('authorship')} className="sheet-row">
+                  <AIcon className="w-5 h-5" /> <T>작성 방식</T>
+                  <span className="ml-auto text-[13px] text-n-888"><T>{AUTHORSHIP_LABEL[authorship]}</T></span>
+                </button>
+                <button type="button" onClick={remove} disabled={busy} className="sheet-row text-red-600">
+                  <Trash2 className="w-5 h-5" /> <T>삭제하기</T>
+                </button>
+              </>
             ) : (
               <button
                 type="button"
@@ -99,21 +128,18 @@ export function AnonActions({ post, afterDelete }: { post: TimelinePost; afterDe
               </button>
             )}
           </div>
+        ) : step === 'authorship' ? (
+          <div className="py-1">
+            <AuthorshipOptions value={authorship} onPick={setAuthorship} disabled={busy} />
+          </div>
         ) : (
           <div className="space-y-3 py-1">
             <div className="flex flex-col" role="radiogroup" aria-label={tx('신고 사유')}>
               {ANON_REPORT_REASONS.map((r) => (
-                <label key={r} className="sheet-row cursor-pointer">
-                  <input
-                    type="radio"
-                    name={`reason-${post.id}`}
-                    value={r}
-                    checked={reason === r}
-                    onChange={() => setReason(r)}
-                    className="w-4 h-4 accent-n-111"
-                  />
+                <button key={r} type="button" role="radio" aria-checked={reason === r} onClick={() => setReason(r)} className="sheet-row justify-between">
                   <T>{r}</T>
-                </label>
+                  {reason === r && <Check className="w-4 h-4 text-n-111" />}
+                </button>
               ))}
             </div>
             <textarea

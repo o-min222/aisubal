@@ -8,10 +8,12 @@ import { AdaptiveSheet } from '@/components/adaptive-sheet'
 import { FEED_REPORT_REASONS } from '@/lib/feed-rules'
 import { publishReplyDelta } from '@/lib/count-store'
 import type { TimelinePost } from './types'
+import { AuthorshipOptions, AUTHORSHIP_ICON } from '@/components/composer/authorship-picker'
+import { AUTHORSHIP_LABEL, parseAuthorship, type Authorship } from '@/lib/authorship'
 import { T } from '@/i18n/t'
 import { tx, tn } from '@/i18n/client'
 
-type Step = 'menu' | 'edit' | 'delete' | 'report'
+type Step = 'menu' | 'edit' | 'delete' | 'report' | 'authorship'
 
 /**
  * ⋯ on feed / group / 아고라 cards. Own rows: 수정 (member-written only) + 삭제;
@@ -26,6 +28,7 @@ export function PostMenu({ post, kind, afterDeleteHref }: { post: TimelinePost; 
   const [detail, setDetail] = useState('')
   const [busy, setBusy] = useState(false)
   const [reported, setReported] = useState(Boolean(post.reportedByMe))
+  const [authorship, setAuthorshipState] = useState<Authorship>(parseAuthorship(post.authorship))
 
   if (post.isDeleted) return null
   const mine = Boolean(post.isMine)
@@ -65,6 +68,23 @@ export function PostMenu({ post, kind, afterDeleteHref }: { post: TimelinePost; 
     }
   }
 
+  async function setAuthorship(next: Authorship) {
+    if (busy) return
+    if (next === authorship) return close(false)
+    setBusy(true)
+    try {
+      await call(base, { method: 'PATCH', body: JSON.stringify({ authorship: next }) }, tn('바꾸지 못했어요'))
+      setAuthorshipState(next)
+      toast.success(tn('작성 방식을 바꿨어요'))
+      close(false)
+      router.refresh()
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : tn('바꾸지 못했어요'))
+    } finally {
+      setBusy(false)
+    }
+  }
+
   async function remove() {
     if (busy) return
     setBusy(true)
@@ -99,7 +119,8 @@ export function PostMenu({ post, kind, afterDeleteHref }: { post: TimelinePost; 
     }
   }
 
-  const title = step === 'edit' ? tx('글 수정') : step === 'delete' ? tx('글 삭제') : step === 'report' ? tx('신고하기') : tx('글 메뉴')
+  const AIcon = AUTHORSHIP_ICON[authorship]
+  const title = step === 'authorship' ? tx('작성 방식') : step === 'edit' ? tx('글 수정') : step === 'delete' ? tx('글 삭제') : step === 'report' ? tx('신고하기') : tx('글 메뉴')
 
   return (
     <>
@@ -114,6 +135,12 @@ export function PostMenu({ post, kind, afterDeleteHref }: { post: TimelinePost; 
                 <Pencil className="w-5 h-5" /> <T>수정하기</T>
               </button>
             )}
+            {canEdit && (
+              <button type="button" onClick={() => setStep('authorship')} className="sheet-row">
+                <AIcon className="w-5 h-5" /> <T>작성 방식</T>
+                <span className="ml-auto text-[13px] text-n-888"><T>{AUTHORSHIP_LABEL[authorship]}</T></span>
+              </button>
+            )}
             {mine && (
               <button type="button" onClick={() => setStep('delete')} className="sheet-row text-red-600">
                 <Trash2 className="w-5 h-5" /> <T>삭제하기</T>
@@ -124,6 +151,11 @@ export function PostMenu({ post, kind, afterDeleteHref }: { post: TimelinePost; 
                 <Flag className="w-5 h-5" /> {reported ? <T>이미 신고한 글이에요</T> : <T>신고하기</T>}
               </button>
             )}
+          </div>
+        )}
+        {step === 'authorship' && (
+          <div className="py-1">
+            <AuthorshipOptions value={authorship} onPick={setAuthorship} disabled={busy} />
           </div>
         )}
         {step === 'edit' && (

@@ -161,7 +161,7 @@ export function PostCard({
             )}
             {a.kind === 'agent' && <span className="agent-chip">AI</span>}
             {post.isNickname && <span className="badge badge-agent"><T>별명</T></span>}
-            {a.kind === 'member' && !gone && <AuthorshipChip value={post.authorship} />}
+            {a.kind !== 'agent' && !gone && <AuthorshipChip value={post.authorship} />}
             {a.subtitle && <span className="text-n-888 truncate max-w-[180px]">{a.subtitle}</span>}
             <span className="text-n-bbb">·</span>
             <span className="text-n-888">
