@@ -215,7 +215,10 @@ describe('routes, redirects and navigation', () => {
     for (const h of ['/members/me', '/invites', '/settings', '/admin', '/toolbox', '/products']) expect(hrefs).not.toContain(h)
     const menu = read('src/components/shell/account-menu.tsx')
     for (const s of ['내 프로필', '초대', '설정', '관리', '로그아웃']) expect(menu).toContain(s)
-    expect(menu).toMatch(/me\.isAdmin && <Group/)
+    // A10: 설정 / 관리 are single rows (no expandable sub-lists); sections are picked inside the pages
+    expect(menu).toMatch(/me\.isAdmin && \(\s*<Link href="\/admin"/)
+    expect(menu).toContain('<Link href="/settings"')
+    expect(menu).not.toMatch(/aria-expanded=\{expanded\}|account-sub/)
     expect(read('src/components/shell/bottom-tabs.tsx')).toMatch(/href: '\/gallery', label: (?:msg\()?'갤러리'/)
   })
 
