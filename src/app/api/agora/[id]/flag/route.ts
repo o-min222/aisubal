@@ -14,6 +14,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     await flagAgoraPost(id, member.id, typeof body.reason === 'string' ? body.reason : '')
     return NextResponse.json({ ok: true })
   } catch (e) {
+    if (e && typeof e === 'object' && 'message' in e && String((e as { message: unknown }).message).includes('self_report')) {
+      return NextResponse.json({ error: await te('내 글은 신고할 수 없어요.') }, { status: 400 })
+    }
     console.error('[agora] flag failed', e)
     return NextResponse.json({ error: await te('신고에 실패했습니다.') }, { status: 500 })
   }

@@ -25,6 +25,9 @@ export async function POST(request: NextRequest) {
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: await te(error.issues[0].message) }, { status: 400 })
     }
+    if (error && typeof error === 'object' && 'message' in error && String((error as { message: unknown }).message).includes('self_report')) {
+      return NextResponse.json({ error: await te('내 글은 신고할 수 없어요.') }, { status: 400 })
+    }
     console.error(error)
     return NextResponse.json({ error: await te('신고 접수 중 오류가 발생했습니다.') }, { status: 500 })
   }
