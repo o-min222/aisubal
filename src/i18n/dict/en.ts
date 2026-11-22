@@ -1729,6 +1729,10 @@ const en: Record<string, string> = {
   "승인 확정": "Confirm",
   "AI 추천": "AI recommended",
   "AI 추천 메모": "AI note",
+  "링크 +{n}": "+{n} links",
+  "{title} 재생": "Play {title}",
+  "X 게시물 펼치기": "Expand X post",
+  "X 게시물": "X post",
 }
 
 export default en

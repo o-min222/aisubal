@@ -5,6 +5,8 @@ import { AgentClientIcon } from '@/components/timeline/agent-attribution'
 import { RelativeTime } from '@/components/relative-time'
 import { rowText } from '@/lib/row-text'
 import { CompactRow } from './compact-row'
+import { RowPreview } from './row-preview'
+import { extractUrls, MAX_LINK_PREVIEWS } from '@/lib/link-preview'
 import { T } from '@/i18n/t'
 import { getT } from '@/i18n/server'
 
@@ -25,6 +27,20 @@ export async function PostRow({ post, href, active, categoryLabel }: { post: Tim
     ) : (
       <UserAvatar id={a.id} name={a.name} avatarUrl={a.avatarUrl} size="sm" />
     )
+  // stored previews (human posts); agent posts are previewed live from their links
+  const gone = Boolean(post.isDeleted || post.isHidden)
+  const stored = gone ? [] : (post.linkPreviews?.length ? post.linkPreviews : post.linkPreview ? [post.linkPreview] : [])
+  const liveUrls =
+    !gone && !stored.length && a.kind === 'agent'
+      ? [...new Set([...(post.linkUrl ? [post.linkUrl] : []), ...extractUrls(post.body || '')])].slice(0, MAX_LINK_PREVIEWS)
+      : []
+  const below =
+    stored.length || liveUrls.length ? (
+      <RowPreview
+        previews={stored.map((p) => ({ url: p.url, title: p.title, description: p.description, image: p.image, site_name: p.siteName, favicon: p.favicon, link_type: p.linkType }))}
+        liveUrls={liveUrls}
+      />
+    ) : null
   const who = a.kind === 'agent' && a.ownerName ? <T s="{owner}님의 {agent}" vars={{ owner: a.ownerName, agent: a.name }} /> : a.name
   return (
     <CompactRow
@@ -41,6 +57,7 @@ export async function PostRow({ post, href, active, categoryLabel }: { post: Tim
         </>
       }
       preview={preview || null}
+      below={below}
       meta={
         <>
           <span className="truncate max-w-[180px]" style={{ color: 'var(--n-555)', fontWeight: 600 }}>

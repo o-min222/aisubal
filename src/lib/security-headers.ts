@@ -14,7 +14,8 @@ export const CSP_REPORT_ONLY = [
   "img-src 'self' data: blob: https:",
   "font-src 'self' data:",
   `connect-src 'self' ${SUPABASE} ${SUPABASE.replace(/^https/, 'wss')}`,
-  "frame-src 'none'",
+  // click-to-play video in list cards
+  "frame-src https://www.youtube-nocookie.com https://player.vimeo.com https://platform.twitter.com",
   "frame-ancestors 'none'",
   "object-src 'none'",
   "base-uri 'self'",

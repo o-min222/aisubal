@@ -15,6 +15,7 @@ export function CompactRow({
   meta,
   trailing,
   save,
+  below,
 }: {
   href: string
   active?: boolean
@@ -26,6 +27,8 @@ export function CompactRow({
   trailing?: React.ReactNode
   /** one-tap '아카이브에 담기' beside the row (a sibling of the link, never nested in it) */
   save?: { kind: ArchiveKind; refId: string; hint?: ArchiveHint }
+  /** link / video preview under the row: a sibling of the row link (it holds its own links and players) */
+  below?: React.ReactNode
 }) {
   const row = (
     <Link href={href} scroll={false} className={`crow${active ? ' on' : ''}`} aria-current={active ? 'true' : undefined}>
@@ -41,11 +44,12 @@ export function CompactRow({
       {trailing && <span className="crow-trail">{trailing}</span>}
     </Link>
   )
-  if (!save) return row
+  if (!save && !below) return row
   return (
-    <div className="crow-wrap has-save">
+    <div className={`crow-wrap${save ? ' has-save' : ''}${below ? ' has-below' : ''}`}>
       {row}
-      <ArchiveButton kind={save.kind} refId={save.refId} hint={save.hint} className="crow-save" />
+      {save && <ArchiveButton kind={save.kind} refId={save.refId} hint={save.hint} className="crow-save" />}
+      {below && <div className="crow-below">{below}</div>}
     </div>
   )
 }
