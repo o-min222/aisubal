@@ -283,65 +283,7 @@ export function sortEntries(
   }
 }
 
-export function defaultInstallSnippets(entry: {
-  name: string
-  type: ToolboxType
-  source_repo: string | null
-  github_url: string | null
-  canonical_url: string
-}): Partial<Record<ToolboxEnvironment | 'generic', string>> {
-  const repo = entry.source_repo || extractGithubOwnerRepo(entry.canonical_url)
-  const repoStr = typeof repo === 'string' ? repo : repo ? `${repo.owner}/${repo.repo}` : null
-  const npxPkg = repoStr ? `@${repoStr.replace('/', '-')}` : entry.name
-
-  if (entry.type === 'mcp_server') {
-    const mcpJson = `{
-  "mcpServers": {
-    "${entry.name.toLowerCase().replace(/\\s+/g, '-')}": {
-      "command": "npx",
-      "args": ["-y", "${npxPkg}"]
-    }
-  }
-}`
-    return {
-      cursor: `// Cursor Settings → MCP → Add new MCP Server\n// 또는 cursor://anysphere.cursor-deeplink/mcp/install?name=${encodeURIComponent(entry.name)}\n${mcpJson}`,
-      claude_desktop: `// ~/Library/Application Support/Claude/claude_desktop_config.json (macOS)\n${mcpJson}`,
-      claude_code: `claude mcp add ${entry.name.toLowerCase().replace(/\\s+/g, '-')} -- npx -y ${npxPkg}`,
-      codex_cli: `# ~/.codex/config.toml\n[mcp_servers.${entry.name.toLowerCase().replace(/\\s+/g, '_')}]\ncommand = "npx"\nargs = ["-y", "${npxPkg}"]`,
-      generic: mcpJson,
-    }
-  }
-
-  if (entry.type === 'agent_skill') {
-    const skillPath = repoStr || entry.name
-    return {
-      claude_code: `npx skills add ${skillPath}`,
-      cursor: `# .cursor/skills/${entry.name.replace(/\\s+/g, '-')}/SKILL.md 로 복사\ngit clone ${entry.github_url || entry.canonical_url} /tmp/${entry.name.replace(/\\s+/g, '-')}-skill`,
-      generic: `npx skills add ${skillPath}`,
-    }
-  }
-
-  if (entry.type === 'cli_tool') {
-    return {
-      generic: repoStr ? `npm i -g ${npxPkg}\n# or: pip install ${entry.name.toLowerCase()}` : `npm i -g ${entry.name}`,
-      codex_cli: repoStr ? `# Codex CLI 환경에서\nnpm i -g ${npxPkg}` : `npm i -g ${entry.name}`,
-      gemini_cli: `# Gemini CLI와 함께 사용\nnpm i -g ${npxPkg}`,
-      cursor: `# 터미널에서 설치 후 Cursor Agent에서 호출\nnpm i -g ${npxPkg}`,
-    }
-  }
-
-  if (entry.type === 'cursor_rules') {
-    return {
-      cursor: `# .cursor/rules/${entry.name.replace(/\\s+/g, '-')}.mdc 에 규칙 추가\ncurl -L ${entry.github_url || entry.canonical_url}/raw/main/.cursorrules -o .cursorrules`,
-      generic: `git clone ${entry.github_url || entry.canonical_url}`,
-    }
-  }
-
-  return {
-    generic: `Visit ${entry.canonical_url}`,
-    chatgpt: `# ChatGPT / Custom GPT에서 해당 서비스 API 키를 연결하세요\n# ${entry.canonical_url}`,
-  }
-}
+// Install commands are no longer generated from slugs/repos (B-1 security fix): see install-catalog.ts.
 
 export const TOOLBOX_TYPE_LABEL: Record<ToolboxType, string> = {
   agent_skill: 'Agent Skill',

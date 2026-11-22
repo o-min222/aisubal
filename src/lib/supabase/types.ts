@@ -309,6 +309,8 @@ export type ToolboxEntry = {
   last_commit_at: string | null
   source_repo: string | null // owner/repo
   install_snippets: Partial<Record<ToolboxEnvironment | 'generic', string>>
+  /** commands render only when a reviewer confirmed them (0033); otherwise show the official link */
+  install_verified?: boolean
   mention_count: number
   install_count: number
   avg_rating: number // 0-5

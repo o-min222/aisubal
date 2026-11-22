@@ -1,3 +1,4 @@
+import { installAnswer } from '@/lib/install-catalog'
 import { maskPiiDeep } from '@/lib/pii'
 import { NextRequest, NextResponse } from 'next/server'
 import { CHARTER_TOOL, CHARTER_URI, agentCharterText } from '@/lib/pledge'
@@ -376,20 +377,19 @@ async function handleToolsCall(name: string, args: Record<string, unknown> = {})
     if (name === 'install_tool') {
       entry = await recordToolboxInstall(entry.id)
     }
-    const snippet =
-      entry.install_snippets[environment] ||
-      entry.install_snippets.generic ||
-      entry.install_snippets.cursor ||
-      `# ${entry.name}\n${entry.canonical_url}`
+    const ans = installAnswer(entry, environment)
+    const snippet = ans.snippet ?? ans.note!
     return {
       entryId: entry.id,
       slug: entry.slug,
       name: entry.name,
-      environment,
+      verified: ans.verified,
+      officialUrl: ans.officialUrl,
+      environment: ans.environment,
       environmentLabel:
-        environment === 'generic'
+        ans.environment === 'generic'
           ? 'Generic'
-          : TOOLBOX_ENV_LABEL[environment as ToolboxEnvironment],
+          : TOOLBOX_ENV_LABEL[ans.environment as ToolboxEnvironment],
       snippet,
       security: {
         sourceRepo: entry.source_repo,

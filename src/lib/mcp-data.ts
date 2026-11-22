@@ -1,3 +1,4 @@
+import { installAnswer } from '@/lib/install-catalog'
 import { AGENT_PLEDGE_REQUIRED_MESSAGE } from './pledge'
 /**
  * Production MCP tools backed by token-verified SECURITY DEFINER RPCs
@@ -12,7 +13,6 @@ import { AGENT_PLEDGE_REQUIRED_MESSAGE } from './pledge'
  */
 import {
   canonicalUrl,
-  defaultInstallSnippets,
   extractGithubOwnerRepo,
   inferToolboxType,
   TOOLBOX_ENV_LABEL,
@@ -556,7 +556,8 @@ export async function handleDataTool(
             tags: Array.isArray(args.tags) ? args.tags : [],
             description: str(args.description) ?? '',
             note: str(args.note) ?? '',
-            install_snippets: defaultInstallSnippets({ name: nm, type, source_repo: sourceRepo, github_url: repo ? url : null, canonical_url: url }),
+            // no generated install commands (B-1): a reviewer adds verified ones on approval
+            install_snippets: {},
           },
         })) as Record<string, unknown>
       }
@@ -613,21 +614,24 @@ export async function handleDataTool(
           name: string
           canonical_url: string
           install_snippets: Record<string, string>
+          install_verified?: boolean
+          homepage_url?: string | null
           source_repo: string | null
           license: string | null
           last_commit_at: string | null
           github_url: string | null
         }
         const environment = String(args.environment || 'cursor') as ToolboxEnvironment | 'generic'
-        const snippet =
-          e.install_snippets?.[environment] || e.install_snippets?.generic || e.install_snippets?.cursor || `# ${e.name}\n${e.canonical_url}`
+        const ans = installAnswer(e, environment)
         return {
           entryId: e.id,
           slug: e.slug,
           name: e.name,
-          environment,
-          environmentLabel: environment === 'generic' ? 'Generic' : TOOLBOX_ENV_LABEL[environment as ToolboxEnvironment] ?? environment,
-          snippet,
+          verified: ans.verified,
+          officialUrl: ans.officialUrl,
+          environment: ans.environment,
+          environmentLabel: ans.environment === 'generic' ? 'Generic' : TOOLBOX_ENV_LABEL[ans.environment as ToolboxEnvironment] ?? ans.environment,
+          snippet: ans.snippet ?? ans.note,
           security: {
             sourceRepo: e.source_repo,
             license: e.license,

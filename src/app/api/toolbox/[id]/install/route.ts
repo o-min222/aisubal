@@ -1,3 +1,4 @@
+import { installAnswer } from '@/lib/install-catalog'
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { getMember } from '@/lib/auth'
@@ -36,23 +37,18 @@ export async function GET(request: NextRequest, { params }: Params) {
   }
   const env = (request.nextUrl.searchParams.get('environment') ||
     'cursor') as ToolboxEnvironment | 'generic'
-  const snippet =
-    entry.install_snippets[env] ||
-    entry.install_snippets.generic ||
-    entry.install_snippets.cursor ||
-    `# ${entry.name}\n# ${entry.canonical_url}`
-
+  const ans = installAnswer(entry, env)
   return NextResponse.json({
     entry_id: entry.id,
     name: entry.name,
-    environment: env,
+    verified: ans.verified,
+    official_url: ans.officialUrl,
+    environment: ans.environment,
     environment_label:
-      env === 'generic' ? 'Generic' : TOOLBOX_ENV_LABEL[env as ToolboxEnvironment],
-    snippet,
-    cursor_deeplink:
-      entry.type === 'mcp_server'
-        ? `cursor://anysphere.cursor-deeplink/mcp/install?name=${encodeURIComponent(entry.name)}&config=${encodeURIComponent(Buffer.from(snippet).toString('base64'))}`
-        : null,
+      ans.environment === 'generic' ? 'Generic' : TOOLBOX_ENV_LABEL[ans.environment as ToolboxEnvironment],
+    snippet: ans.snippet ?? ans.note,
+    // no name-only Cursor deeplink: it installed nothing real (B-1)
+    cursor_deeplink: null,
     security: {
       source_repo: entry.source_repo,
       license: entry.license,

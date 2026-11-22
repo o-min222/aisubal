@@ -9,7 +9,6 @@ import type { ToolboxEntryDetails } from '@/lib/data/types'
 import {
   canonicalUrl,
   compatSummary,
-  defaultInstallSnippets,
   extractGithubOwnerRepo,
   isToolishUrl,
   recordMention,
@@ -18,6 +17,7 @@ import {
   type ToolboxSort,
   upsertByCanonicalUrl,
 } from '@/lib/toolbox-rules'
+import { verifiedSnippets } from '@/lib/install-catalog'
 
 export type { ToolboxEntryDetails } from '@/lib/data/types'
 
@@ -38,23 +38,16 @@ function entry(
   const gh = partial.github_url || partial.canonical_url
   const repo = extractGithubOwnerRepo(gh)
   const source = partial.source_repo || (repo ? `${repo.owner}/${repo.repo}` : null)
-  const base = {
-    name: partial.name,
-    type: partial.type,
-    source_repo: source,
-    github_url: gh,
-    canonical_url: canonicalUrl(partial.canonical_url),
-  }
+  // install commands only from the verified catalog — never derived from the slug/repo (B-1)
+  const verified = verifiedSnippets(partial.slug)
   return {
     ...partial,
     canonical_url: canonicalUrl(partial.canonical_url),
     icon_url: partial.icon_url ?? null,
     homepage_url: partial.homepage_url ?? null,
     source_repo: source,
-    install_snippets: {
-      ...defaultInstallSnippets(base),
-      ...partial.install_snippets,
-    },
+    install_snippets: verified?.snippets ?? {},
+    install_verified: Boolean(verified && Object.keys(verified.snippets).length),
     created_by_id: null,
     updated_at: partial.created_at,
   }
@@ -410,7 +403,7 @@ const SEED: ToolboxEntry[] = [
     name: 'MCP TypeScript SDK',
     one_liner: 'MCP 서버/클라이언트를 TS로 구현',
     description: 'modelcontextprotocol/typescript-sdk',
-    type: 'cli_tool',
+    type: 'mcp_server',
     tags: ['sdk', 'mcp', 'typescript'],
     canonical_url: 'https://github.com/modelcontextprotocol/typescript-sdk',
     github_url: 'https://github.com/modelcontextprotocol/typescript-sdk',
@@ -430,7 +423,7 @@ const SEED: ToolboxEntry[] = [
     name: 'Awesome MCP Servers',
     one_liner: '커뮤니티 MCP 서버 큐레이션 리스트',
     description: 'punkpeye/awesome-mcp-servers — 탐색용 인덱스.',
-    type: 'prompt',
+    type: 'mcp_server',
     tags: ['디렉터리', '큐레이션', 'mcp'],
     canonical_url: 'https://github.com/punkpeye/awesome-mcp-servers',
     github_url: 'https://github.com/punkpeye/awesome-mcp-servers',

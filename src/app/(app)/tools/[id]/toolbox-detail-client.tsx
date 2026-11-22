@@ -25,6 +25,7 @@ import { ArchiveButton } from '@/components/archive/archive-button'
 import { toast } from 'sonner'
 import type { AiRatingSummary } from '@/lib/data/agora'
 import { AiRatingSection } from './ai-rating-section'
+import { renderableInstall } from '@/lib/install-catalog'
 import { T } from '@/i18n/t'
 import { tx, tn } from '@/i18n/client'
 
@@ -44,24 +45,15 @@ const ENVS = Object.keys(TOOLBOX_ENV_LABEL) as ToolboxEnvironment[]
 
 export function ToolboxDetailClient({ entry: initial, mentionPosts, member, aiRating, usersSlot, launchSlot, provenanceSlot, variant = 'page' }: Props) {
   const [entry, setEntry] = useState(initial)
-  const [env, setEnv] = useState<ToolboxEnvironment | 'generic'>('cursor')
   const [rating, setRating] = useState(5)
   const [reviewBody, setReviewBody] = useState('')
   const [busy, setBusy] = useState(false)
 
-  const snippet = useMemo(() => {
-    return (
-      entry.install_snippets[env] ||
-      entry.install_snippets.generic ||
-      entry.install_snippets.cursor ||
-      `# ${entry.name}\n${entry.canonical_url}`
-    )
-  }, [entry, env])
-
-  const deeplink =
-    entry.type === 'mcp_server'
-      ? `cursor://anysphere.cursor-deeplink/mcp/install?name=${encodeURIComponent(entry.name)}`
-      : null
+  // B-1: only reviewer-verified commands, one tab per client that has its OWN snippet
+  const install = useMemo(() => renderableInstall(entry), [entry])
+  const [env, setEnv] = useState<ToolboxEnvironment | 'generic'>(install.tabs[0] ?? 'generic')
+  const snippet = install.snippets[env] ?? install.snippets[install.tabs[0] ?? 'generic'] ?? ''
+  const officialUrl = entry.homepage_url || entry.github_url || entry.canonical_url
 
   async function copySnippet() {
     try {
@@ -163,14 +155,19 @@ export function ToolboxDetailClient({ entry: initial, mentionPosts, member, aiRa
             <h1 className="text-2xl font-bold text-n-111">{entry.name}</h1>
             <p className="text-n-666 mt-1">{entry.one_liner}</p>
             <div className="flex flex-wrap gap-4 mt-3 text-sm text-n-666">
-              <span className="inline-flex items-center gap-1">
-                <Star className="w-4 h-4 fill-[#f5a623] text-[#f5a623]" />
-                {entry.avg_rating.toFixed(1)} ({entry.rating_count})
-              </span>
+              {/* member data only (B-3): nothing shown until a member has rated / installed / mentioned it */}
+              {entry.rating_count > 0 ? (
+                <span className="inline-flex items-center gap-1">
+                  <Star className="w-4 h-4 fill-[#f5a623] text-[#f5a623]" />
+                  {Number(entry.avg_rating).toFixed(1)} <T s="(멤버 {n}명)" vars={{ n: entry.rating_count }} />
+                </span>
+              ) : (
+                <span className="text-n-888"><T>아직 멤버 평가 없음</T></span>
+              )}
               {(entry.ai_rating_count ?? 0) > 0 && <span>AI {Number(entry.ai_rating_avg).toFixed(1)}</span>}
               {(entry.user_count ?? 0) > 0 && <span><T s="{user_count}명이 써요" vars={{ user_count: entry.user_count }} /></span>}
-              {entry.product_id ? <span><T s="업보트 {v}" vars={{ v: entry.upvote_count ?? 0 }} /></span> : <span><T s="설치 {install_count}" vars={{ install_count: entry.install_count }} /></span>}
-              <span><T s="언급 {mention_count}" vars={{ mention_count: entry.mention_count }} /></span>
+              {entry.product_id ? ((entry.upvote_count ?? 0) > 0 && <span><T s="업보트 {v}" vars={{ v: entry.upvote_count ?? 0 }} /></span>) : entry.install_count > 0 && <span><T s="설치 {install_count}" vars={{ install_count: entry.install_count }} /></span>}
+              {entry.mention_count > 0 && <span><T s="언급 {mention_count}" vars={{ mention_count: entry.mention_count }} /></span>}
             </div>
             <div className="flex flex-wrap gap-3 mt-3 text-sm items-center">
               {entry.github_url && (
@@ -232,38 +229,40 @@ export function ToolboxDetailClient({ entry: initial, mentionPosts, member, aiRa
           <Download className="w-4 h-4" />
           <T>바로 적용</T>
         </h2>
-        <div className="tab-filters mb-3 flex-wrap">
-          {ENVS.map((e) => (
-            <button
-              key={e}
-              type="button"
-              className={`tab-filter ${env === e ? 'active' : ''}`}
-              onClick={() => setEnv(e)}
-            >
-              <T>{TOOLBOX_ENV_LABEL[e]}</T>
-            </button>
-          ))}
-          <button
-            type="button"
-            className={`tab-filter ${env === 'generic' ? 'active' : ''}`}
-            onClick={() => setEnv('generic')}
-          >
-            Generic
-          </button>
-        </div>
-        <pre className="bg-n-111 text-n-f5f5f5 text-xs p-4 rounded-lg overflow-x-auto whitespace-pre-wrap font-mono">
-          {snippet}
-        </pre>
+        {install.tabs.length === 0 ? (
+          <p className="text-[13px] text-n-666 mb-3">
+            <T>검증된 설치 명령이 아직 없어요. 공식 설치 안내를 따라 주세요.</T>
+          </p>
+        ) : (
+          <>
+            {install.tabs.length > 1 && (
+              <div className="tab-filters mb-3 flex-wrap">
+                {install.tabs.map((e) => (
+                  <button key={e} type="button" className={`tab-filter ${env === e ? 'active' : ''}`} onClick={() => setEnv(e)}>
+                    {e === 'generic' ? <T>공통</T> : <T>{TOOLBOX_ENV_LABEL[e]}</T>}
+                  </button>
+                ))}
+              </div>
+            )}
+            {install.tabs.length === 1 && install.tabs[0] !== 'generic' && (
+              <p className="text-[12.5px] text-n-666 mb-2"><T>{TOOLBOX_ENV_LABEL[install.tabs[0] as ToolboxEnvironment]}</T></p>
+            )}
+            <pre className="bg-n-111 text-n-f5f5f5 text-xs p-4 rounded-lg overflow-x-auto whitespace-pre-wrap font-mono">
+              {snippet}
+            </pre>
+          </>
+        )}
         <div className="flex flex-wrap gap-2 mt-3">
-          <button type="button" className="btn btn-secondary btn-sm" onClick={copySnippet}>
-            <Copy className="w-4 h-4" />
-            <T>복사</T>
-          </button>
-          {deeplink && (
-            <a href={deeplink} className="btn btn-primary btn-sm">
-              <T>Cursor에 설치</T>
-            </a>
+          {install.tabs.length > 0 && (
+            <button type="button" className="btn btn-secondary btn-sm" onClick={copySnippet}>
+              <Copy className="w-4 h-4" />
+              <T>복사</T>
+            </button>
           )}
+          <a href={officialUrl} target="_blank" rel="noopener noreferrer" className="btn btn-secondary btn-sm">
+            <ExternalLink className="w-4 h-4" />
+            <T>공식 설치 안내</T>
+          </a>
           <button
             type="button"
             className="btn btn-secondary btn-sm"

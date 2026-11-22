@@ -10,7 +10,6 @@ import {
 import {
   canonicalUrl,
   compatSummary,
-  defaultInstallSnippets,
   extractGithubOwnerRepo,
   inferToolboxType,
   recomputeRating,
@@ -150,13 +149,7 @@ export async function createToolboxEntry(
       rating_count: 0,
       featured: false,
       created_by_id: member.id,
-      install_snippets: defaultInstallSnippets({
-        name: data.name,
-        type,
-        source_repo: repo ? `${repo.owner}/${repo.repo}` : null,
-        github_url: data.github_url ?? (repo ? url : null),
-        canonical_url: url,
-      }),
+      install_snippets: {},
     })
     MUTABLE_TOOLBOX.splice(0, MUTABLE_TOOLBOX.length, ...result.entries)
     return {
@@ -166,13 +159,6 @@ export async function createToolboxEntry(
   }
 
   const supabase = await sb()
-  const snippets = defaultInstallSnippets({
-    name: data.name,
-    type,
-    source_repo: repo ? `${repo.owner}/${repo.repo}` : null,
-    github_url: data.github_url ?? (repo ? url : null),
-    canonical_url: url,
-  })
 
   const { data: existing } = await supabase
     .from('toolbox_entries')
@@ -198,7 +184,7 @@ export async function createToolboxEntry(
       homepage_url: data.homepage_url ?? null,
       license: data.license ?? null,
       source_repo: repo ? `${repo.owner}/${repo.repo}` : null,
-      install_snippets: snippets,
+      install_snippets: {}, // unverified until a reviewer confirms (0033)
       created_by_id: member.id,
     })
     .select('*')

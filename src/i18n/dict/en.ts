@@ -1673,6 +1673,11 @@ const en: Record<string, string> = {
   "핸들 변경 기록 (나만 보여요)": "Handle history (only you can see this)",
   "@{h} 보호 중 ({date}까지)": "@{h} on hold until {date}",
   "쓸 수 없는 핸들이에요 (영문 소문자·숫자·_ 3~20자, 예약된 이름 제외).": "That handle isn't allowed (3–20 lowercase letters, numbers or _, no reserved names).",
+  "검증된 설치 명령이 아직 없어요. 공식 설치 안내를 따라 주세요.": "No verified install command yet. Please follow the official install guide.",
+  "공통": "All clients",
+  "공식 설치 안내": "Official install guide",
+  "(멤버 {n}명)": "({n} members)",
+  "아직 멤버 평가 없음": "No member ratings yet",
 }
 
 export default en
