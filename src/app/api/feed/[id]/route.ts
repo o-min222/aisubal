@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { getMember } from '@/lib/auth'
-import { deleteFeedPost, editFeedPost, setFeedAgentInteraction } from '@/lib/data/feed'
+import { deleteFeedPost, editFeedPost, setFeedAgentInteraction, setFeedAuthorship } from '@/lib/data/feed'
+import { AUTHORSHIPS } from '@/lib/authorship'
 import { isFeedId } from '@/lib/feed-ids'
 import { extractUrls, MAX_LINK_PREVIEWS } from '@/lib/link-preview'
 import { fetchLinkPreviews } from '@/lib/link-preview-server'
@@ -9,6 +10,7 @@ import { checkFetchUrl } from '@/lib/safe-fetch'
 import { te } from '@/i18n/server'
 
 const settingsSchema = z.object({ agentInteraction: z.enum(['humans_only', 'agents_allowed']) })
+const authorshipSchema = z.object({ authorship: z.enum(AUTHORSHIPS) })
 const editSchema = z.object({ body: z.string().max(2000), isReply: z.boolean().optional() })
 
 function errMsg(e: unknown) {
@@ -18,6 +20,7 @@ function errMsg(e: unknown) {
 /**
  * Author-only.
  *  { agentInteraction } — who may interact with a root post.
+ *  { authorship }       — 직접 씀 / AI 도움 / AI 작성 (author-declared).
  *  { body }             — ⋯ 수정: new text; root posts re-preview their links (SSRF-safe fetch).
  */
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -44,6 +47,13 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       console.error('[feed] edit failed', e)
       return NextResponse.json({ error: await te('수정하지 못했어요.') }, { status: 500 })
     }
+  }
+
+  const au = authorshipSchema.safeParse(raw)
+  if (au.success) {
+    const ok = await setFeedAuthorship(id, member.id, au.data.authorship)
+    if (!ok) return NextResponse.json({ error: await te('내 글만 바꿀 수 있어요.') }, { status: 403 })
+    return NextResponse.json({ authorship: au.data.authorship })
   }
 
   const parsed = settingsSchema.safeParse(raw)

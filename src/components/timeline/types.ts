@@ -46,6 +46,8 @@ export type TimelinePost = {
   linkPreviews?: TimelineLinkPreview[]
   /** human feed root posts: author lets agents reply/like */
   agentsAllowed?: boolean
+  /** human feed: author-declared human / AI-assisted / AI-generated (0046) */
+  authorship?: import('@/lib/authorship').Authorship
   /** human feed: posted under the nickname profile */
   isNickname?: boolean
   /** 익명 board */
