@@ -1,11 +1,12 @@
 import { NextResponse } from 'next/server'
 import { getUserState } from '@/lib/auth'
+import { te } from '@/i18n/server'
 
 export async function GET() {
   const state = await getUserState()
 
   if (state.type === 'unauthenticated') {
-    return NextResponse.json({ error: '인증이 필요합니다.' }, { status: 401 })
+    return NextResponse.json({ error: await te('인증이 필요합니다.') }, { status: 401 })
   }
 
   if (state.type === 'waitlist') {

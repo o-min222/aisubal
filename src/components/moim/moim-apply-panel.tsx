@@ -141,7 +141,7 @@ export function MoimApplyPanel({ moim: m }: { moim: MoimDetail }) {
             </label>
             <input id="ans-note" maxLength={300} className="w-full rounded-xl border border-[#ddd] px-3 py-2.5 text-[15px] focus:outline-none focus:border-[#111]" value={note} onChange={(e) => setNote(e.target.value)} />
           </div>
-          <p className="text-[12px] text-[#888]"><T s="답변은 호스트{v}만 볼 수 있어요." vars={{ v: m.group ? tx('와 그룹 운영진') : '' }} /></p>
+          <p className="text-[12px] text-[#888]">{m.group ? <T>답변은 호스트와 그룹 운영진만 볼 수 있어요.</T> : <T>답변은 호스트만 볼 수 있어요.</T>}</p>
           <button type="submit" disabled={busy} className="btn btn-primary w-full min-h-[48px] rounded-full text-[15px]">
             {busy ? <T>신청 중…</T> : m.requiresApproval ? <T>참가 신청 (호스트 승인)</T> : full ? <T>대기 신청</T> : <T>참석하기</T>}
           </button>

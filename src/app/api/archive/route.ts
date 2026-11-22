@@ -10,6 +10,7 @@ import {
 } from '@/lib/data/archive'
 import type { ArchiveSourceType } from '@/lib/supabase/types'
 import { ARCHIVE_SOURCE_LABEL } from '@/lib/archive-brain-rules'
+import { te } from '@/i18n/server'
 
 const saveSchema = z.object({
   source_type: z.enum(['post', 'link', 'asset', 'toolbox', 'meetup', 'product']),
@@ -25,7 +26,7 @@ const saveSchema = z.object({
 export async function GET(request: NextRequest) {
   const member = await getMember()
   if (!member) {
-    return NextResponse.json({ error: '인증이 필요합니다.' }, { status: 401 })
+    return NextResponse.json({ error: await te('인증이 필요합니다.') }, { status: 401 })
   }
 
   const sp = request.nextUrl.searchParams
@@ -51,7 +52,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   const member = await getMember()
   if (!member) {
-    return NextResponse.json({ error: '인증이 필요합니다.' }, { status: 401 })
+    return NextResponse.json({ error: await te('인증이 필요합니다.') }, { status: 401 })
   }
 
   try {
@@ -64,7 +65,7 @@ export async function POST(request: NextRequest) {
 
     const resolved = await resolveArchiveSource(data.source_type, data.source_id)
     if (!resolved) {
-      return NextResponse.json({ error: '저장할 대상을 찾을 수 없습니다.' }, { status: 404 })
+      return NextResponse.json({ error: await te('저장할 대상을 찾을 수 없습니다.') }, { status: 404 })
     }
 
     const result = await saveAnything(member, {
@@ -86,9 +87,9 @@ export async function POST(request: NextRequest) {
     )
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: error.issues[0].message }, { status: 400 })
+      return NextResponse.json({ error: await te(error.issues[0].message) }, { status: 400 })
     }
     console.error(error)
-    return NextResponse.json({ error: '아카이브 저장 실패' }, { status: 500 })
+    return NextResponse.json({ error: await te('아카이브 저장 실패') }, { status: 500 })
   }
 }

@@ -14,7 +14,9 @@ async function SocialUsers({ users, total }: { users: ToolSocialUser[]; total: n
   const following = users.filter((u) => u.kind === 'following')
   const shown = [...friends, ...following].slice(0, 4)
   const label = friends.length
-    ? st('친구 {length}명{v}이 써요', { length: friends.length, v: following.length ? ` · 팔로잉 ${following.length}명` : '' })
+    ? following.length
+      ? st('친구 {friends}명 · 팔로잉 {following}명이 써요', { friends: friends.length, following: following.length })
+      : st('친구 {length}명이 써요', { length: friends.length })
     : st('팔로잉 {length}명이 써요', { length: following.length })
   return (
     <span className="tool-social inline-flex items-center gap-1.5 min-w-0" title={shown.map((u) => u.name).join(', ')}>

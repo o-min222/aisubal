@@ -23,6 +23,7 @@ import type {
   Member,
 } from '@/lib/supabase/types'
 import { sb, useMockData } from './client'
+import { msg } from '@/i18n/translate'
 
 type SaveInput = {
   source_type: ArchiveSourceType
@@ -278,7 +279,7 @@ export async function updateBrainItem(
 ): Promise<BrainArchiveItem> {
   if (useMockData()) {
     const idx = MUTABLE_BRAIN.findIndex((i) => i.id === id && i.owner_id === ownerId)
-    if (idx < 0) throw new Error('항목을 찾을 수 없습니다.')
+    if (idx < 0) throw new Error(msg('항목을 찾을 수 없습니다.'))
     const cur = MUTABLE_BRAIN[idx]
     MUTABLE_BRAIN[idx] = {
       ...cur,
@@ -304,7 +305,7 @@ export async function updateBrainItem(
     .select('*')
     .maybeSingle()
   if (error) throw error
-  if (!data) throw new Error('항목을 찾을 수 없습니다.')
+  if (!data) throw new Error(msg('항목을 찾을 수 없습니다.'))
 
   if (patch.collection_ids !== undefined) {
     await supabase.from('brain_archive_collection_items').delete().eq('item_id', id)
@@ -381,7 +382,7 @@ export async function addHighlight(
   if (useMockData()) {
     const item = mockGetBrainItem(itemId, owner.id)
     if (!item || item.owner_id !== owner.id) {
-      throw new Error('항목을 찾을 수 없습니다.')
+      throw new Error(msg('항목을 찾을 수 없습니다.'))
     }
     const hl: ArchiveHighlight = {
       id: `hl-${Date.now()}`,
@@ -397,7 +398,7 @@ export async function addHighlight(
 
   const item = await getBrainItem(itemId, owner.id)
   if (!item || item.owner_id !== owner.id) {
-    throw new Error('항목을 찾을 수 없습니다.')
+    throw new Error(msg('항목을 찾을 수 없습니다.'))
   }
   const supabase = await sb()
   const { data, error } = await supabase

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireAdmin } from '@/lib/auth'
 import { adminBanUser, adminUnbanUser } from '@/lib/data/admin'
 import { z } from 'zod'
+import { te } from '@/i18n/server'
 
 interface RouteParams {
   params: Promise<{ id: string }>
@@ -15,7 +16,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
   try {
     await requireAdmin()
   } catch {
-    return NextResponse.json({ error: '권한이 없습니다.' }, { status: 403 })
+    return NextResponse.json({ error: await te('권한이 없습니다.') }, { status: 403 })
   }
 
   const { id } = await params
@@ -27,10 +28,10 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     return NextResponse.json({ success: true, user })
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: error.issues[0].message }, { status: 400 })
+      return NextResponse.json({ error: await te(error.issues[0].message) }, { status: 400 })
     }
     console.error(error)
-    return NextResponse.json({ error: '사용자 차단 중 오류가 발생했습니다.' }, { status: 500 })
+    return NextResponse.json({ error: await te('사용자 차단 중 오류가 발생했습니다.') }, { status: 500 })
   }
 }
 
@@ -38,7 +39,7 @@ export async function DELETE(_request: NextRequest, { params }: RouteParams) {
   try {
     await requireAdmin()
   } catch {
-    return NextResponse.json({ error: '권한이 없습니다.' }, { status: 403 })
+    return NextResponse.json({ error: await te('권한이 없습니다.') }, { status: 403 })
   }
 
   const { id } = await params
@@ -48,6 +49,6 @@ export async function DELETE(_request: NextRequest, { params }: RouteParams) {
     return NextResponse.json({ success: true, user })
   } catch (e) {
     console.error(e)
-    return NextResponse.json({ error: '차단 해제 중 오류가 발생했습니다.' }, { status: 500 })
+    return NextResponse.json({ error: await te('차단 해제 중 오류가 발생했습니다.') }, { status: 500 })
   }
 }

@@ -1,4 +1,4 @@
-import { msg } from '@/i18n/translate'
+import { msg as M } from '@/i18n/translate'
 export type GroupRole = 'owner' | 'mod' | 'member'
 export type GroupMemberStatus = 'active' | 'pending' | 'invited'
 export type JoinPolicy = 'open' | 'approval'
@@ -17,7 +17,7 @@ export function slugify(name: string): string {
   return GROUP_SLUG_RE.test(ascii) ? ascii : ''
 }
 
-export const ROLE_LABEL: Record<GroupRole, string> = { owner: msg('소유자'), mod: msg('매니저'), member: msg('멤버') }
+export const ROLE_LABEL: Record<GroupRole, string> = { owner: M('소유자'), mod: M('매니저'), member: M('멤버') }
 
 export const canModerate = (role: GroupRole | null | undefined) => role === 'owner' || role === 'mod'
 
@@ -50,5 +50,5 @@ export const GROUP_ERRORS: Record<string, string> = {
 export function groupErrorMessage(e: unknown): string {
   const msg = e instanceof Error ? e.message : String(e ?? '')
   const key = Object.keys(GROUP_ERRORS).find((k) => msg.includes(k))
-  return key ? GROUP_ERRORS[key] : '처리하지 못했어요.'
+  return key ? GROUP_ERRORS[key] : M('처리하지 못했어요.')
 }

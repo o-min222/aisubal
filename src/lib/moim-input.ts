@@ -1,15 +1,16 @@
 import { z } from 'zod'
+import { msg } from '@/i18n/translate'
 
 const optUrl = z
   .string()
   .trim()
   .max(500)
-  .refine((v) => !v || /^https?:\/\//i.test(v), '링크는 http(s)://로 시작해야 해요.')
+  .refine((v) => !v || /^https?:\/\//i.test(v), msg('링크는 http(s)://로 시작해야 해요.'))
   .nullish()
 
 export const moimInputSchema = z.object({
-  title: z.string().trim().min(2, '제목은 2자 이상').max(80),
-  description: z.string().trim().min(1, '소개를 입력해주세요').max(4000),
+  title: z.string().trim().min(2, msg('제목은 2자 이상')).max(80),
+  description: z.string().trim().min(1, msg('소개를 입력해주세요')).max(4000),
   mode: z.enum(['offline', 'online']),
   venueName: z.string().trim().max(120).nullish(),
   venueAddress: z.string().trim().max(300).nullish(),

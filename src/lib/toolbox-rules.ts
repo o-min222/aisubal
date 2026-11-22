@@ -6,6 +6,7 @@ import type {
   ToolboxReview,
   ToolboxType,
 } from '@/lib/supabase/types'
+import { msg } from '@/i18n/translate'
 
 /** Normalize GitHub / skill / MCP / SaaS URLs for dedupe */
 export function canonicalUrl(raw: string): string {
@@ -169,8 +170,8 @@ export function upsertReview(
   rating: number,
   body: string
 ): { ok: true; reviews: ToolboxReview[] } | { ok: false; reason: string } {
-  if (rating < 1 || rating > 5) return { ok: false, reason: '별점은 1~5점입니다.' }
-  if (body.trim().length > 500) return { ok: false, reason: '리뷰는 500자 이내입니다.' }
+  if (rating < 1 || rating > 5) return { ok: false, reason: msg('별점은 1~5점입니다.') }
+  if (body.trim().length > 500) return { ok: false, reason: msg('리뷰는 500자 이내입니다.') }
   const now = new Date().toISOString()
   const idx = reviews.findIndex((r) => r.entry_id === entryId && r.member_id === memberId)
   if (idx >= 0) {

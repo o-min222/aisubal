@@ -8,10 +8,11 @@ import { RelativeTime } from '@/components/relative-time'
 import { inviteShareText, inviteUrl } from '@/lib/invite-share'
 import { T } from '@/i18n/t'
 import { msg as m } from '@/i18n/translate'
-import { tx, tn } from '@/i18n/client'
+import { tx, tn, useLocale } from '@/i18n/client'
 
 /** Real invite codes (no mock data) with a KakaoTalk-ready copy and the Web Share sheet. */
 export function InvitesClient({ inviterName, codes, codesActive, loadFailed }: { inviterName: string; codes: InviteCodeRow[]; codesActive: boolean; loadFailed: boolean }) {
+  const locale = useLocale()
   const [copied, setCopied] = useState<string | null>(null)
   const [canShare, setCanShare] = useState(false)
   const [origin, setOrigin] = useState('https://aisubal.vercel.app')
@@ -38,7 +39,7 @@ export function InvitesClient({ inviterName, codes, codesActive, loadFailed }: {
 
   async function share(code: string) {
     try {
-      await navigator.share({ title: tx('AI쓰발 초대장'), text: inviteShareText(inviterName, code, origin) })
+      await navigator.share({ title: tx('AI쓰발 초대장'), text: inviteShareText(inviterName, code, origin, tx, locale) })
     } catch (e) {
       if ((e as Error)?.name !== 'AbortError') toast.error(tn('공유하지 못했어요. 복사해서 보내 주세요.'))
     }
@@ -53,7 +54,7 @@ export function InvitesClient({ inviterName, codes, codesActive, loadFailed }: {
           <Users className="w-6 h-6" /> <T>초대하기</T>
         </h1>
         <p className="text-sm text-[#666] mt-1">
-          <T>링크를 카카오톡으로 보내면 받은 분이 Google로 로그인하는 것만으로 가입돼요. 남은 초대</T> <b className="text-[#111]">{available}</b><T>장</T>
+          <T s="링크를 카카오톡으로 보내면 받은 분이 Google로 로그인하는 것만으로 가입돼요. 남은 초대 {n}장" vars={{ n: <b className="text-[#111]">{available}</b> }} />
         </p>
       </div>
 
@@ -79,7 +80,7 @@ export function InvitesClient({ inviterName, codes, codesActive, loadFailed }: {
         <ul className="divide-y divide-[#eee]">
           {codes.map((c) => {
             const usable = !c.isUsed && codesActive
-            const msg = inviteShareText(inviterName, c.code, origin)
+            const msg = inviteShareText(inviterName, c.code, origin, tx, locale)
             return (
               <li key={c.code} className="p-4">
                 <div className="flex items-center justify-between gap-3 flex-wrap">
@@ -113,7 +114,7 @@ export function InvitesClient({ inviterName, codes, codesActive, loadFailed }: {
                       <div className="mt-1 rounded-xl bg-[#f6f6f6] p-3 text-[13px] text-[#333] whitespace-pre-wrap break-all select-all">
                         {msg}
                         <div className="mt-2 flex gap-3 text-xs">
-                          <button type="button" className="text-[#0066cc]" onClick={() => copy(inviteUrl(c.code, origin), `link:${c.code}`, m('초대 링크만 복사했어요'))}>
+                          <button type="button" className="text-[#0066cc]" onClick={() => copy(inviteUrl(c.code, origin, locale), `link:${c.code}`, m('초대 링크만 복사했어요'))}>
                             <T>링크만 복사</T>
                           </button>
                           <button type="button" className="text-[#0066cc]" onClick={() => copy(c.code, `code:${c.code}`, m('초대 코드만 복사했어요'))}>

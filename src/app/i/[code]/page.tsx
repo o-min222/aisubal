@@ -7,24 +7,31 @@ import { getInvitePreview } from '@/lib/data/invites'
 import { INVITE_STATUS_TEXT, SITE_INTRO, normalizeInviteCode } from '@/lib/invite-share'
 import { InviteLandingActions } from '@/components/invite/invite-landing-actions'
 import { LocaleSwitch } from '@/components/i18n/locale-switch'
-import { LOCALE_META } from '@/i18n/config'
+import { LOCALE_META, isLocale } from '@/i18n/config'
+import { DICTS } from '@/i18n/dict'
+import { makeT } from '@/i18n/translate'
 import { getLocale, getT } from '@/i18n/server'
 
-type Props = { params: Promise<{ code: string }> }
+type Props = { params: Promise<{ code: string }>; searchParams: Promise<{ lang?: string }> }
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
+/** Link previews: crawlers send no cookie, so ?lang= (added to share links by
+ * non-Korean inviters) picks the card's language; otherwise the request locale. */
+export async function generateMetadata({ params, searchParams }: Props): Promise<Metadata> {
   const { code } = await params
+  const { lang } = await searchParams
+  const locale = isLocale(lang) ? lang : await getLocale()
+  const t = makeT(locale, DICTS[locale])
   const preview = await getInvitePreview(code)
   const who = preview.inviter?.displayName
-  const t = await getT()
   const intro = t(SITE_INTRO)
   const title = preview.status === 'valid' && who ? t('{name}님이 AI쓰발에 초대했어요', { name: who }) : t('AI쓰발 초대장')
+  const image = { url: `/i/${encodeURIComponent(code)}/og?lang=${locale}`, width: 1200, height: 630, alt: t('AI쓰발 초대장') }
   return {
     title,
     description: intro,
     robots: { index: false, follow: false },
-    openGraph: { title, description: intro, siteName: 'AI쓰발', type: 'website', locale: LOCALE_META[await getLocale()].og },
-    twitter: { card: 'summary_large_image', title, description: intro },
+    openGraph: { title, description: intro, siteName: 'AI쓰발', type: 'website', locale: LOCALE_META[locale].og, images: [image] },
+    twitter: { card: 'summary_large_image', title, description: intro, images: [image.url] },
   }
 }
 

@@ -1,15 +1,15 @@
-import { msg } from '@/i18n/translate'
+import { msg as M, interpolate } from '@/i18n/translate'
 import type { TimelinePost } from '@/components/timeline/types'
 
 /** 익명 board rules shared by API routes, the mock store and tests. */
 export const ANON_MAX_CHARS = 1000
 
 export const ANON_CATEGORIES = [
-  { id: 'chat', label: msg('잡담') },
-  { id: 'work', label: msg('회사생활') },
-  { id: 'career', label: msg('커리어') },
-  { id: 'ai', label: msg('AI토로') },
-  { id: 'worry', label: msg('고민') },
+  { id: 'chat', label: M('잡담') },
+  { id: 'work', label: M('회사생활') },
+  { id: 'career', label: M('커리어') },
+  { id: 'ai', label: M('AI토로') },
+  { id: 'worry', label: M('고민') },
 ] as const
 
 export type AnonCategory = (typeof ANON_CATEGORIES)[number]['id']
@@ -18,7 +18,7 @@ export type AnonSort = 'latest' | 'popular'
 export const ANON_REPORT_REASONS = ['욕설·비하', '개인정보 노출', '스팸·홍보', '허위사실', '기타'] as const
 
 /** Shown wherever people write: anonymous to members, traceable by admins for abuse. */
-export const ANON_NOTICE = msg(
+export const ANON_NOTICE = M(
   '회원에게는 익명으로 보여요. 단, 신고된 악용은 운영자가 작성자를 확인하고 조치할 수 있어요.',
 )
 
@@ -57,10 +57,10 @@ export function validateAnonInput(raw: {
   parentId?: unknown
 }): { ok: true; value: AnonInput } | { ok: false; error: string } {
   const body = typeof raw.body === 'string' ? raw.body.trim() : ''
-  if (!body) return { ok: false, error: '내용을 입력해주세요.' }
-  if ([...body].length > ANON_MAX_CHARS) return { ok: false, error: `${ANON_MAX_CHARS}자까지 쓸 수 있어요.` }
+  if (!body) return { ok: false, error: M('내용을 입력해주세요.') }
+  if ([...body].length > ANON_MAX_CHARS) return { ok: false, error: interpolate(M('{n}자까지 쓸 수 있어요.'), { n: ANON_MAX_CHARS }) }
   const parentId = typeof raw.parentId === 'string' && raw.parentId ? raw.parentId : null
-  if (!parentId && !isAnonCategory(raw.category)) return { ok: false, error: '카테고리를 골라주세요.' }
+  if (!parentId && !isAnonCategory(raw.category)) return { ok: false, error: M('카테고리를 골라주세요.') }
   return { ok: true, value: { body, category: parentId ? null : (raw.category as AnonCategory), parentId } }
 }
 
@@ -119,7 +119,7 @@ const ERRORS: Record<string, [number, string]> = {
   anon_admin_only: [403, '운영자만 할 수 있어요.'],
   anon_not_found: [404, '글을 찾을 수 없어요. 삭제되었거나 숨겨졌을 수 있어요.'],
   anon_empty: [400, '내용을 입력해주세요.'],
-  anon_too_long: [400, `${ANON_MAX_CHARS}자까지 쓸 수 있어요.`],
+  anon_too_long: [400, interpolate(M('{n}자까지 쓸 수 있어요.'), { n: ANON_MAX_CHARS })],
   anon_bad_category: [400, '카테고리를 골라주세요.'],
   anon_daily_limit: [429, '오늘 쓸 수 있는 한도를 다 썼어요. 내일 다시 시도해주세요.'],
   anon_report_reason: [400, '신고 사유를 골라주세요.'],
@@ -132,5 +132,5 @@ export function anonError(e: unknown): { status: number; error: string } {
   const msg = e instanceof Error ? e.message : typeof e === 'object' && e && 'message' in e ? String((e as { message: unknown }).message) : String(e)
   const code = Object.keys(ERRORS).find((k) => msg.includes(k))
   if (code) return { status: ERRORS[code][0], error: ERRORS[code][1] }
-  return { status: 500, error: '처리하지 못했어요. 잠시 후 다시 시도해주세요.' }
+  return { status: 500, error: M('처리하지 못했어요. 잠시 후 다시 시도해주세요.') }
 }

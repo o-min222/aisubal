@@ -73,7 +73,7 @@ export function ProfileSettings({ me, nick, links, nicknameUnlocked, activeMembe
             <Lock className="w-8 h-8 mx-auto mb-3 text-[#ccc]" />
             <p className="font-medium text-[#333]"><T s="멤버 {unlockThreshold}명부터 부캐 프로필 오픈" vars={{ unlockThreshold }} /></p>
             <p className="text-sm text-[#888] mt-1">
-              <T>현재 활성 멤버</T> <span className="font-semibold text-[#111]">{activeMemberCount}</span><T>명</T>
+              <T s="현재 활성 멤버 {n}명" vars={{ n: <span className="font-semibold text-[#111]">{activeMemberCount}</span> }} />
             </p>
             <div className="mt-4 h-2 bg-[#eee] rounded-full overflow-hidden max-w-xs mx-auto">
               <div className="h-full bg-[#111] rounded-full transition-all" style={{ width: `${Math.min(100, (activeMemberCount / unlockThreshold) * 100)}%` }} />

@@ -6,6 +6,7 @@ import {
   getCollectionDetail,
   listCollections,
 } from '@/lib/data/archive'
+import { te } from '@/i18n/server'
 
 const createSchema = z.object({
   name: z.string().min(1).max(80),
@@ -16,13 +17,13 @@ const createSchema = z.object({
 export async function GET(request: NextRequest) {
   const member = await getMember()
   if (!member) {
-    return NextResponse.json({ error: '인증이 필요합니다.' }, { status: 401 })
+    return NextResponse.json({ error: await te('인증이 필요합니다.') }, { status: 401 })
   }
   const id = request.nextUrl.searchParams.get('id')
   if (id) {
     const detail = await getCollectionDetail(id, member.id)
     if (!detail) {
-      return NextResponse.json({ error: '컬렉션을 찾을 수 없습니다.' }, { status: 404 })
+      return NextResponse.json({ error: await te('컬렉션을 찾을 수 없습니다.') }, { status: 404 })
     }
     return NextResponse.json(detail)
   }
@@ -34,7 +35,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   const member = await getMember()
   if (!member) {
-    return NextResponse.json({ error: '인증이 필요합니다.' }, { status: 401 })
+    return NextResponse.json({ error: await te('인증이 필요합니다.') }, { status: 401 })
   }
   try {
     const data = createSchema.parse(await request.json())
@@ -42,8 +43,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ collection }, { status: 201 })
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: error.issues[0].message }, { status: 400 })
+      return NextResponse.json({ error: await te(error.issues[0].message) }, { status: 400 })
     }
-    return NextResponse.json({ error: '컬렉션 생성 실패' }, { status: 500 })
+    return NextResponse.json({ error: await te('컬렉션 생성 실패') }, { status: 500 })
   }
 }

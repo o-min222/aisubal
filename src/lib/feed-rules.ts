@@ -1,4 +1,4 @@
-import { msg } from '@/i18n/translate'
+import { msg, interpolate } from '@/i18n/translate'
 import type { TimelineLinkPreview, TimelinePost } from '@/components/timeline/types'
 import type { AgentInteraction, LinkPreview, LinkType, PostAs } from '@/lib/supabase/types'
 import { nicknameProfilePublicId } from '@/lib/profile'
@@ -23,9 +23,9 @@ export function validateFeedInput(
   input: FeedPostInput
 ): { ok: true; value: Required<Omit<FeedPostInput, 'url' | 'parentId'>> & { url: string | null; parentId: string | null } } | { ok: false; error: string } {
   const body = (input.body || '').trim()
-  if (!body) return { ok: false, error: '내용을 입력해 주세요.' }
+  if (!body) return { ok: false, error: msg('내용을 입력해 주세요.') }
   if ([...body].length > FEED_MAX_CHARS) {
-    return { ok: false, error: `${FEED_MAX_CHARS}자 이하로 써 주세요.` }
+    return { ok: false, error: interpolate(msg('{n}자 이하로 써 주세요.'), { n: FEED_MAX_CHARS }) }
   }
   let url: string | null = null
   if (input.url) {
@@ -34,7 +34,7 @@ export function validateFeedInput(
       if (u.protocol !== 'http:' && u.protocol !== 'https:') throw new Error('bad')
       url = u.toString()
     } catch {
-      return { ok: false, error: '링크 주소가 올바르지 않아요.' }
+      return { ok: false, error: msg('링크 주소가 올바르지 않아요.') }
     }
   }
   const agentInteraction: AgentInteraction =

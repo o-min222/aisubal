@@ -334,7 +334,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
     body = (
       <div>
         <p className="px-4 pt-3 text-sm text-[#555]">
-          초대 코드 {codes.length}개 중 <b className="text-[#111]"><T s="{used}명" vars={{ used }} /></b>이 가입했어요 · 남은 초대 {profile.invitesLeft}
+          <T s="초대 코드 {codes}개 중 {used}명이 가입했어요 · 남은 초대 {left}" vars={{ codes: codes.length, used: <b className="text-[#111]">{used}</b>, left: profile.invitesLeft }} />
         </p>
         {codes.length ? (
           <ul className="divide-y divide-[#f0f0f0] mt-2">

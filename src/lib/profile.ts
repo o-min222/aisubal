@@ -1,4 +1,5 @@
 import type { Member, Post, PostAs, PublicAuthor, SiteSettings } from '@/lib/supabase/types'
+import { msg, interpolate } from '@/i18n/translate'
 
 export const DEFAULT_NICKNAME_UNLOCK_THRESHOLD = 100
 export const DEV_NICKNAME_UNLOCK_THRESHOLD = 3 // low so both modes are reviewable in seed
@@ -29,14 +30,14 @@ export function validateNickname(
 ): { ok: true; nickname: string } | { ok: false; reason: string } {
   const nickname = raw.trim()
   if (nickname.length < NICKNAME_MIN || nickname.length > NICKNAME_MAX) {
-    return { ok: false, reason: `별명은 ${NICKNAME_MIN}~${NICKNAME_MAX}자여야 합니다.` }
+    return { ok: false, reason: interpolate(msg('별명은 {n}~{n2}자여야 합니다.'), { n: NICKNAME_MIN, n2: NICKNAME_MAX }) }
   }
   if (!NICKNAME_REGEX.test(nickname)) {
-    return { ok: false, reason: '별명은 한글, 영문, 숫자, _ 만 사용할 수 있습니다.' }
+    return { ok: false, reason: msg('별명은 한글, 영문, 숫자, _ 만 사용할 수 있습니다.') }
   }
   const reserved = ['admin', '관리자', 'aisubal', 'system', 'null', 'undefined']
   if (reserved.includes(nickname.toLowerCase())) {
-    return { ok: false, reason: '사용할 수 없는 별명입니다.' }
+    return { ok: false, reason: msg('사용할 수 없는 별명입니다.') }
   }
   return { ok: true, nickname }
 }
@@ -48,10 +49,10 @@ export function canPostAs(
 ): { ok: true } | { ok: false; reason: string } {
   if (postedAs === 'real') return { ok: true }
   if (!unlocked) {
-    return { ok: false, reason: '아직 별명 프로필이 오픈되지 않았습니다.' }
+    return { ok: false, reason: msg('아직 별명 프로필이 오픈되지 않았습니다.') }
   }
   if (!memberHasNicknameProfile(member)) {
-    return { ok: false, reason: '먼저 설정에서 별명 프로필을 만들어 주세요.' }
+    return { ok: false, reason: msg('먼저 설정에서 별명 프로필을 만들어 주세요.') }
   }
   return { ok: true }
 }

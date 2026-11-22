@@ -3,6 +3,7 @@ import { normalizeInviteCode, type InvitePreview, type InviteStatus } from '@/li
 import { MOCK_MEMBERS } from '@/lib/mock-data'
 import { sb, useMockData } from './client'
 import { MEMBER_PUBLIC_COLUMNS } from './member-columns'
+import { msg } from '@/i18n/translate'
 
 export type InviteCodeRow = {
   code: string
@@ -64,7 +65,7 @@ export async function validateInviteCode(code: string): Promise<{
   error?: string
 }> {
   if (useMockData()) {
-    if (code.length !== 8) return { valid: false, error: '초대 코드는 8자리입니다.' }
+    if (code.length !== 8) return { valid: false, error: msg('초대 코드는 8자리입니다.') }
     return { valid: true, inviter: { displayName: '개발자' } }
   }
 
@@ -75,7 +76,7 @@ export async function validateInviteCode(code: string): Promise<{
 
   if (error) {
     console.error('validate_invite_code', error)
-    return { valid: false, error: '유효하지 않은 초대 코드입니다.' }
+    return { valid: false, error: msg('유효하지 않은 초대 코드입니다.') }
   }
 
   const result = data as {
@@ -86,7 +87,7 @@ export async function validateInviteCode(code: string): Promise<{
   }
 
   if (!result?.ok && !result?.valid) {
-    return { valid: false, error: result?.error || '유효하지 않은 초대 코드입니다.' }
+    return { valid: false, error: result?.error || msg('유효하지 않은 초대 코드입니다.') }
   }
 
   return {

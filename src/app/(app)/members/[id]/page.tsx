@@ -166,7 +166,7 @@ export default async function MemberProfilePage({ params, searchParams }: { para
             </div>
           ) : (
             <p className="text-sm text-[#888]">
-              <T>쓰는 AI, 구독 중인 서비스, 에이전트를</T> <Link href="/settings/profile#stack" className="text-[#0066cc]"><T>프로필 편집</T></Link><T>에서 추가해 보세요.</T>
+              <T s="쓰는 AI, 구독 중인 서비스, 에이전트를 {edit}에서 추가해 보세요." vars={{ edit: <Link href="/settings/profile#stack" className="text-[#0066cc]"><T>프로필 편집</T></Link> }} />
             </p>
           )}
         </section>
@@ -188,7 +188,7 @@ export default async function MemberProfilePage({ params, searchParams }: { para
           <p className="text-sm text-[#888]">
             {isMe ? (
               <>
-                <T>아직 없어요.</T> <Link href="/tools" className="text-[#0066cc]"><T>툴</T></Link><T>에서 ‘나도 써요’를 눌러 모아보세요.</T>
+                <T s="아직 없어요. {tools}에서 ‘나도 써요’를 눌러 모아보세요." vars={{ tools: <Link href="/tools" className="text-[#0066cc]"><T>툴</T></Link> }} />
               </>
             ) : (
               <T>아직 표시한 툴이 없어요.</T>

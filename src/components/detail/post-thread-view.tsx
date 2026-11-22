@@ -76,7 +76,7 @@ export async function PostThreadView({
           {replyTarget && (
             <div className="text-xs text-[#666] mb-2 flex items-center gap-2">
               <span>
-                <b>{replyTarget.author.name}</b><T>님에게 답글</T>
+                <T s="{name}님에게 답글" vars={{ name: <b>{replyTarget.author.name}</b> }} />
               </span>
               <Link href={pageHref} className="text-[#0066cc]">
                 <T>취소</T>

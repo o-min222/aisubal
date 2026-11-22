@@ -66,7 +66,7 @@ export function LikerList({
                 <span className="skeleton h-4 w-40 rounded block" aria-busy="true" />
               ) : (
                 <p className="text-[15px] text-[#111]">
-                  <T>익명</T> <b className="tabular-nums">{anonCount}</b><T>명이 좋아했어요</T>
+                  <T s="익명 {n}명이 좋아했어요" vars={{ n: <b className="tabular-nums">{anonCount}</b> }} />
                 </p>
               )}
               <p className="mt-2 text-xs text-[#888]"><T>익명 게시판에서는 누가 좋아요를 눌렀는지 공개하지 않아요.</T></p>

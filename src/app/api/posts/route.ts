@@ -3,6 +3,8 @@ import { getMember, getNicknameUnlockState } from '@/lib/auth'
 import { canPostAs } from '@/lib/profile'
 import { createPost, listPublicPosts } from '@/lib/data/posts'
 import { z } from 'zod'
+import { msg } from '@/i18n/translate'
+import { te } from '@/i18n/server'
 
 const assetSchema = z.object({
   type: z.enum(['SKILL_MD', 'MCP_CONFIG', 'CURSOR_RULES', 'PROMPT', 'NOTE']),
@@ -13,7 +15,7 @@ const assetSchema = z.object({
 
 const createPostSchema = z.object({
   title: z.string().min(1).max(200),
-  content: z.string().min(1).max(500, '코멘트는 500자 이하로 써 주세요.'),
+  content: z.string().min(1).max(500, msg('코멘트는 500자 이하로 써 주세요.')),
   sourceNote: z.string().optional(),
   url: z.string().url().optional(),
   linkPreview: z
@@ -34,7 +36,7 @@ const createPostSchema = z.object({
 export async function GET() {
   const member = await getMember()
   if (!member) {
-    return NextResponse.json({ error: '인증이 필요합니다.' }, { status: 401 })
+    return NextResponse.json({ error: await te('인증이 필요합니다.') }, { status: 401 })
   }
 
   try {
@@ -42,14 +44,14 @@ export async function GET() {
     return NextResponse.json({ posts })
   } catch (error) {
     console.error(error)
-    return NextResponse.json({ error: '게시물 조회 실패' }, { status: 500 })
+    return NextResponse.json({ error: await te('게시물 조회 실패') }, { status: 500 })
   }
 }
 
 export async function POST(request: NextRequest) {
   const member = await getMember()
   if (!member) {
-    return NextResponse.json({ error: '인증이 필요합니다.' }, { status: 401 })
+    return NextResponse.json({ error: await te('인증이 필요합니다.') }, { status: 401 })
   }
 
   try {
@@ -58,7 +60,7 @@ export async function POST(request: NextRequest) {
     const unlock = await getNicknameUnlockState()
     const asCheck = canPostAs(member, data.postedAs, unlock.unlocked)
     if (!asCheck.ok) {
-      return NextResponse.json({ error: asCheck.reason }, { status: 403 })
+      return NextResponse.json({ error: await te(asCheck.reason) }, { status: 403 })
     }
 
     const { post } = await createPost(member, {
@@ -73,9 +75,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ post }, { status: 201 })
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: error.issues[0].message }, { status: 400 })
+      return NextResponse.json({ error: await te(error.issues[0].message) }, { status: 400 })
     }
     console.error(error)
-    return NextResponse.json({ error: '게시물 작성 중 오류' }, { status: 500 })
+    return NextResponse.json({ error: await te('게시물 작성 중 오류') }, { status: 500 })
   }
 }

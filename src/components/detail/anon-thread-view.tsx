@@ -45,7 +45,7 @@ export function AnonThreadView({
             {replyTarget && (
               <div className="text-xs text-[#666] mb-2 flex items-center gap-2">
                 <span>
-                  <b>{replyTarget.author.name}</b><T>에게 답글</T>
+                  <T s="{name}에게 답글" vars={{ name: <b>{replyTarget.author.name}</b> }} />
                 </span>
                 <Link href={`/anon/${thread.root.id}`} className="text-[#0066cc] min-h-[32px] inline-flex items-center">
                   <T>취소</T>

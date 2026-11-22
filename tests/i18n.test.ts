@@ -22,13 +22,13 @@ const ENTITIES: Record<string, string> = { '&lsquo;': '‘', '&rsquo;': '’', '
 function sourceKeys(): Map<string, string> {
   const keys = new Map<string, string>()
   const patterns: Array<[RegExp, 'js' | 'jsx']> = [
-    [/\b(?:t|tr|tx|tn|st|msg|m)\(\s*'((?:[^'\\\n]|\\.)*[가-힣](?:[^'\\\n]|\\.)*)'/g, 'js'],
-    [/\b(?:t|tr|tx|tn|st|msg|m)\(\s*"((?:[^"\\\n]|\\.)*[가-힣](?:[^"\\\n]|\\.)*)"/g, 'js'],
+    [/\b(?:t|tr|tx|tn|st|te|msg|m|M)\(\s*'((?:[^'\\\n]|\\.)*[가-힣](?:[^'\\\n]|\\.)*)'/g, 'js'],
+    [/\b(?:t|tr|tx|tn|st|te|msg|m|M)\(\s*"((?:[^"\\\n]|\\.)*[가-힣](?:[^"\\\n]|\\.)*)"/g, 'js'],
     [/<T>([^<{]*[가-힣][^<{]*)<\/T>/g, 'jsx'],
     [/<T s="([^"]*[가-힣][^"]*)"/g, 'js'],
   ]
   for (const file of walk('src')) {
-    if (file.includes(`${join('src', 'app', 'api')}`)) continue
+    if (file.includes(join('src', 'app', 'api', 'mcp')) || file.includes(join('src', 'app', 'api', 'setup'))) continue
     const s = readFileSync(file, 'utf8')
     for (const [re, kind] of patterns) {
       for (const m of s.matchAll(re)) {
@@ -106,5 +106,28 @@ describe('pledge and slogan in English', () => {
     expect(PLEDGE_EN.vows[0]).toMatch(/^First,/)
     expect(SLOGAN.en).toBe('From the Shadows, Toward the Light.')
     expect(SLOGAN.koTranslated).toMatch(/next chapter of truth and humanity/)
+  })
+})
+
+describe('makeT numeric fallback', () => {
+  const t = makeT('en', { '링크는 {n}개까지예요.': 'Up to {n} links.', '별명은 {n}~{n2}자여야 합니다.': 'Nicknames must be {n}–{n2} characters.' })
+  it('maps a server message with baked-in numbers onto its {n} template', () => {
+    expect(t('링크는 6개까지예요.')).toBe('Up to 6 links.')
+    expect(t('별명은 2~20자여야 합니다.')).toBe('Nicknames must be 2–20 characters.')
+  })
+  it('falls back to the Korean source when no template matches', () => {
+    expect(t('없는 문장 3개')).toBe('없는 문장 3개')
+  })
+})
+
+describe('invite share text', () => {
+  it('is localized and carries ?lang for non-Korean links', async () => {
+    const { inviteShareText, inviteUrl } = await import('@/lib/invite-share')
+    expect(inviteUrl('AXK8M2PQ', undefined, 'en')).toBe('https://aisubal.vercel.app/i/AXK8M2PQ?lang=en')
+    expect(inviteUrl('AXK8M2PQ', undefined, 'ko')).toBe('https://aisubal.vercel.app/i/AXK8M2PQ')
+    const en = inviteShareText('0mins', 'AXK8M2PQ', undefined, makeT('en', DICTS.en), 'en')
+    expect(en).toContain('0mins invited you')
+    expect(en).toContain('?lang=en')
+    expect(en).not.toContain('초대했어요')
   })
 })

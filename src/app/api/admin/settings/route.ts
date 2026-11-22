@@ -2,12 +2,13 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireAdmin } from '@/lib/auth'
 import { adminGetSettings, adminUpdateSettings } from '@/lib/data/admin'
 import { z } from 'zod'
+import { te } from '@/i18n/server'
 
 export async function GET() {
   try {
     await requireAdmin()
   } catch {
-    return NextResponse.json({ error: '권한이 없습니다.' }, { status: 403 })
+    return NextResponse.json({ error: await te('권한이 없습니다.') }, { status: 403 })
   }
 
   try {
@@ -15,7 +16,7 @@ export async function GET() {
     return NextResponse.json({ settings })
   } catch (e) {
     console.error(e)
-    return NextResponse.json({ error: '설정을 불러오지 못했습니다.' }, { status: 500 })
+    return NextResponse.json({ error: await te('설정을 불러오지 못했습니다.') }, { status: 500 })
   }
 }
 
@@ -31,7 +32,7 @@ export async function PATCH(request: NextRequest) {
   try {
     await requireAdmin()
   } catch {
-    return NextResponse.json({ error: '권한이 없습니다.' }, { status: 403 })
+    return NextResponse.json({ error: await te('권한이 없습니다.') }, { status: 403 })
   }
 
   try {
@@ -41,9 +42,9 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ settings })
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: error.issues[0].message }, { status: 400 })
+      return NextResponse.json({ error: await te(error.issues[0].message) }, { status: 400 })
     }
     console.error(error)
-    return NextResponse.json({ error: '설정 저장 중 오류가 발생했습니다.' }, { status: 500 })
+    return NextResponse.json({ error: await te('설정 저장 중 오류가 발생했습니다.') }, { status: 500 })
   }
 }

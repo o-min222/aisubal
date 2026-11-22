@@ -1,4 +1,4 @@
-import { msg } from '@/i18n/translate'
+import { msg as M } from '@/i18n/translate'
 /**
  * Privacy-first profile rules (0010). The self-made profile — display name,
  * unique @handle, avatar, bio — is the identity everywhere. Google name, email
@@ -17,16 +17,16 @@ export function normalizeHandle(raw: string): string {
 
 export function validateHandle(raw: string): { ok: true; handle: string } | { ok: false; reason: string } {
   const handle = normalizeHandle(raw)
-  if (!HANDLE_RE.test(handle)) return { ok: false, reason: '핸들은 영문 소문자·숫자·_ 3~20자예요.' }
-  if (RESERVED_HANDLES.has(handle)) return { ok: false, reason: '사용할 수 없는 핸들이에요.' }
+  if (!HANDLE_RE.test(handle)) return { ok: false, reason: M('핸들은 영문 소문자·숫자·_ 3~20자예요.') }
+  if (RESERVED_HANDLES.has(handle)) return { ok: false, reason: M('사용할 수 없는 핸들이에요.') }
   return { ok: true, handle }
 }
 
 export function validateDisplayName(raw: string): { ok: true; name: string } | { ok: false; reason: string } {
   const name = raw.replace(/\s+/g, ' ').trim()
-  if (name.length < 2 || name.length > 24) return { ok: false, reason: '이름은 2~24자예요.' }
+  if (name.length < 2 || name.length > 24) return { ok: false, reason: M('이름은 2~24자예요.') }
   // eslint-disable-next-line no-control-regex
-  if (/[@<>\u0000-\u001f]/.test(name)) return { ok: false, reason: '@, <, > 는 이름에 쓸 수 없어요.' }
+  if (/[@<>\u0000-\u001f]/.test(name)) return { ok: false, reason: M('@, <, > 는 이름에 쓸 수 없어요.') }
   return { ok: true, name }
 }
 
@@ -52,25 +52,25 @@ export const LINK_KINDS: Array<{ kind: LinkKind; label: string; placeholder: str
   { kind: 'facebook', label: 'Facebook', placeholder: 'https://facebook.com/handle', host: /^https:\/\/((www|m)\.)?facebook\.com\//i },
   { kind: 'bluesky', label: 'Bluesky', placeholder: 'https://bsky.app/profile/handle', host: /^https:\/\/(www\.)?bsky\.app\//i },
   { kind: 'huggingface', label: 'Hugging Face', placeholder: 'https://huggingface.co/handle', host: /^https:\/\/(www\.)?huggingface\.co\//i },
-  { kind: 'blog', label: msg('블로그'), placeholder: 'https://blog.example.com', host: null },
-  { kind: 'website', label: msg('웹사이트'), placeholder: 'https://example.com', host: null },
+  { kind: 'blog', label: M('블로그'), placeholder: 'https://blog.example.com', host: null },
+  { kind: 'website', label: M('웹사이트'), placeholder: 'https://example.com', host: null },
 ]
 export const LINK_KIND_SET = new Set(LINK_KINDS.map((k) => k.kind))
 export const MAX_LINKS = 12
 
 export const LINK_VISIBILITY: Array<{ id: LinkVisibility; label: string; hint: string }> = [
-  { id: 'members', label: msg('전체 회원'), hint: msg('로그인한 AI쓰발 멤버 모두') },
-  { id: 'friends', label: msg('친구만'), hint: msg('친구 수락한 사람만') },
-  { id: 'private', label: msg('비공개'), hint: msg('나만 보기') },
+  { id: 'members', label: M('전체 회원'), hint: M('로그인한 AI쓰발 멤버 모두') },
+  { id: 'friends', label: M('친구만'), hint: M('친구 수락한 사람만') },
+  { id: 'private', label: M('비공개'), hint: M('나만 보기') },
 ]
 
 export function validateLink(kind: string, rawUrl: string): { ok: true; url: string } | { ok: false; reason: string } {
   const def = LINK_KINDS.find((k) => k.kind === kind)
-  if (!def) return { ok: false, reason: '지원하지 않는 링크 종류예요.' }
+  if (!def) return { ok: false, reason: M('지원하지 않는 링크 종류예요.') }
   let url = rawUrl.trim()
   if (url && !/^https?:\/\//i.test(url)) url = `https://${url}`
   url = url.replace(/^http:\/\//i, 'https://')
-  if (url.length > 300) return { ok: false, reason: '링크가 너무 길어요.' }
+  if (url.length > 300) return { ok: false, reason: M('링크가 너무 길어요.') }
   try {
     const u = new URL(url)
     if (u.protocol !== 'https:' || !u.hostname.includes('.') || u.username || u.password) throw new Error()
@@ -95,5 +95,5 @@ export const PROFILE_ERRORS: Record<string, string> = {
 export function profileErrorMessage(e: unknown): string {
   const msg = e instanceof Error ? e.message : String(e ?? '')
   const key = Object.keys(PROFILE_ERRORS).find((k) => msg.includes(k))
-  return key ? PROFILE_ERRORS[key] : '저장하지 못했어요.'
+  return key ? PROFILE_ERRORS[key] : M('저장하지 못했어요.')
 }

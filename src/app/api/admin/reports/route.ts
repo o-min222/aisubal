@@ -2,12 +2,13 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireAdmin } from '@/lib/auth'
 import { adminListReports, adminResolveReport } from '@/lib/data/admin'
 import { z } from 'zod'
+import { te } from '@/i18n/server'
 
 export async function GET() {
   try {
     await requireAdmin()
   } catch {
-    return NextResponse.json({ error: '권한이 없습니다.' }, { status: 403 })
+    return NextResponse.json({ error: await te('권한이 없습니다.') }, { status: 403 })
   }
 
   try {
@@ -15,7 +16,7 @@ export async function GET() {
     return NextResponse.json({ reports })
   } catch (e) {
     console.error(e)
-    return NextResponse.json({ error: '신고 목록을 불러오지 못했습니다.' }, { status: 500 })
+    return NextResponse.json({ error: await te('신고 목록을 불러오지 못했습니다.') }, { status: 500 })
   }
 }
 
@@ -28,12 +29,12 @@ export async function POST(request: NextRequest) {
   try {
     admin = await requireAdmin()
   } catch {
-    return NextResponse.json({ error: '권한이 없습니다.' }, { status: 403 })
+    return NextResponse.json({ error: await te('권한이 없습니다.') }, { status: 403 })
   }
 
   const reportId = new URL(request.url).searchParams.get('id')
   if (!reportId) {
-    return NextResponse.json({ error: '신고 ID가 필요합니다.' }, { status: 400 })
+    return NextResponse.json({ error: await te('신고 ID가 필요합니다.') }, { status: 400 })
   }
 
   try {
@@ -43,9 +44,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: true, report })
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: error.issues[0].message }, { status: 400 })
+      return NextResponse.json({ error: await te(error.issues[0].message) }, { status: 400 })
     }
     console.error(error)
-    return NextResponse.json({ error: '신고 처리 중 오류가 발생했습니다.' }, { status: 500 })
+    return NextResponse.json({ error: await te('신고 처리 중 오류가 발생했습니다.') }, { status: 500 })
   }
 }

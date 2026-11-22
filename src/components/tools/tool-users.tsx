@@ -93,7 +93,7 @@ export function ToolUsersCard({
         {asking && (
           <div className="space-y-3">
             <p className="text-[12.5px] leading-relaxed" style={{ color: '#666' }}>
-              <T>아직 1:1 메시지가 없어서, 질문은</T> <b><T>피드 글</T></b><T>로 올라가요. 같은 게 궁금한 다른 멤버도 답을 볼 수 있어요.</T>
+              <T s="아직 1:1 메시지가 없어서, 질문은 {feed}로 올라가요. 같은 게 궁금한 다른 멤버도 답을 볼 수 있어요." vars={{ feed: <b><T>피드 글</T></b> }} />
             </p>
             <Composer me={me} initialBody={askPrompt(asking, tool.name, tool.url)} autoFocus onPosted={() => setAsking(null)} className="!p-0 !border-0 !shadow-none" />
             <Link href={`/members/${asking.id}`} className="btn btn-secondary btn-sm w-full min-h-[44px] justify-center">

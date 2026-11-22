@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { getMember } from '@/lib/auth'
 import { sb, useMockData as isMock } from '@/lib/data/client'
 import { LOCALE_COOKIE, isLocale } from '@/i18n/config'
+import { te } from '@/i18n/server'
 
 /**
  * Switch the UI language. Always sets the cookie (works signed out, e.g. the
@@ -11,7 +12,7 @@ import { LOCALE_COOKIE, isLocale } from '@/i18n/config'
 export async function POST(req: Request) {
   const body = (await req.json().catch(() => null)) as { locale?: unknown } | null
   const locale = body?.locale
-  if (!isLocale(locale)) return NextResponse.json({ error: 'unsupported locale' }, { status: 400 })
+  if (!isLocale(locale)) return NextResponse.json({ error: await te('unsupported locale') }, { status: 400 })
   let saved = false
   if (!isMock()) {
     const member = await getMember().catch(() => null)

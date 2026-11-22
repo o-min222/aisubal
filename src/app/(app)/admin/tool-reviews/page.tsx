@@ -42,7 +42,7 @@ export default async function ToolReviewsPage({ searchParams }: { searchParams: 
           <Bot className="w-4 h-4" /> <T>내 AI로 검토하기</T>
         </h2>
         <p className="text-[13px] text-[#555]">
-          <T>‘툴 검토’ 권한으로</T> <Link href="/connect?preset=review" className="text-[#0066cc]"><T>AI를 연결</T></Link><T>한 뒤 아래 메시지를 보내세요. 승인·반려는 AI가 MCP로 처리하고 모두 기록돼요.</T>
+          <T s="‘툴 검토’ 권한으로 {connect}한 뒤 아래 메시지를 보내세요. 승인·반려는 AI가 MCP로 처리하고 모두 기록돼요." vars={{ connect: <Link href="/connect?preset=review" className="text-[#0066cc]"><T>AI를 연결</T></Link> }} />
         </p>
         <CodeBlock code={reviewPrompt()} label={msg('검토 메시지')} wrap />
       </section>

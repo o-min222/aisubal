@@ -1,4 +1,4 @@
-import { msg } from '@/i18n/translate'
+import { msg as M } from '@/i18n/translate'
 /**
  * 모임 rules. The database (0007 moim_* RPCs) is the source of truth in
  * production; these pure functions mirror it for the DEV mock and tests.
@@ -130,11 +130,11 @@ export function canSeePrivate(canManage: boolean, myStatus: RsvpStatus | null | 
 }
 
 export const RSVP_LABEL: Record<RsvpStatus, string> = {
-  pending: msg('승인 대기'),
-  confirmed: msg('참석 확정'),
-  waitlisted: msg('대기 중'),
-  rejected: msg('거절됨'),
-  cancelled: msg('취소함'),
+  pending: M('승인 대기'),
+  confirmed: M('참석 확정'),
+  waitlisted: M('대기 중'),
+  rejected: M('거절됨'),
+  cancelled: M('취소함'),
 }
 
 export const MOIM_ERRORS: Record<string, string> = {
@@ -164,5 +164,5 @@ export const MOIM_ERRORS: Record<string, string> = {
 export function moimErrorMessage(e: unknown): string {
   const msg = e instanceof Error ? e.message : String(e ?? '')
   const key = Object.keys(MOIM_ERRORS).find((k) => msg.includes(k))
-  return key ? MOIM_ERRORS[key] : '처리하지 못했어요.'
+  return key ? MOIM_ERRORS[key] : M('처리하지 못했어요.')
 }

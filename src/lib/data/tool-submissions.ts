@@ -6,6 +6,7 @@
 import { sb, useMockData as isMock } from './client'
 import type { PageSnapshot } from '@/lib/safe-fetch'
 import type { SubmissionStatus } from '@/lib/tool-review'
+import { msg } from '@/i18n/translate'
 
 export type Submission = {
   id: string
@@ -237,7 +238,7 @@ export function mockSubmitTool(memberId: string, label: string, a: Record<string
   }
   st.subs.push(s)
   st.log.push({ id: `${s.id}-l1`, submissionId: s.id, action: 'submitted', actorKind: 'agent', actorLabel: label, reason: null, changes: null, createdAt: s.createdAt })
-  return { id: s.id, status: s.status, submittedBy: label, statusUrl: `/tools/submissions?open=${s.id}`, message: '등록 요청을 받았어요. 관리자 검토 후 공개돼요.' }
+  return { id: s.id, status: s.status, submittedBy: label, statusUrl: `/tools/submissions?open=${s.id}`, message: msg('등록 요청을 받았어요. 관리자 검토 후 공개돼요.') }
 }
 export function mockMySubmissions(memberId: string) {
   return { submissions: mock().subs.filter((s) => s.submitterId === memberId).map((s) => ({ id: s.id, name: s.name, status: s.status, reason: s.reason, reviewedBy: s.reviewedBy })) }

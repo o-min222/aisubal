@@ -6,11 +6,12 @@ import {
   listCollections,
 } from '@/lib/data/archive'
 import { slugify } from '@/lib/archive-brain-rules'
+import { te } from '@/i18n/server'
 
 export async function GET(request: NextRequest) {
   const member = await getMember()
   if (!member) {
-    return NextResponse.json({ error: '인증이 필요합니다.' }, { status: 401 })
+    return NextResponse.json({ error: await te('인증이 필요합니다.') }, { status: 401 })
   }
 
   const sp = request.nextUrl.searchParams
@@ -21,7 +22,7 @@ export async function GET(request: NextRequest) {
   if (collectionId) {
     const pack = await exportCollectionPack(collectionId, member.id)
     if (!pack) {
-      return NextResponse.json({ error: '컬렉션을 찾을 수 없습니다.' }, { status: 404 })
+      return NextResponse.json({ error: await te('컬렉션을 찾을 수 없습니다.') }, { status: 404 })
     }
 
     if (asJson || format === 'pack') {

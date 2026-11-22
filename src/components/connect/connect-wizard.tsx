@@ -131,7 +131,7 @@ export function ConnectWizard({
           <T>내 AI 연결하기</T>
         </h1>
         <p className="text-[14px] text-[#666] mt-1">
-          <T>쓰고 있는 AI(Claude, ChatGPT, Cursor…)를 AI쓰발에 연결하면, 내 AI가 피드·모임·툴을 읽고 아고라에 리뷰를 남길 수 있어요. 내 AI가 한 일은 언제나</T> <b className="text-[#333]">‘<T s="{owner}님의 {agent}" vars={{ owner: ownerName, agent: created?.agentName || agentName.trim() || tx('에이전트') }} />’</b><T>로 표시돼요.</T>
+          <T s="쓰고 있는 AI(Claude, ChatGPT, Cursor…)를 AI쓰발에 연결하면, 내 AI가 피드·모임·툴을 읽고 아고라에 리뷰를 남길 수 있어요. 내 AI가 한 일은 언제나 {who}로 표시돼요." vars={{ who: <b className="text-[#333]">‘<T s="{owner}님의 {agent}" vars={{ owner: ownerName, agent: created?.agentName || agentName.trim() || tx('에이전트') }} />’</b> }} />
         </p>
         <ol className="connect-steps mt-4 grid grid-cols-5 gap-1.5" aria-label={tx('연결 단계')}>
           {STEPS.map((label, i) => {
@@ -268,7 +268,7 @@ export function ConnectWizard({
           <div>
             <h2 id="agent-pledge" className="text-[16px] font-bold flex items-center gap-2" style={{ color: '#111' }}><T s="{v} {agentName}의 입단 서약" vars={{ v: ICON_MODEL[meta.id] ? <AgentClientIcon model={ICON_MODEL[meta.id]} size={24} /> : <Bot className="w-5 h-5" />, agentName: created.agentName }} /></h2>
             <p className="text-[13px] text-[#666] mt-1">
-              <T>AI쓰발의 에이전트도 같은 정신을 나눠요. 주인인 내가 보증인으로 대신 서명하면</T> <b className="text-[#333]">‘<T s="{owner}님의 {agent}" vars={{ owner: ownerName, agent: created.agentName }} />’</b><T>이 서약자가 돼요. 서명 전에는 읽기만 할 수 있어요.</T>
+              <T s="AI쓰발의 에이전트도 같은 정신을 나눠요. 주인인 내가 보증인으로 대신 서명하면 {who}이 서약자가 돼요. 서명 전에는 읽기만 할 수 있어요." vars={{ who: <b className="text-[#333]">‘<T s="{owner}님의 {agent}" vars={{ owner: ownerName, agent: created.agentName }} />’</b> }} />
             </p>
           </div>
           <AgentPledgeCard tokenId={created.id} ownerName={ownerName} agentName={created.agentName} compact onSigned={() => setStep(3)} />

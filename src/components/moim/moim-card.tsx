@@ -31,7 +31,7 @@ export function MoimCard({ moim: m, showGroup = true }: { moim: Moim; showGroup?
           </h3>
         </Link>
         <p className="text-[12.5px] mt-0.5 truncate" style={{ color: '#666' }}>
-          <KstDate iso={m.startsAt} /> · {m.mode === 'online' ? <T>온라인</T> : m.venueName || <T>장소는 확정 후 공개</T>} · 호스트 {m.host.name}
+          <KstDate iso={m.startsAt} /> · {m.mode === 'online' ? <T>온라인</T> : m.venueName || <T>장소는 확정 후 공개</T>} · <T s="호스트 {name}" vars={{ name: m.host.name }} />
         </p>
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2">
           <CapacityBar confirmed={m.confirmed} capacity={m.capacity} />

@@ -1,6 +1,7 @@
 import type { Member } from '@/lib/supabase/types'
 import { LINK_KIND_SET, MAX_LINKS, validateLink, type LinkVisibility, type ProfileLink } from '@/lib/profile-rules'
 import { sb, useMockData as isMock } from './client'
+import { msg } from '@/i18n/translate'
 
 /**
  * Self-made profile (0010): saved through profile_save / links_save RPCs.
@@ -71,11 +72,11 @@ export async function uploadAvatar(authId: string, file: File): Promise<string> 
 }
 
 export function cleanLinks(raw: Array<{ kind: string; url: string; visibility?: string }>): { ok: true; links: ProfileLink[] } | { ok: false; reason: string } {
-  if (raw.length > MAX_LINKS) return { ok: false, reason: `링크는 ${MAX_LINKS}개까지예요.` }
+  if (raw.length > MAX_LINKS) return { ok: false, reason: msg('링크는 {n}개까지예요.') }
   const out: ProfileLink[] = []
   for (const l of raw) {
     if (!l.url?.trim()) continue
-    if (!LINK_KIND_SET.has(l.kind as ProfileLink['kind'])) return { ok: false, reason: '지원하지 않는 링크 종류예요.' }
+    if (!LINK_KIND_SET.has(l.kind as ProfileLink['kind'])) return { ok: false, reason: msg('지원하지 않는 링크 종류예요.') }
     const v = validateLink(l.kind, l.url)
     if (!v.ok) return v
     const visibility: LinkVisibility = l.visibility === 'friends' || l.visibility === 'private' ? l.visibility : 'members'

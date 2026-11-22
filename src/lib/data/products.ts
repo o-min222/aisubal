@@ -12,6 +12,7 @@ import type { Member, Product, ProductComment, ProductUpdate, PublicAuthor } fro
 import { sb, useMockData } from './client'
 import { MEMBER_PUBLIC_COLUMNS } from './member-columns'
 import type { ProductWithDetails } from './types'
+import { msg } from '@/i18n/translate'
 
 export type { ProductWithDetails } from './types'
 
@@ -243,7 +244,7 @@ export async function toggleProductUpvote(
       member_id: memberId,
     })
     if (error) {
-      if (error.code === '23505') throw new Error('이미 업보트했습니다.')
+      if (error.code === '23505') throw new Error(msg('이미 업보트했습니다.'))
       throw error
     }
   } else {

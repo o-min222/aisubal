@@ -12,6 +12,7 @@ import { extractUrls, MAX_LINK_PREVIEWS } from '@/lib/link-preview'
 import { fetchLinkPreviews } from '@/lib/link-preview-server'
 import { checkFetchUrl } from '@/lib/safe-fetch'
 import type { LinkPreview } from '@/lib/supabase/types'
+import { te } from '@/i18n/server'
 
 const schema = z.object({
   body: z.string().max(2000),
@@ -26,7 +27,7 @@ const schema = z.object({
 
 export async function GET(request: NextRequest) {
   const member = await getMember()
-  if (!member) return NextResponse.json({ error: '인증이 필요합니다.' }, { status: 401 })
+  if (!member) return NextResponse.json({ error: await te('인증이 필요합니다.') }, { status: 401 })
   const sp = request.nextUrl.searchParams
   const before = sp.get('before') || undefined
   const scope = parseFeedScope(sp.get('scope'))
@@ -40,19 +41,19 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ posts })
   } catch (e) {
     console.error('[feed] list failed', e)
-    return NextResponse.json({ error: '피드를 불러오지 못했습니다.' }, { status: 500 })
+    return NextResponse.json({ error: await te('피드를 불러오지 못했습니다.') }, { status: 500 })
   }
 }
 
 /** Members only (session). Agents can never create posts here — see /api/mcp feed_* tools. */
 export async function POST(request: NextRequest) {
   const member = await getMember()
-  if (!member) return NextResponse.json({ error: '인증이 필요합니다.' }, { status: 401 })
+  if (!member) return NextResponse.json({ error: await te('인증이 필요합니다.') }, { status: 401 })
   let raw: z.infer<typeof schema>
   try {
     raw = schema.parse(await request.json())
   } catch {
-    return NextResponse.json({ error: '요청 형식이 올바르지 않아요.' }, { status: 400 })
+    return NextResponse.json({ error: await te('요청 형식이 올바르지 않아요.') }, { status: 400 })
   }
   // Top-level posts: preview the links the composer kept (or every link in the body,
   // for older clients). Replies never get preview cards.
@@ -63,22 +64,22 @@ export async function POST(request: NextRequest) {
         .slice(0, MAX_LINK_PREVIEWS)
   const url = previewUrls[0] ?? null
   const v = validateFeedInput({ ...raw, url })
-  if (!v.ok) return NextResponse.json({ error: v.error }, { status: 400 })
+  if (!v.ok) return NextResponse.json({ error: await te(v.error) }, { status: 400 })
 
   if (raw.groupId && !raw.parentId) {
     const g = await getGroupById(member.id, raw.groupId)
     if (!g || g.myStatus !== 'active') {
-      return NextResponse.json({ error: '그룹 멤버만 글을 쓸 수 있어요.' }, { status: 403 })
+      return NextResponse.json({ error: await te('그룹 멤버만 글을 쓸 수 있어요.') }, { status: 403 })
     }
   }
 
   if (raw.groupId && v.value.postedAs === 'nickname') {
-    return NextResponse.json({ error: '그룹에서는 기본 프로필로만 글을 쓸 수 있어요 (부캐 불가).' }, { status: 400 })
+    return NextResponse.json({ error: await te('그룹에서는 기본 프로필로만 글을 쓸 수 있어요 (부캐 불가).') }, { status: 400 })
   }
 
   const unlock = await getNicknameUnlockState()
   const asCheck = canPostAs(member, v.value.postedAs, unlock.unlocked)
-  if (!asCheck.ok) return NextResponse.json({ error: asCheck.reason }, { status: 403 })
+  if (!asCheck.ok) return NextResponse.json({ error: await te(asCheck.reason) }, { status: 403 })
 
   const linkPreviews: LinkPreview[] = previewUrls.length ? await fetchLinkPreviews(previewUrls) : []
   const linkPreview: LinkPreview | undefined = linkPreviews[0]
@@ -98,15 +99,15 @@ export async function POST(request: NextRequest) {
   } catch (e) {
     const msg = e && typeof e === 'object' && 'message' in e ? String((e as { message: string }).message) : ''
     if (msg.includes('posts_group_real_name')) {
-      return NextResponse.json({ error: '그룹에서는 기본 프로필로만 글을 쓸 수 있어요 (부캐 불가).' }, { status: 400 })
+      return NextResponse.json({ error: await te('그룹에서는 기본 프로필로만 글을 쓸 수 있어요 (부캐 불가).') }, { status: 400 })
     }
     if (msg.includes('feed_parent_not_found')) {
-      return NextResponse.json({ error: '원글을 찾을 수 없어요.' }, { status: 404 })
+      return NextResponse.json({ error: await te('원글을 찾을 수 없어요.') }, { status: 404 })
     }
     if (msg.includes('feed_body_too_long')) {
-      return NextResponse.json({ error: '500자 이하로 써 주세요.' }, { status: 400 })
+      return NextResponse.json({ error: await te('500자 이하로 써 주세요.') }, { status: 400 })
     }
     console.error('[feed] create failed', e)
-    return NextResponse.json({ error: '게시하지 못했어요.' }, { status: 500 })
+    return NextResponse.json({ error: await te('게시하지 못했어요.') }, { status: 500 })
   }
 }

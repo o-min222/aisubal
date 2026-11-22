@@ -30,6 +30,7 @@ import type {
 } from '@/lib/supabase/types'
 import { sb, useMockData } from './client'
 import type { ToolboxEntryDetails } from './types'
+import { msg } from '@/i18n/translate'
 
 export type { ToolboxEntryDetails } from './types'
 
@@ -211,14 +212,14 @@ export async function recordToolboxInstall(
 ): Promise<ToolboxEntryDetails> {
   if (useMockData()) {
     const entry = MUTABLE_TOOLBOX.find((e) => e.id === idOrSlug || e.slug === idOrSlug)
-    if (!entry) throw new Error('항목을 찾을 수 없습니다.')
+    if (!entry) throw new Error(msg('항목을 찾을 수 없습니다.'))
     entry.install_count += 1
     entry.updated_at = new Date().toISOString()
     return mockGetEntry(entry.id)!
   }
 
   const current = await getToolboxEntry(idOrSlug)
-  if (!current) throw new Error('항목을 찾을 수 없습니다.')
+  if (!current) throw new Error(msg('항목을 찾을 수 없습니다.'))
   const supabase = await sb()
   const { error } = await supabase
     .from('toolbox_entries')
@@ -239,7 +240,7 @@ export async function upsertToolboxReview(
 ): Promise<ToolboxEntryDetails> {
   if (useMockData()) {
     const entry = MUTABLE_TOOLBOX.find((e) => e.id === entryId || e.slug === entryId)
-    if (!entry) throw new Error('항목을 찾을 수 없습니다.')
+    if (!entry) throw new Error(msg('항목을 찾을 수 없습니다.'))
     const idx = MUTABLE_REVIEWS.findIndex(
       (r) => r.entry_id === entry.id && r.member_id === memberId
     )
@@ -269,7 +270,7 @@ export async function upsertToolboxReview(
   }
 
   const current = await getToolboxEntry(entryId)
-  if (!current) throw new Error('항목을 찾을 수 없습니다.')
+  if (!current) throw new Error(msg('항목을 찾을 수 없습니다.'))
   const supabase = await sb()
   const { error } = await supabase.from('toolbox_reviews').upsert(
     {
@@ -304,7 +305,7 @@ export async function voteToolboxCompat(
 ): Promise<ToolboxEntryDetails> {
   if (useMockData()) {
     const entry = MUTABLE_TOOLBOX.find((e) => e.id === entryId || e.slug === entryId)
-    if (!entry) throw new Error('항목을 찾을 수 없습니다.')
+    if (!entry) throw new Error(msg('항목을 찾을 수 없습니다.'))
     const idx = MUTABLE_COMPAT.findIndex(
       (c) =>
         c.entry_id === entry.id &&
@@ -325,7 +326,7 @@ export async function voteToolboxCompat(
   }
 
   const current = await getToolboxEntry(entryId)
-  if (!current) throw new Error('항목을 찾을 수 없습니다.')
+  if (!current) throw new Error(msg('항목을 찾을 수 없습니다.'))
   const supabase = await sb()
   const { error } = await supabase.from('toolbox_compat_votes').upsert(
     {

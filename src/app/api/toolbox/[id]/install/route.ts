@@ -4,6 +4,7 @@ import { getMember } from '@/lib/auth'
 import { getToolboxEntry, recordToolboxInstall } from '@/lib/data/toolbox'
 import { TOOLBOX_ENV_LABEL } from '@/lib/toolbox-rules'
 import type { ToolboxEnvironment } from '@/lib/supabase/types'
+import { te } from '@/i18n/server'
 
 interface Params {
   params: Promise<{ id: string }>
@@ -26,12 +27,12 @@ const schema = z.object({
 export async function GET(request: NextRequest, { params }: Params) {
   const member = await getMember()
   if (!member) {
-    return NextResponse.json({ error: '인증이 필요합니다.' }, { status: 401 })
+    return NextResponse.json({ error: await te('인증이 필요합니다.') }, { status: 401 })
   }
   const { id } = await params
   const entry = await getToolboxEntry(id)
   if (!entry) {
-    return NextResponse.json({ error: '항목을 찾을 수 없습니다.' }, { status: 404 })
+    return NextResponse.json({ error: await te('항목을 찾을 수 없습니다.') }, { status: 404 })
   }
   const env = (request.nextUrl.searchParams.get('environment') ||
     'cursor') as ToolboxEnvironment | 'generic'
@@ -65,7 +66,7 @@ export async function GET(request: NextRequest, { params }: Params) {
 export async function POST(request: NextRequest, { params }: Params) {
   const member = await getMember()
   if (!member) {
-    return NextResponse.json({ error: '인증이 필요합니다.' }, { status: 401 })
+    return NextResponse.json({ error: await te('인증이 필요합니다.') }, { status: 401 })
   }
   const { id } = await params
   try {
@@ -82,6 +83,6 @@ export async function POST(request: NextRequest, { params }: Params) {
     })
   } catch (error) {
     const message = error instanceof Error ? error.message : '설치 기록 실패'
-    return NextResponse.json({ error: message }, { status: 404 })
+    return NextResponse.json({ error: await te(message) }, { status: 404 })
   }
 }

@@ -14,22 +14,30 @@ export function normalizeInviteCode(raw: unknown): string | null {
   return /^[A-Z0-9]{8}$/.test(c) ? c : null
 }
 
-export function inviteUrl(code: string, origin: string = SITE_ORIGIN): string {
-  return `${origin.replace(/\/$/, '')}/i/${encodeURIComponent(code)}`
+/** `lang` (non-default locales only) makes the link preview card render in the sharer's language. */
+export function inviteUrl(code: string, origin: string = SITE_ORIGIN, lang?: string): string {
+  const q = lang && lang !== 'ko' ? `?lang=${encodeURIComponent(lang)}` : ''
+  return `${origin.replace(/\/$/, '')}/i/${encodeURIComponent(code)}${q}`
 }
 
-import { msg } from '@/i18n/translate'
+import { interpolate, msg } from '@/i18n/translate'
 
-export const SITE_INTRO = 'AI쓰발은 프롬프트·MCP·에이전트 스킬과 AI 툴 사용기를 나누는 초대 전용 AI 커뮤니티예요.'
+export const SITE_INTRO = msg('AI쓰발은 프롬프트·MCP·에이전트 스킬과 AI 툴 사용기를 나누는 초대 전용 AI 커뮤니티예요.')
 
 /** Ready-to-paste KakaoTalk message (the link line alone gets the OG preview card). */
-export function inviteShareText(inviterName: string, code: string, origin: string = SITE_ORIGIN): string {
+export function inviteShareText(
+  inviterName: string,
+  code: string,
+  origin: string = SITE_ORIGIN,
+  t: (s: string, vars?: Record<string, string | number>) => string = interpolate,
+  lang?: string,
+): string {
   return [
-    `[AI쓰발 초대장] ${inviterName}님이 초대했어요 🙌`,
-    SITE_INTRO,
-    '아래 링크에서 Google로 로그인하면 초대 코드가 자동으로 입력돼요.',
-    inviteUrl(code, origin),
-    `(초대 코드 ${code} · 1회용)`,
+    t(msg('[AI쓰발 초대장] {name}님이 초대했어요 🙌'), { name: inviterName }),
+    t(SITE_INTRO),
+    t(msg('아래 링크에서 Google로 로그인하면 초대 코드가 자동으로 입력돼요.')),
+    inviteUrl(code, origin, lang),
+    t(msg('(초대 코드 {code} · 1회용)'), { code }),
   ].join('\n')
 }
 

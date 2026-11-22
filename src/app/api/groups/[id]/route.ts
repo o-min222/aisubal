@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { getMember } from '@/lib/auth'
 import { groupMembership, listGroupMembers, updateGroup, type MembershipAction } from '@/lib/data/groups'
 import { groupErrorMessage } from '@/lib/group-rules'
+import { te } from '@/i18n/server'
 
 const updateSchema = z.object({
   name: z.string().trim().min(2).max(40),
@@ -26,36 +27,36 @@ type Ctx = { params: Promise<{ id: string }> }
 
 export async function GET(_req: NextRequest, { params }: Ctx) {
   const member = await getMember()
-  if (!member) return NextResponse.json({ error: '인증이 필요합니다.' }, { status: 401 })
+  if (!member) return NextResponse.json({ error: await te('인증이 필요합니다.') }, { status: 401 })
   const { id } = await params
   return NextResponse.json({ members: await listGroupMembers(member.id, id) })
 }
 
 export async function PATCH(request: NextRequest, { params }: Ctx) {
   const member = await getMember()
-  if (!member) return NextResponse.json({ error: '인증이 필요합니다.' }, { status: 401 })
+  if (!member) return NextResponse.json({ error: await te('인증이 필요합니다.') }, { status: 401 })
   const { id } = await params
   const parsed = updateSchema.safeParse(await request.json().catch(() => null))
-  if (!parsed.success) return NextResponse.json({ error: '입력값을 확인해주세요.' }, { status: 400 })
+  if (!parsed.success) return NextResponse.json({ error: await te('입력값을 확인해주세요.') }, { status: 400 })
   try {
     await updateGroup(member.id, id, { ...parsed.data, emoji: parsed.data.emoji || null })
     return NextResponse.json({ ok: true })
   } catch (e) {
-    return NextResponse.json({ error: groupErrorMessage(e) }, { status: 400 })
+    return NextResponse.json({ error: await te(groupErrorMessage(e)) }, { status: 400 })
   }
 }
 
 /** Membership actions: join / leave / decide / invite / role / remove / delete. */
 export async function POST(request: NextRequest, { params }: Ctx) {
   const member = await getMember()
-  if (!member) return NextResponse.json({ error: '인증이 필요합니다.' }, { status: 401 })
+  if (!member) return NextResponse.json({ error: await te('인증이 필요합니다.') }, { status: 401 })
   const { id } = await params
   const parsed = actionSchema.safeParse(await request.json().catch(() => null))
-  if (!parsed.success) return NextResponse.json({ error: '요청 형식이 올바르지 않아요.' }, { status: 400 })
+  if (!parsed.success) return NextResponse.json({ error: await te('요청 형식이 올바르지 않아요.') }, { status: 400 })
   try {
     const result = await groupMembership(member.id, id, parsed.data as MembershipAction)
     return NextResponse.json({ result })
   } catch (e) {
-    return NextResponse.json({ error: groupErrorMessage(e) }, { status: 400 })
+    return NextResponse.json({ error: await te(groupErrorMessage(e)) }, { status: 400 })
   }
 }

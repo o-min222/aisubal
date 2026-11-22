@@ -1,4 +1,4 @@
-import { msg } from '@/i18n/translate'
+import { msg as M } from '@/i18n/translate'
 /**
  * Follow / friend rules shared by the UI, data layer and tests.
  * Follow is one-way and instant; a mutual follow is '맞팔' (NOT a friendship).
@@ -30,10 +30,10 @@ export const isMutual = (r: Relation) => r.iFollow && r.followsMe
 /** The one badge we show next to a person: 친구 > 맞팔 > 팔로잉 > 나를 팔로우. */
 export function relationBadge(r: Relation): { label: string; tone: 'friend' | 'mutual' | 'following' | 'follower' } | null {
   if (r.isMe) return null
-  if (r.friend === 'friends') return { label: msg('친구'), tone: 'friend' }
-  if (isMutual(r)) return { label: msg('맞팔'), tone: 'mutual' }
-  if (r.iFollow) return { label: msg('팔로잉'), tone: 'following' }
-  if (r.followsMe) return { label: msg('나를 팔로우'), tone: 'follower' }
+  if (r.friend === 'friends') return { label: M('친구'), tone: 'friend' }
+  if (isMutual(r)) return { label: M('맞팔'), tone: 'mutual' }
+  if (r.iFollow) return { label: M('팔로잉'), tone: 'following' }
+  if (r.followsMe) return { label: M('나를 팔로우'), tone: 'follower' }
   return null
 }
 
@@ -78,10 +78,10 @@ export function friendActionLabel(state: FriendState): string {
 
 export type FeedScope = 'all' | 'following' | 'friends' | 'popular'
 export const FEED_SCOPES: Array<{ id: FeedScope; label: string }> = [
-  { id: 'all', label: msg('전체') },
-  { id: 'following', label: msg('팔로잉') },
-  { id: 'friends', label: msg('친구') },
-  { id: 'popular', label: msg('인기') },
+  { id: 'all', label: M('전체') },
+  { id: 'following', label: M('팔로잉') },
+  { id: 'friends', label: M('친구') },
+  { id: 'popular', label: M('인기') },
 ]
 export function parseFeedScope(v: string | null | undefined): FeedScope {
   return v === 'following' || v === 'friends' || v === 'popular' ? v : 'all'
@@ -101,5 +101,5 @@ export const SOCIAL_ERRORS: Record<string, string> = {
 export function socialErrorMessage(e: unknown): string {
   const msg = e instanceof Error ? e.message : String(e ?? '')
   const key = Object.keys(SOCIAL_ERRORS).find((k) => msg.includes(k))
-  return key ? SOCIAL_ERRORS[key] : '처리하지 못했어요.'
+  return key ? SOCIAL_ERRORS[key] : M('처리하지 못했어요.')
 }
