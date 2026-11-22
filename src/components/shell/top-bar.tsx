@@ -9,6 +9,7 @@ import { UserAvatar } from '@/components/user-avatar'
 import { ModeSwitch } from './mode-switch'
 import { MoreSheet } from './more-sheet'
 import { GlobalSearch } from '@/components/search/global-search'
+import { NotificationBell } from '@/components/notifications/notification-bell'
 import type { ShellMember } from './nav-items'
 import { useT, tx } from '@/i18n/client'
 
@@ -44,6 +45,7 @@ export function TopBar({ me }: { me: ShellMember }) {
 
         <div className="tb-right">
           <GlobalSearch />
+          <NotificationBell />
           <AccountMenu me={me} triggerClassName="tap-target inline-flex items-center justify-center rounded-full">
             <UserAvatar id={me.id} name={me.displayName} avatarUrl={me.avatarUrl} size="sm" />
           </AccountMenu>

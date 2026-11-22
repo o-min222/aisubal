@@ -1290,6 +1290,15 @@ body { -webkit-tap-highlight-color: transparent; }
 .tb-logo img { height: 20px; width: auto; }
 .tb-center { display: flex; justify-content: center; min-width: 0; }
 .tb-right { display: flex; align-items: center; justify-content: flex-end; gap: 4px; min-width: 0; }
+@media (max-width: 767px) {
+  /* phones: menu+logo | switch | search · bell · account — side cells size to their content so the
+   * three right icons never slide under the switch (360px and up) */
+  .top-bar-inner { grid-template-columns: auto minmax(0, 1fr) auto; }
+  .tb-right { gap: 0; }
+}
+@media (max-width: 400px) {
+  .tb-right > .tap-target, .tb-right > * > .tap-target { width: 40px; min-width: 40px; height: 40px; min-height: 40px; }
+}
 @media (min-width: 768px) {
   /* left track | center track; the center cell centers the switch and ends with search + account */
   .top-bar-inner { padding: 0 24px; height: 60px; grid-template-columns: var(--left-w) minmax(0, 1fr); gap: var(--grid-gap); }
@@ -1358,6 +1367,11 @@ body { -webkit-tap-highlight-color: transparent; }
 .mode-switch a:hover { color: var(--n-111); text-decoration: none; }
 .mode-switch a.on { background: var(--n-fff); color: var(--n-111); box-shadow: 0 1px 2px rgba(0,0,0,.12); }
 .mode-switch a.on.ai { background: var(--n-111); color: var(--n-fff); }
+@media (max-width: 400px) {
+  /* phones: text-only segments so search · bell · account fit beside the switch */
+  .mode-switch a { min-width: 52px; padding: 0 10px; gap: 4px; }
+  .mode-switch a svg { display: none; }
+}
 
 .tap-target { min-width: 44px; min-height: 44px; }
 @media (min-width: 768px) { .tap-target { min-width: 36px; min-height: 36px; } }
@@ -2198,3 +2212,31 @@ button.rp-link { width: 100%; text-align: left; font: inherit; cursor: pointer; 
 .graph-card-actions > * { flex: none; }
 .graph-icon-btn { width: 40px; height: 40px; display: inline-flex; align-items: center; justify-content: center; border-radius: 999px; border: 1px solid var(--n-e5e5e5); color: var(--n-333); background: var(--n-fff); }
 .graph-icon-btn:hover { background: var(--n-f5f5f5); color: var(--n-111); text-decoration: none; }
+
+/* ---- notifications (0048) ---- */
+.notif-bell { position: relative; display: inline-flex; align-items: center; justify-content: center; border-radius: 999px; color: var(--n-333); }
+.notif-bell:hover, .notif-bell.on { background: var(--n-f2f2f0); color: var(--n-111); }
+.notif-badge {
+  position: absolute; top: 4px; right: 2px; min-width: 17px; height: 17px; padding: 0 4px; border-radius: 999px;
+  background: #e5484d; color: #fff; font-size: 10.5px; font-weight: 700; line-height: 17px; text-align: center;
+  box-shadow: 0 0 0 2px var(--n-fff); font-variant-numeric: tabular-nums;
+}
+.notif-row { display: flex; align-items: flex-start; gap: 12px; padding: 14px 16px; min-height: 64px; transition: background .15s ease; }
+.notif-row:hover { background: var(--n-f4f4f2); }
+.notif-row.unread { background: var(--n-f4f4f2); }
+.notif-ava-wrap { position: relative; flex-shrink: 0; }
+.notif-ava { width: 40px; height: 40px; border-radius: 999px; display: inline-flex; align-items: center; justify-content: center; background: var(--n-f2f2f0); color: var(--n-555); }
+.notif-ava.is-agent { background: var(--n-111); color: var(--n-fff); }
+.notif-ava.is-anon { background: var(--n-2b2b2b); color: var(--n-fff); }
+.notif-kind {
+  position: absolute; right: -3px; bottom: -3px; width: 18px; height: 18px; border-radius: 999px; display: inline-flex; align-items: center; justify-content: center;
+  background: var(--n-111); color: var(--n-fff); box-shadow: 0 0 0 2px var(--n-fff);
+}
+.notif-kind.k-like, .notif-kind.k-agent_like { background: #e5484d; }
+.notif-kind.k-follow, .notif-kind.k-friend_request, .notif-kind.k-friend_accept { background: #3b82f6; }
+.notif-kind.k-invite_joined { background: #2f9e66; }
+.notif-text { display: block; font-size: 14.5px; line-height: 1.45; color: var(--n-333); word-break: keep-all; overflow-wrap: anywhere; }
+.notif-text b { font-weight: 700; color: var(--n-111); }
+.notif-excerpt { display: block; margin-top: 2px; font-size: 13.5px; color: var(--n-777); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.notif-time { display: block; margin-top: 2px; font-size: 12px; color: var(--n-999); }
+.notif-dot { flex-shrink: 0; width: 8px; height: 8px; margin-top: 8px; border-radius: 999px; background: #3b82f6; }
