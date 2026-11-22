@@ -12,6 +12,7 @@ import { RightRail, RailSkeleton } from '@/components/shell/right-rail'
 import { MyGroupsNav } from '@/components/shell/my-groups-nav'
 import { listMyGroups } from '@/lib/data/groups'
 import { BottomTabs, ComposeFab } from '@/components/shell/bottom-tabs'
+import { PullToRefresh } from '@/components/shell/pull-to-refresh'
 import type { ShellMember } from '@/components/shell/nav-items'
 import { getT } from '@/i18n/server'
 
@@ -58,6 +59,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   return (
     <div className="app-root">
       <TopBar me={me} />
+      <PullToRefresh />
       <div className="app-grid">
         <aside className="app-left">
           <div className="app-sticky">

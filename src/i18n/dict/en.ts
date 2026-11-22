@@ -1787,6 +1787,8 @@ const en: Record<string, string> = {
   "아직 알림이 없어요. 글을 쓰거나 친구를 만들면 여기로 소식이 와요.": "No notifications yet. Post something or make friends and updates will land here.",
   "끈 종류는 새 알림이 쌓이지 않아요. 알림은 상단 종 아이콘에서 볼 수 있어요.": "Turned-off kinds stop collecting new notifications. See them under the bell at the top.",
   "알림 보기": "View notifications",
+  "새로고침 중": "Refreshing",
+  "당겨서 새로고침": "Pull to refresh",
 }
 
 export default en

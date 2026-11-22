@@ -27,11 +27,13 @@ export function NotificationBell() {
     const onRead = () => load()
     document.addEventListener('visibilitychange', load)
     window.addEventListener(NOTIFY_READ_EVENT, onRead)
+    window.addEventListener('aisubal:refreshed', onRead)
     return () => {
       alive = false
       clearInterval(t)
       document.removeEventListener('visibilitychange', load)
       window.removeEventListener(NOTIFY_READ_EVENT, onRead)
+      window.removeEventListener('aisubal:refreshed', onRead)
     }
   }, [pathname])
   const badge = badgeLabel(unread)
