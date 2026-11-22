@@ -2131,3 +2131,10 @@ html:has(.reading-pane.is-open) body { overflow: hidden; }
 .handle-history summary { cursor: pointer; list-style: none; min-height: 24px; display: inline-flex; align-items: center; }
 .handle-history summary::-webkit-details-marker { display: none; }
 .handle-history ul { margin-top: 4px; display: grid; gap: 2px; }
+
+/* '홈 화면에 추가' — iOS how-to sheet */
+.ios-install { display: grid; gap: 14px; padding-bottom: 4px; }
+.ios-install-steps { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; counter-reset: step; }
+.ios-install-steps li { display: flex; align-items: center; gap: 10px; font-size: 14px; color: var(--n-333); line-height: 1.45; }
+.ios-install-icon { flex: none; display: inline-flex; align-items: center; justify-content: center; min-width: 32px; height: 32px; padding: 0 6px; border-radius: 9px; background: var(--n-f3f3f3); color: var(--c-06c); }
+.ios-install-text { font-size: 12.5px; font-weight: 600; }

@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { PWA_BOOT_SCRIPT } from "@/lib/pwa-install";
 import { JetBrains_Mono, Noto_Serif_KR } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import "./fonts/pretendard.css";
@@ -76,6 +77,8 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
       <head>
         {/* resolve 'system' before first paint (no flash) */}
         <script dangerouslySetInnerHTML={{ __html: THEME_BOOT_SCRIPT }} />
+        {/* keep Chromium's install prompt for the '홈 화면에 추가' menu item (no mini-infobar) */}
+        <script dangerouslySetInnerHTML={{ __html: PWA_BOOT_SCRIPT }} />
       </head>
       <body className="min-h-screen antialiased">
         <I18nProvider locale={locale} dict={DICTS[locale]}>

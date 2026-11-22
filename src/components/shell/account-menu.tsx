@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useEffect, useRef, useState, type ReactNode } from 'react'
-import { ChevronDown, LogOut, Settings, Shield, Ticket, UserRound, LayoutDashboard } from 'lucide-react'
+import { ChevronDown, LogOut, Settings, Shield, SquarePlus, Ticket, UserRound, LayoutDashboard } from 'lucide-react'
 import { AdaptiveSheet } from '@/components/adaptive-sheet'
 import { UserAvatar } from '@/components/user-avatar'
 import { useMediaQuery } from '@/hooks/use-media-query'
@@ -13,6 +13,8 @@ import { useT } from '@/i18n/client'
 import { LocaleSwitch } from '@/components/i18n/locale-switch'
 import { ThemeSwitch } from '@/components/theme/theme-switch'
 import { msg } from '@/i18n/translate'
+import { usePwaInstall } from '@/hooks/use-pwa-install'
+import { IosInstallSheet } from '@/components/pwa/ios-install-sheet'
 
 function useInvitesLeft(open: boolean, initial: number | null) {
   const [left, setLeft] = useState<number | null>(initial)
@@ -78,7 +80,7 @@ function Group({
   )
 }
 
-function MenuBody({ me, invitesLeft, close }: { me: ShellMember; invitesLeft: number | null; close: () => void }) {
+function MenuBody({ me, invitesLeft, close, onInstall }: { me: ShellMember; invitesLeft: number | null; close: () => void; onInstall: (() => void) | null }) {
   const t = useT()
   return (
     <nav aria-label={t('계정 메뉴')} className="account-menu-body">
@@ -105,6 +107,11 @@ function MenuBody({ me, invitesLeft, close }: { me: ShellMember; invitesLeft: nu
       <div className="account-sep" />
       <LocaleSwitch variant="row" />
       <ThemeSwitch variant="row" />
+      {onInstall && (
+        <button type="button" onClick={onInstall} className="account-row w-full text-left">
+          <SquarePlus className="w-[18px] h-[18px]" /> {t('홈 화면에 추가')}
+        </button>
+      )}
       <button type="button" onClick={signOut} className="account-row w-full text-left">
         <LogOut className="w-[18px] h-[18px]" /> {t('로그아웃')}
       </button>
@@ -137,6 +144,16 @@ export function AccountMenu({
   const invitesLeft = useInvitesLeft(open, initialInvites)
   const wrap = useRef<HTMLDivElement>(null)
   const close = () => setOpen(false)
+  const install = usePwaInstall()
+  const [iosHelp, setIosHelp] = useState(false)
+  // Chromium: one tap → the browser's install dialog; iOS Safari: how-to sheet (rendered outside the menu so closing it doesn't unmount it)
+  const onInstall = install.mode
+    ? () => {
+        close()
+        if (install.mode === 'prompt') void install.prompt()
+        else setIosHelp(true)
+      }
+    : null
 
   useEffect(() => {
     if (!open || !desktop) return
@@ -166,14 +183,15 @@ export function AccountMenu({
       </button>
       {open && desktop && (
         <div className={`account-dropdown ${align === 'left' ? 'left-0' : 'right-0'}`} role="menu">
-          <MenuBody me={me} invitesLeft={invitesLeft} close={close} />
+          <MenuBody me={me} invitesLeft={invitesLeft} close={close} onInstall={onInstall} />
         </div>
       )}
       {!desktop && (
         <AdaptiveSheet open={open} onOpenChange={setOpen} title={t('내 계정')}>
-          <MenuBody me={me} invitesLeft={invitesLeft} close={close} />
+          <MenuBody me={me} invitesLeft={invitesLeft} close={close} onInstall={onInstall} />
         </AdaptiveSheet>
       )}
+      {install.mode === 'ios' && <IosInstallSheet open={iosHelp} onOpenChange={setIosHelp} />}
     </div>
   )
 }

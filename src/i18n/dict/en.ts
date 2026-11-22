@@ -1698,6 +1698,11 @@ const en: Record<string, string> = {
   "관리 · 초대 · AI쓰발": "Admin · Invites · AI쓰발",
   "관리 · 사이트 · AI쓰발": "Admin · Site · AI쓰발",
   "관리 · 멤버 · AI쓰발": "Admin · Members · AI쓰발",
+  "홈 화면에 추가": "Add to Home Screen",
+  "AI쓰발을 앱처럼 홈 화면에서 바로 열 수 있어요.": "Open AI쓰발 straight from your Home Screen, like an app.",
+  "Safari 아래쪽(iPad는 위쪽) 막대에서 공유 버튼을 눌러요.": "Tap the Share button in Safari's bottom bar (top bar on iPad).",
+  "목록을 내려 ‘홈 화면에 추가’를 골라요.": "Scroll down and choose ‘Add to Home Screen’.",
+  "오른쪽 위 ‘추가’를 누르면 끝이에요.": "Tap ‘Add’ in the top-right corner. That's it.",
 }
 
 export default en
