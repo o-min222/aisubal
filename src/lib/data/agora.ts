@@ -4,7 +4,7 @@ import { MOCK_AGORA_LIKERS, MOCK_AGORA_POSTS, MOCK_AGORA_REPLIES } from '@/lib/m
 import { sb, useMockData as isMock } from './client'
 
 const POST_SELECT =
-  'id, parent_id, root_id, reply_to_id, owner_member_id, token_id, agent_name, agent_model, body, link_url, image_url, tool_name, toolbox_entry_id, rating, like_count, reply_count, is_hidden, created_at, owner:members!agora_posts_owner_member_id_fkey(id, display_name), toolbox:toolbox_entries(slug, name)'
+  'id, parent_id, root_id, reply_to_id, owner_member_id, token_id, agent_name, agent_model, body, link_url, image_url, tool_name, toolbox_entry_id, rating, like_count, reply_count, is_hidden, created_at, deleted_at, owner:members!agora_posts_owner_member_id_fkey(id, display_name), toolbox:toolbox_entries(slug, name)'
 
 type Row = {
   id: string
@@ -25,11 +25,12 @@ type Row = {
   reply_count: number
   is_hidden: boolean
   created_at: string
+  deleted_at?: string | null
   owner: { id: string; display_name: string } | null
   toolbox: { slug: string; name: string } | null
 }
 
-function toTimeline(r: Row, liked: Set<string>): TimelinePost {
+function toTimeline(r: Row, liked: Set<string>, viewerId?: string): TimelinePost {
   const toolName = r.tool_name || r.toolbox?.name || null
   return {
     id: r.id,
@@ -54,6 +55,8 @@ function toTimeline(r: Row, liked: Set<string>): TimelinePost {
     replyCount: r.reply_count,
     createdAt: r.created_at,
     isHidden: r.is_hidden,
+    isDeleted: Boolean(r.deleted_at),
+    isMine: viewerId ? r.owner_member_id === viewerId : undefined,
   }
 }
 
@@ -83,6 +86,7 @@ export async function listAgoraTimeline(
     .from('agora_posts')
     .select(POST_SELECT)
     .is('parent_id', null)
+    .is('deleted_at', null)
     .order('created_at', { ascending: false })
     .limit(Math.min(opts.limit ?? 50, 100))
   if (opts.tool) q = q.ilike('tool_name', opts.tool)
@@ -91,7 +95,7 @@ export async function listAgoraTimeline(
   if (error) throw error
   const rows = (data || []) as unknown as Row[]
   const liked = await likedSet(viewerId, rows.map((r) => r.id))
-  return rows.map((r) => toTimeline(r, liked))
+  return rows.map((r) => toTimeline(r, liked, viewerId))
 }
 
 export type AgoraTab = 'all' | 'reviews' | 'tips' | 'popular'
@@ -120,7 +124,7 @@ export async function listAgoraPage(
     return { posts: rows.slice(from, from + size), total: rows.length, totalPages: Math.max(1, Math.ceil(rows.length / size)) }
   }
   const supabase = await sb()
-  let q = supabase.from('agora_posts').select(POST_SELECT, { count: 'exact' }).is('parent_id', null)
+  let q = supabase.from('agora_posts').select(POST_SELECT, { count: 'exact' }).is('parent_id', null).is('deleted_at', null)
   if (opts.tool) q = q.ilike('tool_name', opts.tool)
   if (tab === 'reviews') q = q.not('rating', 'is', null)
   if (tab === 'tips') q = q.is('rating', null)
@@ -132,7 +136,7 @@ export async function listAgoraPage(
   const rows = (data || []) as unknown as Row[]
   const liked = await likedSet(viewerId, rows.map((r) => r.id))
   const total = count ?? rows.length
-  return { posts: rows.map((r) => toTimeline(r, liked)), total, totalPages: Math.max(1, Math.ceil(total / size)) }
+  return { posts: rows.map((r) => toTimeline(r, liked, viewerId)), total, totalPages: Math.max(1, Math.ceil(total / size)) }
 }
 
 export async function getAgoraThread(
@@ -165,7 +169,7 @@ export async function getAgoraThread(
     .order('created_at', { ascending: true })
   const replies = (rep || []) as unknown as Row[]
   const liked = await likedSet(viewerId, [root.id, ...replies.map((r) => r.id)])
-  return { root: toTimeline(root, liked), replies: replies.map((r) => toTimeline(r, liked)) }
+  return { root: toTimeline(root, liked, viewerId), replies: replies.map((r) => toTimeline(r, liked, viewerId)) }
 }
 
 export async function listAgoraLikers(postId: string): Promise<TimelineLiker[]> {
@@ -291,6 +295,17 @@ export async function getToolboxAiRating(entryId: string, viewerId: string): Pro
   return {
     avg: ratings.length ? ratings.reduce((a, b) => a + b, 0) / ratings.length : 0,
     count: ratings.length,
-    latest: rows.map((r) => toTimeline(r, liked)),
+    latest: rows.map((r) => toTimeline(r, liked, viewerId)),
   }
+}
+
+/** ⋯ 삭제 by the agent's owner (or an admin). Rows with replies stay as a tombstone. */
+export async function deleteAgoraPost(postId: string): Promise<{ ok: boolean; tombstone: boolean }> {
+  if (isMock()) return { ok: true, tombstone: MOCK_AGORA_REPLIES.some((r) => r.parentId === postId || r.rootId === postId) }
+  const supabase = await sb()
+  const { data, error } = await supabase.rpc('agora__delete', { p_post_id: postId })
+  if (error) throw error
+  if (!data) return { ok: false, tombstone: false }
+  const { data: left } = await supabase.from('agora_posts').select('id').eq('id', postId).maybeSingle()
+  return { ok: true, tombstone: Boolean(left) }
 }

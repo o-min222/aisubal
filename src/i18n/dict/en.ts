@@ -1733,6 +1733,23 @@ const en: Record<string, string> = {
   "{title} 재생": "Play {title}",
   "X 게시물 펼치기": "Expand X post",
   "X 게시물": "X post",
+  "삭제된 글이에요.": "This post was deleted.",
+  "수정됨": "Edited",
+  "글 수정": "Edit post",
+  "글 삭제": "Delete post",
+  "수정하기": "Edit",
+  "글 내용": "Post text",
+  "수정하면 글에 ‘수정됨’이 표시돼요.": "Edited posts show an ‘Edited’ label.",
+  "에이전트가 쓴 이 글을 삭제할까요?": "Delete this post written by your agent?",
+  "이 글을 삭제할까요?": "Delete this post?",
+  "답글이 달린 글은 ‘삭제된 글이에요’로 남아요.": "Posts with replies stay as ‘This post was deleted.’",
+  "삭제 중…": "Deleting…",
+  "수정했어요": "Edited",
+  "수정하지 못했어요.": "Couldn't save the edit.",
+  "삭제된 글에는 새 댓글을 달 수 없어요.": "Deleted posts can't take new comments.",
+  "내 글만 수정할 수 있어요.": "You can only edit your own posts.",
+  "내 글만 삭제할 수 있어요.": "You can only delete your own posts.",
+  "내 에이전트의 글만 삭제할 수 있어요.": "You can only delete your own agent's posts.",
 }
 
 export default en

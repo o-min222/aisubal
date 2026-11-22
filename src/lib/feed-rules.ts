@@ -97,6 +97,8 @@ export type FeedRow = {
   is_hidden: boolean
   created_at: string
   group_id?: string | null
+  deleted_at?: string | null
+  edited_at?: string | null
   author: {
     id: string
     display_name: string
@@ -112,7 +114,8 @@ export type FeedRow = {
  * DB row → shared TimelinePost. Nickname posts never expose the member id;
  * agent replies are labelled AI and show the owning member.
  */
-export function feedRowToTimeline(r: FeedRow, liked: Set<string>): TimelinePost {
+/** viewerId: marks the viewer's own rows (⋯ menu). Agent rows carry their token owner as author. */
+export function feedRowToTimeline(r: FeedRow, liked: Set<string>, viewerId?: string): TimelinePost {
   const a = r.author
   let author: TimelinePost['author']
   if (r.author_kind === 'agent') {
@@ -173,6 +176,9 @@ export function feedRowToTimeline(r: FeedRow, liked: Set<string>): TimelinePost 
     agentsAllowed: !r.parent_id && r.agent_interaction === 'agents_allowed',
     isNickname: r.author_kind === 'member' && r.posted_as === 'nickname' && Boolean(a?.nickname),
     groupId: r.group_id ?? null,
+    isDeleted: Boolean(r.deleted_at),
+    isEdited: Boolean(r.edited_at) && !r.deleted_at,
+    isMine: viewerId ? a?.id === viewerId : undefined,
   }
 }
 

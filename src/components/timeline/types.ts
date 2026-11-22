@@ -51,6 +51,8 @@ export type TimelinePost = {
   /** 익명 board */
   isOp?: boolean
   isDeleted?: boolean
+  /** edited after posting ('수정됨') */
+  isEdited?: boolean
   isMine?: boolean
   reportedByMe?: boolean
   category?: string | null

@@ -17,7 +17,7 @@ import { categoryLabel } from '@/lib/anon-rules'
 import { FollowButton } from '@/components/social/follow-button'
 import { AgentAttribution } from './agent-attribution'
 import { MentionText } from './mention-text'
-import { ReportButton } from './report-button'
+import { PostMenu } from './post-menu'
 import { ArchiveButton, archiveKindForEndpoint } from '@/components/archive/archive-button'
 import { RelationBadge } from '@/components/social/relation-badge'
 import { MemberPeek } from '@/components/profile/member-peek'
@@ -54,6 +54,7 @@ export function PostCard({
   isReply = false,
   level = 1,
   replyTo,
+  afterDeleteHref,
 }: {
   post: TimelinePost
   href?: string
@@ -67,6 +68,8 @@ export function PostCard({
   level?: 1 | 2
   /** 대댓글 answering another 대댓글: shown as an @mention before the body */
   replyTo?: string | null
+  /** root card in a detail view: where to go after a delete that leaves no tombstone */
+  afterDeleteHref?: string
 }) {
   const [likersOpen, setLikersOpen] = useState(false)
   const a = post.author
@@ -81,6 +84,7 @@ export function PostCard({
   const anon = a.kind === 'anon'
   const archiveKind = archiveKindForEndpoint(likeEndpoint)
   const gone = Boolean(post.isDeleted || (anon && post.isHidden))
+  const menuKind = likeEndpoint.startsWith('/api/feed/') ? 'feed' : likeEndpoint.startsWith('/api/agora/') ? 'agora' : null
   const avatar = anon ? (
       <span
         className="w-10 h-10 rounded-full text-white flex items-center justify-center flex-shrink-0"
@@ -106,7 +110,7 @@ export function PostCard({
       {post.title && <h3 className="mt-1 text-[15px] font-semibold text-n-111 break-words">{post.title}</h3>}
       {gone ? (
         <p className="mt-1 text-[15px] text-n-999 italic">
-          {post.isDeleted ? <T>작성자가 삭제한 글이에요.</T> : <T>신고가 누적되어 숨겨진 글이에요.</T>}
+          {post.isDeleted ? <T>삭제된 글이에요.</T> : <T>신고가 누적되어 숨겨진 글이에요.</T>}
         </p>
       ) : (
         <CollapsibleText lines={href ? 8 : 400} className="mt-1 text-[15px] leading-relaxed text-n-111 whitespace-pre-wrap break-words">
@@ -136,7 +140,8 @@ export function PostCard({
       <div className="flex gap-3">
         <div className="tc-avatar flex-shrink-0">{avatar}</div>
         <div className="min-w-0 flex-1">
-          <header className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-sm">
+          <div className="flex items-start gap-1">
+          <header className="flex flex-1 min-w-0 flex-wrap items-center gap-x-1.5 gap-y-0.5 text-sm">
             {a.kind === 'member' && !post.isNickname && !anon ? (
               <MemberPeek memberId={a.id} label={a.name}>
                 <span className="peek-name font-semibold text-n-111">{a.name}</span>
@@ -158,6 +163,7 @@ export function PostCard({
             <span className="text-n-888">
               <RelativeTime date={post.createdAt} />
             </span>
+            {post.isEdited && !gone && <span className="text-n-999 text-xs"><T>수정됨</T></span>}
             {post.isHidden && !anon && <span className="badge badge-note"><T>숨김</T></span>}
             {a.follow && !isReply && (
               <span className="ml-auto">
@@ -171,6 +177,8 @@ export function PostCard({
               </span>
             )}
           </header>
+          {menuKind && !anon && !gone && <PostMenu post={post} kind={menuKind} afterDeleteHref={afterDeleteHref} />}
+          </div>
           {a.kind === 'agent' && a.ownerName && (
             <div className="min-w-0">
               <AgentAttribution ownerName={a.ownerName} ownerId={a.ownerId} agentName={a.name} model={a.subtitle} />
@@ -287,7 +295,6 @@ export function PostCard({
             {!gone && archiveKind && (
               <ArchiveButton kind={archiveKind} refId={post.id} hint={{ title: post.title || post.body.slice(0, 80), excerpt: post.body.slice(0, 600), url: href, author: anon ? undefined : a.name }} />
             )}
-            {!anon && !gone && likeEndpoint?.startsWith('/api/feed/') && <ReportButton postId={post.id} />}
             {actions && <div className="ml-auto flex items-center gap-1">{actions}</div>}
           </footer>
         </div>

@@ -9,7 +9,7 @@ import { sb, useMockData as isMock } from './client'
 import { getRelations, socialAuthorIds } from './social'
 
 const FEED_SELECT =
-  'id, parent_id, root_id, reply_to_id, title, content, url, link_title, link_description, link_image, link_site_name, link_favicon, link_type, link_previews, posted_as, author_kind, agent_name, agent_model, agent_token_id, agent_interaction, like_count, reply_count, is_hidden, created_at, group_id, author:members!posts_author_id_fkey(id, display_name, handle, avatar_url, nickname, nickname_avatar_url)'
+  'id, parent_id, root_id, reply_to_id, title, content, url, link_title, link_description, link_image, link_site_name, link_favicon, link_type, link_previews, posted_as, author_kind, agent_name, agent_model, agent_token_id, agent_interaction, like_count, reply_count, is_hidden, created_at, group_id, deleted_at, edited_at, author:members!posts_author_id_fkey(id, display_name, handle, avatar_url, nickname, nickname_avatar_url)'
 
 // ---------------------------------------------------------------- mock (DEV)
 type MockState = { posts: TimelinePost[]; likers: Map<string, TimelineLiker[]> }
@@ -248,6 +248,7 @@ async function queryFeed(viewerId: string, opts: FeedListOpts, withCount: boolea
         (!opts.q || `${p.title ?? ''} ${p.body}`.toLowerCase().includes(opts.q.toLowerCase()))
     )
     if (popular) rows = [...rows].sort((a, b) => b.likeCount * 2 + b.replyCount - (a.likeCount * 2 + a.replyCount) || b.createdAt.localeCompare(a.createdAt))
+    rows = rows.filter((p) => !p.isDeleted).map((p) => ({ ...p, isMine: p.author.id === viewerId }))
     return { posts: await withFollowState(viewerId, rows.slice(offset, offset + limit)), total: rows.length }
   }
   if (authorIds && authorIds.length === 0) return { posts: [], total: 0 }
@@ -257,6 +258,7 @@ async function queryFeed(viewerId: string, opts: FeedListOpts, withCount: boolea
     .select(FEED_SELECT, withCount ? { count: 'exact' } : undefined)
     .is('parent_id', null)
     .eq('is_hidden', false)
+    .is('deleted_at', null)
   q = popular
     ? q.gte('created_at', since).order('like_count', { ascending: false }).order('reply_count', { ascending: false }).order('created_at', { ascending: false })
     : q.order('created_at', { ascending: false })
@@ -273,7 +275,7 @@ async function queryFeed(viewerId: string, opts: FeedListOpts, withCount: boolea
   if (error) throw error
   const rows = (data || []) as unknown as FeedRow[]
   const liked = await likedSet(viewerId, rows.map((r) => r.id))
-  return { posts: await withFollowState(viewerId, rows.map((r) => feedRowToTimeline(r, liked))), total: withCount ? (count ?? null) : null }
+  return { posts: await withFollowState(viewerId, rows.map((r) => feedRowToTimeline(r, liked, viewerId))), total: withCount ? (count ?? null) : null }
 }
 
 export async function listFeedTimeline(viewerId: string, opts: FeedListOpts = {}): Promise<TimelinePost[]> {
@@ -301,7 +303,8 @@ export async function getFeedThread(
     if (!first) return null
     const root = first.rootId ? st.posts.find((p) => p.id === first.rootId) : first
     if (!root) return null
-    return { root, replies: st.posts.filter((p) => p.rootId === root.id), isMine: false }
+    const mine = (p: TimelinePost) => ({ ...p, isMine: p.author.id === viewerId })
+    return { root: mine(root), replies: st.posts.filter((p) => p.rootId === root.id).map(mine), isMine: root.author.id === viewerId }
   }
   const supabase = await sb()
   const { data: first, error } = await supabase
@@ -331,8 +334,8 @@ export async function getFeedThread(
   const replies = (rep || []) as unknown as FeedRow[]
   const liked = await likedSet(viewerId, [root.id, ...replies.map((r) => r.id)])
   return {
-    root: feedRowToTimeline(root, liked),
-    replies: replies.map((r) => feedRowToTimeline(r, liked)),
+    root: feedRowToTimeline(root, liked, viewerId),
+    replies: replies.map((r) => feedRowToTimeline(r, liked, viewerId)),
     isMine: root.author_id === viewerId,
   }
 }
@@ -441,4 +444,51 @@ export function mockFeedGroupOf(postId: string): string | null {
   if (!p) return null
   const root = p.rootId ? st.posts.find((x) => x.id === p.rootId) : p
   return root?.groupId ?? p.groupId ?? null
+}
+
+// ---------------------------------------------------------------- ⋯ edit / delete (0038)
+export type FeedEditInput = { body: string; url: string | null; previews: import('@/lib/supabase/types').LinkPreview[] | null }
+
+/** Author edits their own member-authored row; returns edited_at, or null when not allowed. */
+export async function editFeedPost(postId: string, viewerId: string, input: FeedEditInput): Promise<string | null> {
+  if (isMock()) {
+    const p = mockState().posts.find((x) => x.id === postId && x.author.id === viewerId && !x.isDeleted)
+    if (!p) return null
+    p.body = input.body
+    p.isEdited = true
+    if (!p.parentId) {
+      p.linkUrl = input.url
+      p.linkPreviews = (input.previews ?? []).map((x) => ({ url: x.url, title: x.title, description: x.description, image: x.image, siteName: x.site_name, favicon: x.favicon, linkType: x.link_type }))
+      p.linkPreview = p.linkPreviews[0] ?? null
+    }
+    return new Date().toISOString()
+  }
+  const supabase = await sb()
+  const { data, error } = await supabase.rpc('posts__edit', {
+    p_post_id: postId,
+    p_content: input.body,
+    p_url: input.url,
+    p_previews: input.previews && input.previews.length ? input.previews : null,
+  })
+  if (error) throw error
+  return (data as string | null) ?? null
+}
+
+/** Author (agent rows: token owner) or admin. Rows with replies become a tombstone. */
+export async function deleteFeedPost(postId: string, viewerId: string): Promise<{ ok: boolean; tombstone: boolean }> {
+  if (isMock()) {
+    const st = mockState()
+    const p = st.posts.find((x) => x.id === postId && x.author.id === viewerId && !x.isDeleted)
+    if (!p) return { ok: false, tombstone: false }
+    const hasKids = st.posts.some((x) => x.parentId === postId || x.rootId === postId)
+    if (hasKids) Object.assign(p, { isDeleted: true, isEdited: false, body: '', title: null, linkUrl: null, linkPreview: null, linkPreviews: [] })
+    else st.posts = st.posts.filter((x) => x.id !== postId)
+    return { ok: true, tombstone: hasKids }
+  }
+  const supabase = await sb()
+  const { data, error } = await supabase.rpc('posts__delete', { p_post_id: postId })
+  if (error) throw error
+  if (!data) return { ok: false, tombstone: false }
+  const { data: left } = await supabase.from('posts').select('id').eq('id', postId).maybeSingle()
+  return { ok: true, tombstone: Boolean(left) }
 }

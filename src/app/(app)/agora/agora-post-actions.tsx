@@ -1,9 +1,11 @@
 'use client'
 
-import { Flag, EyeOff, Eye } from 'lucide-react'
+import { EyeOff, Eye } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { tx, tn } from '@/i18n/client'
+
+/** Admin-only hide toggle (신고 lives in the card's ⋯ menu). */
 
 export function AgoraPostActions({
   postId,
@@ -15,18 +17,6 @@ export function AgoraPostActions({
   isHidden?: boolean
 }) {
   const router = useRouter()
-
-  async function flag() {
-    const reason = window.prompt(tx('신고 사유를 적어주세요 (선택)')) ?? null
-    if (reason === null) return
-    const res = await fetch(`/api/agora/${postId}/flag`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ reason }),
-    })
-    if (res.ok) toast.success(tn('신고가 접수되었어요.'))
-    else toast.error(tn('신고에 실패했어요.'))
-  }
 
   async function toggleHidden() {
     const res = await fetch(`/api/agora/${postId}/hide`, {
@@ -42,15 +32,6 @@ export function AgoraPostActions({
 
   return (
     <>
-      <button
-        type="button"
-        onClick={flag}
-        className="inline-flex items-center justify-center w-8 h-8 rounded-full text-n-999 hover:bg-n-f2f2f2 hover:text-n-111"
-        aria-label={tx('신고')}
-        title={tx('신고')}
-      >
-        <Flag className="w-4 h-4" />
-      </button>
       {isAdmin && (
         <button
           type="button"

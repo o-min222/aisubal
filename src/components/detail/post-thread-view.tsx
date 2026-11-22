@@ -31,7 +31,7 @@ export async function PostThreadView({
   const legacy = await getPost(thread.root.id)
   const showLegacy = Boolean(legacy && legacy.assets.length > 0)
   const groups = twoLevelThread(thread.root.id, thread.replies)
-  const replyTarget = reply ? thread.replies.find((r) => r.id === reply) : undefined
+  const replyTarget = reply ? thread.replies.find((r) => r.id === reply && !r.isDeleted) : undefined
   const group = thread.root.groupId ? await getGroupById(member.id, thread.root.groupId).catch(() => null) : null
   const baseMe = composerIdentity(member, unlock.unlocked)
   const me = group ? { ...baseMe, nicknameAvailable: false } : baseMe
@@ -55,7 +55,7 @@ export async function PostThreadView({
       {showLegacy && legacy ? (
         <PostDetailClient post={legacy} member={member} />
       ) : (
-        <PostCard post={thread.root} likeEndpoint={`/api/feed/${thread.root.id}/like`} likersEndpoint={`/api/feed/${thread.root.id}/likers`} />
+        <PostCard post={thread.root} afterDeleteHref={group ? `/groups/${group.slug}` : '/feed'} likeEndpoint={`/api/feed/${thread.root.id}/like`} likersEndpoint={`/api/feed/${thread.root.id}/likers`} />
       )}
 
       <div className="flex flex-wrap items-center gap-2 text-xs text-n-666 px-1">
@@ -86,6 +86,9 @@ export async function PostThreadView({
               </Link>
             </div>
           )}
+          {thread.root.isDeleted && !replyTarget ? (
+            <p className="text-sm text-n-888"><T>삭제된 글에는 새 댓글을 달 수 없어요.</T></p>
+          ) : (
           <Composer
             key={replyTarget?.id || 'root'}
             me={me}
@@ -94,6 +97,7 @@ export async function PostThreadView({
             autoFocus={Boolean(replyTarget)}
             className="!p-0 !border-0 !shadow-none"
           />
+          )}
         </div>
         <h2 className="px-4 pt-3 pb-2 !text-sm font-semibold text-n-111 border-b border-n-eee"><T s="댓글 {count}" vars={{ count: thread.replies.length }} /></h2>
         {groups.length === 0 ? (
@@ -108,7 +112,7 @@ export async function PostThreadView({
                 isReply
                 level={level}
                 replyTo={replyTo}
-                replyHref={`${pageHref}?reply=${post.id}`}
+                replyHref={post.isDeleted ? undefined : `${pageHref}?reply=${post.id}`}
                 likeEndpoint={`/api/feed/${post.id}/like`}
                 likersEndpoint={`/api/feed/${post.id}/likers`}
               />

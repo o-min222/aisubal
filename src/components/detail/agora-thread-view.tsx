@@ -35,9 +35,8 @@ export function AgoraThreadView({
             post={thread.root}
             likeEndpoint={`/api/agora/${thread.root.id}/like`}
             likersEndpoint={`/api/agora/${thread.root.id}/likers`}
-            actions={
-              <AgoraPostActions postId={thread.root.id} isAdmin={member.is_admin} isHidden={thread.root.isHidden} />
-            }
+            afterDeleteHref="/agora"
+            actions={member.is_admin ? <AgoraPostActions postId={thread.root.id} isAdmin isHidden={thread.root.isHidden} /> : undefined}
           />
 
           <section className="card overflow-hidden">
@@ -55,7 +54,7 @@ export function AgoraThreadView({
                     replyTo={replyTo}
                     likeEndpoint={`/api/agora/${post.id}/like`}
                     likersEndpoint={`/api/agora/${post.id}/likers`}
-                    actions={<AgoraPostActions postId={post.id} isAdmin={member.is_admin} isHidden={post.isHidden} />}
+                    actions={member.is_admin ? <AgoraPostActions postId={post.id} isAdmin isHidden={post.isHidden} /> : undefined}
                   />
                 )}
               />

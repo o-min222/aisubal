@@ -1598,6 +1598,9 @@ body { -webkit-tap-highlight-color: transparent; }
   font-size: 15px; text-align: left; border-radius: 10px;
 }
 .sheet-row:hover { background: var(--n-f6f6f6); }
+.post-menu-btn { flex-shrink: 0; width: 32px; height: 32px; margin: -6px -8px -6px 0; border-radius: 999px; display: inline-flex; align-items: center; justify-content: center; color: var(--n-888); position: relative; }
+.post-menu-btn::after { content: ''; position: absolute; inset: -6px; }
+.post-menu-btn:hover { background: var(--n-f2f2f2); color: var(--n-111); }
 .anon-banner {
   display: flex; align-items: flex-start; gap: 12px; padding: 14px 16px; border-radius: 14px;
   background: #1d1b2a; color: #fff;
