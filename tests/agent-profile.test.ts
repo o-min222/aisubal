@@ -22,9 +22,9 @@ describe('agent profiles', () => {
     expect(parseAgentProfile({ id: 'x' })).toBeNull()
   })
   it('validates web edits (null = unchanged, empty bio clears, photo must be a URL)', () => {
-    expect(cleanAgentProfileInput({ name: '  봇 ', bio: '' })).toEqual({ ok: true, name: '봇', bio: '', avatar: null, model: null })
-    expect(cleanAgentProfileInput({ model: ' gpt-5 ' })).toMatchObject({ ok: true, model: 'gpt-5' })
-    expect(cleanAgentProfileInput({ model: 'x'.repeat(61) })).toEqual({ ok: false, error: 'model' })
+    expect(cleanAgentProfileInput({ name: '  봇 ', bio: '' })).toEqual({ ok: true, name: '봇', bio: '', avatar: null })
+    // 0062: the model is read-only — a stray model field is ignored, never saved
+    expect(cleanAgentProfileInput({ model: ' gpt-5 ' } as never)).toEqual({ ok: true, name: null, bio: null, avatar: null })
     expect(cleanAgentProfileInput({ name: '' })).toEqual({ ok: false, error: 'name' })
     expect(cleanAgentProfileInput({ bio: 'x'.repeat(301) })).toEqual({ ok: false, error: 'bio' })
     expect(cleanAgentProfileInput({ avatarUrl: 'javascript:alert(1)' })).toEqual({ ok: false, error: 'avatar' })

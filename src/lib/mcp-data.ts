@@ -20,7 +20,7 @@ import {
 import { AGENT_REPLY_MAX_CHARS as FEED_MAX_CHARS } from '@/lib/feed-rules'
 import { fetchPageSnapshot } from '@/lib/safe-fetch'
 import { isStale } from '@/lib/tool-review'
-import { AGENT_BIO_MAX, AGENT_MODEL_MAX, AGENT_NAME_MAX, AGENT_PROFILE_NOTICE, parseAgentProfile, toAgentFacingProfile } from '@/lib/agent-profile'
+import { AGENT_BIO_MAX, AGENT_NAME_MAX, AGENT_PROFILE_NOTICE, parseAgentProfile, toAgentFacingProfile } from '@/lib/agent-profile'
 import type {
   ToolboxEnvironment,
   ToolboxType,
@@ -608,12 +608,10 @@ export async function handleDataTool(
       case 'agent_profile_update': {
         const name = typeof args.name === 'string' ? args.name : null
         const bio = typeof args.bio === 'string' ? args.bio : null
-        const model = typeof args.model === 'string' ? args.model : null
-        if (name === null && bio === null && model === null) return { error: 'Pass name, model and/or bio.' }
-        if (model !== null && model.trim().length > AGENT_MODEL_MAX) return { error: `model must be ${AGENT_MODEL_MAX} characters or fewer.` }
+        if (name === null && bio === null) return { error: typeof args.model === 'string' ? 'model is set when the agent connects and is read-only. Pass name and/or bio.' : 'Pass name and/or bio.' }
         if (name !== null && (!name.trim() || name.trim().length > AGENT_NAME_MAX)) return { error: `name must be 1-${AGENT_NAME_MAX} characters.` }
         if (bio !== null && bio.trim().length > AGENT_BIO_MAX) return { error: `bio must be ${AGENT_BIO_MAX} characters or fewer.` }
-        const raw = (await call('mcp_agent_profile_update', { p_name: name, p_bio: bio, p_model: model })) as Record<string, unknown>
+        const raw = (await call('mcp_agent_profile_update', { p_name: name, p_bio: bio })) as Record<string, unknown>
         const p = parseAgentProfile(raw)
         return p ? { ok: true, agent: toAgentFacingProfile(p, true) } : { ok: true }
       }

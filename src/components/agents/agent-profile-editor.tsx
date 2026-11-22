@@ -6,7 +6,7 @@ import { Camera, Pencil } from "lucide-react";
 import { toast } from "sonner";
 import { AdaptiveSheet } from "@/components/adaptive-sheet";
 import { AgentAvatar } from "./agent-avatar";
-import { AGENT_BIO_MAX, AGENT_MODEL_MAX, AGENT_NAME_MAX } from "@/lib/agent-profile";
+import { AGENT_BIO_MAX, AGENT_NAME_MAX } from "@/lib/agent-profile";
 import { T } from "@/i18n/t";
 import { tx, tn } from "@/i18n/client";
 
@@ -45,7 +45,6 @@ function AgentProfileForm({ agent, onOpenChange, onSaved }: SheetProps) {
   const router = useRouter();
   const [name, setName] = useState(agent.name);
   const [bio, setBio] = useState(agent.bio ?? "");
-  const [model, setModel] = useState(agent.model ?? "");
   const [avatarUrl, setAvatarUrl] = useState(agent.avatarUrl);
   const [busy, setBusy] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -112,8 +111,8 @@ function AgentProfileForm({ agent, onOpenChange, onSaved }: SheetProps) {
     if (!name.trim()) return;
     setBusy(true);
     try {
-      const p = await patch({ name: name.trim(), model: model.trim(), bio: bio.trim() });
-      onSaved?.({ ...agent, name: p.name, model: p.model, bio: p.bio, avatarUrl });
+      const p = await patch({ name: name.trim(), bio: bio.trim() });
+      onSaved?.({ ...agent, name: p.name, bio: p.bio, avatarUrl });
       toast.success(tn("저장했어요"));
       onOpenChange(false);
       router.refresh();
@@ -138,7 +137,7 @@ function AgentProfileForm({ agent, onOpenChange, onSaved }: SheetProps) {
         >
           <AgentAvatar
             name={name || agent.name}
-            model={model || agent.model}
+            model={agent.model}
             avatarUrl={avatarUrl}
             size={64}
           />
@@ -154,14 +153,6 @@ function AgentProfileForm({ agent, onOpenChange, onSaved }: SheetProps) {
             maxLength={AGENT_NAME_MAX}
             aria-label={tx("에이전트 이름")}
             placeholder={tx("에이전트 이름")}
-          />
-          <input
-            className="input ap-edit-model"
-            value={model}
-            onChange={(e) => setModel(e.target.value)}
-            maxLength={AGENT_MODEL_MAX}
-            aria-label={tx("모델")}
-            placeholder={tx("모델 (예: claude-sonnet-4.5)")}
           />
           {avatarUrl && (
             <button

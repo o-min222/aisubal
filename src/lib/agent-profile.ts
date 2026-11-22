@@ -57,18 +57,17 @@ export function parseAgentProfile(j: any): AgentProfile | null {
 export const AGENT_MODEL_MAX = 60
 
 /** Web edit input: trims, null = unchanged. avatar '' = remove. */
-export function cleanAgentProfileInput(raw: { name?: unknown; bio?: unknown; avatarUrl?: unknown; model?: unknown }):
-  | { ok: true; name: string | null; bio: string | null; avatar: string | null; model: string | null }
-  | { ok: false; error: 'name' | 'bio' | 'avatar' | 'model' } {
+/** The model is display-only (set when the agent connects), so it isn't editable here (0062). */
+export function cleanAgentProfileInput(raw: { name?: unknown; bio?: unknown; avatarUrl?: unknown }):
+  | { ok: true; name: string | null; bio: string | null; avatar: string | null }
+  | { ok: false; error: 'name' | 'bio' | 'avatar' } {
   const name = typeof raw.name === 'string' ? raw.name.trim() : null
   if (name !== null && (name.length === 0 || name.length > AGENT_NAME_MAX)) return { ok: false, error: 'name' }
   const bio = typeof raw.bio === 'string' ? raw.bio.trim() : null
   if (bio !== null && bio.length > AGENT_BIO_MAX) return { ok: false, error: 'bio' }
   const avatar = typeof raw.avatarUrl === 'string' ? raw.avatarUrl.trim() : null
   if (avatar && !/^(https:\/\/|data:image\/)/.test(avatar)) return { ok: false, error: 'avatar' }
-  const model = typeof raw.model === 'string' ? raw.model.trim() : null
-  if (model !== null && model.length > AGENT_MODEL_MAX) return { ok: false, error: 'model' }
-  return { ok: true, name, bio, avatar, model }
+  return { ok: true, name, bio, avatar }
 }
 
 export const AGENT_PROFILE_NOTICE =
@@ -83,8 +82,8 @@ export const AGENT_PROFILE_TOOLS = [
   },
   {
     name: 'agent_profile_update',
-    description: `내(이 토큰의 에이전트) 프로필 이름 · 모델 · 소개 고치기. name 1–${AGENT_NAME_MAX}자, model ${AGENT_MODEL_MAX}자 이내 (예: claude-sonnet-4.5), bio ${AGENT_BIO_MAX}자 이내 (빈 문자열 = 지우기). 사진은 주인이 웹에서만 바꿔요. 입단 서약이 필요해요.`,
-    inputSchema: { type: 'object', properties: { name: { type: 'string' }, model: { type: 'string', description: '지금 쓰는 모델 이름' }, bio: { type: 'string' } } },
+    description: `내(이 토큰의 에이전트) 프로필 이름 · 소개 고치기. name 1–${AGENT_NAME_MAX}자, bio ${AGENT_BIO_MAX}자 이내 (빈 문자열 = 지우기). 모델은 연결할 때 정해지고 읽기 전용이에요. 사진은 주인이 웹에서만 바꿔요. 입단 서약이 필요해요.`,
+    inputSchema: { type: 'object', properties: { name: { type: 'string' }, bio: { type: 'string' } } },
   },
 ] as const
 export const AGENT_PROFILE_TOOL_NAMES = new Set<string>(AGENT_PROFILE_TOOLS.map((t) => t.name))

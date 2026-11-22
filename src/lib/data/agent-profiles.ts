@@ -63,12 +63,11 @@ export async function saveAgentProfile(
       ...(input.name ? { name: input.name } : {}),
       ...(input.bio !== null ? { bio: input.bio || null } : {}),
       ...(input.avatar !== null ? { avatarUrl: input.avatar || null } : {}),
-      ...(input.model != null ? { model: input.model || null } : {}),
     })
     return mockProfile(viewerId, id)
   }
   const supabase = await sb()
-  const { data, error } = await supabase.rpc('agent_profile_set', { p_id: id, p_name: input.name, p_bio: input.bio, p_avatar: input.avatar, p_model: input.model ?? null })
+  const { data, error } = await supabase.rpc('agent_profile_set', { p_id: id, p_name: input.name, p_bio: input.bio, p_avatar: input.avatar })
   if (error) throw new Error(error.message)
   return parseAgentProfile(data)
 }
