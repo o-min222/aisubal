@@ -1,7 +1,8 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Bot, Copy, Key, Plus, Trash2 } from 'lucide-react'
+import { Copy, Eye, EyeOff, Key, Plus, Trash2 } from 'lucide-react'
+import { AgentClientIcon } from '@/components/timeline/agent-attribution'
 import { toast } from 'sonner'
 
 type TokenRow = {
@@ -12,6 +13,10 @@ type TokenRow = {
   scopes: string[]
   createdAt: string
   lastUsedAt: string | null
+  firstUsedAt?: string | null
+  client?: string | null
+  clientInfo?: string | null
+  showOnProfile?: boolean
 }
 
 const SCOPE_GROUPS: { label: string; scopes: { id: string; label: string }[] }[] = [
@@ -44,6 +49,7 @@ const SCOPE_GROUPS: { label: string; scopes: { id: string; label: string }[] }[]
       { id: 'products_write', label: '프로덕트 등록' },
       { id: 'toolbox_read', label: '툴박스 읽기' },
       { id: 'toolbox_write', label: '툴박스 추가·설치 기록' },
+      { id: 'tools:submit', label: '툴 등록 요청 (검토 후 공개 · 다음 업데이트에서 열려요)' },
     ],
   },
 ]
@@ -110,6 +116,17 @@ export function ApiTokensSection() {
     }
   }
 
+  async function setVisibility(t: TokenRow, show: boolean) {
+    const res = await fetch(`/api/tokens/${encodeURIComponent(t.id)}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ showOnProfile: show }),
+    })
+    if (!res.ok) return toast.error('바꾸지 못했어요.')
+    setTokens((list) => list.map((x) => (x.id === t.id ? { ...x, showOnProfile: show } : x)))
+    toast.success(show ? '프로필에 보여요.' : '프로필에서 숨겼어요.')
+  }
+
   async function revoke(id: string) {
     if (!window.confirm('이 토큰을 폐기할까요? 연결된 에이전트는 더 이상 접근할 수 없어요.')) return
     const res = await fetch(`/api/tokens?id=${encodeURIComponent(id)}`, { method: 'DELETE' })
@@ -125,13 +142,13 @@ export function ApiTokensSection() {
         <div>
           <h2 className="font-semibold text-[#111] flex items-center gap-2">
             <Key className="w-4 h-4" />
-            API 토큰 · 내 에이전트
+            연결된 AI · 토큰
           </h2>
-          <p className="text-xs text-[#888] mt-0.5">MCP / CLI용 · 토큰 원문은 발급 직후 한 번만 보여요</p>
+          <p className="text-xs text-[#888] mt-0.5">직접 권한을 골라 토큰만 만들 수도 있어요 · 토큰 원문은 발급 직후 한 번만 보여요</p>
         </div>
         <button className="btn btn-secondary btn-sm" onClick={() => setOpen((v) => !v)}>
           <Plus className="w-4 h-4" />
-          새 토큰
+          직접 만들기
         </button>
       </div>
 
@@ -218,15 +235,18 @@ aisubal agora post "써본 툴 한 줄 평" --tool "Context7" --rating 4`}</pre>
         ) : (
           tokens.map((t) => (
             <div key={t.id} className="p-4 flex items-start gap-3">
-              <span className="w-8 h-8 rounded-full bg-[#111] text-white flex items-center justify-center flex-shrink-0">
-                <Bot className="w-4 h-4" />
-              </span>
+              <AgentClientIcon model={t.agentModel || t.client} size={32} />
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-[#111]">
                   {t.agentName || t.name}
                   {t.agentModel && <span className="text-[#888] font-normal"> · {t.agentModel}</span>}
                 </p>
                 <p className="text-xs text-[#888] truncate">{t.name}</p>
+                <p className="text-xs mt-0.5" style={{ color: t.firstUsedAt || t.lastUsedAt ? '#1f7a4d' : '#a15c00' }}>
+                  {t.firstUsedAt || t.lastUsedAt
+                    ? `연결됨 ✅${t.clientInfo ? ` · ${t.clientInfo}` : ''}${t.lastUsedAt ? ` · 최근 ${new Date(t.lastUsedAt).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })}` : ''}`
+                    : '아직 연결 전'}
+                </p>
                 <div className="mt-1 flex flex-wrap gap-1">
                   {t.scopes.map((s) => (
                     <span key={s} className="font-mono text-[11px] bg-[#f3f3f3] rounded px-1.5 py-0.5">
@@ -235,7 +255,17 @@ aisubal agora post "써본 툴 한 줄 평" --tool "Context7" --rating 4`}</pre>
                   ))}
                 </div>
               </div>
-              <button className="btn btn-ghost btn-sm" onClick={() => revoke(t.id)} aria-label="폐기">
+              {t.agentName && (
+                <button
+                  className="btn btn-ghost btn-sm min-h-[40px]"
+                  onClick={() => setVisibility(t, !(t.showOnProfile ?? true))}
+                  aria-label={(t.showOnProfile ?? true) ? '프로필에서 숨기기' : '프로필에 보이기'}
+                  title={(t.showOnProfile ?? true) ? '프로필에 보여요 (누르면 숨김)' : '프로필에서 숨김 (누르면 보이기)'}
+                >
+                  {(t.showOnProfile ?? true) ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4 text-[#aaa]" />}
+                </button>
+              )}
+              <button className="btn btn-ghost btn-sm min-h-[40px]" onClick={() => revoke(t.id)} aria-label="폐기">
                 <Trash2 className="w-4 h-4" />
               </button>
             </div>

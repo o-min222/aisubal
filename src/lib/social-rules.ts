@@ -75,15 +75,18 @@ export function friendActionLabel(state: FriendState): string {
   }
 }
 
-export type FeedScope = 'all' | 'following' | 'friends'
+export type FeedScope = 'all' | 'following' | 'friends' | 'popular'
 export const FEED_SCOPES: Array<{ id: FeedScope; label: string }> = [
   { id: 'all', label: '전체' },
   { id: 'following', label: '팔로잉' },
   { id: 'friends', label: '친구' },
+  { id: 'popular', label: '인기' },
 ]
 export function parseFeedScope(v: string | null | undefined): FeedScope {
-  return v === 'following' || v === 'friends' ? v : 'all'
+  return v === 'following' || v === 'friends' || v === 'popular' ? v : 'all'
 }
+/** 인기: last 14 days, most liked/replied first. */
+export const POPULAR_DAYS = 14
 
 export const SOCIAL_ERRORS: Record<string, string> = {
   social_self: '나 자신은 팔로우하거나 친구로 추가할 수 없어요.',

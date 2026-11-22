@@ -3,7 +3,9 @@ import { notFound, redirect } from 'next/navigation'
 import { CalendarPlus, ChevronLeft, Lock } from 'lucide-react'
 import { getNicknameUnlockState, getUserState } from '@/lib/auth'
 import { getGroupBySlug, listGroupMembers } from '@/lib/data/groups'
-import { listFeedTimeline } from '@/lib/data/feed'
+import { listFeedPage } from '@/lib/data/feed'
+import { Pagination } from '@/components/pagination'
+import { parsePage } from '@/lib/paging'
 import { listMoim } from '@/lib/data/moim'
 import { getRelations } from '@/lib/data/social'
 import { composerIdentity } from '@/lib/composer-identity'
@@ -22,7 +24,7 @@ import { GroupRequests, MemberControls } from '@/components/groups/group-manage'
 
 type Tab = 'feed' | 'members' | 'moim' | 'requests' | 'settings'
 
-export default async function GroupPage({ params, searchParams }: { params: Promise<{ slug: string }>; searchParams: Promise<{ tab?: string }> }) {
+export default async function GroupPage({ params, searchParams }: { params: Promise<{ slug: string }>; searchParams: Promise<{ tab?: string; page?: string }> }) {
   const state = await getUserState()
   if (state.type === 'unauthenticated') redirect('/login')
   if (state.type === 'waitlist') redirect('/waitlist')
@@ -41,7 +43,9 @@ export default async function GroupPage({ params, searchParams }: { params: Prom
     ...(isMod ? [{ id: 'requests' as Tab, label: '요청' }] : []),
     ...(isOwner ? [{ id: 'settings' as Tab, label: '설정' }] : []),
   ]
-  const raw = (await searchParams).tab as Tab
+  const sp = await searchParams
+  const raw = sp.tab as Tab
+  const page = parsePage(sp.page)
   const tab: Tab = tabs.some((t) => t.id === raw) ? raw : 'feed'
   const base = `/groups/${g.slug}`
 
@@ -90,7 +94,7 @@ export default async function GroupPage({ params, searchParams }: { params: Prom
 
       {tab === 'feed' &&
         (readable ? (
-          <GroupTimeline groupId={g.id} groupName={g.name} canPost={g.myStatus === 'active'} member={state.member} viewerId={me} />
+          <GroupTimeline groupId={g.id} groupName={g.name} canPost={g.myStatus === 'active'} member={state.member} viewerId={me} page={page} base={base} />
         ) : (
           <div className="card p-8 text-center space-y-1">
             <Lock className="w-5 h-5 mx-auto text-[#999]" />
@@ -126,12 +130,16 @@ export default async function GroupPage({ params, searchParams }: { params: Prom
   )
 }
 
-async function GroupTimeline({ groupId, groupName, canPost, member, viewerId }: { groupId: string; groupName: string; canPost: boolean; member: Member; viewerId: string }) {
-  const [posts, unlock] = await Promise.all([listFeedTimeline(viewerId, { groupId }).catch(() => []), getNicknameUnlockState()])
+async function GroupTimeline({ groupId, groupName, canPost, member, viewerId, page, base }: { groupId: string; groupName: string; canPost: boolean; member: Member; viewerId: string; page: number; base: string }) {
+  const [{ posts, totalPages }, unlock] = await Promise.all([
+    listFeedPage(viewerId, { groupId, page }).catch(() => ({ posts: [], totalPages: 1 })),
+    getNicknameUnlockState(),
+  ])
   return (
     <>
-      {canPost && <Composer me={{ ...composerIdentity(member, unlock.unlocked), nicknameAvailable: false }} groupId={groupId} groupName={groupName} />}
-      <FeedTimeline initial={posts} query={`group=${groupId}`} emptyTitle="아직 그룹 글이 없어요" emptyHint={canPost ? '첫 글을 남겨보세요. 그룹 멤버에게만 보여요.' : '가입하면 글을 쓸 수 있어요.'} />
+      {canPost && page === 1 && <Composer me={{ ...composerIdentity(member, unlock.unlocked), nicknameAvailable: false }} groupId={groupId} groupName={groupName} />}
+      <FeedTimeline initial={posts} emptyTitle="아직 그룹 글이 없어요" emptyHint={canPost ? '첫 글을 남겨보세요. 그룹 멤버에게만 보여요.' : '가입하면 글을 쓸 수 있어요.'} />
+      <Pagination base={base} page={page} totalPages={totalPages} label="그룹 타임라인 페이지" />
     </>
   )
 }

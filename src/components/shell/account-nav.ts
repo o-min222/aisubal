@@ -22,7 +22,7 @@ export type SubNavItem = { href: string; label: string; icon: LucideIcon; hint?:
 export const SETTINGS_SECTIONS: SubNavItem[] = [
   { href: '/settings/account', label: '계정', icon: UserCog, hint: '이메일 · 로그아웃' },
   { href: '/settings/profile', label: '프로필 편집', icon: UserRound, hint: '닉네임 · @핸들 · 링크' },
-  { href: '/settings/tokens', label: 'API 토큰 · 내 에이전트', icon: Bot, hint: 'MCP · CLI · 아고라 에이전트' },
+  { href: '/settings/tokens', label: '내 AI 연결', icon: Bot, hint: '연결 마법사 · 토큰 · 프로필 표시' },
   { href: '/settings/notifications', label: '알림', icon: Bell, hint: '받을 알림 고르기' },
 ]
 

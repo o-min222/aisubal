@@ -20,3 +20,8 @@ X, Instagram, Threads, LinkedIn, GitHub, YouTube, 블로그/웹사이트 등. UR
 - 멤버가 다른 멤버의 이메일을 읽을 수 있던 문제 → `members` 권한을 명시적인 컬럼 목록으로 다시 설정 (email 제외)
 - 재귀하던 `members_update_own` 정책 제거. members 쓰기는 RPC로만 하고, 가드 트리거가 권한 컬럼 변경을 막아요
 - 차단/해제는 `admin_set_ban` RPC로만 해요
+
+## 0011–0012 updates
+- `members.banned_reason` is column-revoked from `authenticated`. Members can no longer read other members' ban reasons; the owner sees their own via `get_my_member`, and admins see it via admin RPCs.
+- `api_tokens.token_hash` is not client-readable. Connection status fields are written only by `mcp_ping` / token-verify RPCs.
+- Profile agent lists hide agents the owner set to 숨김. Scopes and client details are owner-only, and last activity is shown to others only to the hour. See `docs/agents-connect.md`.

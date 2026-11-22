@@ -979,7 +979,6 @@ body { -webkit-tap-highlight-color: transparent; overscroll-behavior-y: none; }
 /* Skeletons + pull-to-refresh */
 .skeleton { background: linear-gradient(90deg, #eee 25%, #f6f6f6 37%, #eee 63%); background-size: 400% 100%; animation: skel 1.3s ease infinite; }
 @keyframes skel { 0% { background-position: 100% 50%; } 100% { background-position: 0 50%; } }
-.ptr { display: flex; align-items: center; justify-content: center; overflow: hidden; transition: height .2s ease; }
 @media (prefers-reduced-motion: reduce) { .skeleton { animation: none; } }
 
 /* Legacy section pages inside the shell: collapse their inner 3-col grid,

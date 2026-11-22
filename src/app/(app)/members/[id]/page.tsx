@@ -7,7 +7,9 @@ import { FriendButton } from '@/components/social/friend-button'
 import { RelationBadge } from '@/components/social/relation-badge'
 import { getUserState } from '@/lib/auth'
 import { getMemberById } from '@/lib/data/members'
-import { listFeedTimeline } from '@/lib/data/feed'
+import { listFeedPage } from '@/lib/data/feed'
+import { Pagination } from '@/components/pagination'
+import { parsePage } from '@/lib/paging'
 import { getProfileStats } from '@/lib/data/shell'
 import { isFeedId } from '@/lib/feed-ids'
 import { UserAvatar } from '@/components/user-avatar'
@@ -18,10 +20,12 @@ import { TOOL_TYPE_CHIP, toolHref } from '@/lib/tool-rules'
 import { getProfileLinks } from '@/lib/data/profile'
 import { LINK_KINDS, LINK_VISIBILITY } from '@/lib/profile-rules'
 import { LinkIcon } from '@/components/profile/link-icon'
+import { AgentsSection } from '@/components/profile/agents-section'
+import { listProfileAgents } from '@/lib/data/tokens'
 
 export const metadata = { title: '프로필 · AI쓰발' }
 
-export default async function MemberProfilePage({ params }: { params: Promise<{ id: string }> }) {
+export default async function MemberProfilePage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ page?: string }> }) {
   const state = await getUserState()
   if (state.type === 'unauthenticated') redirect('/login')
   if (state.type === 'waitlist') redirect('/waitlist')
@@ -30,16 +34,18 @@ export default async function MemberProfilePage({ params }: { params: Promise<{ 
   const id = rawId === 'me' ? viewer.id : rawId
   if (id !== viewer.id && !isFeedId(id)) notFound()
   const isMe = id === viewer.id
+  const page = parsePage((await searchParams).page)
 
   const member = isMe ? viewer : await getMemberById(id)
   if (!member || !member.signup_completed_at) notFound()
 
   // Other members' pages only list real-name posts: nickname posts stay unlinkable.
-  const [posts, stats, tools, social] = await Promise.all([
-    listFeedTimeline(viewer.id, { authorId: member.id, includeNickname: isMe, limit: 50 }),
+  const [{ posts, totalPages }, stats, tools, social, agents] = await Promise.all([
+    listFeedPage(viewer.id, { authorId: member.id, includeNickname: isMe, page }),
     isMe ? getProfileStats(viewer) : Promise.resolve(null),
     listMemberTools(member.id).catch(() => []),
     getSocialSummary(viewer.id, member.id).catch(() => null),
+    listProfileAgents(viewer.id, member.id).catch(() => []),
   ])
   // SNS links: filtered server-side by each link's visibility (전체 회원 / 친구만 / 비공개).
   const links = await getProfileLinks(viewer.id, member.id, social?.relation.friend === 'friends').catch(() => [])
@@ -171,6 +177,8 @@ export default async function MemberProfilePage({ params }: { params: Promise<{ 
         )}
       </section>
 
+      <AgentsSection agents={agents} isMe={isMe} ownerName={member.display_name} />
+
       <h2 className="text-sm font-semibold text-[#111] px-1">{isMe ? '내 글' : '글'}</h2>
       {posts.length === 0 ? (
         <div className="card p-8 text-center text-sm text-[#888]">아직 글이 없어요.</div>
@@ -188,6 +196,7 @@ export default async function MemberProfilePage({ params }: { params: Promise<{ 
           ))}
         </div>
       )}
+      <Pagination base={`/members/${isMe ? 'me' : member.id}`} page={page} totalPages={totalPages} label="프로필 글 페이지" />
     </div>
   )
 }

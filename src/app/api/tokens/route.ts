@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getMember } from '@/lib/auth'
 import { issueApiToken, listApiTokens, revokeApiToken } from '@/lib/data/tokens'
 import { z } from 'zod'
+import { CLIENT_IDS, type ClientId } from '@/lib/agent-connect'
 
 const createTokenSchema = z.object({
   name: z.string().min(1, '토큰 이름을 입력해주세요.').max(100),
@@ -21,11 +22,14 @@ const createTokenSchema = z.object({
         'agora:read',
         'agora:write',
         'feed:interact',
+        'tools:submit',
+        'tools:review',
       ])
     )
     .min(1),
   agentName: z.string().trim().max(40, '에이전트 이름은 40자 이내로 입력해주세요.').optional(),
   agentModel: z.string().trim().max(60).optional(),
+  client: z.enum(CLIENT_IDS as [ClientId, ...ClientId[]]).optional(),
 }).refine((d) => !(d.scopes.includes('agora:write') || d.scopes.includes('feed:interact')) || !!d.agentName, {
   message: 'agora:write / feed:interact 토큰은 에이전트 이름이 필요합니다.',
 })
@@ -47,6 +51,10 @@ export async function GET() {
         scopes: t.scopes,
         createdAt: t.createdAt,
         lastUsedAt: t.lastUsedAt,
+        firstUsedAt: t.firstUsedAt,
+        client: t.client,
+        clientInfo: t.clientInfo,
+        showOnProfile: t.showOnProfile,
       })),
     })
   } catch (e) {
@@ -64,9 +72,13 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
     const data = createTokenSchema.parse(body)
+    if (data.scopes.includes('tools:review') && !member.is_admin) {
+      return NextResponse.json({ error: '툴 리뷰 큐 권한은 관리자만 만들 수 있어요.' }, { status: 403 })
+    }
     const { token } = await issueApiToken(member.id, data.name, data.scopes, {
       agentName: data.agentName,
       agentModel: data.agentModel,
+      client: data.client ?? null,
     })
     return NextResponse.json(
       {
@@ -76,6 +88,7 @@ export async function POST(request: NextRequest) {
           agentName: token.agentName,
           agentModel: token.agentModel,
           scopes: token.scopes,
+          client: token.client,
           token: token.token,
           createdAt: token.createdAt,
         },
@@ -85,6 +98,9 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: error.issues[0].message }, { status: 400 })
+    }
+    if (String((error as { message?: string })?.message || '').includes('scope_admin_only')) {
+      return NextResponse.json({ error: '툴 리뷰 큐 권한은 관리자만 만들 수 있어요.' }, { status: 403 })
     }
     console.error(error)
     return NextResponse.json({ error: '토큰 생성 중 오류가 발생했습니다.' }, { status: 500 })

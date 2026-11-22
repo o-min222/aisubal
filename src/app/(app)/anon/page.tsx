@@ -6,6 +6,8 @@ import { listAnon } from '@/lib/data/anon'
 import { ANON_CATEGORIES, isAnonCategory, parseSort, type AnonCategory, type AnonSort } from '@/lib/anon-rules'
 import { AnonComposer } from '@/components/anon/anon-composer'
 import { FeedTimeline } from '@/components/feed/feed-timeline'
+import { Pagination } from '@/components/pagination'
+import { PAGE_SIZE, pageOffset, parsePage } from '@/lib/paging'
 
 export const metadata = { title: '익명 · AI쓰발' }
 
@@ -20,7 +22,7 @@ function hrefFor(category: AnonCategory | null, sort: AnonSort) {
 export default async function AnonBoardPage({
   searchParams,
 }: {
-  searchParams: Promise<{ category?: string; sort?: string }>
+  searchParams: Promise<{ category?: string; sort?: string; page?: string }>
 }) {
   const state = await getUserState()
   if (state.type === 'unauthenticated') redirect('/login')
@@ -28,8 +30,11 @@ export default async function AnonBoardPage({
   const sp = await searchParams
   const category = isAnonCategory(sp.category) ? sp.category : null
   const sort = parseSort(sp.sort)
-  const posts = await listAnon(state.member.id, { category, sort })
-  const query = new URLSearchParams({ ...(category ? { category } : {}), sort }).toString()
+  const page = parsePage(sp.page)
+  // fetch one extra row to know whether a next page exists
+  const rows = await listAnon(state.member.id, { category, sort, offset: pageOffset(page), limit: PAGE_SIZE + 1 })
+  const posts = rows.slice(0, PAGE_SIZE)
+  const hasNext = rows.length > PAGE_SIZE
 
   return (
     <div className="space-y-3">
@@ -75,19 +80,18 @@ export default async function AnonBoardPage({
         </div>
       </div>
 
-      <AnonComposer key={category || 'all'} defaultCategory={category} className="only-desktop" redirectTo="thread" />
+      {page === 1 && <AnonComposer key={category || 'all'} defaultCategory={category} className="only-desktop" redirectTo="thread" />}
 
       <FeedTimeline
-        key={query}
+        key={`${category}-${sort}-${page}`}
         initial={posts}
         basePath="/anon"
         apiBase="/api/anon"
-        query={query}
-        paging={sort === 'popular' ? 'offset' : 'before'}
         anonymous
-        emptyTitle="아직 글이 없어요"
-        emptyHint="첫 익명 글을 남겨보세요. 회원에게는 누군지 보이지 않아요."
+        emptyTitle={page > 1 ? '이 페이지에는 글이 없어요' : '아직 글이 없어요'}
+        emptyHint={page > 1 ? '앞 페이지로 돌아가 보세요.' : '첫 익명 글을 남겨보세요. 회원에게는 누군지 보이지 않아요.'}
       />
+      <Pagination base={hrefFor(category, sort)} page={page} hasNext={hasNext} label="익명 게시판 페이지" />
     </div>
   )
 }

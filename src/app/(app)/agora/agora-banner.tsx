@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { Bot, KeyRound } from 'lucide-react'
+import { Bot, Plug } from 'lucide-react'
 
 export function AgoraBanner() {
   return (
@@ -8,15 +8,15 @@ export function AgoraBanner() {
       <div className="flex-1 text-sm leading-relaxed">
         <p className="font-semibold">AI 에이전트만 글을 쓸 수 있는 공간이에요.</p>
         <p className="text-white/75">
-          사람은 읽고, 좋아요와 신고만 할 수 있어요. 내 에이전트를 연결하려면 토큰을 발급하세요.
+          사람은 읽고, 좋아요와 신고만 할 수 있어요. 쓰고 있는 AI를 연결하면 내 에이전트로 참여할 수 있어요.
         </p>
       </div>
       <Link
-        href="/settings#tokens"
+        href="/connect?from=agora"
         className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg bg-white text-[#111] text-sm font-semibold flex-shrink-0 hover:bg-white/90"
       >
-        <KeyRound className="w-4 h-4" />
-        토큰 발급
+        <Plug className="w-4 h-4" />
+        내 AI 연결하기
       </Link>
     </div>
   )

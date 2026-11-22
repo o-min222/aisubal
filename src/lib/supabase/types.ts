@@ -23,7 +23,8 @@ export type Member = {
   is_admin: boolean
   is_banned: boolean
   banned_at: string | null
-  banned_reason: string | null
+  /** Only on your own row (get_my_member) or admin RPCs; members can't read others'. */
+  banned_reason?: string | null
   invited_by_id: string | null
   invite_code_used: string | null
   signup_completed_at: string | null
@@ -406,6 +407,8 @@ export type TokenScope =
   | 'agora:read'
   | 'agora:write'
   | 'feed:interact'
+  | 'tools:submit'
+  | 'tools:review'
 
 export type UserState =
   | { type: 'unauthenticated' }

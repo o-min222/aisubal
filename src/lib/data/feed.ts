@@ -3,7 +3,8 @@ import { feedRowToTimeline, type FeedRow } from '@/lib/feed-rules'
 import { MOCK_MEMBERS, MOCK_POSTS } from '@/lib/mock-data'
 import { toPublicAuthor, publicAuthorLabel } from '@/lib/profile'
 import type { Member } from '@/lib/supabase/types'
-import { relationBadge, type FeedScope } from '@/lib/social-rules'
+import { POPULAR_DAYS, relationBadge, type FeedScope } from '@/lib/social-rules'
+import { PAGE_SIZE } from '@/lib/paging'
 import { sb, useMockData as isMock } from './client'
 import { getRelations, socialAuthorIds } from './social'
 
@@ -176,41 +177,49 @@ export async function withFollowState(viewerId: string, posts: TimelinePost[]): 
   })
 }
 
-export async function listFeedTimeline(
-  viewerId: string,
-  opts: {
-    limit?: number
-    before?: string
-    authorId?: string
-    includeNickname?: boolean
-    /** 전체 | 팔로잉 | 친구 — the last two only show real-name posts by those people */
-    scope?: FeedScope
-    /** group timeline; when omitted, group posts are excluded */
-    groupId?: string | null
-  } = {}
-): Promise<TimelinePost[]> {
+export type FeedListOpts = {
+  limit?: number
+  before?: string
+  /** numbered pages: skip this many rows */
+  offset?: number
+  authorId?: string
+  includeNickname?: boolean
+  /** 전체 | 팔로잉 | 친구 | 인기 — 팔로잉/친구 only show real-name posts by those people */
+  scope?: FeedScope
+  /** group timeline; when omitted, group posts are excluded */
+  groupId?: string | null
+}
+
+async function queryFeed(viewerId: string, opts: FeedListOpts, withCount: boolean): Promise<{ posts: TimelinePost[]; total: number | null }> {
   const scope = opts.scope ?? 'all'
-  const authorIds = scope === 'all' ? null : await socialAuthorIds(viewerId, scope)
+  const popular = scope === 'popular'
+  const authorIds = scope === 'following' || scope === 'friends' ? await socialAuthorIds(viewerId, scope) : null
+  const limit = Math.min(opts.limit ?? 30, 100)
+  const offset = Math.max(0, opts.offset ?? 0)
+  const since = new Date(Date.now() - POPULAR_DAYS * 86400_000).toISOString()
   if (isMock()) {
     const st = mockState()
-    const rows = st.posts.filter(
+    let rows = st.posts.filter(
       (p) =>
         !p.parentId &&
         (opts.groupId ? p.groupId === opts.groupId : !p.groupId) &&
         (!opts.authorId || p.author.id === opts.authorId) &&
-        (!authorIds || (authorIds.includes(p.author.id) && !p.isNickname))
+        (!authorIds || (authorIds.includes(p.author.id) && !p.isNickname)) &&
+        (!opts.before || p.createdAt < opts.before)
     )
-    return withFollowState(viewerId, rows)
+    if (popular) rows = [...rows].sort((a, b) => b.likeCount * 2 + b.replyCount - (a.likeCount * 2 + a.replyCount) || b.createdAt.localeCompare(a.createdAt))
+    return { posts: await withFollowState(viewerId, rows.slice(offset, offset + limit)), total: rows.length }
   }
-  if (authorIds && authorIds.length === 0) return []
+  if (authorIds && authorIds.length === 0) return { posts: [], total: 0 }
   const supabase = await sb()
   let q = supabase
     .from('posts')
-    .select(FEED_SELECT)
+    .select(FEED_SELECT, withCount ? { count: 'exact' } : undefined)
     .is('parent_id', null)
     .eq('is_hidden', false)
-    .order('created_at', { ascending: false })
-    .limit(Math.min(opts.limit ?? 30, 100))
+  q = popular
+    ? q.gte('created_at', since).order('like_count', { ascending: false }).order('reply_count', { ascending: false }).order('created_at', { ascending: false })
+    : q.order('created_at', { ascending: false })
   q = opts.groupId ? q.eq('group_id', opts.groupId) : q.is('group_id', null)
   if (opts.before) q = q.lt('created_at', opts.before)
   if (authorIds) q = q.in('author_id', authorIds.slice(0, 500)).eq('posted_as', 'real').eq('author_kind', 'member')
@@ -219,11 +228,26 @@ export async function listFeedTimeline(
     // other people's profile pages must never reveal their nickname posts
     if (!opts.includeNickname) q = q.eq('posted_as', 'real')
   }
-  const { data, error } = await q
+  const { data, error, count } = await q.range(offset, offset + limit - 1)
   if (error) throw error
   const rows = (data || []) as unknown as FeedRow[]
   const liked = await likedSet(viewerId, rows.map((r) => r.id))
-  return withFollowState(viewerId, rows.map((r) => feedRowToTimeline(r, liked)))
+  return { posts: await withFollowState(viewerId, rows.map((r) => feedRowToTimeline(r, liked))), total: withCount ? (count ?? null) : null }
+}
+
+export async function listFeedTimeline(viewerId: string, opts: FeedListOpts = {}): Promise<TimelinePost[]> {
+  return (await queryFeed(viewerId, opts, false)).posts
+}
+
+/** One numbered page (20 per page) with the total for the page links. */
+export async function listFeedPage(
+  viewerId: string,
+  opts: Omit<FeedListOpts, 'limit' | 'offset' | 'before'> & { page: number; pageSize?: number }
+): Promise<{ posts: TimelinePost[]; page: number; totalPages: number; total: number }> {
+  const size = opts.pageSize ?? PAGE_SIZE
+  const { posts, total } = await queryFeed(viewerId, { ...opts, limit: size, offset: (opts.page - 1) * size }, true)
+  const t = total ?? posts.length
+  return { posts, page: opts.page, total: t, totalPages: Math.max(1, Math.ceil(t / size)) }
 }
 
 export async function getFeedThread(

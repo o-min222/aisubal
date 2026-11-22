@@ -153,11 +153,11 @@ export async function listAnon(
     if (opts.category) rows = rows.filter((p) => p.category === opts.category)
     if (opts.sort === 'popular') {
       rows = [...rows].sort((a, b) => b.likeCount * 2 + b.replyCount - (a.likeCount * 2 + a.replyCount) || b.createdAt.localeCompare(a.createdAt))
-      rows = rows.slice(opts.offset ?? 0)
     } else {
       rows = [...rows].sort((a, b) => b.createdAt.localeCompare(a.createdAt))
       if (opts.before) rows = rows.filter((p) => p.createdAt < opts.before!)
     }
+    rows = rows.slice(opts.offset ?? 0)
     return rows.slice(0, limit).map((p) => anonRowToTimeline(view(p, viewerId)))
   }
   const rows = await rpc<AnonRow[]>('anon_list', {

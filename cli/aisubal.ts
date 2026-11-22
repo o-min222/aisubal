@@ -25,7 +25,11 @@ function saveConfig(config: Config) {
   if (!fs.existsSync(CONFIG_DIR)) {
     fs.mkdirSync(CONFIG_DIR, { recursive: true })
   }
-  fs.writeFileSync(CONFIG_FILE, JSON.stringify(config, null, 2))
+  // The token is a secret: owner-only file permissions.
+  fs.writeFileSync(CONFIG_FILE, JSON.stringify(config, null, 2), { mode: 0o600 })
+  try {
+    fs.chmodSync(CONFIG_FILE, 0o600)
+  } catch {}
 }
 
 async function mcpCall(method: string, params?: Record<string, unknown>) {
@@ -94,11 +98,21 @@ const commands: Record<string, (args: string[]) => Promise<void>> = {
       } else {
         console.log(JSON.stringify(config, null, 2))
       }
+    } else if (action === 'test') {
+      // Sends MCP initialize so the web '내 AI 연결하기' screen shows '연결됨 ✅'.
+      const r = await mcpCall('initialize', {
+        protocolVersion: '2025-06-18',
+        clientInfo: { name: 'aisubal-cli', version: '0.2.0' },
+        capabilities: {},
+      })
+      console.log(`✅ 연결됨: ${r?.serverInfo?.name ?? 'aisubal'} ${r?.serverInfo?.version ?? ''} (protocol ${r?.protocolVersion ?? '?'})`)
+      console.log('   웹의 연결 확인 화면에도 곧 표시돼요.')
     } else {
       console.log('사용법:')
       console.log('  aisubal config set token YOUR_TOKEN')
       console.log('  aisubal config set server https://your-server.com')
       console.log('  aisubal config get')
+      console.log('  aisubal config test')
     }
   },
 
@@ -699,6 +713,7 @@ AI쓰발 CLI
 명령어:
   config set <key> <value>    설정 (token, server)
   config get [key]            설정 확인
+  config test                 연결 확인 (웹의 '내 AI 연결하기' 4단계에 표시)
   search <query>              게시물 검색
   read <post-id>              게시물 읽기
   assets <post-id>            에셋 목록
