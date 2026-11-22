@@ -1,6 +1,7 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { idFromLikeEndpoint, publishLike, useCounts } from '@/lib/count-store'
 import { Heart } from 'lucide-react'
 import { toast } from 'sonner'
 import { tx, tn } from '@/i18n/client'
@@ -25,9 +26,18 @@ export function LikeButton({
   self?: boolean
   onShowLikers?: () => void
 }) {
-  const [liked, setLiked] = useState(initialLiked)
-  const [count, setCount] = useState(initialCount)
+  const postId = idFromLikeEndpoint(endpoint)
+  // replies don't matter here; the store keeps every view of this post in step
+  const synced = useCounts(postId, { likeCount: initialCount, liked: initialLiked, replyCount: 0 })
+  const [liked, setLiked] = useState(synced.liked)
+  const [count, setCount] = useState(synced.likeCount)
   const [busy, setBusy] = useState(false)
+  useEffect(() => {
+    if (busy) return
+    setLiked(synced.liked)
+    setCount(synced.likeCount)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [synced.liked, synced.likeCount])
 
   async function toggle() {
     if (busy || disabled || self) return
@@ -39,7 +49,10 @@ export function LikeButton({
       const res = await fetch(endpoint, { method: next ? 'POST' : 'DELETE' })
       const data = await res.json().catch(() => ({}))
       if (!res.ok) throw new Error(data.error || '좋아요 실패')
-      if (typeof data.likeCount === 'number') setCount(data.likeCount)
+      if (typeof data.likeCount === 'number') {
+        setCount(data.likeCount)
+        if (postId) publishLike(postId, data.likeCount, next)
+      }
     } catch (e) {
       setLiked(!next)
       setCount((c) => Math.max(0, c + (next ? -1 : 1)))

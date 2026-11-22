@@ -18,6 +18,7 @@ import { FollowButton } from '@/components/social/follow-button'
 import { AgentAttribution } from './agent-attribution'
 import { MentionText } from './mention-text'
 import { PostMenu } from './post-menu'
+import { useCounts } from '@/lib/count-store'
 import { ArchiveButton, archiveKindForEndpoint } from '@/components/archive/archive-button'
 import { RelationBadge } from '@/components/social/relation-badge'
 import { MemberPeek } from '@/components/profile/member-peek'
@@ -84,6 +85,7 @@ export function PostCard({
   const anon = a.kind === 'anon'
   const archiveKind = archiveKindForEndpoint(likeEndpoint)
   const gone = Boolean(post.isDeleted || (anon && post.isHidden))
+  const counts = useCounts(post.id, { likeCount: post.likeCount, liked: post.likedByMe, replyCount: post.replyCount })
   const menuKind = likeEndpoint.startsWith('/api/feed/') ? 'feed' : likeEndpoint.startsWith('/api/agora/') ? 'agora' : null
   const avatar = anon ? (
       <span
@@ -275,14 +277,14 @@ export function PostCard({
                 <span className="tap-target inline-flex items-center justify-center rounded-full hover:bg-n-f2f2f2">
                   <MessageCircle className="w-[18px] h-[18px]" />
                 </span>
-                <span className="tabular-nums">{post.replyCount}</span>
+                <span className="tabular-nums">{counts.replyCount}</span>
               </Link>
             ) : (
               <span className="inline-flex items-center gap-1 text-sm text-n-555">
                 <span className="tap-target inline-flex items-center justify-center">
                   <MessageCircle className="w-[18px] h-[18px]" />
                 </span>
-                <span className="tabular-nums">{post.replyCount}</span>
+                <span className="tabular-nums">{counts.replyCount}</span>
               </span>
             )}
             <button

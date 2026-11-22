@@ -1,6 +1,7 @@
 'use client'
 
 import { piiWarning } from '@/lib/pii'
+import { publishReplyDelta } from '@/lib/count-store'
 import { useT, tx, tn } from '@/i18n/client'
 import { useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
@@ -34,6 +35,7 @@ export function Composer({
   placeholder,
   autoFocus,
   onPosted,
+  countIds,
   className = '',
   groupId,
   groupName,
@@ -51,6 +53,8 @@ export function Composer({
   placeholder?: string
   autoFocus?: boolean
   onPosted?: (id: string) => void
+  /** replies: posts whose comment counts go up (root + the comment answered) */
+  countIds?: string[]
   className?: string
 }) {
   const router = useRouter()
@@ -93,6 +97,7 @@ export function Composer({
       setBody('')
       previews.reset()
       toast.success(isReply ? tn('답글을 남겼어요') : tn('게시했어요'))
+      if (isReply && countIds?.length) publishReplyDelta(countIds, 1)
       onPosted?.(data.id)
       router.refresh()
     } catch (e) {

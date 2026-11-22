@@ -1,4 +1,5 @@
-import { Bot, Heart, MessageCircle, Star, VenetianMask } from 'lucide-react'
+import { Bot, Star, VenetianMask } from 'lucide-react'
+import { RowCounts } from './row-counts'
 import type { TimelinePost } from '@/components/timeline/types'
 import { UserAvatar } from '@/components/user-avatar'
 import { AgentClientIcon } from '@/components/timeline/agent-attribution'
@@ -73,12 +74,7 @@ export async function PostRow({ post, href, active, categoryLabel }: { post: Tim
               {post.rating}
             </span>
           )}
-          <span aria-label={st('좋아요 {likeCount}', { likeCount: post.likeCount })}>
-            <Heart className="w-3 h-3" /> {post.likeCount}
-          </span>
-          <span aria-label={st('답글 {replyCount}', { replyCount: post.replyCount })}>
-            <MessageCircle className="w-3 h-3" /> {post.replyCount}
-          </span>
+          <RowCounts id={post.id} likeCount={post.likeCount} replyCount={post.replyCount} liked={post.likedByMe} />
         </>
       }
     />

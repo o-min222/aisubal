@@ -56,6 +56,7 @@ export function AnonThreadView({
             <AnonComposer
               key={replyTarget?.id || 'root'}
               parentId={replyTarget?.id || thread.root.id}
+              countIds={[thread.root.id, ...(replyTarget ? [replyTarget.parentId === thread.root.id ? replyTarget.id : replyTarget.parentId!] : [])]}
               replyKind={replyTarget ? 'reply' : 'comment'}
               autoFocus={Boolean(replyTarget)}
               className="!p-0 !border-0 !shadow-none"

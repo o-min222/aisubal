@@ -6,6 +6,7 @@ import { Check, Flag, MoreHorizontal, Pencil, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { AdaptiveSheet } from '@/components/adaptive-sheet'
 import { FEED_REPORT_REASONS } from '@/lib/feed-rules'
+import { publishReplyDelta } from '@/lib/count-store'
 import type { TimelinePost } from './types'
 import { T } from '@/i18n/t'
 import { tx, tn } from '@/i18n/client'
@@ -69,6 +70,7 @@ export function PostMenu({ post, kind, afterDeleteHref }: { post: TimelinePost; 
     setBusy(true)
     try {
       const d = await call(base, { method: 'DELETE' }, tn('삭제하지 못했어요.'))
+      if (!d.tombstone && post.parentId) publishReplyDelta([post.rootId, post.parentId], -1)
       toast.success(tn('삭제했어요'))
       close(false)
       if (afterDeleteHref && !d.tombstone) router.push(afterDeleteHref)

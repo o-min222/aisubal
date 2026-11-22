@@ -1,6 +1,7 @@
 'use client'
 
 import { useMemo, useState } from 'react'
+import { publishReplyDelta } from '@/lib/count-store'
 import { piiWarning } from '@/lib/pii'
 import { useRouter } from 'next/navigation'
 import { VenetianMask, ShieldAlert } from 'lucide-react'
@@ -14,6 +15,7 @@ import { ComposerFrame, ComposerTextarea } from '@/components/composer/composer-
 /** 익명 composer. Root posts pick a category; replies inherit the thread's. */
 export function AnonComposer({
   parentId,
+  countIds,
   replyKind = 'reply',
   defaultCategory,
   autoFocus,
@@ -21,6 +23,8 @@ export function AnonComposer({
   className = '',
 }: {
   parentId?: string
+  /** replies: posts whose comment counts go up (root + the comment answered) */
+  countIds?: string[]
   /** 'comment' answers the post (댓글), 'reply' answers a comment (대댓글) */
   replyKind?: 'comment' | 'reply'
   defaultCategory?: AnonCategory | null
@@ -60,6 +64,7 @@ export function AnonComposer({
       if (!res.ok) throw new Error(data.error || '게시하지 못했어요.')
       setBody('')
       toast.success(isReply ? tx('{alias}(으)로 답글을 남겼어요', { alias: data.alias }) : tx('{alias}(으)로 게시했어요', { alias: data.alias }))
+      if (isReply && countIds?.length) publishReplyDelta(countIds, 1)
       if (redirectTo === 'thread' && !isReply) router.push(`/anon/${data.id}`)
       else router.refresh()
     } catch (e) {
