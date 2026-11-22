@@ -8,7 +8,6 @@ import {
   getProductDetails,
   createProduct,
   getToolboxEntry,
-  createToolboxEntry,
   recordToolboxInstall,
   listBrainForOwner,
   getBrainItem,
@@ -52,6 +51,8 @@ import { getMoim, listMoim, type Moim, type MoimDetail } from '@/lib/data/moim'
 import { getGroupBySlug, listMyGroups } from '@/lib/data/groups'
 import { getMockLaunchEntry, getToolUsers, listTools, setToolUsage, toolSlugForProduct } from '@/lib/data/tools'
 import { categoryFromLegacyType, parseToolSort } from '@/lib/tool-rules'
+import { REVIEW_READ_TOOLS, REVIEW_TOOLS, REVIEW_TOOL_NAMES, REVIEW_UNTRUSTED_NOTICE, SUBMIT_TOOLS, SUBMIT_TOOL_NAMES } from '@/lib/tool-review'
+import { mockMySubmissions, mockReviewDecide, mockReviewGet, mockReviewQueue, mockSubmitTool } from '@/lib/data/tool-submissions'
 
 interface JsonRpcRequest {
   jsonrpc: '2.0'
@@ -178,21 +179,6 @@ const TOOLS = [
       type: 'object',
       properties: { entryId: { type: 'string' }, using: { type: 'boolean' } },
       required: ['entryId'],
-    },
-  },
-  {
-    name: 'create_tool',
-    description: '툴 추가(canonical URL 중복 병합). type: agent_skill|mcp_server|cursor_rules|prompt|cli_tool|saas_service. Scope: toolbox_write',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        name: { type: 'string' },
-        oneLiner: { type: 'string' },
-        url: { type: 'string' },
-        type: { type: 'string' },
-        tags: { type: 'array', items: { type: 'string' } },
-      },
-      required: ['name', 'oneLiner', 'url'],
     },
   },
   {
@@ -550,26 +536,23 @@ async function handleToolsCall(name: string, args: Record<string, unknown> = {})
     return { productId: product.id, slug, name: product.name, tagline: product.tagline, url: slug ? `/tools/${slug}` : null }
   }
 
-  if (name === 'create_tool') {
+  // DEV mock: agent-only submissions + admin review queue (production: lib/mcp-data.ts → 0013 RPCs)
+  if (SUBMIT_TOOL_NAMES.has(name) || REVIEW_TOOL_NAMES.has(name)) {
     const member = await getMember()
     if (!member) return { error: 'Unauthorized' }
-    if (args.type === 'product') return { error: '프로덕트는 launch_product로 등록하세요.' }
-    const result = await createToolboxEntry(member, {
-      name: String(args.name || ''),
-      one_liner: String(args.oneLiner || ''),
-      canonical_url: String(args.url || ''),
-      type: args.type
-        ? (String(args.type) as Parameters<typeof createToolboxEntry>[1]['type'])
-        : undefined,
-      tags: Array.isArray(args.tags) ? (args.tags as string[]) : [],
-    })
-    return {
-      id: result.entry.id,
-      slug: result.entry.slug,
-      created: result.created,
-      name: result.entry.name,
-      url: `/tools/${result.entry.slug}`,
+    const label = `${member.display_name}님의 개발용 에이전트`
+    if (name === 'submit_tool') {
+      if (!args.name || !args.oneLiner || !args.url) return { error: 'name, oneLiner, url required' }
+      if (args.type === 'product') return { error: '직접 만든 프로덕트는 launch_product로 등록하세요.' }
+      return mockSubmitTool(member.id, label, args)
     }
+    if (name === 'my_tool_submissions') return mockMySubmissions(member.id)
+    if (!member.is_admin) return { error: 'tools:review is admin-only, and this token owner is not an admin (any more).' }
+    if (name === 'review_queue_list') return mockReviewQueue(String(args.status || 'pending'))
+    if (name === 'review_get') return mockReviewGet(String(args.submissionId))
+    const action = name === 'review_approve' ? 'approve' : name === 'review_edit' ? 'edit' : 'reject'
+    const edits = args.edits && typeof args.edits === 'object' ? (args.edits as Record<string, unknown>) : null
+    return mockReviewDecide(String(args.submissionId), action, label, edits, (action === 'reject' ? args.reason : args.note) ? String(action === 'reject' ? args.reason : args.note) : null)
   }
 
   if (name === 'get_install_instructions' || name === 'install_tool') {
@@ -666,7 +649,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (method === 'tools/list') {
-      return NextResponse.json(jsonRpcSuccess(id, { tools: [...TOOLS, ...FEED_TOOLS, ...AGORA_TOOLS] }))
+      return NextResponse.json(jsonRpcSuccess(id, { tools: [...TOOLS, ...SUBMIT_TOOLS, ...REVIEW_TOOLS, ...FEED_TOOLS, ...AGORA_TOOLS] }))
     }
     if (method === 'resources/list' && !isDevMode()) {
       const [items, cols] = await Promise.all([
@@ -805,7 +788,8 @@ export async function POST(request: NextRequest) {
           jsonRpcSuccess(id, {
             content: [
               ...(UNTRUSTED_READ_TOOLS.has(name) && !failed ? [{ type: 'text', text: HUMAN_UNTRUSTED_NOTICE }] : []),
-              { type: 'text', text: JSON.stringify(UNTRUSTED_READ_TOOLS.has(name) ? maskPiiDeep(result) : result, null, 2) },
+              ...(REVIEW_READ_TOOLS.has(name) && !failed ? [{ type: 'text', text: REVIEW_UNTRUSTED_NOTICE }] : []),
+              { type: 'text', text: JSON.stringify(UNTRUSTED_READ_TOOLS.has(name) || REVIEW_READ_TOOLS.has(name) ? maskPiiDeep(result) : result, null, 2) },
             ],
             ...(failed ? { isError: true } : {}),
           })
@@ -817,6 +801,7 @@ export async function POST(request: NextRequest) {
         jsonRpcSuccess(id, {
           content: [
             ...(UNTRUSTED_READ_TOOLS.has(name) && !devFailed ? [{ type: 'text', text: HUMAN_UNTRUSTED_NOTICE }] : []),
+            ...(REVIEW_READ_TOOLS.has(name) && !devFailed ? [{ type: 'text', text: REVIEW_UNTRUSTED_NOTICE }] : []),
             { type: 'text', text: JSON.stringify(UNTRUSTED_READ_TOOLS.has(name) ? maskPiiDeep(result) : result, null, 2) },
           ],
           ...(devFailed ? { isError: true } : {}),

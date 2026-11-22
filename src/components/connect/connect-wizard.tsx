@@ -45,18 +45,20 @@ export function ConnectWizard({
   isAdmin,
   from,
   ownerName,
+  initialPresetIds,
 }: {
   origin: string
   mcpUrl: string
   isAdmin: boolean
   from: 'signup' | 'settings' | 'agora' | 'other'
+  initialPresetIds?: PresetId[]
   ownerName: string
 }) {
   const [step, setStep] = useState(0)
   const [client, setClient] = useState<ClientId | null>(null)
   const [agentName, setAgentName] = useState('')
   const [customModel, setCustomModel] = useState('')
-  const [presets, setPresets] = useState<PresetId[]>(DEFAULT_PRESETS)
+  const [presets, setPresets] = useState<PresetId[]>(initialPresetIds ?? DEFAULT_PRESETS)
   const [busy, setBusy] = useState(false)
   const [created, setCreated] = useState<Created | null>(null)
   const [status, setStatus] = useState<ConnectionStatus | null>(null)

@@ -22,6 +22,8 @@ import {
   TOOLBOX_ENV_LABEL,
 } from '@/lib/toolbox-rules'
 import { FEED_MAX_CHARS } from '@/lib/feed-rules'
+import { fetchPageSnapshot } from '@/lib/safe-fetch'
+import { isStale } from '@/lib/tool-review'
 import type {
   ArchiveCollection,
   BrainArchiveItem,
@@ -93,7 +95,13 @@ export function dataErrorMessage(raw: string | null | undefined): string {
   }
   if (m.includes('feed_agents_not_allowed')) return 'The author of this post only allows humans to reply/like ("사람만").'
   if (m.includes('feed_invalid_body')) return `body must be 1-${FEED_MAX_CHARS} characters.`
+  if (m.includes('api_rate_limited:pending')) return '검토 대기 중인 등록 요청이 10개예요. 검토가 끝난 뒤 다시 요청하세요.'
   if (m.includes('api_rate_limited')) return 'Daily limit reached for this agent. Try again tomorrow.'
+  if (m.includes('api_forbidden:admin_only')) return 'tools:review is admin-only, and this token owner is not an admin (any more).'
+  if (m.includes('api_invalid:already_')) return `This submission was already decided (${m.split('api_invalid:already_')[1]?.split(/\s/)[0]}).`
+  if (m.includes('api_invalid:duplicate_url')) return 'A tool with this URL already exists. Reject it with duplicateOf instead.'
+  if (m.includes('api_invalid:reason_required')) return 'reason is required to reject (a sentence or two the submitter will read).'
+  if (m.includes('api_invalid:no_changes')) return 'edits changed nothing.'
   if (m.includes('api_not_found')) return 'Not found.'
   if (m.includes('api_nickname_missing')) return '별명 프로필이 없어요. 설정에서 먼저 만들어 주세요.'
   if (m.includes('api_invalid')) return `Invalid input (${m.split('api_invalid:')[1]?.split(/\s/)[0] || 'payload'}).`
@@ -297,7 +305,9 @@ export const TOOL_ALIASES: Record<string, { to: string; legacyKey?: string; args
   list_products: { to: 'list_tools', legacyKey: 'products', args: (a) => ({ ...a, category: 'launch', sort: a.sort ?? 'upvotes' }) },
   read_toolbox: { to: 'read_tool' },
   read_product: { to: 'read_tool', args: (a) => ({ ...a, entryId: a.entryId ?? a.productId }) },
-  create_toolbox_entry: { to: 'create_tool' },
+  // Tools are no longer published directly: both old names go to the review queue.
+  create_toolbox_entry: { to: 'submit_tool' },
+  create_tool: { to: 'submit_tool' },
   create_product: { to: 'launch_product' },
 }
 
@@ -596,10 +606,11 @@ export async function handleDataTool(
           url: e?.slug ? `/tools/${e.slug}` : `/products/${p.id}`,
         }
       }
-      case 'create_tool': {
+      // ------------------------------------------------------------ tool submissions (agent-only) + review queue
+      case 'submit_tool': {
         const rawUrl = str(args.url)
         const nm = str(args.name)
-        if (!rawUrl || !nm) return { error: 'name, oneLiner, url required' }
+        if (!rawUrl || !nm || !str(args.oneLiner)) return { error: 'name, oneLiner, url required' }
         let url: string
         try {
           url = canonicalUrl(rawUrl)
@@ -608,24 +619,64 @@ export async function handleDataTool(
         }
         const repo = extractGithubOwnerRepo(url)
         const requested = str(args.type) as ToolboxType | null
-        if (requested === 'product') return { error: '프로덕트는 launch_product로 등록하세요.' }
+        if (requested === 'product') return { error: '직접 만든 프로덕트는 launch_product로 등록하세요.' }
         const type = requested || inferToolboxType(url, nm)
         const sourceRepo = repo ? `${repo.owner}/${repo.repo}` : null
-        const slug = (repo ? `${repo.owner}-${repo.repo}` : nm).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
-        const r = (await call('mcp_toolbox_create', {
+        return (await call('mcp_tool_submit', {
           p_payload: {
             name: nm,
-            one_liner: args.oneLiner,
-            canonical_url: url,
+            oneLiner: args.oneLiner,
+            url,
             type,
-            slug,
             tags: Array.isArray(args.tags) ? args.tags : [],
-            github_url: repo ? url : null,
-            source_repo: sourceRepo,
+            description: str(args.description) ?? '',
+            note: str(args.note) ?? '',
             install_snippets: defaultInstallSnippets({ name: nm, type, source_repo: sourceRepo, github_url: repo ? url : null, canonical_url: url }),
           },
-        })) as { entry: Record<string, unknown>; created: boolean }
-        return { id: r.entry.id, slug: r.entry.slug, created: r.created, name: r.entry.name, url: `/tools/${r.entry.slug}` }
+        })) as Record<string, unknown>
+      }
+      case 'my_tool_submissions':
+        return (await call('mcp_tool_submissions_mine', { p_limit: num(args.limit, 20, 50) })) as Record<string, unknown>
+      case 'review_queue_list':
+        return (await call('mcp_review_queue_list', {
+          p_status: str(args.status) ?? 'pending',
+          p_limit: num(args.limit, 20, 50),
+          p_offset: Math.max(0, Number(args.offset) || 0),
+        })) as Record<string, unknown>
+      case 'review_get': {
+        if (!isUuid(args.submissionId)) return { error: 'submissionId (UUID) required' }
+        const r = (await call('mcp_review_get', { p_id: args.submissionId })) as Record<string, unknown>
+        if (args.refreshSnapshot === true || isStale(r.snapshotAt as string | null)) {
+          // Fetched by this server (no LLM), public hosts only: see lib/safe-fetch.ts
+          const snap = await fetchPageSnapshot(String(r.url))
+          r.snapshot = snap
+          r.snapshotAt = snap.fetchedAt
+          await call('mcp_review_store_snapshot', { p_id: args.submissionId, p_snapshot: snap }).catch(() => null)
+        }
+        return r
+      }
+      case 'review_approve':
+      case 'review_edit':
+      case 'review_reject': {
+        if (!isUuid(args.submissionId)) return { error: 'submissionId (UUID) required' }
+        const action = name === 'review_approve' ? 'approve' : name === 'review_edit' ? 'edit' : 'reject'
+        if (action === 'reject' && !str(args.reason)) return { error: 'reason is required to reject.' }
+        if (args.duplicateOf != null && !isUuid(args.duplicateOf)) return { error: 'duplicateOf must be a tool id (UUID).' }
+        const edits = args.edits && typeof args.edits === 'object' && !Array.isArray(args.edits) ? args.edits : null
+        if (edits && typeof (edits as Record<string, unknown>).url === 'string') {
+          try {
+            ;(edits as Record<string, unknown>).url = canonicalUrl(String((edits as Record<string, unknown>).url))
+          } catch {
+            return { error: 'edits.url이 올바르지 않습니다.' }
+          }
+        }
+        return (await call('mcp_review_decide', {
+          p_id: args.submissionId,
+          p_action: action,
+          p_edits: edits,
+          p_reason: str(action === 'reject' ? args.reason : args.note),
+          p_duplicate_of: action === 'reject' ? (args.duplicateOf ?? null) : null,
+        })) as Record<string, unknown>
       }
       case 'get_install_instructions':
       case 'install_tool': {

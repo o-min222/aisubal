@@ -32,3 +32,15 @@ export function pageHref(base: string, page: number): string {
   const s = p.toString()
   return s ? `${path}?${s}` : path
 }
+
+/** Build a list URL from params; empty values (and page 1) are dropped. */
+export function withParams(path: string, params: Record<string, string | number | null | undefined | false>): string {
+  const p = new URLSearchParams()
+  for (const [k, v] of Object.entries(params)) {
+    if (v === null || v === undefined || v === false || v === '') continue
+    if (k === 'page' && Number(v) <= 1) continue
+    p.set(k, String(v))
+  }
+  const s = p.toString()
+  return s ? `${path}?${s}` : path
+}

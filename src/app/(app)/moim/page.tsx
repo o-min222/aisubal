@@ -2,13 +2,19 @@ import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { Plus } from 'lucide-react'
 import { getUserState } from '@/lib/auth'
-import { listMoim, type MoimTab } from '@/lib/data/moim'
+import { getMoim, listMoim, type MoimTab } from '@/lib/data/moim'
 import { LinkTabs } from '@/components/link-tabs'
-import { MoimCard } from '@/components/moim/moim-card'
-import { RsvpBadge } from '@/components/moim/moim-badges'
-import { RSVP_LABEL } from '@/lib/moim-rules'
+import { Pagination } from '@/components/pagination'
+import { ReadingLayout, openHref } from '@/components/reading/reading-layout'
+import { CompactList, EmptyList } from '@/components/reading/compact-row'
+import { MoimRow } from '@/components/reading/moim-row'
+import { MoimDetailView } from '@/components/detail/moim-detail-view'
+import { isFeedId } from '@/lib/feed-ids'
+import { parsePage, withParams } from '@/lib/paging'
+import { pageSlice } from '@/lib/dashboard-tabs'
 
 export const metadata = { title: '모임 · AI쓰발' }
+const PAGE = 15
 
 const TABS: Array<{ id: MoimTab; label: string }> = [
   { id: 'upcoming', label: '다가오는' },
@@ -24,20 +30,25 @@ const EMPTY: Record<MoimTab, string> = {
   past: '지난 모임이 없어요.',
 }
 
-export default async function MoimPage({ searchParams }: { searchParams: Promise<{ tab?: string }> }) {
+export default async function MoimPage({ searchParams }: { searchParams: Promise<{ tab?: string; page?: string; open?: string }> }) {
   const state = await getUserState()
   if (state.type === 'unauthenticated') redirect('/login')
   if (state.type === 'waitlist') redirect('/waitlist')
-  const raw = (await searchParams).tab as MoimTab
+  const sp = await searchParams
+  const raw = sp.tab as MoimTab
   const tab: MoimTab = TABS.some((t) => t.id === raw) ? raw : 'upcoming'
-  const list = await listMoim(state.member.id, tab).catch(() => [])
+  const open = sp.open && isFeedId(sp.open) ? sp.open : null
+  const viewer = state.member.id
+  const [all, detail] = await Promise.all([listMoim(viewer, tab, null, 300).catch(() => []), open ? getMoim(viewer, open).catch(() => null) : Promise.resolve(null)])
 
-  // 신청 현황: group by my status so the applicant sees where each application stands
+  // 신청 현황: my status order first so the applicant sees where each application stands
   const order = ['confirmed', 'waitlisted', 'pending', 'rejected', 'cancelled'] as const
-  const byStatus = tab === 'mine' ? order.map((s) => ({ s, items: list.filter((m) => m.myRsvp?.status === s) })).filter((g) => g.items.length) : []
+  const sorted = tab === 'mine' ? [...all].sort((a, b) => order.indexOf(a.myRsvp?.status ?? 'cancelled') - order.indexOf(b.myRsvp?.status ?? 'cancelled')) : all
+  const { items, totalPages, page } = pageSlice(sorted, parsePage(sp.page), PAGE)
+  const base = withParams('/moim', { tab: tab === 'upcoming' ? null : tab, page: page > 1 ? page : null })
 
-  return (
-    <div className="space-y-3">
+  const list = (
+    <>
       <header className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <h1 className="text-[22px] font-bold" style={{ color: '#111' }}>
@@ -52,32 +63,30 @@ export default async function MoimPage({ searchParams }: { searchParams: Promise
         </Link>
       </header>
       <div className="card" style={{ padding: '0 8px' }}>
-        <LinkTabs label="모임 보기" active={tab} tabs={TABS.map((t) => ({ id: t.id, label: t.label, href: t.id === 'upcoming' ? '/moim' : `/moim?tab=${t.id}` }))} />
+        <LinkTabs label="모임 보기" active={tab} tabs={TABS.map((t) => ({ id: t.id, label: t.label, href: t.id === 'upcoming' ? '/moim' : `/moim?tab=${t.id}`, count: t.id === tab ? all.length : undefined }))} />
       </div>
-      {list.length === 0 ? (
-        <div className="card p-10 text-center text-sm" style={{ color: '#888' }}>
-          {EMPTY[tab]}
-        </div>
-      ) : tab === 'mine' ? (
-        <div className="space-y-4">
-          {byStatus.map(({ s, items }) => (
-            <section key={s} className="space-y-2" aria-label={RSVP_LABEL[s]}>
-              <h2 className="flex items-center gap-2 px-1 text-[13px] font-semibold" style={{ color: '#444' }}>
-                <RsvpBadge status={s} /> <span className="tabular-nums text-[#999]">{items.length}</span>
-              </h2>
-              {items.map((m) => (
-                <MoimCard key={m.id} moim={m} />
-              ))}
-            </section>
-          ))}
-        </div>
+      {items.length === 0 ? (
+        <EmptyList title={page > 1 ? '이 페이지에는 모임이 없어요' : EMPTY[tab]} />
       ) : (
-        <div className="space-y-2">
-          {list.map((m) => (
-            <MoimCard key={m.id} moim={m} />
+        <CompactList label="모임 목록">
+          {items.map((m) => (
+            <MoimRow key={m.id} moim={m} href={openHref(base, m.id)} active={detail?.id === m.id} />
           ))}
-        </div>
+        </CompactList>
       )}
-    </div>
+      <Pagination base={base} page={page} totalPages={totalPages} label="모임 페이지" />
+    </>
+  )
+
+  return (
+    <ReadingLayout
+      list={list}
+      openId={detail ? open : null}
+      closeHref={base}
+      fullHref={detail ? `/moim/${detail.id}` : null}
+      paneTitle="모임"
+      emptyTitle="모임을 고르면 여기에서 봐요"
+      pane={detail ? <MoimDetailView m={detail} variant="pane" /> : null}
+    />
   )
 }

@@ -5,7 +5,12 @@ import { getUserState } from '@/lib/auth'
 import { listAnon } from '@/lib/data/anon'
 import { ANON_CATEGORIES, isAnonCategory, parseSort, type AnonCategory, type AnonSort } from '@/lib/anon-rules'
 import { AnonComposer } from '@/components/anon/anon-composer'
-import { FeedTimeline } from '@/components/feed/feed-timeline'
+import { getAnonThread } from '@/lib/data/anon'
+import { isFeedId } from '@/lib/feed-ids'
+import { ReadingLayout, openHref } from '@/components/reading/reading-layout'
+import { CompactList, EmptyList } from '@/components/reading/compact-row'
+import { PostRow } from '@/components/reading/post-row'
+import { AnonThreadView } from '@/components/detail/anon-thread-view'
 import { Pagination } from '@/components/pagination'
 import { PAGE_SIZE, pageOffset, parsePage } from '@/lib/paging'
 
@@ -22,7 +27,7 @@ function hrefFor(category: AnonCategory | null, sort: AnonSort) {
 export default async function AnonBoardPage({
   searchParams,
 }: {
-  searchParams: Promise<{ category?: string; sort?: string; page?: string }>
+  searchParams: Promise<{ category?: string; sort?: string; page?: string; open?: string }>
 }) {
   const state = await getUserState()
   if (state.type === 'unauthenticated') redirect('/login')
@@ -35,9 +40,14 @@ export default async function AnonBoardPage({
   const rows = await listAnon(state.member.id, { category, sort, offset: pageOffset(page), limit: PAGE_SIZE + 1 })
   const posts = rows.slice(0, PAGE_SIZE)
   const hasNext = rows.length > PAGE_SIZE
+  const open = sp.open && isFeedId(sp.open) ? sp.open : null
+  const thread = open ? await getAnonThread(open, state.member.id).catch(() => null) : null
+  const listBase = hrefFor(category, sort)
+  const base = page > 1 ? `${listBase}${listBase.includes('?') ? '&' : '?'}page=${page}` : listBase
+  const catLabel = (id?: string | null) => ANON_CATEGORIES.find((c) => c.id === id)?.label ?? null
 
-  return (
-    <div className="space-y-3">
+  const list = (
+    <>
       <section className="anon-banner">
         <span className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center flex-shrink-0">
           <VenetianMask className="w-5 h-5" />
@@ -82,16 +92,31 @@ export default async function AnonBoardPage({
 
       {page === 1 && <AnonComposer key={category || 'all'} defaultCategory={category} className="only-desktop" redirectTo="thread" />}
 
-      <FeedTimeline
-        key={`${category}-${sort}-${page}`}
-        initial={posts}
-        basePath="/anon"
-        apiBase="/api/anon"
-        anonymous
-        emptyTitle={page > 1 ? '이 페이지에는 글이 없어요' : '아직 글이 없어요'}
-        emptyHint={page > 1 ? '앞 페이지로 돌아가 보세요.' : '첫 익명 글을 남겨보세요. 회원에게는 누군지 보이지 않아요.'}
-      />
-      <Pagination base={hrefFor(category, sort)} page={page} hasNext={hasNext} label="익명 게시판 페이지" />
-    </div>
+      {posts.length === 0 ? (
+        <EmptyList
+          title={page > 1 ? '이 페이지에는 글이 없어요' : '아직 글이 없어요'}
+          hint={page > 1 ? '앞 페이지로 돌아가 보세요.' : '첫 익명 글을 남겨보세요. 회원에게는 누군지 보이지 않아요.'}
+        />
+      ) : (
+        <CompactList label="익명 글">
+          {posts.map((p) => (
+            <PostRow key={p.id} post={p} href={openHref(base, p.id)} active={thread?.root.id === p.id} categoryLabel={category ? null : catLabel(p.category)} />
+          ))}
+        </CompactList>
+      )}
+      <Pagination base={listBase} page={page} hasNext={hasNext} label="익명 게시판 페이지" />
+    </>
+  )
+
+  return (
+    <ReadingLayout
+      list={list}
+      openId={thread ? open : null}
+      closeHref={base}
+      fullHref={thread ? `/anon/${thread.root.id}` : null}
+      paneTitle="익명 글 읽기"
+      emptyTitle="글을 고르면 여기에서 읽어요"
+      pane={thread ? <AnonThreadView thread={thread} variant="pane" closeHref={base} /> : null}
+    />
   )
 }

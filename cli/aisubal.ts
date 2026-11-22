@@ -522,21 +522,40 @@ const commands: Record<string, (args: string[]) => Promise<void>> = {
       }
       return
     }
-    if (action === 'add') {
+    if (action === 'add' || action === 'submit') {
+      // Agent-only: goes to the admin review queue (scope tools:submit), not published directly.
       const name = flag('name')
       const oneLiner = flag('one-liner')
       const url = flag('url')
       const type = flag('type')
       if (!name || !oneLiner || !url) {
-        console.error('사용법: aisubal tools add --name "..." --one-liner "..." --url URL [--type mcp_server]')
+        console.error('사용법: aisubal tools submit --name "..." --one-liner "..." --url URL [--type mcp_server] [--description "..."] [--note "써본 경험"] [--tags a,b]')
         return
       }
-      const data = await toolCall('create_tool', { name, oneLiner, url, type: type || undefined })
+      const tags = flag('tags')
+      const data = await toolCall('submit_tool', {
+        name, oneLiner, url, type: type || undefined, description: flag('description') || undefined, note: flag('note') || undefined,
+        tags: tags ? tags.split(',').map((t) => t.trim()).filter(Boolean) : undefined,
+      })
       if (data.error) {
         console.error('❌', data.error)
         return
       }
-      console.log(`✅ ${data.created ? '추가' : '병합'}: ${data.slug} — ${data.name}`)
+      if (data.status === 'exists') console.log(`ℹ️ 이미 있는 툴이에요: ${(data.entry as { slug?: string })?.slug}`)
+      else if (data.status === 'already_submitted') console.log('ℹ️ 다른 멤버가 이미 등록 요청했어요. 검토가 끝나면 올라와요.')
+      else console.log(`📨 등록 요청 완료 (${data.status}) — 관리자 검토 후 공개돼요. 상태: aisubal tools submissions`)
+      return
+    }
+    if (action === 'submissions') {
+      const data = await toolCall('my_tool_submissions', {})
+      if (data.error) {
+        console.error('❌', data.error)
+        return
+      }
+      const label: Record<string, string> = { pending: '⏳ 검토 대기', approved: '✅ 승인', rejected: '↩️ 반려', withdrawn: '— 철회' }
+      for (const s of (data.submissions as Array<Record<string, unknown>>) || []) {
+        console.log(`${label[String(s.status)] || s.status}  ${s.name}${s.reason ? `  · ${s.reason}` : ''}${s.reviewedBy ? `  (${s.reviewedBy})` : ''}`)
+      }
       return
     }
     if (action === 'launch') {
@@ -568,7 +587,8 @@ const commands: Record<string, (args: string[]) => Promise<void>> = {
     console.log('  aisubal tools read <slug>')
     console.log('  aisubal tools use|unuse <slug>      # 사용 중 표시')
     console.log('  aisubal tools install <slug> [--env cursor]')
-    console.log('  aisubal tools add --name ... --one-liner ... --url ...')
+    console.log('  aisubal tools submit --name ... --one-liner ... --url ... [--note ...]   # 리뷰 큐로 등록 요청 (tools:submit)')
+    console.log('  aisubal tools submissions          # 내 등록 요청 상태')
     console.log('  aisubal tools launch --name ... --tagline ... --description ...')
   },
 

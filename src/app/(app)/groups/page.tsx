@@ -3,23 +3,45 @@ import { redirect } from 'next/navigation'
 import { Plus, Search } from 'lucide-react'
 import { getUserState } from '@/lib/auth'
 import { listDiscoverGroups, listMyGroups } from '@/lib/data/groups'
-import { GroupCard } from '@/components/groups/group-card'
+import { LinkTabs } from '@/components/link-tabs'
+import { Pagination } from '@/components/pagination'
+import { CompactList, EmptyList } from '@/components/reading/compact-row'
+import { GroupRow } from '@/components/reading/group-row'
+import { parsePage, withParams } from '@/lib/paging'
+import { pageSlice } from '@/lib/dashboard-tabs'
 
 export const metadata = { title: '그룹 · AI쓰발' }
 
-export default async function GroupsPage({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
+type GroupsTab = 'mine' | 'discover' | 'waiting'
+const PAGE = 15
+
+export default async function GroupsPage({ searchParams }: { searchParams: Promise<{ q?: string; tab?: string; page?: string }> }) {
   const state = await getUserState()
   if (state.type === 'unauthenticated') redirect('/login')
   if (state.type === 'waitlist') redirect('/waitlist')
-  const q = ((await searchParams).q || '').trim().slice(0, 40)
+  const sp = await searchParams
+  const q = (sp.q || '').trim().slice(0, 40)
   const [mine, discover] = await Promise.all([listMyGroups(state.member.id, true).catch(() => []), listDiscoverGroups(state.member.id, q || null).catch(() => [])])
   const active = mine.filter((g) => g.myStatus === 'active')
   const waiting = mine.filter((g) => g.myStatus !== 'active')
   const mineIds = new Set(mine.map((g) => g.id))
   const others = discover.filter((g) => !mineIds.has(g.id))
+  // default: my groups if I have any, else discover; a search always shows discover
+  const fallback: GroupsTab = q ? 'discover' : active.length ? 'mine' : 'discover'
+  const tab: GroupsTab = sp.tab === 'mine' || sp.tab === 'discover' || (sp.tab === 'waiting' && waiting.length) ? (sp.tab as GroupsTab) : fallback
+  const source = tab === 'mine' ? active : tab === 'waiting' ? waiting : others
+  const { items, totalPages, page } = pageSlice(source, parsePage(sp.page), PAGE)
+  const tabHref = (t: GroupsTab) => withParams('/groups', { tab: t, q: t === 'discover' ? q || null : null })
+  const tabs = [
+    { id: 'mine', label: '내 그룹', href: tabHref('mine'), count: active.length },
+    { id: 'discover', label: '둘러보기', href: tabHref('discover'), count: others.length },
+    ...(waiting.length ? [{ id: 'waiting', label: '초대 · 요청', href: tabHref('waiting'), count: waiting.length, dot: true }] : []),
+  ]
+  const empty =
+    tab === 'mine' ? '아직 가입한 그룹이 없어요. 둘러보거나 직접 만들어보세요.' : tab === 'waiting' ? '받은 초대나 보낸 요청이 없어요.' : q ? `‘${q}’에 맞는 그룹이 없어요.` : '둘러볼 그룹이 아직 없어요.'
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       <header className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <h1 className="text-[22px] font-bold" style={{ color: '#111' }}>
@@ -33,49 +55,26 @@ export default async function GroupsPage({ searchParams }: { searchParams: Promi
           <Plus className="w-4 h-4" /> 만들기
         </Link>
       </header>
-
-      {waiting.length > 0 && (
-        <section className="space-y-2" aria-label="초대·요청">
-          <h2 className="px-1 text-[13px] font-semibold" style={{ color: '#444' }}>
-            초대 · 가입 요청
-          </h2>
-          {waiting.map((g) => (
-            <GroupCard key={g.id} g={g} />
-          ))}
-        </section>
-      )}
-
-      <section className="space-y-2" aria-label="내 그룹">
-        <h2 className="px-1 text-[13px] font-semibold" style={{ color: '#444' }}>
-          내 그룹 <span className="tabular-nums text-[#999]">{active.length}</span>
-        </h2>
-        {active.length === 0 ? (
-          <div className="card p-6 text-center text-[13px]" style={{ color: '#888' }}>
-            아직 가입한 그룹이 없어요. 아래에서 둘러보거나 직접 만들어보세요.
-          </div>
-        ) : (
-          active.map((g) => <GroupCard key={g.id} g={g} />)
-        )}
-      </section>
-
-      <section className="space-y-2" aria-label="둘러보기">
-        <div className="flex items-center justify-between gap-2 px-1">
-          <h2 className="text-[13px] font-semibold" style={{ color: '#444' }}>
-            둘러보기
-          </h2>
-        </div>
+      <div className="card" style={{ padding: '0 8px' }}>
+        <LinkTabs label="그룹 보기" active={tab} tabs={tabs} />
+      </div>
+      {tab === 'discover' && (
         <form action="/groups" className="flex items-center gap-2 rounded-full border border-[#ddd] bg-white px-3">
+          <input type="hidden" name="tab" value="discover" />
           <Search className="w-4 h-4 text-[#999]" />
           <input name="q" defaultValue={q} placeholder="그룹 이름·소개 검색" aria-label="그룹 검색" className="flex-1 py-2.5 text-[15px] bg-transparent focus:outline-none" />
         </form>
-        {others.length === 0 ? (
-          <div className="card p-6 text-center text-[13px]" style={{ color: '#888' }}>
-            {q ? `‘${q}’에 맞는 그룹이 없어요.` : '둘러볼 그룹이 아직 없어요.'}
-          </div>
-        ) : (
-          others.map((g) => <GroupCard key={g.id} g={g} />)
-        )}
-      </section>
+      )}
+      {items.length === 0 ? (
+        <EmptyList title={empty} />
+      ) : (
+        <CompactList label="그룹 목록">
+          {items.map((g) => (
+            <GroupRow key={g.id} g={g} />
+          ))}
+        </CompactList>
+      )}
+      <Pagination base={withParams('/groups', { tab, q: tab === 'discover' ? q || null : null })} page={page} totalPages={totalPages} label="그룹 페이지" />
     </div>
   )
 }

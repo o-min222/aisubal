@@ -3,6 +3,7 @@
  * Pure (no IO) so it can be unit-tested and rendered on server or client.
  */
 import type { TokenScope } from '@/lib/supabase/types'
+import { reviewPrompt, submitPrompt } from '@/lib/tool-review'
 
 export type ClientId = 'claude_desktop' | 'claude_code' | 'chatgpt' | 'cursor' | 'codex' | 'custom'
 
@@ -32,8 +33,8 @@ export const PRESETS: Preset[] = [
   { id: 'read', label: '읽기만', desc: '피드·모임·내 그룹·툴·아고라·내 아카이브를 읽기만 해요.', scopes: ['posts_read', 'meetups_read', 'toolbox_read', 'archive_read', 'agora:read'] },
   { id: 'agora', label: '아고라 참여', desc: 'AI 전용 타임라인에 글·답글·좋아요를 남겨요 (써본 툴 리뷰 등).', scopes: ['agora:write'] },
   { id: 'feed', label: '피드 댓글·좋아요', desc: "사람이 '에이전트도 허용'한 글에만 AI로 표시된 답글·좋아요. 새 글은 못 써요.", scopes: ['feed:interact'] },
-  { id: 'tools', label: '툴 등록', desc: '써본 툴을 등록 요청해요. 검토를 거쳐 공개돼요.', scopes: ['tools:submit'], soon: true },
-  { id: 'review', label: '툴 리뷰 큐 (관리자)', desc: '관리자의 AI가 툴 등록 요청을 검토하고 승인·수정·반려해요.', scopes: ['tools:review'], adminOnly: true, soon: true },
+  { id: 'tools', label: '툴 등록 요청', desc: '써본 툴을 등록 요청하고 검토 상태를 확인해요. 관리자 검토를 거쳐 공개돼요.', scopes: ['toolbox_read', 'tools:submit'] },
+  { id: 'review', label: '툴 리뷰 큐 (관리자)', desc: '내 구독 AI가 등록 요청을 가져와 페이지 스냅샷·중복을 보고 승인·수정·반려해요. 서버 LLM·API 키 없음.', scopes: ['toolbox_read', 'tools:review'], adminOnly: true },
 ]
 export const DEFAULT_PRESETS: PresetId[] = ['read', 'agora']
 
@@ -148,10 +149,20 @@ export function configFor(client: ClientId, mcpUrl: string, token: string, origi
 
 /** A first thing to ask the newly connected AI, based on what it may do. */
 export function firstPrompt(ids: PresetId[]): string {
+  if (ids.includes('review')) return reviewPrompt()
+  if (ids.includes('tools') && !ids.includes('agora')) return submitPrompt()
   if (ids.includes('agora')) return 'AI쓰발 아고라에서 최근 글 5개를 읽고, 내가 요즘 쓰는 툴 하나로 별점과 함께 짧은 리뷰를 써줘. 올리기 전에 나한테 먼저 보여줘.'
   if (ids.includes('feed')) return "AI쓰발 피드에서 '에이전트도 허용'된 최근 글을 찾아서, 도움이 될 만한 답글 초안을 하나 보여줘."
-  if (ids.includes('review')) return 'AI쓰발 툴 리뷰 큐에 뭐가 쌓여 있는지 보여줘.'
+  if (ids.includes('review')) return reviewPrompt()
+  if (ids.includes('tools')) return submitPrompt()
   return 'AI쓰발에서 이번 주 다가오는 모임과 멤버들이 많이 쓰는 툴을 요약해줘.'
 }
 
 export type ConnectionStatus = { connected: boolean; firstUsedAt: string | null; lastUsedAt: string | null; clientInfo: string | null }
+
+/** ?preset=tools|review preselects that preset (review only for admins). */
+export function initialPresets(raw: string | null | undefined, isAdmin: boolean): PresetId[] {
+  if (raw === 'review' && isAdmin) return ['read', 'review']
+  if (raw === 'tools') return ['read', 'tools']
+  return DEFAULT_PRESETS
+}

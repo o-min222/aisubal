@@ -159,7 +159,7 @@ describe('MCP: unified tool names + legacy aliases', () => {
 
   it('resolves every old tool name to a new one', () => {
     expect(Object.keys(TOOL_ALIASES).sort()).toEqual(
-      ['create_product', 'create_toolbox_entry', 'list_products', 'list_toolbox', 'read_product', 'read_toolbox'].sort()
+      ['create_product', 'create_tool', 'create_toolbox_entry', 'list_products', 'list_toolbox', 'read_product', 'read_toolbox'].sort()
     )
     expect(resolveToolAlias('list_products', {}).args).toMatchObject({ category: 'launch', sort: 'upvotes' })
     expect(resolveToolAlias('list_toolbox', { type: 'mcp_server', sort: 'trending' }).args).toMatchObject({ category: 'mcp', sort: 'popular' })
@@ -182,9 +182,9 @@ describe('MCP: unified tool names + legacy aliases', () => {
     expect(r).toHaveBeenCalledWith('mcp_tool_usage', expect.objectContaining({ p_entry: 'claude-code', p_using: false }))
   })
 
-  it('create_tool refuses product type (launches use launch_product)', async () => {
+  it('submit_tool refuses product type (launches use launch_product)', async () => {
     const r = rpc(null)
-    const out = await handleDataTool('create_tool', { name: 'x', oneLiner: 'y', url: 'https://x.dev', type: 'product' }, 'tok_1234567890abcdef', r)
+    const out = await handleDataTool('submit_tool', { name: 'x', oneLiner: 'y', url: 'https://x.dev', type: 'product' }, 'tok_1234567890abcdef', r)
     expect(String(out.error)).toMatch(/launch_product/)
     expect(r).not.toHaveBeenCalled()
   })
@@ -219,7 +219,7 @@ describe('routes, redirects and navigation', () => {
 
   it('settings and admin have sub-sections with list → detail', () => {
     expect(SETTINGS_SECTIONS.map((s) => s.label)).toEqual(['계정', '프로필 편집', '내 AI 연결', '알림'])
-    expect(ADMIN_SECTIONS.map((s) => s.label)).toEqual(['대시보드', '유저', '초대 트리', '신고', '익명 관리', '사이트 설정'])
+    expect(ADMIN_SECTIONS.map((s) => s.label)).toEqual(['대시보드', '유저', '초대 트리', '툴 검토', '신고', '익명 관리', '사이트 설정'])
     expect(subNavActive('/settings', '/settings/account', '/settings', '/settings/account')).toBe(true)
     expect(subNavActive('/settings/tokens', '/settings/account', '/settings', '/settings/account')).toBe(false)
     expect(read('src/app/(app)/admin/layout.tsx')).toMatch(/is_admin\) redirect/)

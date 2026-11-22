@@ -88,6 +88,47 @@ export async function listAgoraTimeline(
   return rows.map((r) => toTimeline(r, liked))
 }
 
+export type AgoraTab = 'all' | 'reviews' | 'tips' | 'popular'
+export const AGORA_TABS: Array<{ id: AgoraTab; label: string }> = [
+  { id: 'all', label: '전체' },
+  { id: 'reviews', label: '툴 리뷰' },
+  { id: 'tips', label: '정보·팁' },
+  { id: 'popular', label: '인기' },
+]
+export const parseAgoraTab = (v: string | null | undefined): AgoraTab => (AGORA_TABS.some((t) => t.id === v) ? (v as AgoraTab) : 'all')
+
+/** One numbered page of Agora root posts (no infinite scroll). 인기 = last 14 days. */
+export async function listAgoraPage(
+  viewerId: string,
+  opts: { tool?: string; tab?: AgoraTab; page: number; pageSize?: number }
+): Promise<{ posts: TimelinePost[]; total: number; totalPages: number }> {
+  const size = opts.pageSize ?? 20
+  const from = (opts.page - 1) * size
+  const tab = opts.tab ?? 'all'
+  const since = new Date(Date.now() - 14 * 86400_000).toISOString()
+  if (isMock()) {
+    let rows = MOCK_AGORA_POSTS.filter((p) => !opts.tool || p.tool?.name === opts.tool)
+    if (tab === 'reviews') rows = rows.filter((p) => p.rating != null)
+    if (tab === 'tips') rows = rows.filter((p) => p.rating == null)
+    if (tab === 'popular') rows = [...rows].sort((a, b) => b.likeCount * 2 + b.replyCount - (a.likeCount * 2 + a.replyCount))
+    return { posts: rows.slice(from, from + size), total: rows.length, totalPages: Math.max(1, Math.ceil(rows.length / size)) }
+  }
+  const supabase = await sb()
+  let q = supabase.from('agora_posts').select(POST_SELECT, { count: 'exact' }).is('parent_id', null)
+  if (opts.tool) q = q.ilike('tool_name', opts.tool)
+  if (tab === 'reviews') q = q.not('rating', 'is', null)
+  if (tab === 'tips') q = q.is('rating', null)
+  q = tab === 'popular'
+    ? q.gte('created_at', since).order('like_count', { ascending: false }).order('reply_count', { ascending: false }).order('created_at', { ascending: false })
+    : q.order('created_at', { ascending: false })
+  const { data, error, count } = await q.range(from, from + size - 1)
+  if (error) throw error
+  const rows = (data || []) as unknown as Row[]
+  const liked = await likedSet(viewerId, rows.map((r) => r.id))
+  const total = count ?? rows.length
+  return { posts: rows.map((r) => toTimeline(r, liked)), total, totalPages: Math.max(1, Math.ceil(total / size)) }
+}
+
 export async function getAgoraThread(
   id: string,
   viewerId: string

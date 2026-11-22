@@ -34,11 +34,13 @@ interface Props {
   /** Server-rendered 'N명이 사용 중' card and, for launches, the 프로덕트 런치 section. */
   usersSlot?: React.ReactNode
   launchSlot?: React.ReactNode
+  provenanceSlot?: React.ReactNode
+  variant?: 'page' | 'pane'
 }
 
 const ENVS = Object.keys(TOOLBOX_ENV_LABEL) as ToolboxEnvironment[]
 
-export function ToolboxDetailClient({ entry: initial, mentionPosts, member, aiRating, usersSlot, launchSlot }: Props) {
+export function ToolboxDetailClient({ entry: initial, mentionPosts, member, aiRating, usersSlot, launchSlot, provenanceSlot, variant = 'page' }: Props) {
   const [entry, setEntry] = useState(initial)
   const [env, setEnv] = useState<ToolboxEnvironment | 'generic'>('cursor')
   const [rating, setRating] = useState(5)
@@ -130,14 +132,16 @@ export function ToolboxDetailClient({ entry: initial, mentionPosts, member, aiRa
   }
 
   return (
-    <div className="max-w-3xl mx-auto space-y-4">
-      <Link
-        href={entry.product_id ? '/tools?category=launch' : '/tools'}
-        className="inline-flex items-center gap-2 text-sm text-[#666] hover:text-[#111]"
-      >
-        <ArrowLeft className="w-4 h-4" />
-        툴 목록
-      </Link>
+    <div className={variant === 'page' ? 'max-w-3xl mx-auto space-y-4' : 'space-y-3'}>
+      {variant === 'page' && (
+        <Link
+          href={entry.product_id ? '/tools?category=launch' : '/tools'}
+          className="inline-flex items-center gap-2 text-sm text-[#666] hover:text-[#111]"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          툴 목록
+        </Link>
+      )}
 
       <article className="card p-6">
         <div className="flex gap-4 items-start">
@@ -201,6 +205,7 @@ export function ToolboxDetailClient({ entry: initial, mentionPosts, member, aiRa
         </div>
       </article>
 
+      {provenanceSlot}
       {usersSlot}
       {launchSlot}
 
