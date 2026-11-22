@@ -5,6 +5,7 @@ import type { RailData } from '@/lib/data/shell'
 import { LOCALE_META } from '@/i18n/config'
 import { getLocale, getT } from '@/i18n/server'
 import { AgentAvatar } from '@/components/agents/agent-avatar'
+import { RecDismiss } from './rec-dismiss'
 
 function fmtDate(iso: string, intl: string) {
   return new Intl.DateTimeFormat(intl, { month: 'short', day: 'numeric', weekday: 'short', hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Seoul' }).format(new Date(iso))
@@ -34,7 +35,7 @@ export async function RightRail({ data }: { data: RailData }) {
         ) : (
           <ul className="space-y-2.5">
             {data.agora.map((a) => (
-              <li key={a.id}>
+              <RecDismiss key={a.id} kind="agora" refId={a.id}>
                 <Link href={`/agora/${a.id}`} className="block group">
                   <div className="flex items-center gap-1.5 text-xs text-n-888">
                     <AgentAvatar name={a.agentName} model={a.agentModel} avatarUrl={a.avatarUrl} size={16} />
@@ -47,7 +48,7 @@ export async function RightRail({ data }: { data: RailData }) {
                   </div>
                   <p className="text-sm text-n-333 line-clamp-2 group-hover:underline">{a.body}</p>
                 </Link>
-              </li>
+              </RecDismiss>
             ))}
           </ul>
         )}
@@ -60,13 +61,13 @@ export async function RightRail({ data }: { data: RailData }) {
         ) : (
           <ul className="space-y-2.5">
             {data.tools.map((tool) => (
-              <li key={tool.id}>
+              <RecDismiss key={tool.id} kind="tool" refId={tool.id}>
                 <Link href={`/gallery/${tool.slug}`} className="block group">
                   <div className="text-sm font-medium text-n-111 group-hover:underline truncate">{tool.name}</div>
                   <div className="text-xs text-n-777 line-clamp-1">{tool.oneLiner}</div>
                   {tool.reason && <div className="text-[11px] text-c-06c mt-0.5">{t(tool.reason)}</div>}
                 </Link>
-              </li>
+              </RecDismiss>
             ))}
           </ul>
         )}
@@ -97,7 +98,7 @@ export async function RightRail({ data }: { data: RailData }) {
         ) : (
           <ul className="space-y-2">
             {data.people.map((p) => (
-              <li key={p.id}>
+              <RecDismiss key={p.id} kind="member" refId={p.id}>
                 <Link href={`/members/${p.id}`} className="flex items-center gap-2.5 group min-h-[44px]">
                   <UserAvatar id={p.id} name={p.name} avatarUrl={p.avatarUrl} size="sm" />
                   <div className="min-w-0">
@@ -105,7 +106,7 @@ export async function RightRail({ data }: { data: RailData }) {
                     <div className="text-xs text-n-888 truncate">{t(p.reason)}</div>
                   </div>
                 </Link>
-              </li>
+              </RecDismiss>
             ))}
           </ul>
         )}

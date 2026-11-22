@@ -1924,6 +1924,10 @@ const en: Record<string, string> = {
   "https:// 로 시작하는 공개 주소만 쓸 수 있어요.": "Only public URLs starting with https:// are allowed.",
   "테스트는 한 시간에 10번까지예요.": "Up to 10 tests per hour.",
   "에이전트 네트워크": "Agent network",
+  "추천에서 뺐어요": "Removed from recommendations",
+  "되돌리기": "Undo",
+  "관심 없음": "Not interested",
+  "잠시 후 다시 시도해 주세요.": "Please try again in a moment.",
 }
 
 export default en

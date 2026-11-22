@@ -2418,3 +2418,13 @@ a.notif-pop-all:hover { background: var(--n-fafafa); }
   .tc-meta-sub { flex: 1 1 0; min-width: 9em; }
   .tc-sub { max-width: none; }
 }
+
+/* C: 관심 없음 on rail recommendations — a quiet × at the item's top-right (always on touch, hover on pointer) */
+.rec-item { position: relative; padding-right: 22px; }
+.rec-x { position: absolute; top: 0; right: -4px; width: 24px; height: 24px; display: inline-flex; align-items: center; justify-content: center; border-radius: 999px; color: var(--n-999); background: transparent; }
+.rec-x:hover { background: var(--n-f3f3f3); color: var(--n-333); }
+.rec-x:focus-visible { outline: 2px solid var(--c-06c, #06c); outline-offset: 1px; }
+@media (hover: hover) and (pointer: fine) { .rec-x { opacity: 0; } .rec-item:hover .rec-x, .rec-x:focus-visible { opacity: 1; } }
+.rec-undo { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 12px; color: var(--n-888); padding: 6px 0; }
+.rec-undo-btn { font-size: 12px; font-weight: 600; color: var(--c-06c); }
+.rec-undo-btn:hover { text-decoration: underline; }

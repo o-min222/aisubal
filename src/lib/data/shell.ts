@@ -11,6 +11,7 @@ import { sb, useMockData as isMock } from './client'
 import { getT } from '@/i18n/server'
 import { msg } from '@/i18n/translate'
 import { withAgentCards } from './agent-profiles'
+import { listDismissed } from './rec-dismissals'
 
 export type ProfileStats = { posts: number; likes: number; invitesLeft: number }
 
@@ -39,12 +40,13 @@ export const getProfileStats = cache(async (member: Member): Promise<ProfileStat
 })
 
 export const getRailData = cache(async (member: Member): Promise<RailData> => {
-  const [toolbox, agoraPosts, meetups, mine, pairs] = await Promise.all([
+  const [toolbox, agoraPosts, meetups, mine, pairs, dismissed] = await Promise.all([
     listTools(member.id, { sort: 'popular' }).catch(() => [] as ToolboxEntry[]),
     listAgoraTimeline(member.id, { limit: 30 }).catch(() => []),
     upcomingMoim(member.id, 2).catch(() => []),
     myToolIds(member.id).catch(() => new Set<string>()),
     usagePairsAround(member.id).catch(() => []),
+    listDismissed(member.id).catch(() => null),
   ])
 
   let archiveTags: string[][] = []
@@ -75,7 +77,7 @@ export const getRailData = cache(async (member: Member): Promise<RailData> => {
     archiveTags.push(...toolbox.filter((t) => usedToolIds.has(t.id)).map((t) => t.tags))
 
     const likedIds = ((likes || []) as Array<{ post_id: string }>).map((l) => l.post_id)
-    const seen = new Set<string>([member.id])
+    const seen = new Set<string>([member.id, ...(dismissed?.member ?? [])])
     if (likedIds.length) {
       const { data: authors } = await supabase
         .from('posts')
@@ -110,7 +112,9 @@ export const getRailData = cache(async (member: Member): Promise<RailData> => {
 
   const interestTags = pickInterestTags(archiveTags)
   const tr = await getT()
-  const tools = rankToolsForMember(toolbox, interestTags, usedToolIds, 3, coUsage(pairs, member.id)).map((t) => ({
+  // 관심 없음: dismissed tools rank like tools I already use (skipped)
+  const toolExclude = new Set([...usedToolIds, ...(dismissed?.tool ?? [])])
+  const tools = rankToolsForMember(toolbox, interestTags, toolExclude, 3, coUsage(pairs, member.id)).map((t) => ({
     id: t.id,
     slug: t.slug,
     name: t.name,
@@ -121,7 +125,7 @@ export const getRailData = cache(async (member: Member): Promise<RailData> => {
   const interest = new Set(interestTags)
   const toolTagByName = new Map(toolbox.map((t) => [t.name.toLowerCase(), t.tags]))
   const agoraTop = agoraPosts
-    .filter((p) => p.rating !== null || p.tool)
+    .filter((p) => (p.rating !== null || p.tool) && !dismissed?.agora.has(p.id))
     .map((p) => {
       const tags = p.tool ? toolTagByName.get(p.tool.name.toLowerCase()) || [] : []
       const boost = tags.some((t) => interest.has(t.toLowerCase())) ? 100 : 0
@@ -155,6 +159,6 @@ export const getRailData = cache(async (member: Member): Promise<RailData> => {
       capacity: m.capacity,
       group: m.group?.name ?? null,
     })),
-    people: people.slice(0, 3),
+    people: people.filter((p) => !dismissed?.member.has(p.id)).slice(0, 3),
   }
 })
