@@ -232,27 +232,19 @@ export function MoimForm({
           <span className={lbl} style={{ color: 'var(--n-111)' }}>
             <T>신청 방식</T>
           </span>
-          <div className="grid gap-2" role="radiogroup" aria-label={tx('신청 방식')} style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 220px), 1fr))' }}>
+          <div className="seg" role="radiogroup" aria-label={tx('신청 방식')}>
             {[
-              { v: false, t: tx('선착순'), d: <T>자리가 있으면 바로 확정, 차면 대기열 → 빈자리 생기면 자동 승급</T> },
-              { v: true, t: tx('호스트 승인'), d: <T>신청을 보고 승인·대기·거절. 정원이 차면 승인 시 대기열로</T> },
+              { v: false, t: tx('선착순') },
+              { v: true, t: tx('호스트 승인') },
             ].map((o) => (
-              <button
-                key={String(o.v)}
-                type="button"
-                role="radio"
-                aria-checked={approval === o.v}
-                onClick={() => setApproval(o.v)}
-                className="text-left rounded-xl px-3 py-2.5"
-                style={{ border: approval === o.v ? '2px solid var(--n-111)' : '1px solid var(--n-ddd)' }}
-              >
-                <span className="block text-[14px] font-semibold" style={{ color: 'var(--n-111)' }}>
-                  {o.t}
-                </span>
-                <span className="block text-[12px] text-n-777 mt-0.5">{o.d}</span>
+              <button key={String(o.v)} type="button" role="radio" aria-checked={approval === o.v} className={approval === o.v ? 'on' : ''} onClick={() => setApproval(o.v)}>
+                {o.t}
               </button>
             ))}
           </div>
+          <p className="text-[12px] text-n-777 mt-1.5" aria-live="polite">
+            {approval ? <T>신청을 보고 승인·대기·거절. 정원이 차면 승인 시 대기열로</T> : <T>자리가 있으면 바로 확정, 차면 대기열 → 빈자리 생기면 자동 승급</T>}
+          </p>
         </div>
         <div>
           <span className={lbl} style={{ color: 'var(--n-111)' }}>
