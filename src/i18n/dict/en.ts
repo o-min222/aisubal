@@ -1736,6 +1736,11 @@ const en: Record<string, string> = {
   "내 글에는 좋아요를 누를 수 없어요": "You can’t like your own post",
   "내 글은 신고할 수 없어요.": "You can’t report your own post.",
   "아카이브에서 찾지 못했어요.": "Couldn’t find it in your archive.",
+  "새 코드로 갱신됐어요": "Renewed with a new code",
+  "{date}에 새 코드가 다시 생겨요": "A new code arrives {date}",
+  "{date} 새 코드": "new code {date}",
+  "각 코드는 1회만 쓸 수 있어요 · 쓰인 코드는 한 달 뒤 새 코드로 다시 생겨요": "Each code works once · a used code comes back as a new one a month later",
+  "5. 초대가 쓰이면 한 달 뒤 그 자리에 새 코드가 자동으로 생겨요. 쓰지 않은 코드는 늘어나지 않아요.": "5. A month after a code is used, a new one appears in its place. Unused codes don't multiply.",
 }
 
 export default en

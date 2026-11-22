@@ -4,6 +4,7 @@ import { MOCK_MEMBERS } from '@/lib/mock-data'
 import { sb, useMockData } from './client'
 import { MEMBER_PUBLIC_COLUMNS } from './member-columns'
 import { msg } from '@/i18n/translate'
+import { hasDueRenewal, renewsAt } from '@/lib/invite-renewal'
 
 export type InviteCodeRow = {
   code: string
@@ -11,6 +12,12 @@ export type InviteCodeRow = {
   isActive: boolean
   usedBy: { displayName: string } | null
   usedAt: string | null
+  /** set once the fresh replacement code exists */
+  renewedAt: string | null
+  /** used, not yet renewed: when the fresh code arrives */
+  renewsAt: string | null
+  /** this code is itself a renewal of a used one */
+  isRenewal: boolean
 }
 
 export async function listMyInviteCodes(memberId: string, signupCompleted: boolean) {
@@ -23,6 +30,9 @@ export async function listMyInviteCodes(memberId: string, signupCompleted: boole
           isActive: signupCompleted,
           usedBy: null,
           usedAt: null,
+          renewedAt: null,
+          renewsAt: null,
+          isRenewal: false,
         },
         {
           code: 'B7NJ4TRW',
@@ -30,6 +40,9 @@ export async function listMyInviteCodes(memberId: string, signupCompleted: boole
           isActive: signupCompleted,
           usedBy: { displayName: '새벽CTO' },
           usedAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+          renewedAt: null,
+          renewsAt: renewsAt({ usedAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(), renewedAt: null }),
+          isRenewal: false,
         },
       ] satisfies InviteCodeRow[],
       codesActive: signupCompleted,
@@ -37,13 +50,22 @@ export async function listMyInviteCodes(memberId: string, signupCompleted: boole
   }
 
   const supabase = await sb()
-  const { data, error } = await supabase
-    .from('invite_codes')
-    .select('code, used_by_id, used_at, used_by:members!invite_codes_used_by_id_fkey(display_name)')
-    .eq('created_by_id', memberId)
-    .order('created_at', { ascending: true })
-
+  const load = () =>
+    supabase
+      .from('invite_codes')
+      .select('code, used_by_id, used_at, renewed_at, renewed_from_id, used_by:members!invite_codes_used_by_id_fkey(display_name)')
+      .eq('created_by_id', memberId)
+      .order('created_at', { ascending: true })
+  let { data, error } = await load()
   if (error) throw error
+
+  // lazy auto-renewal: only when a used code is past its month (no extra call otherwise)
+  if (signupCompleted && hasDueRenewal((data || []).map((r) => ({ usedAt: r.used_at, renewedAt: r.renewed_at })))) {
+    const { data: n, error: renewError } = await supabase.rpc('invites__renew_mine')
+    if (renewError) console.error('invites__renew_mine', renewError)
+    else if (Number(n) > 0) ({ data, error } = await load())
+    if (error) throw error
+  }
 
   const codes: InviteCodeRow[] = (data || []).map((row) => {
     const usedBy = row.used_by as { display_name?: string } | null
@@ -53,6 +75,9 @@ export async function listMyInviteCodes(memberId: string, signupCompleted: boole
       isActive: signupCompleted,
       usedBy: usedBy?.display_name ? { displayName: usedBy.display_name } : null,
       usedAt: row.used_at,
+      renewedAt: row.renewed_at ?? null,
+      renewsAt: row.used_by_id ? renewsAt({ usedAt: row.used_at, renewedAt: row.renewed_at ?? null }) : null,
+      isRenewal: !!row.renewed_from_id,
     }
   })
 
