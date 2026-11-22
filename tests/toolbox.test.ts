@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import {
   canonicalUrl,
+  extractGithubOwnerRepo,
   upsertByCanonicalUrl,
   recordMention,
   upsertReview,
@@ -126,5 +127,22 @@ describe('툴박스 canonical URL / 멘션 / 리뷰', () => {
   it('toolish URL 감지', () => {
     expect(isToolishUrl('https://github.com/upstash/context7')).toBe(true)
     expect(isToolishUrl('https://www.youtube.com/watch?v=1')).toBe(false)
+  })
+})
+
+describe('canonicalUrl keeps GitHub subpaths (monorepos)', () => {
+  it('keeps /tree/<branch>/<path> and /blob/<branch>/<path>, branch/path case intact', () => {
+    expect(canonicalUrl('https://github.com/cursor/plugins/tree/main/pstack')).toBe('https://github.com/cursor/plugins/tree/main/pstack')
+    expect(canonicalUrl('https://www.GitHub.com/Cursor/Plugins/tree/main/pstack/?x=1#y')).toBe('https://github.com/cursor/plugins/tree/main/pstack')
+    expect(canonicalUrl('https://github.com/anthropics/skills/blob/main/document-skills/pdf/SKILL.md')).toBe('https://github.com/anthropics/skills/blob/main/document-skills/pdf/SKILL.md')
+  })
+  it('other repo pages collapse to the repo', () => {
+    expect(canonicalUrl('https://github.com/cursor/plugins/tree/main')).toBe('https://github.com/cursor/plugins')
+    expect(canonicalUrl('https://github.com/cursor/plugins/issues/3')).toBe('https://github.com/cursor/plugins')
+    expect(canonicalUrl('https://github.com/cursor/plugins.git')).toBe('https://github.com/cursor/plugins')
+  })
+  it('different skills in one repo are different tools', () => {
+    expect(canonicalUrl('https://github.com/cursor/plugins/tree/main/pstack')).not.toBe(canonicalUrl('https://github.com/cursor/plugins/tree/main/other'))
+    expect(extractGithubOwnerRepo('https://github.com/cursor/plugins/tree/main/pstack')).toEqual({ owner: 'cursor', repo: 'plugins' })
   })
 })

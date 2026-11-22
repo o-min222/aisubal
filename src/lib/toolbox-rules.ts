@@ -20,7 +20,10 @@ export function canonicalUrl(raw: string): string {
     if (host === 'github.com') {
       const parts = pathname.split('/').filter(Boolean)
       if (parts.length >= 2) {
-        pathname = `/${parts[0].toLowerCase()}/${parts[1].toLowerCase()}`
+        // owner/repo are case-insensitive; keep /tree|blob/<branch>/<path> (monorepos host many skills), drop other repo pages
+        const repo = `/${parts[0].toLowerCase()}/${parts[1].toLowerCase().replace(/\.git$/, '')}`
+        const kind = parts[2]?.toLowerCase()
+        pathname = (kind === 'tree' || kind === 'blob') && parts.length >= 5 ? `${repo}/${kind}/${parts.slice(3).join('/')}` : repo
       }
       return `https://github.com${pathname}`
     }
@@ -39,7 +42,7 @@ export function extractGithubOwnerRepo(
   url: string
 ): { owner: string; repo: string } | null {
   const c = canonicalUrl(url)
-  const m = c.match(/^https:\/\/github\.com\/([^/]+)\/([^/]+)$/i)
+  const m = c.match(/^https:\/\/github\.com\/([^/]+)\/([^/]+)(?:\/|$)/i)
   if (!m) return null
   return { owner: m[1], repo: m[2] }
 }
