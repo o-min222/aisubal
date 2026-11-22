@@ -1,6 +1,7 @@
 import { cache } from 'react'
 import { DEV_ID, mockPerson } from '@/lib/mock-social'
 import type { GroupMemberStatus, GroupRole, JoinPolicy } from '@/lib/group-rules'
+import { uniqueGroupSlug } from '@/lib/group-rules'
 import { sb, useMockData as isMock } from './client'
 
 /**
@@ -162,6 +163,9 @@ export async function listDiscoverGroups(viewerId: string, q?: string | null): P
   })
 }
 
+const gr = globalThis as unknown as { __aisubalGroupRedirects?: Map<string, string> }
+const mockRedirects = () => (gr.__aisubalGroupRedirects ??= new Map())
+
 export const getGroupBySlug = cache(async (viewerId: string, slug: string): Promise<Group | null> => {
   if (isMock()) {
     const gr = mockGroups().groups.find((x) => x.slug === slug)
@@ -218,13 +222,14 @@ export async function listGroupMembers(viewerId: string, groupId: string): Promi
 }
 
 // ------------------------------------------------------------------ writes
-export type GroupInput = { name: string; slug: string; description: string; emoji: string | null; joinPolicy: JoinPolicy; isHidden: boolean }
+export type GroupInput = { name: string; slug?: string; description: string; emoji: string | null; joinPolicy: JoinPolicy; isHidden: boolean }
 
 export async function createGroup(viewerId: string, input: GroupInput): Promise<Group> {
   if (isMock()) {
     const s = mockGroups()
-    if (s.groups.some((x) => x.slug === input.slug)) throw new Error('group_slug_taken')
-    const row: GroupRow = { id: `grp-${input.slug}`, slug: input.slug, name: input.name, description: input.description, emoji: input.emoji, join_policy: input.joinPolicy, is_hidden: input.isHidden, member_count: 1, post_count: 0, created_at: new Date().toISOString() }
+    if (input.slug && s.groups.some((x) => x.slug === input.slug)) throw new Error('group_slug_taken')
+    const slug = input.slug || uniqueGroupSlug(input.name, (c) => s.groups.some((x) => x.slug === c))
+    const row: GroupRow = { id: `grp-${slug}`, slug, name: input.name, description: input.description, emoji: input.emoji, join_policy: input.joinPolicy, is_hidden: input.isHidden, member_count: 1, post_count: 0, created_at: new Date().toISOString() }
     s.groups.push(row)
     s.members.push({ group_id: row.id, member_id: v(viewerId), role: 'owner', status: 'active', message: null, created_at: row.created_at })
     recount()
@@ -233,7 +238,7 @@ export async function createGroup(viewerId: string, input: GroupInput): Promise<
   const supabase = await sb()
   const { data, error } = await supabase.rpc('group_create', {
     p_name: input.name,
-    p_slug: input.slug,
+    p_slug: input.slug ?? null,
     p_description: input.description,
     p_emoji: input.emoji,
     p_join_policy: input.joinPolicy,
@@ -244,12 +249,16 @@ export async function createGroup(viewerId: string, input: GroupInput): Promise<
   return toGroup(r, { role: r.my_role || 'owner', status: 'active' })
 }
 
-export async function updateGroup(viewerId: string, groupId: string, input: Omit<GroupInput, 'slug'>): Promise<void> {
+export async function updateGroup(viewerId: string, groupId: string, input: GroupInput): Promise<{ slug: string | null }> {
   if (isMock()) {
     if (mockRole(groupId, viewerId) !== 'owner') throw new Error('group_forbidden')
     const gr = mockGroups().groups.find((x) => x.id === groupId)!
-    Object.assign(gr, { name: input.name, description: input.description, emoji: input.emoji, join_policy: input.joinPolicy, is_hidden: input.isHidden })
-    return
+    if (input.slug && input.slug !== gr.slug) {
+      if (mockGroups().groups.some((x) => x.slug === input.slug)) throw new Error('group_slug_taken')
+      mockRedirects().set(gr.slug, gr.id)
+    }
+    Object.assign(gr, { name: input.name, description: input.description, emoji: input.emoji, join_policy: input.joinPolicy, is_hidden: input.isHidden, slug: input.slug || gr.slug })
+    return { slug: gr.slug }
   }
   const supabase = await sb()
   const { error } = await supabase.rpc('group_update', {
@@ -261,6 +270,21 @@ export async function updateGroup(viewerId: string, groupId: string, input: Omit
     p_hidden: input.isHidden,
   })
   if (error) throw new Error(error.message)
+  if (!input.slug) return { slug: null }
+  const { data, error: slugErr } = await supabase.rpc('group_set_slug', { p_group: groupId, p_slug: input.slug })
+  if (slugErr) throw new Error(slugErr.message)
+  return { slug: (data as { slug?: string } | null)?.slug ?? input.slug }
+}
+
+/** An old group address → the current one (0060), or null. */
+export async function resolveGroupSlug(slug: string): Promise<string | null> {
+  if (isMock()) {
+    const id = mockRedirects().get(slug)
+    return id ? mockGroups().groups.find((x) => x.id === id)?.slug ?? null : null
+  }
+  const supabase = await sb()
+  const { data } = await supabase.rpc('group_resolve_slug', { p_slug: slug })
+  return typeof data === 'string' && data ? data : null
 }
 
 export type MembershipAction =

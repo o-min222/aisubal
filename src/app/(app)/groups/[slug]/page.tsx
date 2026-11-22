@@ -3,7 +3,7 @@ import { ArchiveButton } from '@/components/archive/archive-button'
 import { notFound, redirect } from 'next/navigation'
 import { CalendarPlus, ChevronLeft, Lock } from 'lucide-react'
 import { getNicknameUnlockState, getUserState } from '@/lib/auth'
-import { getGroupBySlug, listGroupMembers } from '@/lib/data/groups'
+import { getGroupBySlug, listGroupMembers, resolveGroupSlug } from '@/lib/data/groups'
 import { listFeedPage } from '@/lib/data/feed'
 import { Pagination } from '@/components/pagination'
 import { parsePage } from '@/lib/paging'
@@ -20,13 +20,14 @@ import { MoimCard } from '@/components/moim/moim-card'
 import { PersonRow } from '@/components/social/person-row'
 import { GroupPolicy } from '@/components/groups/group-card'
 import { GroupJoinButton } from '@/components/groups/group-actions'
-import { GroupForm } from '@/components/groups/group-form'
+import { GroupSettingsForm } from '@/components/groups/group-form'
 import { GroupRequests, MemberControls } from '@/components/groups/group-manage'
 import { T } from '@/i18n/t'
 import { msg } from '@/i18n/translate'
 import { getT } from '@/i18n/server'
 import { pageTitle } from '@/lib/page-title'
 import { canonical } from '@/lib/canonical'
+import { GroupAvatar } from '@/components/groups/group-avatar'
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
   const state = await getUserState()
@@ -46,7 +47,15 @@ export default async function GroupPage({ params, searchParams }: { params: Prom
   const me = state.member.id
   const { slug } = await params
   const g = await getGroupBySlug(me, slug)
-  if (!g) notFound()
+  if (!g) {
+    // 0060: an address the owner changed keeps working
+    const moved = await resolveGroupSlug(slug).catch(() => null)
+    if (moved && moved !== slug) {
+      const qs = new URLSearchParams(Object.entries(await searchParams).filter((e): e is [string, string] => typeof e[1] === 'string')).toString()
+      redirect(`/groups/${moved}${qs ? `?${qs}` : ''}`)
+    }
+    notFound()
+  }
 
   const isMod = canModerate(g.myRole)
   const isOwner = g.myRole === 'owner'
@@ -79,9 +88,7 @@ export default async function GroupPage({ params, searchParams }: { params: Prom
 
       <header className="card p-4 flex flex-col md:flex-row md:items-center gap-3">
         <div className="flex gap-3 min-w-0 flex-1">
-          <span aria-hidden className="flex-shrink-0 flex items-center justify-center rounded-2xl text-[28px]" style={{ width: 60, height: 60, background: 'var(--c-f3f0ff)' }}>
-            {g.emoji || '#'}
-          </span>
+          <GroupAvatar name={g.name} size={60} />
           <div className="min-w-0">
             <div className="flex items-start gap-2">
               <h1 className="text-[20px] font-bold leading-tight min-w-0" style={{ color: 'var(--n-111)' }}>
@@ -143,7 +150,7 @@ export default async function GroupPage({ params, searchParams }: { params: Prom
         <GroupRequests groupId={g.id} pending={members.filter((m) => m.status === 'pending')} invited={members.filter((m) => m.status === 'invited')} memberIds={active.map((m) => m.id)} />
       )}
 
-      {tab === 'settings' && isOwner && <GroupForm edit={g} />}
+      {tab === 'settings' && isOwner && <GroupSettingsForm group={g} />}
     </div>
   )
 }

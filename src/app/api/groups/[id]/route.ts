@@ -2,15 +2,16 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { getMember } from '@/lib/auth'
 import { groupMembership, listGroupMembers, updateGroup, type MembershipAction } from '@/lib/data/groups'
-import { groupErrorMessage } from '@/lib/group-rules'
+import { GROUP_SLUG_RE, groupErrorMessage } from '@/lib/group-rules'
 import { te } from '@/i18n/server'
 
 const updateSchema = z.object({
   name: z.string().trim().min(2).max(40),
   description: z.string().trim().max(500).default(''),
-  emoji: z.string().trim().max(8).nullish(),
   joinPolicy: z.enum(['open', 'approval']),
   isHidden: z.boolean(),
+  // 0060: the owner may change the address; the old one redirects
+  slug: z.string().trim().toLowerCase().regex(GROUP_SLUG_RE).optional(),
 })
 
 const actionSchema = z.discriminatedUnion('action', [
@@ -39,8 +40,8 @@ export async function PATCH(request: NextRequest, { params }: Ctx) {
   const parsed = updateSchema.safeParse(await request.json().catch(() => null))
   if (!parsed.success) return NextResponse.json({ error: await te('입력값을 확인해주세요.') }, { status: 400 })
   try {
-    await updateGroup(member.id, id, { ...parsed.data, emoji: parsed.data.emoji || null })
-    return NextResponse.json({ ok: true })
+    const { slug } = await updateGroup(member.id, id, { ...parsed.data, emoji: null })
+    return NextResponse.json({ ok: true, slug })
   } catch (e) {
     return NextResponse.json({ error: await te(groupErrorMessage(e)) }, { status: 400 })
   }

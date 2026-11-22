@@ -4,6 +4,7 @@ import { KstDate } from '@/components/kst-date'
 import { ModeBadge, RsvpBadge } from '@/components/moim/moim-badges'
 import { CompactRow } from './compact-row'
 import { T } from '@/i18n/t'
+import { GroupAvatar } from '@/components/groups/group-avatar'
 
 /** Compact 모임 row: date tile, title, when/where, capacity and my RSVP. */
 export function MoimRow({ moim: m, href, active }: { moim: Moim; href: string; active?: boolean }) {
@@ -43,7 +44,7 @@ export function MoimRow({ moim: m, href, active }: { moim: Moim; href: string; a
           )}
           {m.group ? (
             <span>
-              {m.group.emoji ?? '👥'} {m.group.name}
+              <GroupAvatar name={m.group.name} size={16} className="align-[-3px] mr-1" />{m.group.name}
             </span>
           ) : (
             <span>{m.host.name}</span>

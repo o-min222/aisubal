@@ -10,6 +10,7 @@ import { isoToKstInput, kstInputToIso } from '@/lib/kst'
 import { MAX_QUESTIONS } from '@/lib/moim-rules'
 import { T } from '@/i18n/t'
 import { tx, tn } from '@/i18n/client'
+import { GroupAvatar } from '@/components/groups/group-avatar'
 
 type Q = { label: string; required: boolean }
 
@@ -105,7 +106,7 @@ export function MoimForm({
             <T>호스트</T>
           </span>
           {edit ? (
-            <p className="text-sm text-n-555"><T s="{v} · 호스트는 바꿀 수 없어요" vars={{ v: edit.group ? tx('{v} {name} 그룹', { v: edit.group.emoji || '', name: edit.group.name }) : tx('개인 ({name})', { name: edit.host.name }) }} /></p>
+            <p className="text-sm text-n-555"><T s="{v} · 호스트는 바꿀 수 없어요" vars={{ v: edit.group ? tx('{name} 그룹', { name: edit.group.name }) : tx('개인 ({name})', { name: edit.host.name }) }} /></p>
           ) : (
             <div className="host-picker grid gap-2" role="radiogroup" aria-label={tx('호스트')} style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 180px), 1fr))' }}>
               {hostOptions.map((o) => {
@@ -120,7 +121,7 @@ export function MoimForm({
                     className="flex items-center gap-2 rounded-xl px-3 text-left min-h-[48px]"
                     style={{ border: on ? '2px solid var(--n-111)' : '1px solid var(--n-ddd)', background: on ? 'var(--n-fafafa)' : 'var(--n-fff)' }}
                   >
-                    <span aria-hidden className="w-6 text-center">{o.id ? o.emoji || '#' : <UserRound className="w-4 h-4 inline" />}</span>
+                    <span aria-hidden className="w-6 inline-flex justify-center">{o.id ? <GroupAvatar name={o.label} size={20} /> : <UserRound className="w-4 h-4 inline" />}</span>
                     <span className="text-[14px] font-medium truncate" style={{ color: 'var(--n-111)' }}>
                       <T>{o.label}</T>
                     </span>

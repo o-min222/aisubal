@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Plus } from 'lucide-react'
 import { useT } from '@/i18n/client'
+import { GroupAvatar } from '@/components/groups/group-avatar'
 
 export type MyGroupLink = { slug: string; name: string; emoji: string | null; role: string | null }
 
@@ -33,7 +34,7 @@ export function MyGroupsNav({ groups }: { groups: MyGroupLink[] }) {
             return (
               <li key={g.slug}>
                 <Link href={href} className={`side-nav-item text-[13.5px] ${on ? 'active' : ''}`} aria-current={on ? 'page' : undefined}>
-                  <span aria-hidden className="w-5 text-center">{g.emoji || '#'}</span>
+                  <GroupAvatar name={g.name} size={20} />
                   <span className="truncate">{g.name}</span>
                 </Link>
               </li>

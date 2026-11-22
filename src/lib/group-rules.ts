@@ -5,6 +5,17 @@ export type JoinPolicy = 'open' | 'approval'
 
 export const GROUP_SLUG_RE = /^[a-z0-9][a-z0-9-]{1,39}$/
 
+/** Mirrors 0060 group__slug_from: latin words of the name, else 'group'; a short suffix when taken. */
+export function uniqueGroupSlug(name: string, taken: (slug: string) => boolean): string {
+  let base = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 30).replace(/-+$/g, '')
+  if (!GROUP_SLUG_RE.test(base)) base = 'group'
+  let cand = base
+  for (let i = 0; cand === 'group' || ['new', 'admin', 'settings'].includes(cand) || taken(cand); i++) {
+    cand = `${base}-${Math.random().toString(36).slice(2, i < 10 ? 6 : 10)}`
+  }
+  return cand
+}
+
 export function slugify(name: string): string {
   const ascii = name
     .toLowerCase()

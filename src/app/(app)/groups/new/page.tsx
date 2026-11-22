@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { ChevronLeft } from 'lucide-react'
 import { getUserState } from '@/lib/auth'
-import { GroupForm } from '@/components/groups/group-form'
+import { CreateGroupForm } from '@/components/groups/group-form'
 import { T } from '@/i18n/t'
 import { getT } from '@/i18n/server'
 
@@ -26,7 +26,7 @@ export default async function NewGroupPage() {
           <T>그룹 만들기</T>
         </h1>
       </div>
-      <GroupForm />
+      <CreateGroupForm />
     </div>
   )
 }

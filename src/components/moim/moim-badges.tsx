@@ -3,11 +3,12 @@ import { Globe, MapPin, Lock } from 'lucide-react'
 import type { MoimGroupRef } from '@/lib/data/moim'
 import { RSVP_LABEL, type RsvpStatus } from '@/lib/moim-rules'
 import { T } from '@/i18n/t'
+import { GroupAvatar } from '@/components/groups/group-avatar'
 
 export function GroupBadge({ group, link = true }: { group: MoimGroupRef; link?: boolean }) {
   const inner = (
     <>
-      <span aria-hidden>{group.emoji || '#'}</span>
+      <GroupAvatar name={group.name} size={14} />
       {group.name}
     </>
   )

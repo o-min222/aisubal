@@ -4,6 +4,7 @@ import type { Group } from '@/lib/data/groups'
 import { ROLE_LABEL } from '@/lib/group-rules'
 import { T } from '@/i18n/t'
 import { getT } from '@/i18n/server'
+import { GroupAvatar } from '@/components/groups/group-avatar'
 
 export function GroupPolicy({ g }: { g: Pick<Group, 'joinPolicy' | 'isHidden'> }) {
   return (
@@ -27,9 +28,7 @@ export async function GroupCard({ g }: { g: Group }) {
     g.myStatus === 'active' ? (g.myRole && g.myRole !== 'member' ? ROLE_LABEL[g.myRole] : st('가입됨')) : g.myStatus === 'pending' ? st('가입 요청 중') : g.myStatus === 'invited' ? st('초대받음') : null
   return (
     <Link href={`/groups/${g.slug}`} className="group-card card p-3.5 flex gap-3 hover:bg-n-fafafa">
-      <span aria-hidden className="flex-shrink-0 flex items-center justify-center rounded-xl text-[22px]" style={{ width: 48, height: 48, background: 'var(--c-f3f0ff)' }}>
-        {g.emoji || '#'}
-      </span>
+      <GroupAvatar name={g.name} size={48} />
       <span className="min-w-0 flex-1">
         <span className="flex items-center gap-2">
           <span className="font-semibold text-[15px] truncate" style={{ color: 'var(--n-111)' }}>

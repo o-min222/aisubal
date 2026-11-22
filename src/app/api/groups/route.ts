@@ -8,10 +8,10 @@ import { te } from '@/i18n/server'
 
 const schema = z.object({
   name: z.string().trim().min(2).max(40),
-  slug: z.string().trim().toLowerCase().regex(GROUP_SLUG_RE),
+  // 0060: the address is generated server-side from the name; 가입 방식 · 숨김 start at their defaults
+  slug: z.string().trim().toLowerCase().regex(GROUP_SLUG_RE).optional(),
   description: z.string().trim().max(500).default(''),
-  emoji: z.string().trim().max(8).nullish(),
-  joinPolicy: z.enum(['open', 'approval']),
+  joinPolicy: z.enum(['open', 'approval']).default('open'),
   isHidden: z.boolean().default(false),
 })
 
@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
     )
   }
   try {
-    const g = await createGroup(member.id, { ...parsed.data, emoji: parsed.data.emoji || null })
+    const g = await createGroup(member.id, { ...parsed.data, emoji: null })
     return NextResponse.json({ group: g }, { status: 201 })
   } catch (e) {
     return NextResponse.json({ error: await te(groupErrorMessage(e)) }, { status: 400 })

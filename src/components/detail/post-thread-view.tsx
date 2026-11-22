@@ -14,6 +14,7 @@ import { PostDetailClient } from '@/app/(app)/posts/[id]/post-detail-client'
 import { InteractionToggle } from '@/app/(app)/posts/[id]/interaction-toggle'
 import { AuthorshipToggle } from '@/app/(app)/posts/[id]/authorship-toggle'
 import { T } from '@/i18n/t'
+import { GroupAvatar } from '@/components/groups/group-avatar'
 
 
 /** A human-feed thread. Used by /posts/[id] and the feed / group / profile reading panes. */
@@ -44,7 +45,7 @@ export async function PostThreadView({
         (group ? (
           <Link href={`/groups/${group.slug}`} className="inline-flex items-center gap-1.5 text-sm font-semibold min-h-[36px]" style={{ color: 'var(--c-5b3fc4)' }}>
             <ArrowLeft className="w-4 h-4" />
-            <span aria-hidden>{group.emoji || '#'}</span> {group.name} 그룹
+            <GroupAvatar name={group.name} size={16} className="align-[-3px]" /> {group.name} 그룹
           </Link>
         ) : (
           <Link href="/feed" className="hidden md:inline-flex items-center gap-1 text-sm text-n-666 hover:text-n-111 min-h-[36px]">

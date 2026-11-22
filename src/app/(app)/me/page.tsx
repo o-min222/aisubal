@@ -34,6 +34,7 @@ import { getLocale, getT } from '@/i18n/server'
 import { kstShortDate } from '@/lib/kst'
 import { LOCALE_META } from '@/i18n/config'
 import { msg } from '@/i18n/translate'
+import { GroupAvatar } from '@/components/groups/group-avatar'
 
 export async function generateMetadata() {
   const t = await getT()
@@ -228,9 +229,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
         {s.items.map((g) => (
           <li key={g.id}>
             <Link href={`/groups/${g.slug}`} className="flex items-center gap-3 px-4 py-3 hover:bg-n-fafafa">
-              <span className="w-9 h-9 rounded-xl bg-n-f3f3f3 inline-flex items-center justify-center text-lg" aria-hidden>
-                {g.emoji || '👥'}
-              </span>
+              <GroupAvatar name={g.name} size={36} />
               <span className="min-w-0 flex-1">
                 <span className="block font-medium text-n-111 truncate">{g.name}</span>
                 <span className="block text-xs text-n-888"><T s="멤버 {memberCount} · 글 {postCount}" vars={{ memberCount: g.memberCount, postCount: g.postCount }} /></span>

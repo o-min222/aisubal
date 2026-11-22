@@ -2298,3 +2298,7 @@ button.rp-link { width: 100%; text-align: left; font: inherit; cursor: pointer; 
 .inst-fill .input { flex: 1; min-width: 0; }
 .inst-code { width: 100%; font-family: var(--font-mono, ui-monospace, monospace); font-size: 12.5px; line-height: 1.5; white-space: pre; overflow-x: auto; resize: vertical; min-height: 150px; }
 @media (min-width: 768px) { [data-slot=dialog-content].inst-sheet { max-width: 640px; width: calc(100% - 48px); } }
+
+/* Group avatar: initial on a name-hashed tint */
+.gav { flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; font-weight: 700; line-height: 1; background: hsl(var(--gh) 62% 92%); color: hsl(var(--gh) 48% 30%); }
+.dark .gav { background: hsl(var(--gh) 28% 24%); color: hsl(var(--gh) 70% 84%); }

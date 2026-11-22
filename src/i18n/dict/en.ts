@@ -1856,6 +1856,10 @@ const en: Record<string, string> = {
   "알 수 없는 환경이 있어요.": "Unknown environment.",
   "설치 명령 확인 · 공개": "Check · publish install commands",
   "설치 명령": "Install command",
+  "주소·가입 방식·공개 여부는 만든 뒤 그룹 설정에서 바꿀 수 있어요.": "You can change the address, join policy and visibility later in group settings.",
+  "만드는 중…": "Creating…",
+  "예전 주소로 들어와도 새 주소로 이동해요.": "Links to the old address will redirect here.",
+  "{name} 그룹": "{name} group",
 }
 
 export default en

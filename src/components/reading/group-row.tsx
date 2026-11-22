@@ -4,6 +4,7 @@ import { GroupPolicy } from '@/components/groups/group-card'
 import { CompactRow } from './compact-row'
 import { T } from '@/i18n/t'
 import { getT } from '@/i18n/server'
+import { GroupAvatar } from '@/components/groups/group-avatar'
 
 /** Compact 그룹 row; groups open as their own space (timeline + tabs), not in a pane. */
 export async function GroupRow({ g }: { g: Group }) {
@@ -15,9 +16,7 @@ export async function GroupRow({ g }: { g: Group }) {
       save={{ kind: 'group', refId: g.slug, hint: { title: g.name } }}
       href={`/groups/${g.slug}`}
       leading={
-        <span aria-hidden className="flex items-center justify-center rounded-xl text-[20px]" style={{ width: 42, height: 42, background: 'var(--c-f3f0ff)' }}>
-          {g.emoji || '#'}
-        </span>
+        <GroupAvatar name={g.name} size={42} />
       }
       title={g.name}
       badge={state ? <span className="crow-chip" style={g.myStatus === 'invited' ? { background: 'var(--c-e8f5ee)', color: 'var(--c-1f7a4d)' } : g.myStatus === 'pending' ? { background: 'var(--c-fff4e5)', color: 'var(--c-9a5b00)' } : undefined}>{state}</span> : null}
