@@ -81,7 +81,7 @@ export function InvitesClient({ inviterName, codes, codesActive, loadFailed }: {
           <h2 className="font-semibold" style={{ color: 'var(--n-111)' }}>
             <T>내 초대 코드</T>
           </h2>
-          <p className="text-xs text-n-888 mt-0.5"><T>각 코드는 1회만 쓸 수 있어요 · 쓰인 코드는 한 달 뒤 새 코드로 다시 생겨요</T></p>
+          <p className="text-xs text-n-888 mt-0.5"><T>각 코드는 1회만 쓸 수 있어요 · 쓰인 코드는 7일 뒤 새 코드로 다시 생겨요</T></p>
         </div>
         {loadFailed && <p className="p-6 text-center text-sm text-n-888"><T>초대 코드를 불러오지 못했어요. 잠시 후 다시 시도해 주세요.</T></p>}
         {!loadFailed && codes.length === 0 && <p className="p-6 text-center text-sm text-n-888"><T>아직 받은 초대 코드가 없어요.</T></p>}
@@ -169,7 +169,7 @@ export function InvitesClient({ inviterName, codes, codesActive, loadFailed }: {
         <p><T>2. 받은 분이 링크를 열면 누가 초대했는지와 코드 상태를 보고 Google로 로그인해요.</T></p>
         <p><T>3. 로그인 후 가입 화면에 코드가 자동으로 들어가 있어요. 버튼 한 번이면 가입 완료.</T></p>
         <p><T>4. 이미 쓰인 코드면 받은 분은 웨이트리스트로 가요. 각 코드는 1회용이에요.</T></p>
-        <p><T>5. 초대가 쓰이면 한 달 뒤 그 자리에 새 코드가 자동으로 생겨요. 쓰지 않은 코드는 늘어나지 않아요.</T></p>
+        <p><T>5. 초대가 쓰이면 7일 뒤 그 자리에 새 코드가 자동으로 생겨요. 쓰지 않은 코드는 늘어나지 않아요.</T></p>
       </div>
     </div>
   )

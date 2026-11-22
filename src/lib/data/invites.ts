@@ -59,7 +59,7 @@ export async function listMyInviteCodes(memberId: string, signupCompleted: boole
   let { data, error } = await load()
   if (error) throw error
 
-  // lazy auto-renewal: only when a used code is past its month (no extra call otherwise)
+  // lazy auto-renewal: only when a used code is past its 7 days (no extra call otherwise)
   if (signupCompleted && hasDueRenewal((data || []).map((r) => ({ usedAt: r.used_at, renewedAt: r.renewed_at })))) {
     const { data: n, error: renewError } = await supabase.rpc('invites__renew_mine')
     if (renewError) console.error('invites__renew_mine', renewError)
