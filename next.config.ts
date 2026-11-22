@@ -1,8 +1,13 @@
 import type { NextConfig } from "next";
+import { SECURITY_HEADERS } from "./src/lib/security-headers";
 
 const nextConfig: NextConfig = {
   // Allow Playwright / cloud-agent browsers hitting 127.0.0.1 (not localhost)
   allowedDevOrigins: ["127.0.0.1", "localhost"],
+  poweredByHeader: false,
+  async headers() {
+    return [{ source: "/:path*", headers: SECURITY_HEADERS }];
+  },
   // 0006: 툴박스 + 프로덕트 → 툴. /products/[id] needs a DB lookup (app/(app)/products/[id]).
   async redirects() {
     return [
