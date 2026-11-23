@@ -164,7 +164,7 @@ const TOOLS = [
   },
   {
     name: 'install_tool',
-    description: '설치 지시 반환 + 설치 기록 (같은 멤버는 도구당 한 번만 집계). 갤러리 읽기 scope면 충분해요.',
+    description: '설치 지시 반환 + 설치 기록 (같은 멤버는 도구당 한 번만 집계). 처음 설치하면 오너의 ‘나도 써요’에도 표시돼요(오너가 끌 수 있어요). 갤러리 읽기 scope면 충분해요.',
     inputSchema: {
       type: 'object',
       properties: {

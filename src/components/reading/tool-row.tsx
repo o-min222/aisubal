@@ -1,16 +1,17 @@
-import { Bot, ChevronUp, Star, Users } from 'lucide-react'
+import { Bot, ChevronUp, Star } from 'lucide-react'
 import type { ToolListItem } from '@/lib/tool-rules'
 import { ToolTypeChips } from '@/components/tools/type-chips'
-import type { ToolSocialUser } from '@/lib/data/tools'
+import { usageLine, type ToolUsageStack } from '@/lib/tool-usage-rules'
 import { ToolIcon } from '@/components/tools/tool-icon'
+import { UserAvatar } from '@/components/user-avatar'
 import { CompactRow } from './compact-row'
 import { T } from '@/i18n/t'
 
 /** Compact 툴 row: name, kind, one-liner, the stats that matter for that kind. */
-export function ToolRow({ tool, href, active, social = [] }: { tool: ToolListItem; href: string; active?: boolean; social?: ToolSocialUser[] }) {
+export function ToolRow({ tool, href, active, usage }: { tool: ToolListItem; href: string; active?: boolean; usage?: ToolUsageStack }) {
   const isLaunch = Boolean(tool.product_id)
-  const friends = social.filter((u) => u.kind === 'friend').length
-  const following = social.filter((u) => u.kind === 'following').length
+  const line = usageLine(usage, tool.user_count ?? 0)
+  const stack = usage?.stack ?? []
   return (
     <CompactRow
       save={{ kind: 'tool', refId: tool.id, hint: { title: tool.name } }}
@@ -27,16 +28,19 @@ export function ToolRow({ tool, href, active, social = [] }: { tool: ToolListIte
       preview={tool.one_liner}
       meta={
         <>
-          {friends + following > 0 ? (
-            <span style={{ color: friends ? 'var(--c-1f7a4d)' : 'var(--n-555)', fontWeight: 600 }}>
-              <Users className="w-3 h-3" /> {friends ? <T s="친구 {n}명이 써요" vars={{ n: friends }} /> : <T s="팔로잉 {n}명이 써요" vars={{ n: following }} />}
+          {line && (
+            <span className="tool-usage" style={usage?.friends ? { color: 'var(--c-1f7a4d)', fontWeight: 600 } : usage?.following ? { color: 'var(--n-555)', fontWeight: 600 } : undefined}>
+              {stack.length > 0 && (
+                <span className="tool-usage-stack" aria-hidden>
+                  {stack.map((u) => (
+                    <span key={u.id} className={u.kind === 'friend' ? 'is-friend' : undefined}>
+                      <UserAvatar id={u.id} name={u.name} avatarUrl={u.avatarUrl} size="sm" />
+                    </span>
+                  ))}
+                </span>
+              )}
+              <T s={line.s} vars={line.vars} />
             </span>
-          ) : (
-            (tool.user_count ?? 0) > 0 && (
-              <span>
-                <Users className="w-3 h-3" /> {tool.user_count}명
-              </span>
-            )
           )}
           {tool.rating_count > 0 && (
             <span>

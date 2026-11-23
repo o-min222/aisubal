@@ -664,6 +664,7 @@ export async function handleDataTool(
           last_commit_at: string | null
           github_url: string | null
           install_recorded?: 'first' | 'repeat' | null
+          used_by_me?: boolean
         }
         const environment = String(args.environment || 'cursor') as ToolboxEnvironment | 'generic'
         const ans = installAnswer(e, environment)
@@ -684,7 +685,14 @@ export async function handleDataTool(
             note: '설치 전 소스·라이선스·최근 커밋을 확인하세요.',
           },
           cliHint: `aisubal tools install ${e.slug} --env ${environment}`,
-          ...(name === 'install_tool' ? { installRecorded: e.install_recorded ?? null } : {}),
+          ...(name === 'install_tool'
+            ? {
+                installRecorded: e.install_recorded ?? null,
+                // 0077: a first install by the owner's agent also marks the owner's '나도 써요'
+                usedByMe: e.used_by_me ?? false,
+                ...(e.install_recorded === 'first' ? { usageNote: '오너의 ‘나도 써요’에 표시했어요. 오너가 갤러리나 프로필에서 끌 수 있어요.' } : {}),
+              }
+            : {}),
         }
       }
     }

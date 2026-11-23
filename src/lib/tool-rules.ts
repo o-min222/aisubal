@@ -15,11 +15,12 @@ export const TOOL_CATEGORIES = [
 ] as const satisfies ReadonlyArray<{ id: string; label: string; types: readonly ToolboxType[] }>
 
 export type ToolCategory = (typeof TOOL_CATEGORIES)[number]['id']
-export type ToolSort = 'popular' | 'newest' | 'ai'
+export type ToolSort = 'popular' | 'users' | 'newest' | 'ai'
 export type ToolKind = 'tool' | 'service'
 
 export const TOOL_SORTS: { id: ToolSort; label: string }[] = [
   { id: 'popular', label: msg('인기') },
+  { id: 'users', label: msg('많이 쓰는') },
   { id: 'newest', label: msg('최신') },
   { id: 'ai', label: msg('AI 평가') },
 ]
@@ -56,7 +57,7 @@ export function isToolCategory(v: unknown): v is ToolCategory {
 
 /** Accepts the old toolbox/product sort names too (trending, rated, …). */
 export function parseToolSort(v: string | null | undefined): ToolSort {
-  if (v === 'newest' || v === 'ai') return v
+  if (v === 'users' || v === 'newest' || v === 'ai') return v
   return 'popular'
 }
 
@@ -101,6 +102,7 @@ export function sortTools<T extends ToolboxEntry>(list: T[], sort: ToolSort): T[
   const out = [...list]
   const time = (e: ToolboxEntry) => new Date(e.launched_at || e.created_at).getTime()
   if (sort === 'newest') return out.sort((a, b) => time(b) - time(a))
+  if (sort === 'users') return out.sort((a, b) => (b.user_count ?? 0) - (a.user_count ?? 0) || popularityScore(b) - popularityScore(a) || time(b) - time(a))
   if (sort === 'ai') {
     return out.sort(
       (a, b) =>

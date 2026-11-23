@@ -42,6 +42,8 @@ export function ToolUsersCard({
   const shown = expanded ? usage.users : usage.users.slice(0, COLLAPSED)
   const header = socialProofLine(usage.users.map((u) => u.relation))
   const friends = others.filter((u) => u.relation.friend === 'friends').length
+  // marks hidden by their owner's '나도 써요' visibility still count, without a name
+  const hidden = usage.users.length < 100 ? Math.max(0, usage.count - usage.users.length) : 0
 
   return (
     <section className="card overflow-hidden" aria-labelledby="tool-people-title">
@@ -94,6 +96,11 @@ export function ToolUsersCard({
             </li>
           ))}
         </ul>
+      )}
+      {hidden > 0 && (expanded || usage.users.length <= COLLAPSED) && (
+        <p className="px-4 py-2.5 text-[12.5px] border-t border-n-f0f0f0" style={{ color: 'var(--n-888)' }}>
+          {tx('{n}명은 쓰는 걸 공개하지 않았어요', { n: hidden })}
+        </p>
       )}
       {usage.users.length > COLLAPSED && (
         <button type="button" onClick={() => setExpanded((x) => !x)} className="w-full text-sm py-3 border-t border-n-f0f0f0 min-h-[44px]" style={{ color: 'var(--c-06c)' }}>

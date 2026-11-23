@@ -54,11 +54,11 @@ export default async function ToolsPage({ searchParams }: { searchParams: Promis
   const category: ToolCategory | null = categoryFromLegacyType(sp.category || sp.type)
   const sort: ToolSort = parseToolSort(sp.sort)
   const rec = sp.view === 'rec'
+  const mine = !rec && (sp.view === 'mine' || sp.mine === '1')
   const tag = sp.tag?.toLowerCase() || null
   const q = sp.q || ''
-  const base: Params = { category: category ?? undefined, tag: tag ?? undefined, q: q || undefined, sort, view: rec ? 'rec' : undefined }
-  // Old links (?category=launch|rules|prompt, ?type=…, ?mine=1) land on today's URL.
-  // '내가 쓰는 것' moved to the profile, so ?mine=1 just opens the gallery.
+  const base: Params = { category: category ?? undefined, tag: tag ?? undefined, q: q || undefined, sort, view: rec ? 'rec' : mine ? 'mine' : undefined }
+  // Old links (?category=launch|rules|prompt, ?type=…, ?mine=1) land on today's URL (?mine=1 → 내가 쓰는 것).
   if ((sp.category && sp.category !== category) || sp.type || sp.mine) {
     const to = new URL(hrefWith(base, {}), 'http://x')
     if (sp.open) to.searchParams.set('open', sp.open)
@@ -68,7 +68,7 @@ export default async function ToolsPage({ searchParams }: { searchParams: Promis
   const open = sp.open ? decodeURIComponent(sp.open).slice(0, 120) : null
 
   const [all, forTags, openEntry] = await Promise.all([
-    listTools(state.member.id, { category, tag, q, sort, rec }),
+    listTools(state.member.id, { category, tag, q, sort, rec, mine }),
     listTools(state.member.id, { category }),
     open ? loadToolEntry(open).catch(() => null) : Promise.resolve(null),
   ])
@@ -76,20 +76,20 @@ export default async function ToolsPage({ searchParams }: { searchParams: Promis
   const tools = all.slice(0, PAGE_SIZE)
   const tags = topTags(forTags, 14)
   const social = await socialToolUsers(state.member.id, tools.map((t) => t.id)).catch(() => new Map())
-  const tab = rec ? 'rec' : category ?? 'all'
+  const tab = rec ? 'rec' : mine ? 'mine' : category ?? 'all'
 
   async function more(page: number) {
     'use server'
     const s = await getUserState()
     if (s.type !== 'member') return { nodes: null, hasMore: false }
-    const rows = await listTools(s.member.id, { category, tag, q, sort, rec })
+    const rows = await listTools(s.member.id, { category, tag, q, sort, rec, mine })
     const slice = rows.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
     const soc = await socialToolUsers(s.member.id, slice.map((t) => t.id)).catch(() => new Map())
     return {
       nodes: slice.length ? (
         <CompactList label={msg('갤러리 목록')}>
           {slice.map((t) => (
-            <ToolRow key={t.id} tool={t} href={openHref(here, t.slug)} social={soc.get(t.id) || []} />
+            <ToolRow key={t.id} tool={t} href={openHref(here, t.slug)} usage={soc.get(t.id)} />
           ))}
         </CompactList>
       ) : null,
@@ -123,6 +123,7 @@ export default async function ToolsPage({ searchParams }: { searchParams: Promis
             tabs={[
               { id: 'all', label: st('전체'), href: hrefWith(base, { category: null, view: null, tag: null }) },
               { id: 'rec', label: st('추천'), href: hrefWith(base, { category: null, view: 'rec', tag: null }) },
+              { id: 'mine', label: st('내가 쓰는 것'), href: hrefWith(base, { category: null, view: 'mine', tag: null }) },
               ...TOOL_CATEGORIES.map((c) => ({ id: c.id, label: st(c.label), href: hrefWith(base, { category: c.id, view: null, tag: null }) })),
             ]}
           />
@@ -164,14 +165,14 @@ export default async function ToolsPage({ searchParams }: { searchParams: Promis
 
       {tools.length === 0 ? (
         <EmptyList
-          title={rec ? st('아직 추천할 게 없어요') : st('조건에 맞는 항목이 없어요')}
-          hint={rec ? st('쓰는 것에 ‘나도 써요’를 누르면 비슷한 사람들이 쓰는 걸 추천해 드려요.') : st('필터를 바꾸거나, 쓰는 걸 갤러리에 등록해 보세요. 내가 만든 서비스도 등록해 홍보할 수 있어요.')}
+          title={rec ? st('아직 추천할 게 없어요') : mine && !q ? st('아직 ‘나도 써요’로 표시한 게 없어요') : st('조건에 맞는 항목이 없어요')}
+          hint={rec ? st('쓰는 것에 ‘나도 써요’를 누르면 비슷한 사람들이 쓰는 걸 추천해 드려요.') : mine && !q ? st('쓰고 있는 항목을 열고 ‘나도 써요’를 누르면 여기에 모여요.') : st('필터를 바꾸거나, 쓰는 걸 갤러리에 등록해 보세요. 내가 만든 서비스도 등록해 홍보할 수 있어요.')}
         />
       ) : (
         <InfiniteList key={here} className="inf-surface" hasMore={totalPages > 1} load={more} storageKey={here}>
           <CompactList label={msg('갤러리 목록')}>
             {tools.map((t) => (
-              <ToolRow key={t.id} tool={t} href={openHref(here, t.slug)} active={Boolean(openEntry && openEntry.id === t.id)} social={social.get(t.id) || []} />
+              <ToolRow key={t.id} tool={t} href={openHref(here, t.slug)} active={Boolean(openEntry && openEntry.id === t.id)} usage={social.get(t.id)} />
             ))}
           </CompactList>
         </InfiniteList>

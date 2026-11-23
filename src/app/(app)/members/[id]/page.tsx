@@ -15,7 +15,8 @@ import { isFeedId } from '@/lib/feed-ids'
 import { UserAvatar } from '@/components/user-avatar'
 import { PostCard } from '@/components/timeline/post-card'
 import { ToolIcon } from '@/components/tools/tool-icon'
-import { listMemberTools } from '@/lib/data/tools'
+import { getUsageVisibility, listMemberTools } from '@/lib/data/tools'
+import { UsageVisibility } from '@/components/tools/usage-visibility'
 import { TOOL_TYPE_CHIP, toolHref } from '@/lib/tool-rules'
 import { getProfileLinks } from '@/lib/data/profile'
 import { LINK_KINDS, LINK_VISIBILITY } from '@/lib/profile-rules'
@@ -55,6 +56,7 @@ export default async function MemberProfilePage({ params }: { params: Promise<{ 
     listProfileAgents(viewer.id, member.id).catch(() => []),
     getProfileStack(viewer.id, member.id).catch(() => null),
   ])
+  const usageVis = isMe ? await getUsageVisibility().catch(() => 'members' as const) : 'members'
   const authorId = member.id
   async function more(page: number) {
     'use server'
@@ -184,9 +186,12 @@ export default async function MemberProfilePage({ params }: { params: Promise<{ 
             <span className="text-n-888 font-normal tabular-nums">{tools.length}</span>
           </h2>
           {isMe && (
-            <Link href="/gallery?mine=1" className="text-xs text-c-06c inline-flex items-center min-h-[32px]">
-              <T>관리</T> <ChevronRight className="w-3.5 h-3.5" />
-            </Link>
+            <div className="flex items-center gap-2">
+              <UsageVisibility initial={usageVis} />
+              <Link href="/gallery?view=mine" className="text-xs text-c-06c inline-flex items-center min-h-[32px]">
+                <T>관리</T> <ChevronRight className="w-3.5 h-3.5" />
+              </Link>
+            </div>
           )}
         </div>
         {tools.length === 0 ? (

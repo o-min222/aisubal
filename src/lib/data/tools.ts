@@ -1,6 +1,8 @@
 import { cache } from 'react'
 import type { Member, ToolboxEntry } from '@/lib/supabase/types'
 import { MOCK_MEMBERS } from '@/lib/mock-data'
+import { usageStacks, type ToolUsageStack } from '@/lib/tool-usage-rules'
+export type { ToolUsageStack, ToolStackUser } from '@/lib/tool-usage-rules'
 import { MOCK_PRODUCTS, MUTABLE_UPVOTES } from '@/lib/mock-products'
 import { MUTABLE_TOOLBOX } from '@/lib/mock-toolbox'
 import {
@@ -15,6 +17,7 @@ import {
 import { mockHandle, mockPerson } from '@/lib/mock-social'
 import { rankToolsForMember } from '@/lib/recommend-rules'
 import { sortByRelation, type Relation } from '@/lib/social-rules'
+import type { LinkVisibility } from '@/lib/profile-rules'
 import { sb, useMockData as isMock } from './client'
 import { getRelations, socialAuthorIds } from './social'
 import { MEMBER_PUBLIC_COLUMNS } from './member-columns'
@@ -27,12 +30,10 @@ import { MEMBER_PUBLIC_COLUMNS } from './member-columns'
 /** A member who uses a tool, with the viewer's relation (friends → following → others). */
 export type ToolUser = { id: string; name: string; handle: string | null; avatarUrl: string | null; relation: Relation }
 export type ToolUsers = { count: number; users: ToolUser[]; usedByMe: boolean }
-/** Friends / people I follow who use a tool (tool cards show these avatars first). */
-export type ToolSocialUser = { id: string; name: string; avatarUrl: string | null; kind: 'friend' | 'following' }
 
 // ------------------------------------------------------------------ mock (DEV)
 type MockState = { usage: Array<{ entry_id: string; member_id: string; created_at: string }> }
-const g = globalThis as unknown as { __aisubalToolUsage?: MockState }
+const g = globalThis as unknown as { __aisubalToolUsage?: MockState; __aisubalUsageVis?: LinkVisibility }
 const DEV_VIEWER = 'dev-user-id' // DEV_BYPASS member in lib/auth
 
 function mockUsage(): MockState {
@@ -182,8 +183,9 @@ export async function getToolUsers(entryId: string, viewerId: string, limit = 10
     }))
   } else {
     const supabase = await sb()
-    const [{ count: c }, { data }, { data: mine }] = await Promise.all([
-      supabase.from('tool_users').select('entry_id', { count: 'exact', head: true }).eq('entry_id', entryId),
+    const [{ data: counter }, { data }, { data: mine }] = await Promise.all([
+      // the counter counts everyone; the rows below are only the marks visible to me (0077)
+      supabase.from('toolbox_entries').select('user_count').eq('id', entryId).maybeSingle(),
       supabase
         .from('tool_users')
         .select(`created_at, member:members(${MEMBER_PUBLIC_COLUMNS})`)
@@ -196,7 +198,7 @@ export async function getToolUsers(entryId: string, viewerId: string, limit = 10
       .map((r) => r.member)
       .filter((m): m is Member => Boolean(m))
       .map((m) => ({ id: m.id, name: m.display_name, handle: m.handle ?? null, avatarUrl: m.avatar_url }))
-    count = c ?? base.length
+    count = Math.max((counter as { user_count: number } | null)?.user_count ?? 0, base.length)
     usedByMe = Boolean(mine)
   }
   const rel = await getRelations(viewerId, base.map((u) => u.id)).catch(() => new Map<string, Relation>())
@@ -208,30 +210,28 @@ export async function getToolUsers(entryId: string, viewerId: string, limit = 10
 }
 
 /** Per tool: friends first, then people I follow, who marked it '나도 써요'. */
-export async function socialToolUsers(viewerId: string, entryIds: string[]): Promise<Map<string, ToolSocialUser[]>> {
-  const out = new Map<string, ToolSocialUser[]>()
+export async function socialToolUsers(viewerId: string, entryIds: string[]): Promise<Map<string, ToolUsageStack>> {
+  const out = new Map<string, ToolUsageStack>()
   if (!entryIds.length) return out
   const [friends, following] = await Promise.all([
     socialAuthorIds(viewerId, 'friends').catch(() => [] as string[]),
     socialAuthorIds(viewerId, 'following').catch(() => [] as string[]),
   ])
-  const friendSet = new Set(friends)
-  const ids = [...new Set([...friends, ...following])].filter((id) => id !== viewerId)
-  if (!ids.length) return out
+  // Visible marks only: RLS (0077) hides members whose '나도 써요' is friends-only or private.
   let rows: Array<{ entry_id: string; member_id: string; name: string; avatarUrl: string | null }> = []
   if (isMock()) {
     const want = new Set(entryIds)
     rows = mockUsage()
-      .usage.filter((u) => want.has(u.entry_id) && ids.includes(u.member_id))
-      .map((u) => ({ entry_id: u.entry_id, member_id: u.member_id, name: mockPerson(u.member_id).name, avatarUrl: null }))
+      .usage.filter((u) => want.has(u.entry_id))
+      .map((u) => ({ entry_id: u.entry_id, member_id: u.member_id, name: MOCK_MEMBERS.find((m) => m.id === u.member_id)?.display_name ?? mockPerson(u.member_id).name, avatarUrl: null }))
   } else {
     const supabase = await sb()
     const { data } = await supabase
       .from('tool_users')
       .select('entry_id, member_id, member:members(display_name, avatar_url)')
-      .in('member_id', ids.slice(0, 500))
       .in('entry_id', entryIds.slice(0, 300))
-      .limit(2000)
+      .order('created_at', { ascending: false })
+      .limit(3000)
     rows = ((data || []) as unknown as Array<{ entry_id: string; member_id: string; member: { display_name: string; avatar_url: string | null } | null }>).map((r) => ({
       entry_id: r.entry_id,
       member_id: r.member_id,
@@ -239,13 +239,7 @@ export async function socialToolUsers(viewerId: string, entryIds: string[]): Pro
       avatarUrl: r.member?.avatar_url ?? null,
     }))
   }
-  for (const r of rows) {
-    const list = out.get(r.entry_id) || []
-    list.push({ id: r.member_id, name: r.name, avatarUrl: r.avatarUrl, kind: friendSet.has(r.member_id) ? 'friend' : 'following' })
-    out.set(r.entry_id, list)
-  }
-  for (const [k, list] of out) out.set(k, list.sort((a, b) => (a.kind === b.kind ? 0 : a.kind === 'friend' ? -1 : 1)))
-  return out
+  return usageStacks(rows, viewerId, new Set(friends), new Set(following))
 }
 
 export async function setToolUsage(entryId: string, memberId: string, using: boolean): Promise<number> {
@@ -263,8 +257,25 @@ export async function setToolUsage(entryId: string, memberId: string, using: boo
     const { error } = await supabase.from('tool_users').delete().eq('entry_id', entryId).eq('member_id', memberId)
     if (error) throw error
   }
-  const { count } = await supabase.from('tool_users').select('entry_id', { count: 'exact', head: true }).eq('entry_id', entryId)
-  return count ?? 0
+  const { data } = await supabase.from('toolbox_entries').select('user_count').eq('id', entryId).maybeSingle()
+  return (data as { user_count: number } | null)?.user_count ?? 0
+}
+
+/** Who sees my '나도 써요' marks (gallery stacks, who-uses lists, my profile). Counts stay anonymous totals. */
+export async function getUsageVisibility(): Promise<LinkVisibility> {
+  if (isMock()) return g.__aisubalUsageVis ?? 'members'
+  const supabase = await sb()
+  const { data, error } = await supabase.rpc('tool_usage_visibility')
+  if (error) throw error
+  return (data as LinkVisibility) ?? 'members'
+}
+
+export async function setUsageVisibility(vis: LinkVisibility): Promise<LinkVisibility> {
+  if (isMock()) return (g.__aisubalUsageVis = vis)
+  const supabase = await sb()
+  const { data, error } = await supabase.rpc('tool_usage_set_visibility', { p_vis: vis })
+  if (error) throw error
+  return data as LinkVisibility
 }
 
 /** (member, tool) pairs among people who share a tool with the viewer — for co-usage recommendations. */
