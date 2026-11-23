@@ -109,10 +109,10 @@ describe('단일 사용 초대 코드', () => {
   })
 })
 
-describe('멤버당 초대 자리 3개', () => {
-  it('멤버는 정확히 3개의 초대 코드를 가진다', () => {
-    const codes = createInactiveCodesForMember('member-1', ['AAAA1111', 'BBBB2222', 'CCCC3333'])
-    expect(INVITES_PER_MEMBER).toBe(3)
+describe('멤버당 초대 수 (기본 5, 관리자 설정이 우선)', () => {
+  it('멤버는 설정 수(기본 5)만큼 초대 코드를 가진다', () => {
+    const codes = createInactiveCodesForMember('member-1', ['AAAA1111', 'BBBB2222', 'CCCC3333', 'DDDD4444', 'EEEE5555'])
+    expect(INVITES_PER_MEMBER).toBe(5)
     expect(codes).toHaveLength(INVITES_PER_MEMBER)
     expect(validateInviteCodeCount(codes)).toBe(true)
   })

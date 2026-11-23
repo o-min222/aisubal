@@ -7,7 +7,7 @@ export type { PostWithDetails } from '@/lib/data/types'
 export const MOCK_SITE_SETTINGS: SiteSettings = {
   nickname_unlock_threshold: DEV_NICKNAME_UNLOCK_THRESHOLD, // 3 — both modes reviewable
   site_name: 'AI쓰발',
-  invites_per_member: 3,
+  invites_per_member: 5,
 }
 
 export const MOCK_MEMBERS: Member[] = [

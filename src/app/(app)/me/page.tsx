@@ -252,7 +252,6 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   const stats = await getDashboardStats(me, profile.likes, profile.posts).catch(() => ({ posts: profile.posts, comments: 0, likesReceived: profile.likes, likesGiven: 0 }))
   const moims = [...new Map([...moimHosting, ...moimMine].map((m) => [m.id, m])).values()].sort((a, b) => b.startsAt.localeCompare(a.startsAt))
   const codes = invites?.codes ?? []
-  const used = codes.filter((c) => c.isUsed).length
   const agentActs = agents.reduce((s, a) => s + a.counts.agoraPosts + a.counts.agoraReplies + a.counts.feedReplies + a.counts.likes, 0)
 
   const counts: Record<DashboardTab, number> = {
@@ -393,7 +392,9 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
     body = (
       <div>
         <p className="px-4 pt-3 text-sm text-n-555">
-          <T s="초대 코드 {codes}개 중 {used}명이 가입했어요 · 남은 초대 {left}" vars={{ codes: codes.length, used: <b className="text-n-111">{used}</b>, left: profile.invitesLeft }} />
+          {invites ? (
+            <T s="초대한 {used}/{total}명 가입 · 남은 초대 {left}장 · 모두 가입하면 바로 {n}장이 다시 채워져요" vars={{ used: <b className="text-n-111">{invites.progress.joined}</b>, total: invites.progress.size, left: profile.invitesLeft, n: invites.allowance }} />
+          ) : null}
           {' · '}
           <Link href={networkHref()} className="text-link whitespace-nowrap"><T>초대 그래프 보기</T> ›</Link>
         </p>

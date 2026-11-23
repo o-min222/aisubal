@@ -50,6 +50,7 @@ export function SiteSettingsForm({ initial }: { initial: S }) {
         <label className="block">
           <span className="block text-sm font-medium text-n-333 mb-1.5"><T>멤버당 초대 수</T></span>
           <input type="number" min={0} max={10} className="input" value={s.invitesPerMember} onChange={(e) => setS({ ...s, invitesPerMember: Number(e.target.value) })} />
+          <span className="block text-xs text-n-888 mt-1"><T>모두 가입하면 바로 이 수만큼 새 초대장이 다시 채워져요 (시간이 지나서 생기지는 않아요)</T></span>
         </label>
         <label className="block">
           <span className="block text-sm font-medium text-n-333 mb-1.5"><T>별명 언락 기준 (활성 멤버 수)</T></span>
