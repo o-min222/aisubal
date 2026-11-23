@@ -1,5 +1,5 @@
 import { isStandalone } from '@/lib/pwa-install'
-import { PUSH_OFFER_KEY, pushPlan, shouldOfferPush, vapidKeyBytes, type PushPlan } from '@/lib/push-rules'
+import { PUSH_OFFER_KEY, classifyPushError, pushPlan, shouldOfferPush, vapidKeyBytes, type PushFailure, type PushPlan } from '@/lib/push-rules'
 
 /** Browser side of web push (D1). Only this device's endpoint ever leaves the browser, in a POST body. */
 const VAPID = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || ''
@@ -16,9 +16,16 @@ export function currentPushPlan(): PushPlan {
   return pushPlan({ supported, ios: isIos(), standalone: isStandalone(), permission: supported ? Notification.permission : 'unsupported' })
 }
 
+/** A service worker that never activates would leave the switch spinning forever: give up after 10s. */
 async function registration(): Promise<ServiceWorkerRegistration> {
   if (!(await navigator.serviceWorker.getRegistration('/'))) await navigator.serviceWorker.register('/sw.js', { scope: '/' })
-  return navigator.serviceWorker.ready
+  let timer: ReturnType<typeof setTimeout> | undefined
+  const timeout = new Promise<never>((_, reject) => (timer = setTimeout(() => reject(new Error('sw_timeout')), 10_000)))
+  try {
+    return await Promise.race([navigator.serviceWorker.ready, timeout])
+  } finally {
+    clearTimeout(timer)
+  }
 }
 
 async function deviceSubscription(): Promise<PushSubscription | null> {
@@ -35,21 +42,61 @@ export async function isPushOn(): Promise<boolean> {
   return Boolean(r?.ok && ((await r.json()) as { subscribed?: boolean }).subscribed)
 }
 
-export type EnableResult = 'on' | 'denied' | 'dismissed' | 'unsupported' | 'error'
+export type EnableResult = 'on' | 'dismissed' | 'unsupported' | PushFailure
 
-/** Ask (first, so iOS still sees the tap), subscribe, and save the subscription for this member. */
+async function subscribe(reg: ServiceWorkerRegistration): Promise<PushSubscription> {
+  const opts = { userVisibleOnly: true, applicationServerKey: vapidKeyBytes(VAPID) as BufferSource }
+  const existing = await reg.pushManager.getSubscription()
+  if (existing) return existing
+  try {
+    return await reg.pushManager.subscribe(opts)
+  } catch (e) {
+    // a stale subscription made with another key: drop it and try once more
+    if ((e as { name?: string }).name !== 'InvalidStateError') throw e
+    await (await reg.pushManager.getSubscription())?.unsubscribe().catch(() => false)
+    return reg.pushManager.subscribe(opts)
+  }
+}
+
+/**
+ * Ask (first, inside the tap, so iOS and quiet-permission browsers see the gesture), subscribe,
+ * and save the subscription for this member. Every failure comes back named (A50).
+ */
 export async function enablePush(): Promise<EnableResult> {
   if (!pushSupported()) return 'unsupported'
   const perm = Notification.permission === 'granted' ? 'granted' : await Notification.requestPermission()
   if (perm === 'denied') return 'denied'
+  // 'default': the prompt was closed, or the browser showed only its quiet bell icon (Edge/Chrome on Windows)
   if (perm !== 'granted') return 'dismissed'
   try {
-    const reg = await registration()
-    const sub = (await reg.pushManager.getSubscription()) ?? (await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: vapidKeyBytes(VAPID) as BufferSource }))
+    const sub = await subscribe(await registration())
     const r = await fetch('/api/push/subscribe', json(sub.toJSON()))
+    if (!r.ok) console.warn('[push] save failed', r.status)
     return r.ok ? 'on' : 'error'
-  } catch {
-    return 'error'
+  } catch (e) {
+    console.warn('[push] subscribe failed', (e as Error)?.name, (e as Error)?.message)
+    return classifyPushError(e, Notification.permission)
+  }
+}
+
+/** Re-read the permission when it changes in site settings, so unblocking needs no reload. */
+export function watchPushPermission(onChange: () => void): () => void {
+  let status: PermissionStatus | null = null
+  let live = true
+  navigator.permissions
+    ?.query({ name: 'notifications' as PermissionName })
+    .then((s) => {
+      if (!live) return
+      status = s
+      s.onchange = onChange
+    })
+    .catch(() => {})
+  const vis = () => document.visibilityState === 'visible' && onChange()
+  document.addEventListener('visibilitychange', vis)
+  return () => {
+    live = false
+    if (status) status.onchange = null
+    document.removeEventListener('visibilitychange', vis)
   }
 }
 

@@ -2693,3 +2693,6 @@ a.notif-pop-all:hover { background: var(--n-fafafa); }
 .lk-add-btn:not(:disabled):hover { background: var(--tint-hover); }
 .lk-hint { font-size: 12px; color: var(--n-888); margin: 0; }
 .lk-err { font-size: 12px; color: var(--c-b42318); margin: 0; }
+
+/* A50: why push didn't turn on — one muted-red line, not a toast that vanishes */
+.push-issue { color: var(--c-e5484d); }

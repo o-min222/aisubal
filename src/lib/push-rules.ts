@@ -17,6 +17,24 @@ export function pushPlan(s: { supported: boolean; ios: boolean; standalone: bool
   return s.ios ? 'ask' : 'auto'
 }
 
+/**
+ * A50: why turning push on failed, so the switch never just "stays off" without a reason.
+ * - private: Chrome/Edge refuse push in incognito/InPrivate even with notifications granted
+ *   ("AbortError: Registration failed - permission denied").
+ * - push_service: the browser can't reach its push service (Brave with Google push off, blocked network).
+ * - denied: the site's notification permission is blocked.
+ */
+export type PushFailure = 'denied' | 'private' | 'push_service' | 'sw_timeout' | 'error'
+export function classifyPushError(e: unknown, permission: NotificationPermission | 'unsupported'): PushFailure {
+  const name = (e as { name?: string } | null)?.name ?? ''
+  const message = String((e as { message?: string } | null)?.message ?? e ?? '')
+  if (message === 'sw_timeout') return 'sw_timeout'
+  if (name === 'NotAllowedError') return permission === 'granted' ? 'private' : 'denied'
+  if (name === 'AbortError' && /permission denied/i.test(message)) return permission === 'granted' ? 'private' : 'denied'
+  if (name === 'AbortError' || /push service/i.test(message)) return 'push_service'
+  return 'error'
+}
+
 /** VAPID public key (base64url) → the bytes PushManager.subscribe wants. */
 export function vapidKeyBytes(key: string): Uint8Array {
   const pad = '='.repeat((4 - (key.length % 4)) % 4)
