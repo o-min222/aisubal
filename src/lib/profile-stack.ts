@@ -49,7 +49,7 @@ export const STACK_GROUP_LABEL: Record<StackGroup, string> = {
 
 const norm = (s: string) => s.toLowerCase().replace(/[\s_\-·.]+/g, '')
 
-/** Clean + de-duplicate one group's items (case/space-insensitive), cap at the limit; keeps a valid per-chip lock. */
+/** Clean + de-duplicate one group's items (case/space-insensitive), cap at the limit; chips always follow the group's visibility. */
 export function cleanStackItems(
   items: Array<{ label: string; entryId?: string | null; visibility?: unknown }>,
   limit = STACK_LIMIT,
@@ -63,8 +63,8 @@ export function cleanStackItems(
     if (seen.has(key) || seen.has(`t:${norm(label)}`)) continue
     seen.add(key)
     seen.add(`t:${norm(label)}`)
-    const v = it.visibility
-    out.push({ label, entryId: it.entryId || null, visibility: v === 'members' || v === 'friends' || v === 'private' ? v : null })
+    // A41: no per-chip visibility any more; every chip follows its group's setting
+    out.push({ label, entryId: it.entryId || null, visibility: null })
     if (out.length >= limit) break
   }
   return out

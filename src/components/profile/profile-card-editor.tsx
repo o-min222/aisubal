@@ -1,14 +1,14 @@
 'use client'
 
 import Link from 'next/link'
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Camera, Check, ChevronRight, Ghost, Link2, Loader2, Lock, Plus, Trash2, Users, Bot, Eye } from 'lucide-react'
+import { Camera, Check, ChevronRight, Ghost, Link2, Loader2, Lock, Plus, Users, Bot, Eye, X } from 'lucide-react'
 import { toast } from 'sonner'
 import { UserAvatar } from '@/components/user-avatar'
 import { ServiceIcon } from '@/components/service-chip'
 import { AdaptiveSheet } from '@/components/adaptive-sheet'
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { LinksEditor } from '@/components/profile/links-editor'
 import { HandleField } from '@/components/profile/handle-field'
 import { LinkIcon } from '@/components/profile/link-icon'
@@ -131,11 +131,23 @@ export function ProfileCardEditor({
   const [used, setUsed] = useState<Item[]>(stack.usedSkills)
   const [vis, setVis] = useState(stack.vis)
   const [adding, setAdding] = useState<StackGroup | null>(null)
+  // A41: tap a chip → an inline × appears; tap × deletes; tap elsewhere / the chip again hides it
+  const [armed, setArmed] = useState<string | null>(null)
+  useEffect(() => {
+    if (!armed) return
+    // pointerdown + touchstart: iOS Safari fires no click on non-interactive areas
+    const close = (e: Event) => { if (!(e.target as Element | null)?.closest?.('[data-pe-chip]')) setArmed(null) }
+    const esc = (e: KeyboardEvent) => { if (e.key === 'Escape') setArmed(null) }
+    document.addEventListener('pointerdown', close)
+    document.addEventListener('touchstart', close, { passive: true })
+    document.addEventListener('keydown', esc)
+    return () => { document.removeEventListener('pointerdown', close); document.removeEventListener('touchstart', close); document.removeEventListener('keydown', esc) }
+  }, [armed])
 
   async function putStack(nextGroups = groups, nextVis = vis) {
     mark('saving')
     try {
-      const strip = (l: Item[]) => l.map(({ label, entryId, visibility }) => ({ label, entryId, visibility: visibility ?? null }))
+      const strip = (l: Item[]) => l.map(({ label, entryId }) => ({ label, entryId }))
       const res = await fetch('/api/profile/stack', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -208,42 +220,31 @@ export function ProfileCardEditor({
         </div>
         <ul className="mc-chips">
           {items.map(({ it, used: isUsed, idx }) => {
-            const locked = it.visibility && it.visibility !== 'members'
+            const key = `${g}-${isUsed ? 'u' : 'o'}-${it.label}-${idx}`
+            const on = armed === key
             return (
-              <li key={`${isUsed ? 'u' : 'o'}-${it.label}-${idx}`}>
-                <DropdownMenu>
-                  <DropdownMenuTrigger className="mc-chip pe-chip" aria-label={tx('{label} 설정', { label: it.label })}>
+              <li key={key}>
+                <span className={`mc-chip pe-chip${on ? ' on' : ''}`} data-pe-chip={on ? '' : undefined}>
+                  <button type="button" className="pe-chip-btn" aria-expanded={on} onClick={() => setArmed(on ? null : key)} aria-label={tx('{label} 삭제 버튼 보기', { label: it.label })}>
                     <ServiceIcon label={it.label} iconUrl={it.iconUrl} />
                     <span className="svc-label">{it.label}</span>
-                    {locked && <Lock className="w-3 h-3 text-n-999 flex-shrink-0" aria-label={tx('잠금')} />}
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="start" className="min-w-[220px]">
-                    <DropdownMenuLabel className="truncate">{it.label}</DropdownMenuLabel>
-                    {!isUsed && (
-                      <>
-                        {LINK_VISIBILITY.map((v) => {
-                          const I = VIS_ICON[v.id]
-                          const cur = (it.visibility ?? 'members') === v.id
-                          return (
-                            <DropdownMenuItem key={v.id} onClick={() => setGroup(g, own.map((x, j) => (j === idx ? { ...x, visibility: v.id === 'members' ? null : v.id } : x)))}>
-                              <I className="w-4 h-4" /> <T>{v.id === 'members' ? '묶음 설정 따르기' : v.label}</T>
-                              {cur && <Check className="w-4 h-4 ml-auto" />}
-                            </DropdownMenuItem>
-                          )
-                        })}
-                        <DropdownMenuSeparator />
-                      </>
-                    )}
-                    {isUsed && it.slug && (
-                      <DropdownMenuItem render={<Link href={`/gallery/${it.slug}`} />}>
-                        <ChevronRight className="w-4 h-4" /> <T>갤러리에서 보기</T>
-                      </DropdownMenuItem>
-                    )}
-                    <DropdownMenuItem variant="destructive" onClick={() => (isUsed ? void toggleUsage(it, false) : setGroup(g, own.filter((_, j) => j !== idx)))}>
-                      <Trash2 className="w-4 h-4" /> {isUsed ? <T>사용 중 표시 빼기</T> : <T>빼기</T>}
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                  </button>
+                  {on && (
+                    <button
+                      type="button"
+                      className="pe-chip-x"
+                      autoFocus
+                      aria-label={tx('{label} 삭제', { label: it.label })}
+                      onClick={() => {
+                        setArmed(null)
+                        if (isUsed) void toggleUsage(it, false)
+                        else setGroup(g, own.filter((_, j) => j !== idx))
+                      }}
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </span>
               </li>
             )
           })}

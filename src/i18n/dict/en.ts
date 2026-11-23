@@ -453,6 +453,8 @@ const en: Record<string, string> = {
   "로그아웃": "Sign out",
   "로그인 · 멤버십 · 언어": "Sign-in · membership · language",
   "로그인 이메일": "Sign-in email",
+  "{label} 삭제 버튼 보기": "Show delete for {label}",
+  "{label} 삭제": "Delete {label}",
   "창립멤버": "Founding member",
   "초기멤버": "Early member",
   "갤러리 기록 · 관리 · AI쓰발": "Gallery log · Admin · AI쓰발",
