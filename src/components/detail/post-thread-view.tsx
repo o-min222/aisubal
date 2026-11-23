@@ -108,7 +108,6 @@ export async function PostThreadView({
               countIds={[thread.root.id, ...(replyTarget ? [replyTarget.parentId === thread.root.id ? replyTarget.id : replyTarget.parentId!] : [])]}
               replyKind={replyTarget ? 'reply' : 'comment'}
               autoFocus={Boolean(replyTarget)}
-              className="!p-0 !border-0 !shadow-none"
             />
           )}
         </>

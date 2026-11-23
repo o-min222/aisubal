@@ -8,8 +8,8 @@ import { twoLevelThread } from '@/lib/thread'
 import { postApi, type FeedMode } from '@/lib/feed-mode'
 
 /**
- * One thread page for every timeline: the post, a meta line, the reply box
- * (or a note when the viewer may not reply), then 댓글 + 대댓글.
+ * One thread page for every timeline: the post, a meta line, 댓글 + 대댓글, then the reply box
+ * at the bottom (A44: read what's there before writing; or a note when the viewer may not reply).
  */
 export function ThreadLayout({
   mode,
@@ -58,9 +58,8 @@ export function ThreadLayout({
         {rootNode ?? (
           <PostCard post={root} afterDeleteHref={afterDeleteHref} likeEndpoint={postApi(mode, root.id, 'like')} likersEndpoint={postApi(mode, root.id, 'likers')} actions={actionsFor?.(root)} />
         )}
-        <div className="thread-meta flex flex-wrap items-center gap-2 text-xs text-n-666">{meta}</div>
+        <div className="thread-meta flex flex-wrap items-center">{meta}</div>
         <section className="thread-replies" aria-label={repliesLabel}>
-          <div className="thread-compose">{compose}</div>
           <h2 className="thread-count">{countLabel}</h2>
           {groups.length === 0 ? (
             <p className="px-4 py-6 text-sm text-n-888 text-center">{emptyLabel}</p>
@@ -82,6 +81,7 @@ export function ThreadLayout({
               )}
             />
           )}
+          <div className="thread-compose">{compose}</div>
         </section>
       </article>
     </div>

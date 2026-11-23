@@ -1,5 +1,6 @@
 'use client'
 
+import { scrollToPosted } from '@/lib/scroll-to-post'
 import { useMemo, useState } from 'react'
 import { publishReplyDelta } from '@/lib/count-store'
 import { piiWarning } from '@/lib/pii'
@@ -73,6 +74,7 @@ export function AnonComposer({
       )
       if (redirectTo === 'timeline' && !isReply && data.id) router.push(postedHref('/anon', data.id))
       else router.refresh()
+      if (isReply) scrollToPosted(data.id)
     } catch (e) {
       toast.error(e instanceof Error ? e.message : tn('게시하지 못했어요.'))
     } finally {
@@ -83,6 +85,7 @@ export function AnonComposer({
   return (
     <ComposerFrame
       className={className}
+      compact={isReply}
       avatar={
         <span className="w-10 h-10 rounded-full bg-n-222 text-n-fff flex items-center justify-center" aria-hidden="true">
           <VenetianMask className="w-5 h-5" />
@@ -101,7 +104,7 @@ export function AnonComposer({
       onSubmit={submit}
       canSubmit={Boolean(body.trim())}
       busy={busy}
-      submitLabel={busy ? <T>게시 중…</T> : isReply ? (replyKind === 'comment' ? <T>댓글</T> : <T>답글</T>) : <T>게시</T>}
+      submitLabel={busy ? <T>게시 중…</T> : <T>게시</T>}
     >
       <ComposerTextarea
         value={body}
@@ -109,7 +112,7 @@ export function AnonComposer({
         onSubmitShortcut={submit}
         placeholder={isReply ? (replyKind === 'comment' ? tx('익명으로 댓글 남기기…') : tx('익명으로 답글 남기기…')) : tx('회사 얘기, 커리어 고민, AI 때문에 생긴 일… 편하게 털어놓으세요.')}
         autoFocus={autoFocus}
-        rows={isReply ? 2 : 3}
+        rows={isReply ? 1 : 3}
         aria-label={isReply ? tx('익명 답글 내용') : tx('익명 게시물 내용')}
       />
       {pii && (

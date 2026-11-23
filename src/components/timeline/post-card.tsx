@@ -309,7 +309,7 @@ export function PostCard({
             <ReactionChips postId={post.id} initialLiked={post.likedByMe} initialCount={post.likeCount} reactionCount={post.reactionCount} disabled={!canLike || gone} />
           )}
 
-          <footer className="mt-1 -ml-2.5 flex items-center gap-1 sm:gap-3">
+          <footer className={`tc-foot flex items-center${isReply ? ' tc-foot-reply' : ''}`}>
             {menuKind === 'feed' ? (
               <ReactionAddButton postId={post.id} initialLiked={post.likedByMe} initialCount={post.likeCount} disabled={!canLike || gone} />
             ) : (

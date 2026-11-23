@@ -1,5 +1,6 @@
 'use client'
 
+import { scrollToPosted } from '@/lib/scroll-to-post'
 import { piiWarning } from '@/lib/pii'
 import { publishReplyDelta } from '@/lib/count-store'
 import { useT, tx, tn } from '@/i18n/client'
@@ -126,6 +127,7 @@ export function Composer({
         toast,
       )
       onPosted?.(data.id)
+      if (isReply) scrollToPosted(data.id)
       // A23: a reply stays put; a new post opens the timeline it went to, scrolled to it
       if (isReply || !data.id) router.refresh()
       else if (groupId) router.replace(postedHref(pathname, data.id), { scroll: false })
@@ -144,6 +146,7 @@ export function Composer({
   return (
     <ComposerFrame
       className={className}
+      compact={isReply}
       avatar={
         asGroup ? <GroupAvatar name={asGroup.name} /> : <UserAvatar id={me.id} name={me.displayName} avatarUrl={me.avatarUrl} />
       }
@@ -181,7 +184,7 @@ export function Composer({
       onSubmit={submit}
       canSubmit={Boolean(body.trim())}
       busy={busy}
-      submitLabel={busy ? <T>게시 중…</T> : piiAckFor === body && pii ? <T>그래도 게시</T> : isReply ? (replyKind === 'comment' ? <T>댓글</T> : <T>답글</T>) : <T>게시</T>}
+      submitLabel={busy ? <T>게시 중…</T> : piiAckFor === body && pii ? <T>그래도 게시</T> : <T>게시</T>}
     >
       <ComposerTextarea
         value={body}
@@ -190,7 +193,7 @@ export function Composer({
         mentions
         placeholder={placeholder ? tr(placeholder) : isReply ? (replyKind === 'comment' ? tr('댓글 남기기…') : tr('답글 남기기…')) : tr('무슨 생각을 하고 있나요? 링크를 붙이면 미리보기가 생겨요.')}
         autoFocus={autoFocus}
-        rows={isReply ? 2 : 3}
+        rows={isReply ? 1 : 3}
         aria-label={isReply ? tx('답글 내용') : tx('게시물 내용')}
       />
       {pii && (

@@ -18,6 +18,7 @@ export function ComposerFrame({
   canSubmit,
   busy,
   className = '',
+  compact = false,
 }: {
   avatar: ReactNode
   head?: ReactNode
@@ -28,7 +29,22 @@ export function ComposerFrame({
   canSubmit: boolean
   busy?: boolean
   className?: string
+  /** A44: replies — one growing line, no avatar/name, a small text send; tools become a muted note below */
+  compact?: boolean
 }) {
+  if (compact) {
+    return (
+      <div className={`composer-compact ${className}`}>
+        <div className="composer-compact-field">
+          <div className="composer-body">{children}</div>
+          <button type="button" onClick={onSubmit} disabled={!canSubmit || busy} className="composer-send">
+            {submitLabel}
+          </button>
+        </div>
+        {tools && <div className="composer-compact-note">{tools}</div>}
+      </div>
+    )
+  }
   return (
     <div className={`composer ${className}`}>
       <div className="composer-avatar">{avatar}</div>
