@@ -47,7 +47,7 @@ export function ThreadLayout({
 }) {
   const groups = twoLevelThread(root.id, replies)
   return (
-    <div className="space-y-3">
+    <div className={back ? 'space-y-3 thread-page' : 'space-y-3'}>
       {back && (
         <Link href={back.href} className="hidden md:inline-flex items-center gap-1 text-sm text-n-666 hover:text-n-111 min-h-[36px]">
           <ArrowLeft className="w-4 h-4" />

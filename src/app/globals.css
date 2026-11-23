@@ -881,52 +881,6 @@ code, pre, .font-mono {
   overflow-x: auto;
 }
 
-/* Mobile bottom nav */
-.mobile-nav {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  display: none;
-  background: var(--bg-white);
-  border-top: 1px solid var(--border-light);
-  padding: 8px 0;
-  padding-bottom: calc(8px + env(safe-area-inset-bottom));
-  z-index: 100;
-}
-
-@media (max-width: 768px) {
-  .mobile-nav {
-    display: flex;
-    justify-content: space-around;
-  }
-  
-  body {
-    padding-bottom: 80px;
-  }
-}
-
-.mobile-nav-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  padding: 8px 16px;
-  font-size: 11px;
-  font-weight: 500;
-  color: var(--text-muted);
-  transition: color 0.15s ease;
-}
-
-.mobile-nav-item.active {
-  color: var(--n-111);
-}
-
-.mobile-nav-item svg {
-  width: 20px;
-  height: 20px;
-}
-
 /* Empty state */
 .empty-state {
   text-align: center;
@@ -2333,6 +2287,19 @@ a.tc-act:hover { color: var(--n-111); text-decoration: none; }
 
 /* Post page: the post, its settings line, the reply box and the thread read as one surface */
 .thread-surface { background: var(--n-fff); border: 1px solid var(--n-e5e5e5); border-radius: 14px; overflow: hidden; }
+/* A21: a thread page (post / agora / 익명) is one surface. Phone: flush under the header, and the
+   tab-bar space below the comments is the card's own colour, not a grey band. Desktop: same gutters
+   as the rails, but the card runs to the bottom of the column. */
+@media (max-width: 767px) {
+  .app-grid:has(.thread-page) { padding-top: 0; }
+  .app-root:has(.thread-page) { background: var(--n-fff); }
+  .thread-page > .thread-surface { border-bottom-width: 0; }
+}
+@media (min-width: 768px) {
+  .app-center:has(> .thread-page) { display: flex; flex-direction: column; }
+  .thread-page { flex: 1; display: flex; flex-direction: column; }
+  .thread-page > .thread-surface { flex: 1; }
+}
 .thread-surface > .timeline-card { border: 0; border-radius: 0; padding: 16px 16px 6px; }
 .thread-surface > .timeline-card .whitespace-pre-wrap { font-size: 16px; line-height: 1.65; }
 .thread-meta { padding: 2px 16px 10px; border-bottom: 1px solid var(--n-eee); }
