@@ -1296,9 +1296,7 @@ body { -webkit-tap-highlight-color: transparent; }
 
 .top-bar {
   position: sticky; top: 0; z-index: 50;
-  background: color-mix(in srgb, var(--n-fff) 92%, transparent);
-  backdrop-filter: saturate(180%) blur(12px);
-  -webkit-backdrop-filter: saturate(180%) blur(12px);
+  background: var(--n-fff); /* solid: scrolled content must not show through (G1b) */
   border-bottom: 1px solid var(--n-e8e8e8);
   padding-top: env(safe-area-inset-top);
 }
@@ -1469,9 +1467,7 @@ body { -webkit-tap-highlight-color: transparent; }
 .bottom-tabs {
   position: fixed; left: 0; right: 0; bottom: 0; z-index: 50;
   display: grid; grid-template-columns: repeat(5, 1fr);
-  background: color-mix(in srgb, var(--n-fff) 96%, transparent);
-  backdrop-filter: saturate(180%) blur(12px);
-  -webkit-backdrop-filter: saturate(180%) blur(12px);
+  background: var(--n-fff); /* solid (G1b) */
   border-top: 1px solid var(--n-e8e8e8);
   padding-bottom: env(safe-area-inset-bottom);
   padding-left: env(safe-area-inset-left); padding-right: env(safe-area-inset-right);
@@ -1648,8 +1644,9 @@ body { -webkit-tap-highlight-color: transparent; }
 .post-menu-btn:hover { background: var(--n-f2f2f2); color: var(--n-111); }
 @media (max-width: 767px) {
   .anon-toolbar {
-    position: sticky; top: calc(56px + env(safe-area-inset-top)); z-index: 5;
-    background: color-mix(in srgb, var(--n-f4f4f2) 94%, transparent); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+    /* solid page colour: a translucent bar let the list show through while scrolling (G1b) */
+    position: sticky; top: calc(56px + env(safe-area-inset-top)); z-index: 20;
+    background: var(--n-f4f4f2); border-bottom: 1px solid var(--n-e5e5e5);
     margin: 0 -10px; padding: 8px 10px;
   }
 }
