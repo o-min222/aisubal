@@ -2474,3 +2474,8 @@ a.notif-pop-all:hover { background: var(--n-fafafa); }
 .badge-item { display: flex; align-items: flex-start; gap: 12px; padding: 10px 2px; border-radius: 12px; }
 .badge-item.is-focus { background: var(--n-f4f4f2); padding-left: 8px; padding-right: 8px; }
 .badge-item .badge-ico { width: 32px; height: 32px; }
+
+/* A23: the post you just published, tinted once when its timeline opens */
+.timeline-card.just-posted { animation: just-posted 2.6s ease-out; }
+@keyframes just-posted { 0%, 35% { background-color: var(--tint-hover); } 100% { background-color: transparent; } }
+@media (prefers-reduced-motion: reduce) { .timeline-card.just-posted { animation: none; background-color: var(--tint-hover); } }

@@ -72,7 +72,7 @@ export default async function AnonBoardPage({ searchParams }: { searchParams: Pr
         <VenetianMask className="w-4 h-4 flex-shrink-0" aria-hidden="true" />
         <p className="min-w-0 flex-1"><T>{ANON_NOTICE}</T></p>
       </div>
-      <AnonComposer key={category || 'all'} defaultCategory={category} className="only-desktop" redirectTo="thread" />
+      <AnonComposer key={category || 'all'} defaultCategory={category} className="only-desktop" redirectTo="timeline" />
       {sort === 'popular' && <p className="text-xs text-n-888 px-1"><T>최근 30일 · 좋아요와 답글 순</T></p>}
       <FeedBoard
         mode="anon"

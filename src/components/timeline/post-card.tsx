@@ -162,7 +162,7 @@ export function PostCard({
           <T>되돌리기</T>
         </button>
       </div>
-    ) : <article className={`timeline-card ${isReply ? 'timeline-card-reply' : ''} ${level === 2 ? 'timeline-card-l2' : ''} ${post.isHidden && !anon ? 'opacity-60' : ''}`}>
+    ) : <article data-post-id={post.id} className={`timeline-card ${isReply ? 'timeline-card-reply' : ''} ${level === 2 ? 'timeline-card-l2' : ''} ${post.isHidden && !anon ? 'opacity-60' : ''}`}>
       <div className="flex gap-3">
         <div className="tc-avatar flex-shrink-0">{avatar}</div>
         <div className="min-w-0 flex-1">

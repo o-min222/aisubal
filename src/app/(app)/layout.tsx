@@ -14,6 +14,7 @@ import { MyGroupsNav } from '@/components/shell/my-groups-nav'
 import { listMyGroups } from '@/lib/data/groups'
 import { BottomTabs, ComposeFab } from '@/components/shell/bottom-tabs'
 import { PullToRefresh } from '@/components/shell/pull-to-refresh'
+import { JustPosted } from '@/components/timeline/just-posted'
 import type { ShellMember } from '@/components/shell/nav-items'
 import { getT } from '@/i18n/server'
 
@@ -76,6 +77,9 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         </aside>
         <main className="app-center" id="main">
           {children}
+          <Suspense fallback={null}>
+            <JustPosted />
+          </Suspense>
         </main>
         <aside className="app-right" aria-label={st('추천')}>
           <div className="app-sticky">

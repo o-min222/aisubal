@@ -4,9 +4,10 @@ import { piiWarning } from '@/lib/pii'
 import { publishReplyDelta } from '@/lib/count-store'
 import { useT, tx, tn } from '@/i18n/client'
 import { useState, useMemo } from 'react'
-import { useRouter } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { Users, ShieldAlert } from 'lucide-react'
 import { toast } from 'sonner'
+import { postedHref } from '@/lib/posted-rules'
 import { UserAvatar } from '@/components/user-avatar'
 import { ComposerFrame, ComposerTextarea } from '@/components/composer/composer-frame'
 import { AgentReactionPicker } from '@/components/composer/agent-reaction-picker'
@@ -62,6 +63,7 @@ export function Composer({
   className?: string
 }) {
   const router = useRouter()
+  const pathname = usePathname()
   const tr = useT()
   const [body, setBody] = useState(initialBody)
   const [postedAs, setPostedAs] = useState<PostAs>('real')
@@ -107,7 +109,10 @@ export function Composer({
       toast.success(isReply ? tn('답글을 남겼어요') : tn('게시했어요'))
       if (isReply && countIds?.length) publishReplyDelta(countIds, 1)
       onPosted?.(data.id)
-      router.refresh()
+      // A23: a reply stays put; a new post opens the timeline it went to, scrolled to it
+      if (isReply || !data.id) router.refresh()
+      else if (groupId) router.replace(postedHref(pathname, data.id), { scroll: false })
+      else router.push(postedHref('/feed', data.id))
     } catch (e) {
       toast.error(e instanceof Error ? e.message : tn('게시하지 못했어요.'))
     } finally {

@@ -6,6 +6,7 @@ import { piiWarning } from '@/lib/pii'
 import { useRouter } from 'next/navigation'
 import { VenetianMask, ShieldAlert } from 'lucide-react'
 import { toast } from 'sonner'
+import { postedHref } from '@/lib/posted-rules'
 import { ANON_NOTICE, type AnonCategory } from '@/lib/anon-rules'
 import { T } from '@/i18n/t'
 import { tx, tn } from '@/i18n/client'
@@ -29,8 +30,8 @@ export function AnonComposer({
   replyKind?: 'comment' | 'reply'
   defaultCategory?: AnonCategory | null
   autoFocus?: boolean
-  /** after posting a root: 'thread' opens the new thread */
-  redirectTo?: 'thread'
+  /** after posting a root: 'timeline' opens /anon scrolled to the new post (A23) */
+  redirectTo?: 'timeline'
   className?: string
 }) {
   const router = useRouter()
@@ -65,7 +66,7 @@ export function AnonComposer({
       setBody('')
       toast.success(isReply ? tx('{alias}(으)로 답글을 남겼어요', { alias: data.alias }) : tx('{alias}(으)로 게시했어요', { alias: data.alias }))
       if (isReply && countIds?.length) publishReplyDelta(countIds, 1)
-      if (redirectTo === 'thread' && !isReply) router.push(`/anon/${data.id}`)
+      if (redirectTo === 'timeline' && !isReply && data.id) router.push(postedHref('/anon', data.id))
       else router.refresh()
     } catch (e) {
       toast.error(e instanceof Error ? e.message : tn('게시하지 못했어요.'))

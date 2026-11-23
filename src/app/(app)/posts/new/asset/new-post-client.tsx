@@ -11,6 +11,7 @@ import { memberHasNicknameProfile } from '@/lib/profile'
 import { toast } from 'sonner'
 import { T } from '@/i18n/t'
 import { tx, tn } from '@/i18n/client'
+import { postedHref } from '@/lib/posted-rules'
 import { msg } from '@/i18n/translate'
 
 interface NewPostClientProps {
@@ -107,8 +108,9 @@ export function NewPostClient({
         toast.error(data.error || tn('게시 실패'))
         return
       }
+      const { post } = (await res.json().catch(() => ({}))) as { post?: { id?: string } }
       toast.success(tn('게시되었습니다.'))
-      router.push('/feed')
+      router.push(post?.id ? postedHref('/feed', post.id) : '/feed')
     } catch {
       toast.error(tn('게시 중 오류'))
     } finally {

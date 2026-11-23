@@ -24,7 +24,7 @@ export default async function AnonNewPage({ searchParams }: { searchParams: Prom
         <T>익명 라운지</T>
       </Link>
       <h1 className="sr-only"><T>익명 글쓰기</T></h1>
-      <AnonComposer autoFocus redirectTo="thread" defaultCategory={isAnonCategory(category) ? category : null} />
+      <AnonComposer autoFocus redirectTo="timeline" defaultCategory={isAnonCategory(category) ? category : null} />
     </div>
   )
 }
