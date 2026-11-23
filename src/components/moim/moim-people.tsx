@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { Lock, UserCog, Users } from 'lucide-react'
+import { UserCog, Users } from 'lucide-react'
 import type { MoimDetail } from '@/lib/data/moim'
 import { AdaptiveSheet } from '@/components/adaptive-sheet'
 import { UserAvatar } from '@/components/user-avatar'
@@ -18,8 +18,8 @@ const STACK = 5
  *  - capacity row (the host counts as confirmed since 0091) + '참석자 관리' for hosts / group managers,
  *    which opens the host tools in a sheet instead of a section in the page body
  *  - host row with the confirmed participants beside it; tapping opens the full list
- * Who may see names is unchanged: the server only sends `attendees` to managers and confirmed
- * attendees; everyone else sees the count and a note.
+ * Names: every member who can see the meetup (0093); members-only group meetups keep them to
+ * group members, who are the only ones the server sends `attendees` to.
  */
 export function MoimPeople({ m }: { m: MoimDetail }) {
   const [list, setList] = useState(false)
@@ -54,7 +54,7 @@ export function MoimPeople({ m }: { m: MoimDetail }) {
             ) }} />
           </span>
         </span>
-        <button type="button" className="moim-people" onClick={() => setList(true)} aria-label={tx('참석 확정 {n}명 보기', { n: m.confirmed })}>
+        <button type="button" className="moim-people" disabled={attendees === null} onClick={() => setList(true)} aria-label={tx('참석 확정 {n}명 보기', { n: m.confirmed })}>
           {others.length > 0 && (
             <span className="moim-avs" aria-hidden>
               {others.slice(0, STACK).map((a) => (
@@ -70,11 +70,7 @@ export function MoimPeople({ m }: { m: MoimDetail }) {
       </div>
 
       <AdaptiveSheet open={list} onOpenChange={setList} title={tx('참석 확정 {n}명', { n: m.confirmed })} className="sm:!max-w-md">
-        {attendees === null ? (
-          <p className="flex items-center gap-1.5 text-[13px] text-n-888 py-2">
-            <Lock className="w-3.5 h-3.5 flex-shrink-0" /> <T>참석 확정자와 호스트만 명단을 볼 수 있어요.</T>
-          </p>
-        ) : attendees.length === 0 ? (
+        {attendees === null ? null : attendees.length === 0 ? (
           <p className="text-[13px] text-n-888 py-2"><T>아직 확정된 참석자가 없어요.</T></p>
         ) : (
           <ul>

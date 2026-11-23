@@ -449,7 +449,8 @@ function mockDetail(m: MockMoim, viewerId: string): MoimDetail {
   return {
     ...base,
     private: canSeePrivate(base.canManage, base.myRsvp?.status) ? { venueAddress: m.venueAddress, mapUrl: m.mapUrl, meetingUrl: m.meetingUrl } : null,
-    attendees: canSeePrivate(base.canManage, base.myRsvp?.status)
+    // A38: every member who can see the meetup sees who's going (members-only: group members)
+    attendees: canSeePrivate(base.canManage, base.myRsvp?.status) || !m.membersOnly || !m.groupId || Boolean(mockRoleIn(m.groupId, me(viewerId)))
       ? m.rsvps.filter((r) => r.status === 'confirmed').map((r) => ({ ...mockHandleAuthor(r.memberId), memberId: r.memberId }))
       : null,
     announcements: [...m.announcements].sort((a, b) => b.createdAt.localeCompare(a.createdAt)),
