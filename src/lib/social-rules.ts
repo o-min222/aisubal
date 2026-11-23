@@ -84,6 +84,10 @@ export const FEED_SCOPES: Array<{ id: FeedScope; label: string }> = [
   { id: 'friends', label: M('친구') },
   { id: 'popular', label: M('인기') },
 ]
+/** A59: the feed filter lives in ?f= (older ?scope= links still parse). */
+export function feedHref(scope: FeedScope): string {
+  return scope === 'all' ? '/feed' : `/feed?f=${scope}`
+}
 export function parseFeedScope(v: string | null | undefined): FeedScope {
   return v === 'for_you' || v === 'following' || v === 'friends' || v === 'popular' ? v : 'all'
 }

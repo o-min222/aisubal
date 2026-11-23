@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import Image from 'next/image'
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Menu } from 'lucide-react'
 import { AccountMenu } from './account-menu'
 import { UserAvatar } from '@/components/user-avatar'
@@ -21,9 +21,10 @@ import { useT, tx } from '@/i18n/client'
  */
 export function TopBar({ me }: { me: ShellMember }) {
   const [moreOpen, setMoreOpen] = useState(false)
+  const hidden = useHideOnScroll()
   const t = useT()
   return (
-    <header className="top-bar">
+    <header className={hidden ? 'top-bar is-hidden' : 'top-bar'}>
       <div className="top-bar-inner">
         <div className="tb-left">
           <button
@@ -54,4 +55,38 @@ export function TopBar({ me }: { me: ShellMember }) {
       <MoreSheet open={moreOpen} onOpenChange={setMoreOpen} isAdmin={me.isAdmin} />
     </header>
   )
+}
+
+/**
+ * A59: on phones the bar slides away while reading down and comes back on any
+ * scroll up (or near the top). Desktop keeps it fixed.
+ */
+function useHideOnScroll(): boolean {
+  const [hidden, setHidden] = useState(false)
+  const last = useRef(0)
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 767.98px)')
+    let frame = 0
+    const onScroll = () => {
+      if (frame) return
+      frame = requestAnimationFrame(() => {
+        frame = 0
+        const y = Math.max(0, window.scrollY)
+        const dy = y - last.current
+        if (!mq.matches || y < 64) setHidden(false)
+        else if (dy > 8) setHidden(true)
+        else if (dy < -8) setHidden(false)
+        if (Math.abs(dy) > 8 || y < 64) last.current = y
+      })
+    }
+    const onMq = () => setHidden(false)
+    window.addEventListener('scroll', onScroll, { passive: true })
+    mq.addEventListener('change', onMq)
+    return () => {
+      window.removeEventListener('scroll', onScroll)
+      mq.removeEventListener('change', onMq)
+      if (frame) cancelAnimationFrame(frame)
+    }
+  }, [])
+  return hidden
 }

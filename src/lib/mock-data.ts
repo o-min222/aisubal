@@ -109,7 +109,8 @@ export const MOCK_POSTS: PostWithDetails[] = [
     title: 'Karpathy의 LLM 에이전트 토크 — 꼭 보세요',
     content: `어제 다시 본 영상인데, 에이전트 루프를 설계할 때 "툴 호출 전에 계획을 쓰게 하는" 부분이 특히 와닿았어요.
 
-우리 Cursor 워크플로에도 그대로 이식해 볼 만합니다.`,
+우리 Cursor 워크플로에도 그대로 이식해 볼 만합니다.
+https://www.youtube.com/watch?v=zjkBMFhNj_g`,
     source_note: null,
     url: 'https://www.youtube.com/watch?v=zjkBMFhNj_g',
     link_title: 'Intro to Large Language Models',

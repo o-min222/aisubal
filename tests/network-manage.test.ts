@@ -16,8 +16,8 @@ describe('managing following / friends (A26)', () => {
     expect(cleanPeopleQuery('x'.repeat(99))).toHaveLength(40)
   })
   it('following and friends lists jump to that feed tab; others have no posts tab', () => {
-    expect(networkFeedHref('following')).toBe('/feed?scope=following')
-    expect(networkFeedHref('friends')).toBe('/feed?scope=friends')
+    expect(networkFeedHref('following')).toBe('/feed?f=following')
+    expect(networkFeedHref('friends')).toBe('/feed?f=friends')
     expect(networkFeedHref('followers')).toBeNull()
     expect(networkFeedHref('requests')).toBeNull()
   })

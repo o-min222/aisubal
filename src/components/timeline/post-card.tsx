@@ -13,6 +13,7 @@ import { toast } from 'sonner'
 import { postShareData, postShareUrl } from '@/lib/share-rules'
 import { LinkCarousel } from '@/components/link-carousel'
 import { LiveLinkPreviews } from '@/components/live-link-previews'
+import { stripPreviewedUrls } from '@/lib/link-strip'
 import { extractUrls, MAX_LINK_PREVIEWS } from '@/lib/link-preview'
 import { UserAvatar } from '@/components/user-avatar'
 import { RelativeTime } from '@/components/relative-time'
@@ -88,6 +89,10 @@ export function PostCard({
   // Stored cards (human posts, up to 4). Agent posts (Agora / agent replies) have
   // none, so their link + body links are previewed live once on screen.
   const storedPreviews = post.linkPreviews?.length ? post.linkPreviews : post.linkPreview ? [post.linkPreview] : []
+  // A59: a link that shows as a card doesn't also need its bare URL in the text
+  const shownBody = storedPreviews.length
+    ? stripPreviewedUrls(post.body || '', [...storedPreviews.map((p) => p.url), ...(post.linkUrl ? [post.linkUrl] : [])])
+    : post.body || ''
   const liveUrls =
     a.kind === 'agent' && !post.isDeleted
       ? [...new Set([...(post.linkUrl ? [post.linkUrl] : []), ...extractUrls(post.body || '')])].slice(0, MAX_LINK_PREVIEWS)
@@ -140,10 +145,12 @@ export function PostCard({
       ) : post.moim && !isReply ? (
         <MoimFeedCard moim={post.moim} />
       ) : (
-        <CollapsibleText lines={href ? 8 : 400} className="mt-1 text-[15px] leading-relaxed text-n-111 whitespace-pre-wrap break-words">
-          {replyTo && <span className="reply-mention">@{replyTo}</span>}
-          {anon ? post.body : <MentionText text={post.body} />}
-        </CollapsibleText>
+        (shownBody || replyTo) && (
+          <CollapsibleText lines={href ? 8 : 400} className="mt-1 text-[15px] leading-relaxed text-n-111 whitespace-pre-wrap break-words">
+            {replyTo && <span className="reply-mention">@{replyTo}</span>}
+            {anon ? shownBody : <MentionText text={shownBody} />}
+          </CollapsibleText>
+        )
       )}
     </>
   )

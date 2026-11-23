@@ -54,7 +54,7 @@ export function filterPeople<P extends { name: string }>(people: P[], q: string 
 
 /** A26: the feed tab showing the posts of a list's people (followers have none). */
 export function networkFeedHref(view: NetworkView): string | null {
-  return view === 'following' ? '/feed?scope=following' : view === 'friends' ? '/feed?scope=friends' : null
+  return view === 'following' ? '/feed?f=following' : view === 'friends' ? '/feed?f=friends' : null
 }
 
 export type DashboardTab = (typeof DASHBOARD_TABS)[number]['id']

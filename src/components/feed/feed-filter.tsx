@@ -1,0 +1,29 @@
+'use client'
+
+import Link from 'next/link'
+import { Check, ChevronDown } from 'lucide-react'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
+import { FEED_SCOPES, feedHref, type FeedScope } from '@/lib/social-rules'
+import { T } from '@/i18n/t'
+import { tx } from '@/i18n/client'
+
+/** A59: the feed's only control — a small "전체 ▾" text menu instead of a tab bar (?f=). */
+export function FeedFilter({ active }: { active: FeedScope }) {
+  const cur = FEED_SCOPES.find((s) => s.id === active) ?? FEED_SCOPES[0]
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger className="feed-filter" aria-label={tx('피드 범위: {name}', { name: tx(cur.label) })}>
+        <T>{cur.label}</T>
+        <ChevronDown className="w-4 h-4" aria-hidden />
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="start" className="min-w-[160px]">
+        {FEED_SCOPES.map((s) => (
+          <DropdownMenuItem key={s.id} render={<Link href={feedHref(s.id)} aria-current={s.id === active ? 'page' : undefined} />}>
+            <span className="flex-1"><T>{s.label}</T></span>
+            {s.id === active && <Check className="w-4 h-4" aria-hidden />}
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  )
+}

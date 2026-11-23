@@ -2841,3 +2841,16 @@ a.notif-pop-all:hover { background: var(--n-fafafa); }
 .hb-btitle { font-size: 11.5px; font-weight: 600; color: var(--n-888); }
 .hb-note { font-size: 12px; line-height: 1.5; color: var(--n-777); }
 @media (max-width: 480px) { .hb-body { padding-left: 0; } .hb-hint { display: none; } }
+
+/* A59: feed without a tab bar — one small text filter; mobile header hides on scroll down */
+.feed-head { display: flex; align-items: center; min-height: 32px; padding: 0 2px; }
+.feed-filter { display: inline-flex; align-items: center; gap: 2px; min-height: 36px; padding: 0 6px; margin-left: -6px; border-radius: 8px;
+  background: none; border: 0; font-size: 15px; font-weight: 700; color: var(--n-111); cursor: pointer; }
+.feed-filter:hover { background: var(--tint-hover); }
+.feed-filter svg { color: var(--n-777); }
+@media (max-width: 767.98px) {
+  .top-bar { transition: transform .22s ease; will-change: transform; }
+  .top-bar.is-hidden { transform: translateY(-100%); }
+  .feed-head { margin: -4px 0 -2px; }
+}
+@media (prefers-reduced-motion: reduce) { .top-bar { transition: none; } }
