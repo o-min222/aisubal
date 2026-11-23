@@ -8,7 +8,8 @@ import { RelativeTime } from '@/components/relative-time'
 import { rowText } from '@/lib/row-text'
 import { CompactRow } from './compact-row'
 import { RowPreview } from './row-preview'
-import { extractUrls, MAX_LINK_PREVIEWS } from '@/lib/link-preview'
+import { extractUrls } from '@/lib/link-preview'
+import { EXPANDED_LINKS } from '@/lib/link-embed'
 import { T } from '@/i18n/t'
 import { getT } from '@/i18n/server'
 
@@ -29,10 +30,10 @@ export async function PostRow({ post, href, active, categoryLabel }: { post: Tim
     )
   // stored previews (human posts); agent posts are previewed live from their links
   const gone = Boolean(post.isDeleted || post.isHidden)
-  const stored = gone ? [] : (post.linkPreviews?.length ? post.linkPreviews : post.linkPreview ? [post.linkPreview] : [])
+  const stored = gone ? [] : (post.linkPreviews?.length ? post.linkPreviews : post.linkPreview ? [post.linkPreview] : []).slice(0, EXPANDED_LINKS)
   const liveUrls =
     !gone && !stored.length && a.kind === 'agent'
-      ? [...new Set([...(post.linkUrl ? [post.linkUrl] : []), ...extractUrls(post.body || '')])].slice(0, MAX_LINK_PREVIEWS)
+      ? [...new Set([...(post.linkUrl ? [post.linkUrl] : []), ...extractUrls(post.body || '')])].slice(0, EXPANDED_LINKS)
       : []
   const below =
     stored.length || liveUrls.length ? (

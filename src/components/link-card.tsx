@@ -35,12 +35,15 @@ export function LinkCard({
   compact = false,
   tile = false,
   href,
+  onOpen,
 }: {
   link: LinkCardData
   compact?: boolean
   /** vertical card (image on top) used inside the multi-link carousel */
   tile?: boolean
   href?: string
+  /** A58: open a details sheet instead of leaving the page (middle-click / ⌘-click still open the link) */
+  onOpen?: () => void
 }) {
   const isYoutube = link.link_type === 'youtube'
   const target = href || link.url
@@ -66,7 +69,13 @@ export function LinkCard({
       target="_blank"
       rel="noopener noreferrer"
       className={`link-card group ${compact ? 'link-card-compact' : ''} ${tile ? 'link-card-tile' : ''}`}
-      onClick={(e) => e.stopPropagation()}
+      onClick={(e) => {
+        e.stopPropagation()
+        if (onOpen && !e.metaKey && !e.ctrlKey && !e.shiftKey && e.button === 0) {
+          e.preventDefault()
+          onOpen()
+        }
+      }}
     >
       {showImage ? (
         <div className={`link-card-media ${isYoutube ? 'is-video' : ''}`}>

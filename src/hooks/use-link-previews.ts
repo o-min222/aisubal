@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { LinkCardData } from '@/components/link-card'
 import type { CarouselItem } from '@/components/link-carousel'
 import { extractUrls, MAX_LINK_PREVIEWS } from '@/lib/link-preview'
+import { EXPANDED_LINKS } from '@/lib/link-embed'
 
 const DEBOUNCE_MS = 450
 
@@ -18,7 +19,7 @@ export function useLinkPreviews(text: string, enabled = true) {
   const inflight = useRef(new Set<string>())
   // extract more than the cap so removing one lets the next link take its place
   const all = useMemo(() => (enabled ? extractUrls(text, MAX_LINK_PREVIEWS + 8) : []), [text, enabled])
-  const urls = useMemo(() => all.filter((u) => !removed.includes(u)).slice(0, MAX_LINK_PREVIEWS), [all, removed])
+  const urls = useMemo(() => all.filter((u) => !removed.includes(u)).slice(0, EXPANDED_LINKS), [all, removed])
   const [debounced, setDebounced] = useState<string[]>([])
 
   useEffect(() => {

@@ -1,6 +1,8 @@
 import type { LinkPreview } from '@/lib/supabase/types'
 import { safeFetchText, BLOCKED_FETCH_ERRORS, BlockedUrlError } from '@/lib/safe-fetch'
 import { resolvePageIcon } from '@/lib/service-icon'
+import { socialKind } from '@/lib/link-embed'
+import { sb, isMock } from '@/lib/data/client'
 import {
   absoluteUrl,
   detectLinkType,
@@ -22,6 +24,9 @@ import {
  * Results are cached per server instance (LRU-ish Map, 6h; failures 10 min) so
  * the composer's debounced lookups and repeated renders don't refetch.
  */
+
+/** posts.link_type CHECK (0001) */
+const LINK_TYPES = ['article', 'youtube', 'x', 'github', 'other'] as const
 
 const TTL_OK = 6 * 3600_000
 const TTL_FAIL = 10 * 60_000
@@ -97,6 +102,25 @@ async function xPreview(url: string): Promise<LinkPreview> {
   }
 }
 
+/** A58: Vimeo and TikTok publish keyless oEmbed; Instagram's needs an app token, so it uses the page's OG tags */
+async function socialPreview(url: string, kind: 'vimeo' | 'tiktok'): Promise<LinkPreview> {
+  const endpoint = kind === 'vimeo'
+    ? `https://vimeo.com/api/oembed.json?dnt=true&url=${encodeURIComponent(url)}`
+    : `https://www.tiktok.com/oembed?url=${encodeURIComponent(url)}`
+  const o = await oembedJson(endpoint)
+  if (!o) return { ...fallback(url), site_name: kind === 'vimeo' ? 'Vimeo' : 'TikTok' }
+  const author = str(o.author_name)
+  return {
+    url,
+    title: str(o.title) || (kind === 'vimeo' ? 'Vimeo' : 'TikTok'),
+    description: author ? `${author} · ${kind === 'vimeo' ? 'Vimeo' : 'TikTok'}` : null,
+    image: str(o.thumbnail_url),
+    site_name: kind === 'vimeo' ? 'Vimeo' : 'TikTok',
+    favicon: knownSiteIcon(url),
+    link_type: 'other',
+  }
+}
+
 async function htmlPreview(url: string): Promise<LinkPreview> {
   const type = detectLinkType(url)
   const res = await safeFetchText(url, 'text/html')
@@ -123,11 +147,55 @@ async function htmlPreview(url: string): Promise<LinkPreview> {
 async function load(url: string): Promise<{ value: LinkPreview; ok: boolean }> {
   const type = detectLinkType(url)
   try {
-    const v = type === 'youtube' ? await youtubePreview(url) : type === 'x' ? await xPreview(url) : await htmlPreview(url)
+    const social = socialKind(url)
+    const v =
+      type === 'youtube' ? await youtubePreview(url)
+      : type === 'x' ? await xPreview(url)
+      : social === 'vimeo' || social === 'tiktok' ? await socialPreview(url, social)
+      : await htmlPreview(url)
+    if (social === 'instagram') v.site_name = 'Instagram'
     return { value: sanitizePreview(v), ok: v.title !== hostOf(url) || Boolean(v.image) }
   } catch (e) {
     if (e instanceof BlockedUrlError) throw e // never cache or soften an SSRF block
     return { value: sanitizePreview(fallback(url)), ok: false }
+  }
+}
+
+/*
+ * A58: shared TTL cache (0109) between the memory cache and the network, so instances and deploys
+ * reuse each other's cards. Best effort both ways: a cache error never blocks a preview.
+ */
+async function dbGet(url: string): Promise<LinkPreview | null> {
+  if (isMock()) return null
+  try {
+    const supabase = await sb()
+    const { data } = await supabase.rpc('link_preview_cache_get', { p_url: url })
+    if (!data || typeof data !== 'object' || Array.isArray(data)) return null
+    // a cached row was written by some member's request: re-check every field before trusting it
+    const d = data as Record<string, unknown>
+    const s = (k: string) => (typeof d[k] === 'string' ? (d[k] as string) : null)
+    const t = s('link_type')
+    return sanitizePreview({
+      url,
+      title: s('title'),
+      description: s('description'),
+      image: s('image'),
+      site_name: s('site_name'),
+      favicon: s('favicon'),
+      link_type: (LINK_TYPES as readonly string[]).includes(t ?? '') ? (t as LinkPreview['link_type']) : detectLinkType(url),
+    })
+  } catch {
+    return null
+  }
+}
+
+async function dbPut(url: string, value: LinkPreview, ok: boolean): Promise<void> {
+  if (isMock()) return
+  try {
+    const supabase = await sb()
+    await supabase.rpc('link_preview_cache_put', { p_url: url, p_value: value, p_ok: ok })
+  } catch {
+    /* cache only */
   }
 }
 
@@ -141,8 +209,13 @@ export async function fetchLinkPreview(url: string): Promise<LinkPreview> {
   }
   const pending = inflight.get(url)
   if (pending) return pending
-  const p = load(url)
-    .then(({ value, ok }) => {
+  const p = (async () => {
+    const shared = await dbGet(url)
+    if (shared) return { value: shared, ok: true, fromDb: true }
+    return { ...(await load(url)), fromDb: false }
+  })()
+    .then(({ value, ok, fromDb }) => {
+      if (!fromDb) void dbPut(url, value, ok)
       cache.set(url, { at: Date.now(), ttl: ok ? TTL_OK : TTL_FAIL, value })
       while (cache.size > MAX_ENTRIES) cache.delete(cache.keys().next().value as string)
       return value

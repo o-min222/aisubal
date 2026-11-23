@@ -11,10 +11,11 @@ import Link from 'next/link'
 import { Bot, MessageCircle, Star, Wrench, ExternalLink, Share2, VenetianMask, Sparkles } from 'lucide-react'
 import { toast } from 'sonner'
 import { postShareData, postShareUrl } from '@/lib/share-rules'
-import { LinkCarousel } from '@/components/link-carousel'
+import { LinkPreviewBlock } from '@/components/link-preview-block'
 import { LiveLinkPreviews } from '@/components/live-link-previews'
 import { stripPreviewedUrls } from '@/lib/link-strip'
-import { extractUrls, MAX_LINK_PREVIEWS } from '@/lib/link-preview'
+import { extractUrls } from '@/lib/link-preview'
+import { EXPANDED_LINKS } from '@/lib/link-embed'
 import { UserAvatar } from '@/components/user-avatar'
 import { RelativeTime } from '@/components/relative-time'
 import { LikeButton } from './like-button'
@@ -91,15 +92,16 @@ export function PostCard({
   const recHidden = useRecHidden(post.id)
   // Stored cards (human posts, up to 4). Agent posts (Agora / agent replies) have
   // none, so their link + body links are previewed live once on screen.
-  const storedPreviews = post.linkPreviews?.length ? post.linkPreviews : post.linkPreview ? [post.linkPreview] : []
+  // A58: only the first link expands; older posts with several stored cards show the first
+  const storedPreviews = (post.linkPreviews?.length ? post.linkPreviews : post.linkPreview ? [post.linkPreview] : []).slice(0, EXPANDED_LINKS)
   // A59: a link that shows as a card doesn't also need its bare URL in the text
   const liveUrls =
     a.kind === 'agent' && !post.isDeleted
-      ? [...new Set([...(post.linkUrl ? [post.linkUrl] : []), ...extractUrls(post.body || '')])].slice(0, MAX_LINK_PREVIEWS)
+      ? [...new Set([...(post.linkUrl ? [post.linkUrl] : []), ...extractUrls(post.body || '')])].slice(0, EXPANDED_LINKS)
       : []
   // A59/A60: a link that shows as a card (stored, or live for agent posts — a failed fetch still
   // renders a plain card) doesn't also need its bare URL in the text
-  const carded = storedPreviews.length ? [...storedPreviews.map((p) => p.url), ...(post.linkUrl ? [post.linkUrl] : [])] : liveUrls
+  const carded = storedPreviews.length ? storedPreviews.map((p) => p.url) : liveUrls
   const shownBody = carded.length ? stripPreviewedUrls(post.body || '', carded) : post.body || ''
 
   const anon = a.kind === 'anon'
@@ -278,16 +280,16 @@ export function PostCard({
 
           {storedPreviews.length > 0 && (
             <div className="mt-2 max-w-full" onClick={(e) => e.stopPropagation()}>
-              <LinkCarousel
-                items={storedPreviews.map((p) => ({
-                  url: p.url,
-                  title: p.title,
-                  description: p.description,
-                  image: p.image,
-                  site_name: p.siteName,
-                  favicon: p.favicon,
-                  link_type: p.linkType,
-                }))}
+              <LinkPreviewBlock
+                link={{
+                  url: storedPreviews[0].url,
+                  title: storedPreviews[0].title,
+                  description: storedPreviews[0].description,
+                  image: storedPreviews[0].image,
+                  site_name: storedPreviews[0].siteName,
+                  favicon: storedPreviews[0].favicon,
+                  link_type: storedPreviews[0].linkType,
+                }}
               />
             </div>
           )}

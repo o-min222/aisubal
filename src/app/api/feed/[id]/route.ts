@@ -3,7 +3,8 @@ import { z } from 'zod'
 import { getMember } from '@/lib/auth'
 import { deleteFeedPost, editFeedPost, setFeedAgentInteraction, setFeedVisibility } from '@/lib/data/feed'
 import { isFeedId } from '@/lib/feed-ids'
-import { extractUrls, MAX_LINK_PREVIEWS } from '@/lib/link-preview'
+import { extractUrls } from '@/lib/link-preview'
+import { EXPANDED_LINKS } from '@/lib/link-embed'
 import { fetchLinkPreviews } from '@/lib/link-preview-server'
 import { checkFetchUrl } from '@/lib/safe-fetch'
 import { te } from '@/i18n/server'
@@ -35,7 +36,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     if (!body) return NextResponse.json({ error: await te('내용을 입력해 주세요.') }, { status: 400 })
     const urls = edit.data.isReply
       ? []
-      : extractUrls(body).filter((u, i, a) => a.indexOf(u) === i && checkFetchUrl(u).ok).slice(0, MAX_LINK_PREVIEWS)
+      : extractUrls(body).filter((u, i, a) => a.indexOf(u) === i && checkFetchUrl(u).ok).slice(0, EXPANDED_LINKS)
     const previews = urls.length ? await fetchLinkPreviews(urls) : []
     try {
       const at = await editFeedPost(id, member.id, { body, url: urls[0] ?? null, previews: edit.data.isReply ? null : previews })

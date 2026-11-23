@@ -11,6 +11,7 @@ import { canReadTimeline } from '@/lib/group-rules'
 import { parseFeedScope } from '@/lib/social-rules'
 import { validateFeedInput } from '@/lib/feed-rules'
 import { extractUrls, MAX_LINK_PREVIEWS } from '@/lib/link-preview'
+import { EXPANDED_LINKS } from '@/lib/link-embed'
 import { fetchLinkPreviews } from '@/lib/link-preview-server'
 import { checkFetchUrl } from '@/lib/safe-fetch'
 import type { LinkPreview } from '@/lib/supabase/types'
@@ -67,7 +68,7 @@ export async function POST(request: NextRequest) {
     ? []
     : (raw.urls ?? (raw.url ? [raw.url] : extractUrls(raw.body)))
         .filter((u, i, a) => a.indexOf(u) === i && checkFetchUrl(u).ok)
-        .slice(0, MAX_LINK_PREVIEWS)
+        .slice(0, EXPANDED_LINKS)
   const url = previewUrls[0] ?? null
   const v = validateFeedInput({ ...raw, url })
   if (!v.ok) return NextResponse.json({ error: await te(v.error) }, { status: 400 })

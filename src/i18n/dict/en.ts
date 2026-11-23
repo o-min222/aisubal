@@ -453,6 +453,8 @@ const en: Record<string, string> = {
   "로그아웃": "Sign out",
   "로그인 · 멤버십 · 언어": "Sign-in · membership · language",
   "로그인 이메일": "Sign-in email",
+  "영상": "Video",
+  "영상 불러오기: {title}": "Load video: {title}",
   "관리 · 대기 명단 · AI쓰발": "Admin · Waitlist · AI쓰발",
   "대기 명단": "Waitlist",
   "/join에서 신청한 사람들. 초대하면 코드가 만들어지고, 보내는 건 직접 해요.": "People who signed up at /join. Inviting creates a code; you send it yourself.",
