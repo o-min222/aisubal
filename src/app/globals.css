@@ -2474,6 +2474,3 @@ a.notif-pop-all:hover { background: var(--n-fafafa); }
 .badge-item { display: flex; align-items: flex-start; gap: 12px; padding: 10px 2px; border-radius: 12px; }
 .badge-item.is-focus { background: var(--n-f4f4f2); padding-left: 8px; padding-right: 8px; }
 .badge-item .badge-ico { width: 32px; height: 32px; }
-
-/* A22: small provider / 기본 tags beside a sign-in email */
-.login-email-chip { flex: none; font-size: 11px; line-height: 1; padding: 3px 7px; border-radius: 999px; background: var(--n-f4f4f2); color: var(--n-666); }

@@ -3,7 +3,6 @@ import { NextResponse } from 'next/server'
 import { INVITE_COOKIE } from '@/lib/invite-share'
 import { cookies } from 'next/headers'
 import { AFTER_LOGIN_COOKIE, safeNextPath } from '@/lib/handoff-rules'
-import { LINK_RETURN_PATH } from '@/lib/login-identities'
 
 /**
  * OAuth callback.
@@ -21,13 +20,6 @@ export async function GET(request: Request) {
   const next = safeNextPath(searchParams.get('next')) ?? safeNextPath(jar.get(AFTER_LOGIN_COOKIE)?.value) ?? '/feed'
 
   if (!code) {
-    // a failed "add a sign-in email" (A22) returns here with ?error_code=…: back to settings, still signed in
-    const linkErr = searchParams.get('error_code')
-    if (linkErr && next.startsWith(LINK_RETURN_PATH)) {
-      const res = NextResponse.redirect(`${origin}${LINK_RETURN_PATH}?link_error=${encodeURIComponent(linkErr)}`)
-      res.cookies.delete(AFTER_LOGIN_COOKIE)
-      return res
-    }
     return NextResponse.redirect(`${origin}/login?error=auth_failed`)
   }
 

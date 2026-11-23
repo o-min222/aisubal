@@ -1,37 +1,27 @@
 'use client'
 
 import Link from 'next/link'
-import { Suspense } from 'react'
-import { ChevronRight, Globe, LogOut, Moon, ShieldCheck } from 'lucide-react'
+import { ChevronRight, Globe, LogOut, Mail, Moon, ShieldCheck } from 'lucide-react'
 import { signOut } from '@/components/shell/sign-out'
 import { LocaleSwitch } from '@/components/i18n/locale-switch'
 import { ThemeSwitch } from '@/components/theme/theme-switch'
 import { useLocale, useT } from '@/i18n/client'
 import { LOCALE_META } from '@/i18n/config'
-import type { LoginIdentity } from '@/lib/login-identities'
-import { LoginEmails } from './login-emails'
 
-export function AccountSettings({
-  email,
-  identities,
-  mock,
-  joinedAt,
-  isAdmin,
-}: {
-  email: string
-  identities: LoginIdentity[]
-  mock: boolean
-  joinedAt: string | null
-  isAdmin: boolean
-}) {
+export function AccountSettings({ email, joinedAt, isAdmin }: { email: string; joinedAt: string | null; isAdmin: boolean }) {
   const t = useT()
   const locale = useLocale()
   return (
     <div className="space-y-4">
       <section className="card divide-y divide-n-eee">
-        <Suspense fallback={null}>
-          <LoginEmails identities={identities} accountEmail={email} mock={mock} />
-        </Suspense>
+        <div className="p-4 flex items-start gap-3">
+          <Mail className="w-5 h-5 text-n-666 mt-0.5" />
+          <div className="min-w-0 flex-1">
+            <div className="text-sm font-medium text-n-333">{t('로그인 이메일')}</div>
+            <div className="text-sm text-n-666 truncate">{email || t('(이메일 비공개)')}</div>
+            <p className="text-xs text-n-888 mt-1">{t('본인만 확인할 수 있고 피드·게시물에 노출되지 않아요.')}</p>
+          </div>
+        </div>
         <div className="p-4 flex items-start gap-3">
           <ShieldCheck className="w-5 h-5 text-n-666 mt-0.5" />
           <div className="text-sm">
