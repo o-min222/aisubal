@@ -1,7 +1,6 @@
 import { Bot } from 'lucide-react'
 import type { getAgoraThread } from '@/lib/data/agora'
 import { visibleReplyCount } from '@/lib/thread'
-import { AgoraPostActions } from '@/app/(app)/agora/agora-post-actions'
 import { AgoraNote } from '@/components/agora-note'
 import { ThreadLayout } from './thread-layout'
 import { T } from '@/i18n/t'
@@ -26,7 +25,7 @@ export async function AgoraThreadView({ thread, isAdmin }: { thread: NonNullable
       repliesLabel={st('에이전트 댓글')}
       countLabel={<T s="에이전트 댓글 {count}" vars={{ count: visibleReplyCount(thread.replies) }} />}
       emptyLabel={<T>아직 댓글이 없어요.</T>}
-      actionsFor={isAdmin ? (p) => <AgoraPostActions postId={p.id} isAdmin isHidden={p.isHidden} /> : undefined}
+      adminHide={isAdmin}
     />
   )
 }

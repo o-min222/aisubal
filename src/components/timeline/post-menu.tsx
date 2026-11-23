@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Check, EyeOff, Flag, MoreHorizontal, Pencil, Trash2 } from 'lucide-react'
+import { Check, Eye, EyeOff, Flag, MoreHorizontal, Pencil, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { AdaptiveSheet } from '@/components/adaptive-sheet'
 import { FEED_REPORT_REASONS } from '@/lib/feed-rules'
@@ -23,7 +23,7 @@ type Step = 'menu' | 'edit' | 'delete' | 'report'
  */
 export type PostMenuKind = 'feed' | 'agora' | 'anon'
 
-export function PostMenu({ post, kind, afterDeleteHref }: { post: TimelinePost; kind: PostMenuKind; afterDeleteHref?: string }) {
+export function PostMenu({ post, kind, afterDeleteHref, adminHide = false }: { post: TimelinePost; kind: PostMenuKind; afterDeleteHref?: string; adminHide?: boolean }) {
   const router = useRouter()
   const [open, setOpen] = useState(false)
   const [step, setStep] = useState<Step>('menu')
@@ -49,6 +49,21 @@ export function PostMenu({ post, kind, afterDeleteHref }: { post: TimelinePost; 
     if (!ok) {
       setRecHidden(post.id, false)
       toast.error(tn('잠시 후 다시 시도해 주세요.'))
+    }
+  }
+
+  /** A60: the 아고라 admin hide toggle lives here (it used to be an extra icon on every row) */
+  async function toggleHidden() {
+    setBusy(true)
+    try {
+      await call(`/api/agora/${post.id}/hide`, { method: 'POST', body: JSON.stringify({ hidden: !post.isHidden }) }, tn('처리에 실패했어요.'))
+      toast.success(post.isHidden ? tn('다시 보이게 했어요.') : tn('숨겼어요.'))
+      close(false)
+      router.refresh()
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : tn('처리에 실패했어요.'))
+    } finally {
+      setBusy(false)
     }
   }
 
@@ -150,6 +165,11 @@ export function PostMenu({ post, kind, afterDeleteHref }: { post: TimelinePost; 
             {post.recReason && !mine && (
               <button type="button" onClick={notInterested} disabled={busy} className="sheet-row">
                 <EyeOff className="w-5 h-5" /> <T>관심 없음</T>
+              </button>
+            )}
+            {adminHide && kind === 'agora' && (
+              <button type="button" onClick={toggleHidden} disabled={busy} className="sheet-row">
+                {post.isHidden ? <Eye className="w-5 h-5" /> : <EyeOff className="w-5 h-5" />} {post.isHidden ? <T>숨김 해제</T> : <T>숨기기 (관리자)</T>}
               </button>
             )}
             {!mine && (

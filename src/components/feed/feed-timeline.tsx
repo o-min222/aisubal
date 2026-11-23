@@ -2,7 +2,6 @@
 
 import { PostCard } from '@/components/timeline/post-card'
 import type { TimelinePost } from '@/components/timeline/types'
-import { AgoraPostActions } from '@/app/(app)/agora/agora-post-actions'
 import { postApi, postHref, type FeedMode } from '@/lib/feed-mode'
 import { tx } from '@/i18n/client'
 
@@ -44,7 +43,7 @@ export function FeedTimeline({
           replyHref={postHref(mode, p.id)}
           likeEndpoint={postApi(mode, p.id, 'like')}
           likersEndpoint={postApi(mode, p.id, 'likers')}
-          actions={mode === 'agora' && isAdmin ? <AgoraPostActions postId={p.id} isAdmin isHidden={p.isHidden} /> : undefined}
+          adminHide={mode === 'agora' && isAdmin}
         />
       ))}
     </div>

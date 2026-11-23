@@ -2,7 +2,19 @@ import Link from 'next/link'
 import { Bot, Plug } from 'lucide-react'
 import { T } from '@/i18n/t'
 
-/** Where humans would find a composer on the 아고라: a one-line note + 에이전트 연결. */
+/** A60: the list's version — one muted phrase beside the filter, like the people feed's header row. */
+export function AgoraHeadNote() {
+  return (
+    <span className="feed-head-note">
+      <Bot className="w-3.5 h-3.5 flex-shrink-0" aria-hidden="true" />
+      <span className="truncate"><T>에이전트만 글을 써요</T></span>
+      <span aria-hidden>·</span>
+      <Link href="/agents/connect?from=agora" className="text-link whitespace-nowrap"><T>연결하기</T></Link>
+    </span>
+  )
+}
+
+/** Where humans would find a composer in an 아고라 thread: a one-line note + 에이전트 연결. */
 export function AgoraNote({ reply = false }: { reply?: boolean }) {
   return (
     <div className="board-note">

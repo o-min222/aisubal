@@ -63,6 +63,7 @@ export function PostCard({
   canLike = true,
   replyHref,
   actions,
+  adminHide,
   isReply = false,
   level = 1,
   replyTo,
@@ -75,6 +76,8 @@ export function PostCard({
   canLike?: boolean
   replyHref?: string
   actions?: ReactNode
+  /** A60: 아고라 admins get 숨기기 in the ⋯ menu */
+  adminHide?: boolean
   isReply?: boolean
   /** two-level comments: 2 = 대댓글 (compact, indented by the thread) */
   level?: 1 | 2
@@ -90,13 +93,14 @@ export function PostCard({
   // none, so their link + body links are previewed live once on screen.
   const storedPreviews = post.linkPreviews?.length ? post.linkPreviews : post.linkPreview ? [post.linkPreview] : []
   // A59: a link that shows as a card doesn't also need its bare URL in the text
-  const shownBody = storedPreviews.length
-    ? stripPreviewedUrls(post.body || '', [...storedPreviews.map((p) => p.url), ...(post.linkUrl ? [post.linkUrl] : [])])
-    : post.body || ''
   const liveUrls =
     a.kind === 'agent' && !post.isDeleted
       ? [...new Set([...(post.linkUrl ? [post.linkUrl] : []), ...extractUrls(post.body || '')])].slice(0, MAX_LINK_PREVIEWS)
       : []
+  // A59/A60: a link that shows as a card (stored, or live for agent posts — a failed fetch still
+  // renders a plain card) doesn't also need its bare URL in the text
+  const carded = storedPreviews.length ? [...storedPreviews.map((p) => p.url), ...(post.linkUrl ? [post.linkUrl] : [])] : liveUrls
+  const shownBody = carded.length ? stripPreviewedUrls(post.body || '', carded) : post.body || ''
 
   const anon = a.kind === 'anon'
   const archiveKind = archiveKindForEndpoint(likeEndpoint)
@@ -227,7 +231,7 @@ export function PostCard({
               </span>
             )}
           </header>
-          {menuKind && !gone && <PostMenu post={post} kind={menuKind} afterDeleteHref={afterDeleteHref} />}
+          {menuKind && !gone && <PostMenu post={post} kind={menuKind} afterDeleteHref={afterDeleteHref} adminHide={adminHide} />}
           </div>
           {a.kind === 'group' && post.groupWriter && (
             <p className="group-writer" title={tx('그룹 운영진에게만 보여요')}>
@@ -313,13 +317,13 @@ export function PostCard({
             />
           )}
 
-          {menuKind === 'feed' && (
-            <ReactionChips postId={post.id} initialLiked={post.likedByMe} initialCount={post.likeCount} reactionCount={post.reactionCount} disabled={!canLike || gone} />
+          {(menuKind === 'feed' || menuKind === 'agora') && (
+            <ReactionChips postId={post.id} surface={menuKind} initialLiked={post.likedByMe} initialCount={post.likeCount} reactionCount={post.reactionCount} disabled={!canLike || gone} />
           )}
 
           <footer className={`tc-foot flex items-center${isReply ? ' tc-foot-reply' : ''}`}>
-            {menuKind === 'feed' ? (
-              <ReactionAddButton postId={post.id} initialLiked={post.likedByMe} initialCount={post.likeCount} disabled={!canLike || gone} />
+            {menuKind === 'feed' || menuKind === 'agora' ? (
+              <ReactionAddButton postId={post.id} surface={menuKind} initialLiked={post.likedByMe} initialCount={post.likeCount} disabled={!canLike || gone} />
             ) : (
               <LikeButton
                 endpoint={likeEndpoint}

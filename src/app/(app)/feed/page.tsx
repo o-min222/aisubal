@@ -6,7 +6,7 @@ import { listFeedPage } from '@/lib/data/feed'
 import { managedGroupIdentities } from '@/lib/data/groups'
 import { composerIdentity } from '@/lib/composer-identity'
 import { isFeedId } from '@/lib/feed-ids'
-import { feedHref, parseFeedScope } from '@/lib/social-rules'
+import { FEED_SCOPES, feedHref, parseFeedScope } from '@/lib/social-rules'
 import { Composer } from '@/components/feed/composer'
 import { FeedFilter } from '@/components/feed/feed-filter'
 import { FeedBoard } from '@/components/feed/feed-board'
@@ -54,7 +54,7 @@ export default async function FeedPage({ searchParams }: { searchParams: Promise
       <h1 className="sr-only"><T>사람 피드</T></h1>
       {/* A59: no tab bar — the posts get the space; the scope is one small text menu */}
       <div className="feed-head">
-        <FeedFilter active={scope} />
+        <FeedFilter active={scope} items={FEED_SCOPES.map((s) => ({ id: s.id, label: s.label, href: feedHref(s.id) }))} />
       </div>
       {<Composer me={{ ...composerIdentity(state.member), groupIdentities }} className="only-desktop" />}
       {/* A26: whose posts these are, and where to manage that list */}

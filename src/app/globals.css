@@ -2882,3 +2882,7 @@ a.notif-pop-all:hover { background: var(--n-fafafa); }
   .moim-flat-page.td-page { border: 0; border-radius: 0; padding: 4px 16px 0; }
   .moim-flat-page .thread-compose { bottom: calc(var(--bottom-tabs-h, 57px) + env(safe-area-inset-bottom)); }
 }
+
+/* A60: the 아고라 header row: the feed's filter + one muted line about who writes here */
+.feed-head-note { margin-left: auto; display: inline-flex; align-items: center; gap: 4px; min-width: 0; font-size: 12.5px; color: var(--n-888); }
+.feed-head-note .text-link { font-size: 12.5px; }

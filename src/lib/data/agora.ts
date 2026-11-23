@@ -3,9 +3,10 @@ import { withAgentCards, withAgentLikerCards } from './agent-profiles'
 import type { TimelineLiker, TimelinePost } from '@/components/timeline/types'
 import { MOCK_AGORA_LIKERS, MOCK_AGORA_POSTS, MOCK_AGORA_REPLIES } from '@/lib/mock-agora'
 import { sb, isMock } from './client'
+import { pickCommentPreviews, previewLine, COMMENT_PREVIEW_COUNT } from '@/lib/feed-rules'
 
 const POST_SELECT =
-  'id, parent_id, root_id, reply_to_id, owner_member_id, token_id, agent_name, agent_model, body, link_url, image_url, tool_name, toolbox_entry_id, rating, like_count, reply_count, is_hidden, created_at, deleted_at, owner:members!agora_posts_owner_member_id_fkey(id, display_name), toolbox:toolbox_entries(slug, name)'
+  'id, parent_id, root_id, reply_to_id, owner_member_id, token_id, agent_name, agent_model, body, link_url, image_url, tool_name, toolbox_entry_id, rating, like_count, reaction_count, reply_count, is_hidden, created_at, deleted_at, owner:members!agora_posts_owner_member_id_fkey(id, display_name), toolbox:toolbox_entries(slug, name)'
 
 type Row = {
   id: string
@@ -23,6 +24,7 @@ type Row = {
   toolbox_entry_id: string | null
   rating: number | null
   like_count: number
+  reaction_count?: number
   reply_count: number
   is_hidden: boolean
   created_at: string
@@ -52,6 +54,7 @@ function toTimeline(r: Row, liked: Set<string>, viewerId?: string): TimelinePost
     tool: toolName ? { name: toolName, href: r.toolbox ? `/gallery/${r.toolbox.slug}` : null } : null,
     rating: r.rating,
     likeCount: r.like_count,
+    reactionCount: r.reaction_count ?? 0,
     likedByMe: liked.has(r.id),
     replyCount: r.reply_count,
     createdAt: r.created_at,
@@ -318,7 +321,39 @@ export async function listAgoraTimeline(...args: Parameters<typeof listAgoraTime
 
 export async function listAgoraPage(...args: Parameters<typeof listAgoraPage__raw>): ReturnType<typeof listAgoraPage__raw> {
   const r = await listAgoraPage__raw(...args)
-  return { ...r, posts: await withAgentCards(r.posts) }
+  return { ...r, posts: await withAgoraCommentPreviews(await withAgentCards(r.posts)) }
+}
+
+/** A60 (= A46 on the people feed): a couple of replies under each card; never breaks the list. */
+async function withAgoraCommentPreviews(posts: TimelinePost[]): Promise<TimelinePost[]> {
+  const ids = posts.filter((p) => !p.parentId && !p.isDeleted && p.replyCount > 0).map((p) => p.id)
+  if (!ids.length) return posts
+  try {
+    const byRoot = new Map<string, TimelinePost[]>()
+    if (isMock()) {
+      for (const id of ids) byRoot.set(id, pickCommentPreviews(id, MOCK_AGORA_REPLIES))
+    } else {
+      const supabase = await sb()
+      const { data: refs, error } = await supabase.rpc('agora_comment_previews', { p_ids: ids.slice(0, 50), p_per: COMMENT_PREVIEW_COUNT })
+      if (error) throw error
+      const list = (refs || []) as Array<{ root_id: string; id: string; rnk: number }>
+      if (!list.length) return posts
+      const { data, error: e2 } = await supabase.from('agora_posts').select(POST_SELECT).in('id', list.map((r) => r.id))
+      if (e2) throw e2
+      const rows = new Map(((data || []) as unknown as Row[]).map((r) => [r.id, toTimeline(r, new Set())]))
+      for (const r of [...list].sort((a, b) => a.rnk - b.rnk)) {
+        const t = rows.get(r.id)
+        if (t) byRoot.set(r.root_id, [...(byRoot.get(r.root_id) ?? []), t])
+      }
+    }
+    return posts.map((p) => {
+      const items = (byRoot.get(p.id) ?? []).map((c) => ({ id: c.id, name: c.author.name, body: previewLine(c.body, c.linkUrl) })).filter((c) => c.body)
+      return items.length ? { ...p, commentPreviews: items } : p
+    })
+  } catch (e) {
+    console.warn('[agora] comment previews skipped', e)
+    return posts
+  }
 }
 
 export async function getAgoraThread(...args: Parameters<typeof getAgoraThread__raw>): ReturnType<typeof getAgoraThread__raw> {

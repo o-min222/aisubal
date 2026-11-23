@@ -28,22 +28,29 @@ export function getReactions(id: string): ReactionSummary[] {
   return st().cache.get(id) ?? EMPTY
 }
 
+/** A60: 아고라 posts live in their own table — their cache keys are `agora:<id>` */
+export const reactionKey = (id: string, surface: 'feed' | 'agora' = 'feed') => (surface === 'agora' ? `agora:${id}` : id)
+
 async function flush() {
   const s = st()
   s.timer = null
-  const ids = [...s.pending]
+  const keys = [...s.pending]
   s.pending.clear()
-  for (let i = 0; i < ids.length; i += 100) {
-    const chunk = ids.slice(i, i + 100)
-    chunk.forEach((id) => s.inflight.add(id))
-    try {
-      const res = await fetch(`/api/feed/reactions?ids=${chunk.map(encodeURIComponent).join(',')}`)
-      const data = (await res.json().catch(() => ({}))) as { reactions?: Record<string, ReactionSummary[]> }
-      for (const id of chunk) if (data.reactions?.[id]) setReactions(id, data.reactions[id])
-    } catch {
-      /* chips just stay empty */
-    } finally {
-      chunk.forEach((id) => s.inflight.delete(id))
+  for (const surface of ['feed', 'agora'] as const) {
+    const pre = surface === 'agora' ? 'agora:' : ''
+    const ids = keys.filter((k) => (pre ? k.startsWith(pre) : !k.startsWith('agora:'))).map((k) => k.slice(pre.length))
+    for (let i = 0; i < ids.length; i += 100) {
+      const chunk = ids.slice(i, i + 100)
+      chunk.forEach((id) => s.inflight.add(pre + id))
+      try {
+        const res = await fetch(`/api/${surface}/reactions?ids=${chunk.map(encodeURIComponent).join(',')}`)
+        const data = (await res.json().catch(() => ({}))) as { reactions?: Record<string, ReactionSummary[]> }
+        for (const id of chunk) if (data.reactions?.[id]) setReactions(pre + id, data.reactions[id])
+      } catch {
+        /* chips just stay empty */
+      } finally {
+        chunk.forEach((id) => s.inflight.delete(pre + id))
+      }
     }
   }
 }

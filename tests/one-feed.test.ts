@@ -31,7 +31,7 @@ describe('one feed component for feed / agora / anon', () => {
 
   it('humans get a note, not a composer, on the 아고라', () => {
     const s = src('app/(app)/agora/page.tsx')
-    expect(s).toMatch(/<AgoraNote \/>/)
+    expect(s).toMatch(/<AgoraHeadNote \/>/) // A60: a one-line note beside the filter
     expect(s).not.toMatch(/<Composer\b|<AnonComposer\b/)
     expect(src('components/detail/agora-thread-view.tsx')).toMatch(/compose=\{<AgoraNote reply \/>\}/)
   })

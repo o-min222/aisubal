@@ -1,10 +1,18 @@
 import { sb, isMock } from './client'
 import { listFeedLikers, mockFeedPost, setMemberFeedLike } from './feed'
+import { listAgoraLikers, setMemberAgoraLike } from './agora'
+import { MOCK_AGORA_POSTS, MOCK_AGORA_REPLIES } from '@/lib/mock-agora'
 import { MOCK_MEMBERS } from '@/lib/mock-data'
 import { CUSTOM_EMOJI_MAX_BYTES, CUSTOM_EMOJI_TYPES, THUMBS, sortSummary, type CustomEmoji, type ReactionSummary } from '@/lib/emoji-rules'
 import type { TimelineLiker } from '@/components/timeline/types'
 
-/** A39: emoji reactions on feed posts/comments. 👍 delegates to post_likes; the rest live in post_reactions. */
+/** A39: emoji reactions on feed posts/comments. 👍 delegates to post_likes; the rest live in post_reactions.
+ *  A60: the same for 아고라 (agora_likes / agora_reactions, 0102). */
+export type ReactionSurface = 'feed' | 'agora'
+const TABLE = { feed: 'post_reactions', agora: 'agora_reactions' } as const
+function mockPost(surface: ReactionSurface, id: string) {
+  return surface === 'agora' ? [...MOCK_AGORA_POSTS, ...MOCK_AGORA_REPLIES].find((p) => p.id === id) : mockFeedPost(id)
+}
 
 type MockReactions = { byPost: Map<string, Array<{ emoji: string; memberId: string; at: string }>>; customs: Array<{ shortcode: string; url: string; createdBy: string }> }
 function mock(): MockReactions {
@@ -33,7 +41,7 @@ function summarize(rows: Array<{ emoji: string; member_id: string }>, viewerId: 
 }
 
 /** non-👍 reactions for many posts at once */
-export async function listReactions(viewerId: string, ids: string[]): Promise<Record<string, ReactionSummary[]>> {
+export async function listReactions(viewerId: string, ids: string[], surface: ReactionSurface = 'feed'): Promise<Record<string, ReactionSummary[]>> {
   const out: Record<string, ReactionSummary[]> = {}
   if (!ids.length) return out
   if (isMock()) {
@@ -41,7 +49,7 @@ export async function listReactions(viewerId: string, ids: string[]): Promise<Re
     return out
   }
   const supabase = await sb()
-  const { data, error } = await supabase.from('post_reactions').select('post_id, emoji, member_id').in('post_id', ids).order('created_at').limit(5000)
+  const { data, error } = await supabase.from(TABLE[surface]).select('post_id, emoji, member_id').in('post_id', ids).order('created_at').limit(5000)
   if (error) throw error
   const by = new Map<string, Array<{ emoji: string; member_id: string }>>()
   for (const r of (data || []) as Array<{ post_id: string; emoji: string; member_id: string }>) {
@@ -59,14 +67,16 @@ export async function setReaction(
   postId: string,
   memberId: string,
   emoji: string,
-  on: boolean
+  on: boolean,
+  surface: ReactionSurface = 'feed'
 ): Promise<{ reactions: ReactionSummary[]; likeCount?: number; liked?: boolean }> {
+  const fresh = async () => (await listReactions(memberId, [postId], surface))[postId] ?? []
   if (emoji === THUMBS) {
-    const likeCount = await setMemberFeedLike(postId, memberId, on)
-    return { reactions: (await listReactions(memberId, [postId]))[postId] ?? [], likeCount, liked: on }
+    const likeCount = surface === 'agora' ? await setMemberAgoraLike(postId, memberId, on) : await setMemberFeedLike(postId, memberId, on)
+    return { reactions: await fresh(), likeCount, liked: on }
   }
   if (isMock()) {
-    const p = mockFeedPost(postId)
+    const p = mockPost(surface, postId)
     if (!p || p.isDeleted) throw new ReactionError('reaction_post_gone')
     const st = mock()
     const list = st.byPost.get(postId) || []
@@ -78,22 +88,22 @@ export async function setReaction(
     }
     st.byPost.set(postId, on ? list : list.filter((r) => !(r.emoji === emoji && r.memberId === memberId)))
     p.reactionCount = (st.byPost.get(postId) || []).length
-    return { reactions: (await listReactions(memberId, [postId]))[postId] ?? [] }
+    return { reactions: await fresh() }
   }
   const supabase = await sb()
   if (on) {
-    const { error } = await supabase.from('post_reactions').insert({ post_id: postId, member_id: memberId, emoji })
+    const { error } = await supabase.from(TABLE[surface]).insert({ post_id: postId, member_id: memberId, emoji })
     if (error && error.code !== '23505') throw new ReactionError(error.message)
   } else {
-    const { error } = await supabase.from('post_reactions').delete().eq('post_id', postId).eq('member_id', memberId).eq('emoji', emoji)
+    const { error } = await supabase.from(TABLE[surface]).delete().eq('post_id', postId).eq('member_id', memberId).eq('emoji', emoji)
     if (error) throw new ReactionError(error.message)
   }
-  return { reactions: (await listReactions(memberId, [postId]))[postId] ?? [] }
+  return { reactions: await fresh() }
 }
 
 /** who reacted with one emoji (👍 = the liker list, agents included) */
-export async function listReactors(postId: string, emoji: string): Promise<TimelineLiker[]> {
-  if (emoji === THUMBS) return listFeedLikers(postId)
+export async function listReactors(postId: string, emoji: string, surface: ReactionSurface = 'feed'): Promise<TimelineLiker[]> {
+  if (emoji === THUMBS) return surface === 'agora' ? listAgoraLikers(postId) : listFeedLikers(postId)
   if (isMock()) {
     return (mock().byPost.get(postId) || [])
       .filter((r) => r.emoji === emoji)
@@ -104,8 +114,8 @@ export async function listReactors(postId: string, emoji: string): Promise<Timel
   }
   const supabase = await sb()
   const { data, error } = await supabase
-    .from('post_reactions')
-    .select('member_id, created_at, member:members!post_reactions_member_id_fkey(id, display_name, avatar_url)')
+    .from(TABLE[surface])
+    .select(`member_id, created_at, member:members!${TABLE[surface]}_member_id_fkey(id, display_name, avatar_url)`)
     .eq('post_id', postId)
     .eq('emoji', emoji)
     .order('created_at')

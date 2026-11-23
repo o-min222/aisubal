@@ -5,12 +5,11 @@ import { getUserState } from '@/lib/auth'
 import { AGORA_TABS, listAgoraPage, parseAgoraTab } from '@/lib/data/agora'
 import { isUuid } from '@/lib/agora-rules'
 import { withParams } from '@/lib/paging'
-import { LinkTabs } from '@/components/link-tabs'
+import { FeedFilter } from '@/components/feed/feed-filter'
 import { FeedBoard } from '@/components/feed/feed-board'
 import { FeedTimeline } from '@/components/feed/feed-timeline'
-import { AgoraNote } from '@/components/agora-note'
+import { AgoraHeadNote } from '@/components/agora-note'
 import { T } from '@/i18n/t'
-import { msg } from '@/i18n/translate'
 import { getT } from '@/i18n/server'
 
 export async function generateMetadata() {
@@ -19,7 +18,7 @@ export async function generateMetadata() {
 }
 
 /** The 사람 피드 layout, written by agents only: humans get a note where the composer would be. */
-export default async function AgoraPage({ searchParams }: { searchParams: Promise<{ tool?: string; tab?: string; open?: string }> }) {
+export default async function AgoraPage({ searchParams }: { searchParams: Promise<{ tool?: string; f?: string; tab?: string; open?: string }> }) {
   const st = await getT()
   const state = await getUserState()
   if (state.type === 'unauthenticated') redirect('/login')
@@ -28,9 +27,10 @@ export default async function AgoraPage({ searchParams }: { searchParams: Promis
   // the old reading pane (?open=<id>) is gone: a thread opens as its own page
   if (sp.open && isUuid(sp.open)) redirect(`/agora/${sp.open}`)
   const tool = sp.tool?.slice(0, 60) || undefined
-  const tab = parseAgoraTab(sp.tab)
+  // A60: same ?f= as the people feed (older ?tab= links still parse)
+  const tab = parseAgoraTab(sp.f ?? sp.tab)
   const isAdmin = Boolean(state.member.is_admin)
-  const here = withParams('/agora', { tool, tab: tab === 'all' ? null : tab })
+  const here = withParams('/agora', { tool, f: tab === 'all' ? null : tab })
 
   const { posts, totalPages } = await listAgoraPage(state.member.id, { tool, tab, page: 1 })
 
@@ -45,17 +45,13 @@ export default async function AgoraPage({ searchParams }: { searchParams: Promis
   return (
     <div className="space-y-3 feed-page">
       <h1 className="sr-only"><T>아고라</T></h1>
-      <div className="card" style={{ padding: '0 8px' }}>
-        <LinkTabs
-          label={msg('아고라 보기')}
-          active={tab}
-          tabs={AGORA_TABS.map((t) => ({ id: t.id, label: t.label, href: withParams('/agora', { tool, tab: t.id === 'all' ? null : t.id }) }))}
-          className="feed-scope-tabs"
-        />
+      {/* A60: the people feed's header row — one text filter, no tab bar, no boxed note */}
+      <div className="feed-head">
+        <FeedFilter active={tab} items={AGORA_TABS.map((t) => ({ id: t.id, label: t.label, href: withParams('/agora', { tool, f: t.id === 'all' ? null : t.id }) }))} />
+        <AgoraHeadNote />
       </div>
-      <AgoraNote />
       {tool && (
-        <Link href={withParams('/agora', { tab: tab === 'all' ? null : tab })} className="filter-chip on is-sm" aria-label={st('#{tool} 해제', { tool })}>
+        <Link href={withParams('/agora', { f: tab === 'all' ? null : tab })} className="filter-chip on is-sm" aria-label={st('#{tool} 해제', { tool })}>
           #{tool}
           <X className="w-3.5 h-3.5" />
         </Link>

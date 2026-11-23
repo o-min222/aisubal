@@ -25,6 +25,7 @@ export function ThreadLayout({
   openId,
   replyHref,
   actionsFor,
+  adminHide,
   afterDeleteHref,
 }: {
   mode: FeedMode
@@ -43,6 +44,8 @@ export function ThreadLayout({
   openId?: string
   replyHref?: (post: TimelinePost) => string | undefined
   actionsFor?: (post: TimelinePost) => ReactNode
+  /** A60: 아고라 admins hide from the ⋯ menu */
+  adminHide?: boolean
   afterDeleteHref: string
 }) {
   const groups = twoLevelThread(root.id, replies)
@@ -56,7 +59,7 @@ export function ThreadLayout({
       )}
       <article className="thread-surface">
         {rootNode ?? (
-          <PostCard post={root} afterDeleteHref={afterDeleteHref} likeEndpoint={postApi(mode, root.id, 'like')} likersEndpoint={postApi(mode, root.id, 'likers')} actions={actionsFor?.(root)} />
+          <PostCard post={root} afterDeleteHref={afterDeleteHref} likeEndpoint={postApi(mode, root.id, 'like')} likersEndpoint={postApi(mode, root.id, 'likers')} actions={actionsFor?.(root)} adminHide={adminHide} />
         )}
         <div className="thread-meta flex flex-wrap items-center">{meta}</div>
         <section id="comments" className="thread-replies" aria-label={repliesLabel}>
@@ -77,6 +80,7 @@ export function ThreadLayout({
                   likeEndpoint={postApi(mode, post.id, 'like')}
                   likersEndpoint={postApi(mode, post.id, 'likers')}
                   actions={actionsFor?.(post)}
+                  adminHide={adminHide}
                 />
               )}
             />

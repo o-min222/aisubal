@@ -6,19 +6,22 @@ import { toast } from 'sonner'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { publishLike, useCounts } from '@/lib/count-store'
 import { applyToggle, isCustomCode, normalizeShortcode, searchEmoji, THUMBS, type CustomEmoji, type ReactionSummary } from '@/lib/emoji-rules'
-import { getReactions, loadCustomEmoji, setCustomEmoji, setReactions, useCustomEmoji, useReactions } from '@/lib/reaction-store'
+import { getReactions, loadCustomEmoji, reactionKey, setCustomEmoji, setReactions, useCustomEmoji, useReactions } from '@/lib/reaction-store'
 import type { TimelineLiker } from './types'
 import { tx, tn } from '@/i18n/client'
 
-/** A39: Slack-style emoji reactions for feed posts and comments. 👍 = the post's like. */
+/** A39: Slack-style emoji reactions for feed posts and comments. 👍 = the post's like.
+ *  A60: the same control on 아고라 posts (surface='agora' → /api/agora/…). */
+export type ReactionSurface = 'feed' | 'agora'
 
 type LikeState = { likeCount: number; liked: boolean }
 
-async function toggleReaction(postId: string, emoji: string, on: boolean, like: LikeState) {
+async function toggleReaction(postId: string, emoji: string, on: boolean, like: LikeState, surface: ReactionSurface = 'feed') {
+  const key = reactionKey(postId, surface)
   if (emoji === THUMBS) {
     publishLike(postId, Math.max(0, like.likeCount + (on ? 1 : -1)), on)
     try {
-      const res = await fetch(`/api/feed/${postId}/like`, { method: on ? 'POST' : 'DELETE' })
+      const res = await fetch(`/api/${surface}/${postId}/like`, { method: on ? 'POST' : 'DELETE' })
       const data = await res.json().catch(() => ({}))
       if (!res.ok) throw new Error(data.error || tn('좋아요 실패'))
       if (typeof data.likeCount === 'number') publishLike(postId, data.likeCount, on)
@@ -28,15 +31,15 @@ async function toggleReaction(postId: string, emoji: string, on: boolean, like: 
     }
     return
   }
-  const before = getReactions(postId)
-  setReactions(postId, applyToggle(before, emoji, on))
+  const before = getReactions(key)
+  setReactions(key, applyToggle(before, emoji, on))
   try {
-    const res = await fetch(`/api/feed/${postId}/reactions`, { method: on ? 'POST' : 'DELETE', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ emoji }) })
+    const res = await fetch(`/api/${surface}/${postId}/reactions`, { method: on ? 'POST' : 'DELETE', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ emoji }) })
     const data = await res.json().catch(() => ({}))
     if (!res.ok) throw new Error(data.error || tn('반응을 남기지 못했어요.'))
-    if (Array.isArray(data.reactions)) setReactions(postId, data.reactions)
+    if (Array.isArray(data.reactions)) setReactions(key, data.reactions)
   } catch (e) {
-    setReactions(postId, before)
+    setReactions(key, before)
     toast.error(e instanceof Error ? e.message : tn('반응을 남기지 못했어요.'))
   }
 }
@@ -49,18 +52,18 @@ function EmojiGlyph({ emoji, customs, size = 16 }: { emoji: string; customs: Cus
 }
 
 /** names of who reacted (hover on desktop, long-press on touch) */
-function WhoReacted({ postId, emoji, count }: { postId: string; emoji: string; count: number }) {
+function WhoReacted({ postId, emoji, count, surface }: { postId: string; emoji: string; count: number; surface: ReactionSurface }) {
   const [people, setPeople] = useState<TimelineLiker[] | null>(null)
   useEffect(() => {
     let off = false
-    fetch(`/api/feed/${postId}/reactions?emoji=${encodeURIComponent(emoji)}`)
+    fetch(`/api/${surface}/${postId}/reactions?emoji=${encodeURIComponent(emoji)}`)
       .then((r) => r.json())
       .then((d) => !off && setPeople(d.people ?? []))
       .catch(() => !off && setPeople([]))
     return () => {
       off = true
     }
-  }, [postId, emoji, count])
+  }, [postId, emoji, count, surface])
   if (!people) return <span className="rx-who-muted">…</span>
   const shown = people.slice(0, 8).map((p) => p.name)
   const rest = Math.max(0, people.length - shown.length)
@@ -72,7 +75,7 @@ function WhoReacted({ postId, emoji, count }: { postId: string; emoji: string; c
   )
 }
 
-function Chip({ postId, r, customs, disabled, like }: { postId: string; r: ReactionSummary; customs: CustomEmoji[]; disabled?: boolean; like: LikeState }) {
+function Chip({ postId, r, customs, disabled, like, surface }: { postId: string; r: ReactionSummary; customs: CustomEmoji[]; disabled?: boolean; like: LikeState; surface: ReactionSurface }) {
   const [peek, setPeek] = useState(false)
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const longPressed = useRef(false)
@@ -125,7 +128,7 @@ function Chip({ postId, r, customs, disabled, like }: { postId: string; r: React
             longPressed.current = false
             return
           }
-          void toggleReaction(postId, r.emoji, !r.mine, like)
+          void toggleReaction(postId, r.emoji, !r.mine, like, surface)
         }}
       >
         <EmojiGlyph emoji={r.emoji} customs={customs} size={15} />
@@ -133,7 +136,7 @@ function Chip({ postId, r, customs, disabled, like }: { postId: string; r: React
       </button>
       {peek && (
         <span className="rx-who" role="tooltip">
-          <WhoReacted postId={postId} emoji={r.emoji} count={r.count} />
+          <WhoReacted postId={postId} emoji={r.emoji} count={r.count} surface={surface} />
         </span>
       )}
     </span>
@@ -147,15 +150,17 @@ export function ReactionChips({
   initialCount,
   reactionCount,
   disabled,
+  surface = 'feed',
 }: {
   postId: string
   initialLiked: boolean
   initialCount: number
   reactionCount?: number
   disabled?: boolean
+  surface?: ReactionSurface
 }) {
   const counts = useCounts(postId, { likeCount: initialCount, liked: initialLiked, replyCount: 0 })
-  const rest = useReactions(postId, reactionCount === 0)
+  const rest = useReactions(reactionKey(postId, surface), reactionCount === 0)
   const needCustom = rest.some((r) => isCustomCode(r.emoji))
   const { list: customs } = useCustomEmoji(needCustom)
   const all = useMemo(
@@ -166,17 +171,17 @@ export function ReactionChips({
   return (
     <div className="rx-row" data-rx-row>
       {all.map((r) => (
-        <Chip key={r.emoji} postId={postId} r={r} customs={customs} disabled={disabled} like={counts} />
+        <Chip key={r.emoji} postId={postId} r={r} customs={customs} disabled={disabled} like={counts} surface={surface} />
       ))}
     </div>
   )
 }
 
 /** footer button: opens the picker */
-export function ReactionAddButton({ postId, initialLiked, initialCount, disabled }: { postId: string; initialLiked: boolean; initialCount: number; disabled?: boolean }) {
+export function ReactionAddButton({ postId, initialLiked, initialCount, disabled, surface = 'feed' }: { postId: string; initialLiked: boolean; initialCount: number; disabled?: boolean; surface?: ReactionSurface }) {
   const [open, setOpen] = useState(false)
   const counts = useCounts(postId, { likeCount: initialCount, liked: initialLiked, replyCount: 0 })
-  const rest = useReactions(postId, true)
+  const rest = useReactions(reactionKey(postId, surface), true)
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger
@@ -193,7 +198,7 @@ export function ReactionAddButton({ postId, initialLiked, initialCount, disabled
             mineSet={new Set([...(counts.liked ? [THUMBS] : []), ...rest.filter((r) => r.mine).map((r) => r.emoji)])}
             onPick={(emoji, mine) => {
               setOpen(false)
-              void toggleReaction(postId, emoji, !mine, counts)
+              void toggleReaction(postId, emoji, !mine, counts, surface)
             }}
           />
         )}
