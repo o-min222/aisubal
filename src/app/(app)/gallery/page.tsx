@@ -105,7 +105,7 @@ export default async function ToolsPage({ searchParams }: { searchParams: Promis
           <p className="text-[13px] text-n-666 mt-0.5"><T>MCP·스킬·CLI·서비스. 멤버가 쓰는 것과 직접 만든 서비스를 한곳에서.</T></p>
         </div>
         <div className="flex gap-2 flex-shrink-0">
-          <Link href="/gallery/submissions" className="btn btn-secondary btn-sm min-h-[40px]" aria-label={st('내 등록 요청')}>
+          <Link href="/gallery/submissions" className="btn btn-secondary btn-sm min-h-[40px]" aria-label={st('내가 올린 항목')}>
             <Inbox className="w-4 h-4" /> <span className="only-desktop"><T>내 요청</T></span>
           </Link>
           <Link href="/gallery/new" className="btn btn-primary btn-sm min-h-[40px]">

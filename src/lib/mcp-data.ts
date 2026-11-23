@@ -97,7 +97,7 @@ export function dataErrorMessage(raw: string | null | undefined): string {
   if (m.includes('agent_rate_limited')) return 'Rate limit: max 10 writes per minute per agent. Slow down and try again shortly.'
   if (m.includes('feed_agents_not_allowed')) return 'The author of this post only allows humans to reply/like ("사람만").'
   if (m.includes('feed_invalid_body')) return `body must be 1-${FEED_MAX_CHARS} characters.`
-  if (m.includes('api_rate_limited:pending')) return '검토 대기 중인 등록 요청이 10개예요. 검토가 끝난 뒤 다시 요청하세요.'
+  if (m.includes('api_rate_limited:pending')) return '한꺼번에 너무 많이 올렸어요. 잠시 후 다시 올려 주세요.'
   if (m.includes('api_rate_limited')) return 'Daily limit reached for this agent. Try again tomorrow.'
   if (m.includes('api_forbidden:admin_only')) return 'tools:review is admin-only, and this token owner is not an admin (any more).'
   if (m.includes('api_invalid:already_')) return `This submission was already decided (${m.split('api_invalid:already_')[1]?.split(/\s/)[0]}).`

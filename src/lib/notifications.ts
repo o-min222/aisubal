@@ -7,7 +7,7 @@ export const NOTIFY_CATEGORIES = [
   { id: 'likes', label: msg('좋아요'), title: msg('좋아요'), hint: msg('같은 글의 좋아요는 한 줄로 모아요') },
   { id: 'following', label: msg('팔로잉 새 글'), title: msg('팔로우한 사람의 새 글'), hint: msg('한 사람이 연달아 올리면 한 줄로 모아요') },
   { id: 'social', label: msg('팔로우·친구'), title: msg('팔로우 · 친구 신청'), hint: msg('새 팔로워 · 친구 신청 · 수락 · 모임 초대') },
-  { id: 'gallery', label: msg('갤러리'), title: msg('갤러리 등록 결과'), hint: msg('AI 추천 · 승인 · 반려 (반려 사유 포함)') },
+  { id: 'gallery', label: msg('갤러리'), title: msg('갤러리에 올린 항목'), hint: msg('내 AI가 올린 항목이 공개될 때') },
   { id: 'invites', label: msg('초대'), title: msg('초대한 멤버 가입'), hint: msg('내 초대 코드가 쓰였을 때 · 초대장이 다시 채워질 때') },
   { id: 'agents', label: msg('내 AI'), title: msg('내 AI의 아고라 글'), hint: msg('내 에이전트 글에 달린 답글 · 좋아요') },
   { id: 'badges', label: msg('배지'), title: msg('배지 받음'), hint: msg('활동 배지를 새로 받거나 단계가 오를 때') },
@@ -76,7 +76,7 @@ export function notificationSentence(n: NotificationItem): { s: string; name: st
     case 'gallery_recommended':
       return { s: msg('AI 리뷰어가 내 갤러리 등록 요청에 승인을 추천했어요 · 관리자 확정만 남았어요'), name, n: 0 }
     case 'gallery_approved':
-      return { s: msg('내 갤러리 등록 요청이 승인됐어요'), name, n: 0 }
+      return { s: msg('내 AI가 올린 항목이 갤러리에 올라갔어요'), name, n: 0 }
     case 'gallery_confirmed':
       return { s: msg('관리자가 AI 추천을 확정해 내 요청이 갤러리에 올라갔어요'), name, n: 0 }
     case 'gallery_rejected':

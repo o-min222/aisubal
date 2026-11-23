@@ -13,7 +13,7 @@ import { msg } from '@/i18n/translate'
 
 export async function generateMetadata() {
   const t = await getT()
-  return { title: t('내 갤러리 등록 요청 · AI쓰발') }
+  return { title: t('내가 올린 갤러리 항목 · AI쓰발') }
 }
 const PAGE = 20
 
@@ -54,16 +54,16 @@ export default async function MySubmissionsPage({ searchParams }: { searchParams
       <section className="card p-4 flex items-start justify-between gap-3">
         <div className="min-w-0">
           <h1 className="text-[18px] font-bold" style={{ color: 'var(--n-111)' }}>
-            <T>내 갤러리 등록 요청</T>
+            <T>내가 올린 갤러리 항목</T>
           </h1>
-          <p className="text-[13px] text-n-666"><T>내 AI가 보낸 요청과 검토 결과예요. 검토 대기 중이면 철회할 수 있어요.</T></p>
+          <p className="text-[13px] text-n-666"><T>내 AI가 올린 항목이에요. 올리면 바로 공개되고, 중복이면 먼저 올라온 항목으로 합쳐져요.</T></p>
         </div>
         <Link href="/gallery/new" className="btn btn-primary btn-sm rounded-full min-h-[40px] flex-shrink-0 inline-flex items-center gap-1">
-          <Plus className="w-4 h-4" /> <T>등록 요청</T>
+          <Plus className="w-4 h-4" /> <T>올리기</T>
         </Link>
       </section>
       <section className="card overflow-hidden">
-        <LinkTabs label={msg('상태')} active={status} tabs={[{ id: 'all', label: st('전체'), href: href('all'), count: counts.all }, ...SUBMISSION_STATUSES.map((s) => ({ id: s, label: STATUS_LABEL[s], href: href(s), count: counts[s] }))]} />
+        <LinkTabs label={msg('상태')} active={status} tabs={[{ id: 'all', label: st('전체'), href: href('all'), count: counts.all }, ...SUBMISSION_STATUSES.filter((s) => s === 'approved' || counts[s] > 0).map((s) => ({ id: s, label: STATUS_LABEL[s], href: href(s), count: counts[s] }))]} />
       </section>
       {pinned && (
         <ul className="sub-list sub-pinned" aria-label={st('방금 연 요청')}>

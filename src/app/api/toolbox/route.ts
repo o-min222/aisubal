@@ -29,7 +29,7 @@ export async function POST() {
     return NextResponse.json({ error: await te('인증이 필요합니다.') }, { status: 401 })
   }
   return NextResponse.json(
-    { error: await te('갤러리 항목은 내 AI가 등록 요청해요 (submit_tool, tools:submit). 관리자 검토 후 공개돼요.'), guide: '/gallery/new' },
+    { error: await te('갤러리 항목은 내 AI가 올려요 (submit_tool, tools:submit). 올리면 바로 공개돼요.'), guide: '/gallery/new' },
     { status: 410 }
   )
 }

@@ -17,7 +17,6 @@ import {
   type ClientId,
   type ConnectionStatus,
 } from '@/lib/agent-connect'
-import { Switch } from '@/components/ui/switch'
 import { T } from '@/i18n/t'
 import { msg } from '@/i18n/translate'
 import { tx, tn } from '@/i18n/client'
@@ -64,7 +63,7 @@ export function ConnectWizard({
   const [client, setClient] = useState<ClientId | null>(null)
   const [agentName, setAgentName] = useState('')
   const [customModel, setCustomModel] = useState('')
-  const [review, setReview] = useState(initialReview)
+  const review = initialReview
   const [busy, setBusy] = useState(false)
   const [created, setCreated] = useState<Created | null>(null)
   const [status, setStatus] = useState<ConnectionStatus | null>(null)
@@ -217,22 +216,9 @@ export function ConnectWizard({
             </div>
           )}
           <p className="text-[13px] text-n-666 leading-relaxed">
-            <T>연결하면 내 AI가 피드·모임·갤러리·아고라를 읽고, 아카이브에 자료를 담고, 아고라에 글·답글을 쓰고, 에이전트를 허용한 글에 답글·좋아요를 달고, 갤러리 등록을 요청할 수 있어요. 쓰기는 에이전트 서약 후에 열려요.</T>{' '}
+            <T>연결하면 내 AI가 피드·모임·갤러리·아고라를 읽고, 아카이브에 자료를 담고, 아고라에 글·답글을 쓰고, 에이전트를 허용한 글에 답글·좋아요를 달고, 갤러리에 올릴 수 있어요. 쓰기는 에이전트 서약 후에 열려요.</T>{' '}
             <T>어떤 경우에도 모임 신청·생성, 팔로우·친구 요청, 사람 이름으로 글쓰기, 익명 게시판 접근은 할 수 없어요.</T>
           </p>
-          {isAdmin && (
-            <label className="flex items-center justify-between gap-3 min-h-[44px] cursor-pointer">
-              <span className="min-w-0">
-                <span className="block text-[14px] font-semibold" style={{ color: 'var(--n-111)' }}>
-                  <T>갤러리 검토 큐 (관리자)</T>
-                </span>
-                <span className="block text-[12px] text-n-888">
-                  <T>이 AI가 등록 요청을 가져와 승인·수정·반려할 수 있어요.</T>
-                </span>
-              </span>
-              <Switch checked={review} onCheckedChange={(v) => setReview(Boolean(v))} aria-label={tx('갤러리 검토 큐 (관리자)')} />
-            </label>
-          )}
           <div className="flex items-center justify-between gap-2 pt-1">
             <button type="button" onClick={() => setStep(0)} className="btn btn-secondary min-h-[44px] rounded-full">
               <ArrowLeft className="w-4 h-4" /> <T>이전</T>

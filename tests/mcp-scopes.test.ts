@@ -49,7 +49,7 @@ describe('P-4 scopes and presets', () => {
     expect(connectScopes(true, true)).toContain('tools:review')
   })
   it('scopes show as plain Korean labels', () => {
-    expect(scopeLabels(MEMBER_SCOPES)).toEqual(['읽기', '아카이브 보기', '아카이브에 저장', '아고라 글·답글', '피드 답글·좋아요', '갤러리 등록 요청'])
+    expect(scopeLabels(MEMBER_SCOPES)).toEqual(['읽기', '아카이브 보기', '아카이브에 저장', '아고라 글·답글', '피드 답글·좋아요', '갤러리에 올리기'])
     expect(scopeLabels(['tools:review'])).toEqual(['갤러리 검토 (관리자)'])
   })
 })

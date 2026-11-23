@@ -111,6 +111,8 @@ function mock(): MockState {
     { ...base, id: '5b0c1f7e-0004-4c1a-9a61-000000000004', submitterId: 'member-1', name: 'Playwright MCP', oneLiner: '브라우저 자동화 MCP', url: 'https://github.com/microsoft/playwright-mcp', type: 'mcp_server', tags: ['mcp', 'browser'], status: 'pending', submittedBy: '에이전트덕후님의 커서 집사', createdAt: ago(1), aiRecommended: { at: ago(0.5), by: '개발자님의 검토 비서', note: '공식 Microsoft 저장소이고 스냅샷이 설명과 일치해요.' } },
     { ...base, id: '5b0c1f7e-0005-4c1a-9a61-000000000005', submitterId: 'member-2', name: 'Cursor Rules Pack KR', oneLiner: '한국어 주석·커밋 메시지 규칙 모음', url: 'https://github.com/example/cursor-rules-kr', type: 'cursor_rules', tags: ['rules', 'korean'], status: 'pending', submittedBy: '프롬프트수집가님의 GPT 비서', createdAt: ago(5) },
   ]
+  // uploads publish immediately since 0088: no pending items in the seed
+  for (const s of subs) if (s.status === 'pending') Object.assign(s, { status: 'approved', reviewedBy: '바로 공개', reviewedAt: s.createdAt, aiRecommended: undefined })
   const log: MockState['log'] = []
   for (const s of subs) {
     log.push({ id: `${s.id}-l1`, submissionId: s.id, action: 'submitted', actorKind: 'agent', actorLabel: s.submittedBy, reason: null, changes: null, createdAt: s.createdAt })
@@ -185,6 +187,37 @@ export async function getSubmission(viewerId: string, id: string): Promise<{ sub
   }
 }
 
+export type MergeLog = {
+  id: string
+  keptSlug: string | null
+  keptName: string | null
+  mergedName: string
+  mergedSlug: string
+  rule: 'same_url' | 'same_name_host'
+  moved: Record<string, number>
+  createdAt: string
+}
+
+/** Recent automatic duplicate merges (hourly pg_cron job, 0088). Admin RLS. */
+export async function listMerges(limit = 20): Promise<MergeLog[]> {
+  if (isMock()) {
+    return [
+      { id: 'mock-merge-1', keptSlug: 'claude-code', keptName: 'Claude Code', mergedName: 'claude code cli', mergedSlug: 'claude-code-cli', rule: 'same_url', moved: { users: 2, reviews: 1, submissions: 1 }, createdAt: new Date(Date.now() - 3 * 3600_000).toISOString() },
+    ]
+  }
+  const supabase = await sb()
+  const { data } = await supabase
+    .from('toolbox_merges')
+    .select('id, merged_name, merged_slug, rule, moved, created_at, kept:toolbox_entries!toolbox_merges_kept_id_fkey(slug, name)')
+    .order('created_at', { ascending: false })
+    .limit(limit)
+  type Row = { id: string; merged_name: string; merged_slug: string; rule: MergeLog['rule']; moved: Record<string, number> | null; created_at: string; kept: { slug: string; name: string } | { slug: string; name: string }[] | null }
+  return ((data || []) as unknown as Row[]).map((r) => {
+    const k = Array.isArray(r.kept) ? r.kept[0] : r.kept
+    return { id: r.id, keptSlug: k?.slug ?? null, keptName: k?.name ?? null, mergedName: r.merged_name, mergedSlug: r.merged_slug, rule: r.rule, moved: r.moved || {}, createdAt: r.created_at }
+  })
+}
+
 /** Light duplicate hints for the admin web view (the full check runs in review_get). */
 export async function duplicateHints(s: Pick<Submission, 'id' | 'url' | 'name'>): Promise<DupCandidate[]> {
   const norm = (x: string) => x.toLowerCase().replace(/[^a-z0-9가-힣]+/g, '')
@@ -235,16 +268,16 @@ export async function getToolProvenance(entryId: string): Promise<Provenance | n
 export function mockSubmitTool(memberId: string, label: string, a: Record<string, unknown>) {
   const st = mock()
   const url = String(a.url || '')
-  const existing = st.subs.find((s) => s.url === url && s.status === 'pending')
-  if (existing) return existing.submitterId === memberId ? { id: existing.id, status: existing.status, deduped: true } : { status: 'already_submitted' }
+  const existing = st.subs.find((s) => s.url === url && s.status === 'approved')
+  if (existing) return { status: 'exists', message: msg('이미 갤러리에 있어요.') }
   const s: Submission = {
     id: crypto.randomUUID(), submitterId: memberId, name: String(a.name), oneLiner: String(a.oneLiner), description: String(a.description || ''), url,
-    type: String(a.type || 'saas_service'), tags: Array.isArray(a.tags) ? (a.tags as string[]).slice(0, 10) : [], note: String(a.note || ''), status: 'pending',
-    reason: null, submittedBy: label, reviewedBy: null, reviewedAt: null, createdAt: new Date().toISOString(), entry: null, duplicateOf: null, snapshot: null, snapshotAt: null,
+    type: String(a.type || 'saas_service'), tags: Array.isArray(a.tags) ? (a.tags as string[]).slice(0, 10) : [], note: String(a.note || ''), status: 'approved',
+    reason: null, submittedBy: label, reviewedBy: '바로 공개', reviewedAt: new Date().toISOString(), createdAt: new Date().toISOString(), entry: null, duplicateOf: null, snapshot: null, snapshotAt: null,
   }
   st.subs.push(s)
   st.log.push({ id: `${s.id}-l1`, submissionId: s.id, action: 'submitted', actorKind: 'agent', actorLabel: label, reason: null, changes: null, createdAt: s.createdAt })
-  return { id: s.id, status: s.status, submittedBy: label, statusUrl: `/gallery/submissions?open=${s.id}`, message: msg('등록 요청을 받았어요. 관리자 검토 후 공개돼요.') }
+  return { id: s.id, status: s.status, submittedBy: label, statusUrl: `/gallery/submissions?open=${s.id}`, message: msg('갤러리에 바로 올라갔어요. 비슷한 항목이 이미 있으면 정리 작업이 자동으로 하나로 합쳐요.') }
 }
 export function mockMySubmissions(memberId: string) {
   return { submissions: mock().subs.filter((s) => s.submitterId === memberId).map((s) => ({ id: s.id, name: s.name, status: s.status, reason: s.reason, reviewedBy: s.reviewedBy })) }

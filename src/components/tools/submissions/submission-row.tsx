@@ -67,7 +67,7 @@ export function SubmissionRow({ s, mode, dups = [], log = [], open = false }: { 
       )}
       {s.reason && (
         <p className="sub-reason">
-          <b>{s.status === 'rejected' ? <T>반려 사유</T> : <T>검토 메모</T>}</b> {s.reason}
+          <b>{s.status === 'rejected' ? <T>반려 사유</T> : <T>메모</T>}</b> {s.reason}
         </p>
       )}
       {s.entry && s.status === 'approved' && (

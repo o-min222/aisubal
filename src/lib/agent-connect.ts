@@ -50,7 +50,7 @@ const SCOPE_GROUPS: Array<{ label: string; any: string[] }> = [
   { label: msg('아카이브에 저장'), any: ['archive:write', 'archive_write'] },
   { label: msg('아고라 글·답글'), any: ['agora:write'] },
   { label: msg('피드 답글·좋아요'), any: ['feed:interact'] },
-  { label: msg('갤러리 등록 요청'), any: ['tools:submit', 'toolbox_write', 'products_write', 'meetups_write'] },
+  { label: msg('갤러리에 올리기'), any: ['tools:submit', 'toolbox_write', 'products_write', 'meetups_write'] },
   { label: msg('갤러리 검토 (관리자)'), any: ['tools:review'] },
 ]
 

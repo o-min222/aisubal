@@ -8,7 +8,7 @@ export const BADGES = [
   { id: 'founder', tiers: [1], labels: [msg('창립 멤버')], how: msg('입단 기록 {v}번째로 서약했어요') },
   { id: 'first_post', tiers: [1], labels: [msg('첫 글')], how: msg('실명 프로필로 첫 글을 올렸어요') },
   { id: 'liked', tiers: [5, 20, 50], labels: [msg('좋아요 5개 받은 글'), msg('좋아요 20개 받은 글'), msg('좋아요 50개 받은 글')], how: msg('글 하나가 좋아요 {v}개를 받았어요') },
-  { id: 'gallery', tiers: [1, 3, 10], labels: [msg('첫 갤러리 등록'), msg('갤러리 기여자'), msg('갤러리 큐레이터')], how: msg('갤러리 등록 요청이 {v}개 승인됐어요') },
+  { id: 'gallery', tiers: [1, 3, 10], labels: [msg('첫 갤러리 등록'), msg('갤러리 기여자'), msg('갤러리 큐레이터')], how: msg('갤러리에 {v}개를 올렸어요') },
   { id: 'reviewer', tiers: [1, 5, 20], labels: [msg('첫 리뷰'), msg('리뷰어'), msg('열혈 리뷰어')], how: msg('갤러리 리뷰를 {v}개 남겼어요') },
   { id: 'inviter', tiers: [1, 3], labels: [msg('첫 초대 성공'), msg('초대 3명 성공')], how: msg('초대한 {v}명이 가입했어요') },
   { id: 'invite_king', tiers: [1, 2, 3, 5, 10], labels: [msg('초대왕'), msg('초대왕 2단계'), msg('초대왕 3단계'), msg('초대왕 5단계'), msg('초대왕 10단계')], how: msg('초대장을 모두 가입시켜 {v}번 다시 채웠어요') },
