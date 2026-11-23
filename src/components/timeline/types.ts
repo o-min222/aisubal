@@ -40,6 +40,8 @@ export type TimelinePost = {
   likedByMe: boolean
   /** A39: emoji reactions other than 👍 (👍 = likeCount); undefined = unknown (mock) */
   reactionCount?: number
+  /** A43: who can see it (root's value on replies); undefined = members */
+  visibility?: import('@/lib/post-visibility').PostVisibility
   replyCount: number
   createdAt: string
   isHidden?: boolean

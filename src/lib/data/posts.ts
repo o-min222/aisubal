@@ -1,3 +1,5 @@
+import type { PostVisibility } from '@/lib/post-visibility'
+import { setMockPostVisibilityDefault } from './agent-interaction-default'
 import {
   MOCK_MEMBERS,
   MOCK_POSTS,
@@ -7,7 +9,7 @@ import { nicknameProfilePublicId, toPublicAuthor, toPublicPost, toPublicPostView
 import { aggregateMentionsFromPosts } from '@/lib/data/toolbox'
 import { archiveSaveCounts } from '@/lib/data/archive'
 import type { AgentInteraction, Asset, LinkPreview, Member, Post, PostAs } from '@/lib/supabase/types'
-import { mockAppendFeedPost, mockFeedGroupOf, mockRecordGroupWriter } from './feed'
+import { mockAppendFeedPost, mockFeedGroupOf, mockFeedPost, mockRecordGroupWriter } from './feed'
 import { sb, isMock } from './client'
 import { MEMBER_EMBED, MEMBER_PUBLIC_COLUMNS } from './member-columns'
 import type { PostWithDetails } from './types'
@@ -26,6 +28,8 @@ type CreatePostInput = {
   /** reply target (any post in the thread). Replies skip archive auto-save. */
   parentId?: string | null
   agentInteraction?: AgentInteraction
+  /** A43: 공유범위 (the route only passes a restricted value for eligible root posts) */
+  visibility?: PostVisibility
   /** author-declared (0046); default human */
   sourceNote?: string
   url?: string
@@ -224,7 +228,9 @@ export async function createPost(
       createdAt: post.created_at,
       agentsAllowed: !parentId && input.agentInteraction === 'agents_allowed',
       isNickname: input.postedAs === 'nickname',
+      visibility: parentId ? mockFeedPost(parentId)?.visibility ?? 'members' : input.visibility ?? 'members',
     })
+    if (!parentId && !input.groupId && !input.asGroup && input.postedAs === 'real') setMockPostVisibilityDefault(input.visibility ?? 'members')
     if (input.asGroup) mockRecordGroupWriter(post.id, member.id)
     if (parentId || input.groupId || input.asGroup) return { post: pub, details }
     MOCK_POSTS.unshift(details)
@@ -253,6 +259,7 @@ export async function createPost(
       author_id: member.id,
       posted_as: input.asGroup && !input.parentId ? 'group' : input.postedAs,
       as_group_id: input.asGroup && !input.parentId ? input.asGroup.id : null,
+      ...(input.visibility && input.visibility !== 'members' && !input.parentId ? { visibility: input.visibility } : {}),
     })
     .select(POST_COLUMNS)
     .single()

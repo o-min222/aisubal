@@ -5,6 +5,8 @@ export type Member = {
   theme?: string | null
   /** composer's last agent-reaction choice (0082); set via member_set_agent_interaction */
   agent_interaction_default?: string | null
+  /** A43 (0095): the composer's last 공유범위 */
+  post_visibility_default?: string | null
   id: string
   auth_id: string
   email: string // private — only from get_my_member() for the owner; never shown to others

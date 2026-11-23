@@ -1,3 +1,4 @@
+import { canRestrict } from '@/lib/post-visibility'
 import { kickWebhookWorker } from '@/lib/agent-webhooks'
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
@@ -22,6 +23,8 @@ const schema = z.object({
   /** links the composer is showing previews for (after the author removed some); max 4 */
   urls: z.array(z.string().max(2000)).max(MAX_LINK_PREVIEWS).optional(),
   agentInteraction: z.enum(['humans_only', 'agents_allowed']).optional(),
+  /** A43: 공유범위 (root, real-name, non-group posts only) */
+  visibility: z.enum(['members', 'followers', 'friends', 'private']).optional(),
   postedAs: z.enum(['real', 'nickname']).optional(),
   groupId: z.string().max(64).nullish(),
   /** B14: post under this group's identity (group owners/mods, root posts) */
@@ -102,6 +105,7 @@ export async function POST(request: NextRequest) {
       content: v.value.body,
       parentId: v.value.parentId,
       agentInteraction: raw.groupId ? 'humans_only' : v.value.agentInteraction,
+      visibility: canRestrict({ isReply: Boolean(raw.parentId), groupId: raw.groupId, asGroup: Boolean(asGroup), postedAs: v.value.postedAs }) ? raw.visibility ?? 'members' : 'members',
       postedAs: asGroup ? 'real' : v.value.postedAs,
       asGroup,
       groupId: raw.parentId ? null : raw.groupId || null,

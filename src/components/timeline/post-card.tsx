@@ -16,6 +16,7 @@ import { UserAvatar } from '@/components/user-avatar'
 import { RelativeTime } from '@/components/relative-time'
 import { LikeButton } from './like-button'
 import { ReactionAddButton, ReactionChips } from './reactions'
+import { VisibilityMark } from './visibility-mark'
 import { LikerList } from './liker-list'
 import type { TimelinePost } from './types'
 import { categoryLabel } from '@/lib/anon-rules'
@@ -201,6 +202,7 @@ export function PostCard({
               <span className="tc-time">
                 <span className="text-n-bbb" aria-hidden>·</span> <RelativeTime date={post.createdAt} />
               </span>
+              {!isReply && post.visibility && post.visibility !== 'members' && <VisibilityMark v={post.visibility} />}
             </span>
             {post.isEdited && !gone && <span className="text-n-999 text-xs"><T>수정됨</T></span>}
             {post.isHidden && !anon && <span className="badge badge-note"><T>숨김</T></span>}

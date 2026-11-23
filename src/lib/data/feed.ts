@@ -1,3 +1,4 @@
+import type { PostVisibility } from '@/lib/post-visibility'
 import { ownPostsFilter } from './own-posts'
 import { myNicknameId } from './nickname'
 import { withAgentCards, withAgentLikerCards } from './agent-profiles'
@@ -16,7 +17,7 @@ import { pickInterestTags, rankFeedPosts } from '@/lib/recommend-rules'
 import { moimCardsForThreads, promotedGroupMoimThreads } from './moim'
 import { isMoimThreadBody } from '@/lib/moim-thread-rules'
 const FEED_SELECT =
-  'id, parent_id, root_id, reply_to_id, title, content, url, link_title, link_description, link_image, link_site_name, link_favicon, link_type, link_previews, posted_as, author_kind, agent_name, agent_model, agent_token_id, agent_interaction, like_count, reaction_count, reply_count, is_hidden, created_at, group_id, deleted_at, edited_at, public_author_id, author:members!posts_public_author_id_fkey(id, display_name, handle, avatar_url), nick:nickname_profiles!posts_nickname_id_fkey(id, nickname, avatar_url), as_group_id, grp:groups!posts_as_group_id_fkey(id, slug, name)'
+  'id, parent_id, root_id, reply_to_id, title, content, url, link_title, link_description, link_image, link_site_name, link_favicon, link_type, link_previews, posted_as, author_kind, agent_name, agent_model, agent_token_id, agent_interaction, like_count, reaction_count, visibility, reply_count, is_hidden, created_at, group_id, deleted_at, edited_at, public_author_id, author:members!posts_public_author_id_fkey(id, display_name, handle, avatar_url), nick:nickname_profiles!posts_nickname_id_fkey(id, nickname, avatar_url), as_group_id, grp:groups!posts_as_group_id_fkey(id, slug, name)'
 
 // ---------------------------------------------------------------- mock (DEV)
 type MockState = { posts: TimelinePost[]; likers: Map<string, TimelineLiker[]> }
@@ -520,6 +521,29 @@ export async function setMemberFeedLike(postId: string, memberId: string, like: 
 
 
 /** Author toggles who may interact (root posts only). */
+/** A43: the author's own real-name root post; replies follow in the DB (0095) */
+export async function setFeedVisibility(postId: string, memberId: string, value: PostVisibility): Promise<boolean> {
+  if (isMock()) {
+    const st = mockState()
+    const p = st.posts.find((x) => x.id === postId && !x.parentId && x.author.id === memberId && !x.isNickname && x.author.kind === 'member' && !x.groupId)
+    if (!p) return false
+    for (const x of st.posts) if (x.id === postId || x.rootId === postId) x.visibility = value
+    return true
+  }
+  const supabase = await sb()
+  const { data, error } = await supabase
+    .from('posts')
+    .update({ visibility: value })
+    .eq('id', postId)
+    .eq('public_author_id', memberId)
+    .eq('posted_as', 'real')
+    .is('parent_id', null)
+    .is('group_id', null)
+    .select('id')
+  if (error) throw error
+  return Boolean(data?.length)
+}
+
 export async function setFeedAgentInteraction(
   postId: string,
   member: Member,

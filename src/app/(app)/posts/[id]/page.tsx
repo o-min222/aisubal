@@ -11,6 +11,7 @@ import { T } from '@/i18n/t'
 import { pageTitle } from '@/lib/page-title'
 import { canonical } from '@/lib/canonical'
 import { getT } from '@/i18n/server'
+import { NotFoundCard } from '@/components/not-found-card'
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
   const state = await getUserState()
@@ -33,7 +34,13 @@ export default async function PostThreadPage({
   const { reply } = await searchParams
   if (!isFeedId(id)) notFound()
   const thread = await getFeedThread(id, state.member.id)
-  if (!thread) notFound()
+  // A43: restricted, deleted and unknown posts look the same
+  if (!thread)
+    return (
+      <div className="py-2">
+        <NotFoundCard kind="post" />
+      </div>
+    )
   if (thread.root.id !== id) redirect(`/posts/${thread.root.id}`)
   // A29: a 모임's thread post links back to the 모임 (date · place · 신청 live there)
   const moim = isMoimThreadBody(thread.root.body) ? await moimForThread(thread.root.id).catch(() => null) : null

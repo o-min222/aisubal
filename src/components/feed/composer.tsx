@@ -11,6 +11,8 @@ import { postedHref } from '@/lib/posted-rules'
 import { offerPushAfterPosting } from '@/lib/push-client'
 import { UserAvatar } from '@/components/user-avatar'
 import { ComposerFrame, ComposerTextarea } from '@/components/composer/composer-frame'
+import { VisibilityPicker } from '@/components/composer/visibility-picker'
+import { canRestrict, type PostVisibility } from '@/lib/post-visibility'
 import { AgentReactionPicker } from '@/components/composer/agent-reaction-picker'
 import { IdentityPicker, type IdentityOption } from '@/components/composer/identity-picker'
 import { GroupAvatar } from '@/components/groups/group-avatar'
@@ -30,6 +32,8 @@ export type ComposerIdentity = {
   groupIdentities?: Array<{ id: string; name: string }>
   /** A24: where the agent-reaction toggle starts (the member's last choice) */
   agentInteraction?: AgentInteraction
+  /** A43: last 공유범위 */
+  visibility?: PostVisibility
 }
 
 /**
@@ -73,9 +77,11 @@ export function Composer({
   // 'real' | 'nickname' | 'group:<id>' (group identities only on root posts)
   const [who, setWho] = useState('real')
   const [interaction, setInteraction] = useState<AgentInteraction>(me.agentInteraction ?? 'humans_only')
+  const [visibility, setVisibility] = useState<PostVisibility>(me.visibility ?? 'members')
   const [busy, setBusy] = useState(false)
   const isReply = Boolean(parentId)
   const asGroup = !isReply && who.startsWith('group:') ? (me.groupIdentities ?? []).find((g) => `group:${g.id}` === who) ?? null : null
+  const restrictable = canRestrict({ isReply, groupId, asGroup: Boolean(asGroup), postedAs })
   // live link previews (top-level posts only; replies never get cards)
   const previews = useLinkPreviews(body, !isReply)
   // PII guard: warn before publishing; a second press posts anyway (the poster decides).
@@ -107,6 +113,7 @@ export function Composer({
           postedAs: asGroup ? 'real' : postedAs,
           asGroupId: asGroup?.id,
           agentInteraction: groupId ? 'humans_only' : interaction,
+          ...(restrictable ? { visibility } : {}),
           groupId,
           ...(isReply ? {} : { urls: previews.urls }),
         }),
@@ -174,7 +181,10 @@ export function Composer({
                 <span className="truncate">{groupName ? tx('{groupName} 그룹에만 보여요 · 사람만', { groupName }) : tx('그룹에만 보여요 · 사람만')}</span>
               </span>
             ) : (
-              <AgentReactionPicker value={interaction} onChange={pickInteraction} />
+              <>
+                {restrictable && <VisibilityPicker value={visibility} onChange={setVisibility} />}
+                <AgentReactionPicker value={interaction} onChange={pickInteraction} />
+              </>
             )}
           </span>
         )

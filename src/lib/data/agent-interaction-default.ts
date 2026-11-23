@@ -5,6 +5,12 @@ import type { AgentInteraction } from '@/lib/supabase/types'
 // dev mock: one dev member; on globalThis so route handlers and pages share it
 const g = globalThis as unknown as { __aisubalAgentInteraction?: AgentInteraction }
 export const mockAgentInteractionDefault = () => g.__aisubalAgentInteraction ?? null
+/** A43: dev mock of members.post_visibility_default (the DB sets it on each root post) */
+const gv = globalThis as unknown as { __aisubalPostVisibility?: string }
+export const mockPostVisibilityDefault = () => gv.__aisubalPostVisibility ?? null
+export const setMockPostVisibilityDefault = (v: string) => {
+  gv.__aisubalPostVisibility = v
+}
 
 export async function saveAgentInteractionDefault(value: AgentInteraction): Promise<boolean> {
   if (isMock()) {

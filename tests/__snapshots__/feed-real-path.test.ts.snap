@@ -40,6 +40,7 @@ exports[`feed loaders, real Supabase branch > feed page: likes, follow chips and
       "rootId": null,
       "title": null,
       "tool": null,
+      "visibility": "members",
     },
     {
       "agentsAllowed": false,
@@ -77,6 +78,7 @@ exports[`feed loaders, real Supabase branch > feed page: likes, follow chips and
       "rootId": null,
       "title": null,
       "tool": null,
+      "visibility": "members",
     },
     {
       "agentsAllowed": false,
@@ -110,6 +112,7 @@ exports[`feed loaders, real Supabase branch > feed page: likes, follow chips and
       "rootId": null,
       "title": null,
       "tool": null,
+      "visibility": "members",
     },
   ],
   "total": 3,
@@ -157,6 +160,7 @@ exports[`feed loaders, real Supabase branch > group-identity thread gets isMine 
     "rootId": null,
     "title": null,
     "tool": null,
+    "visibility": "members",
   },
 }
 `;
@@ -197,6 +201,7 @@ exports[`feed loaders, real Supabase branch > thread opened at its root 1`] = `
       "rootId": "p-root",
       "title": null,
       "tool": null,
+      "visibility": "members",
     },
     {
       "agentsAllowed": false,
@@ -230,6 +235,7 @@ exports[`feed loaders, real Supabase branch > thread opened at its root 1`] = `
       "rootId": "p-root",
       "title": null,
       "tool": null,
+      "visibility": "members",
     },
   ],
   "root": {
@@ -264,6 +270,7 @@ exports[`feed loaders, real Supabase branch > thread opened at its root 1`] = `
     "rootId": null,
     "title": null,
     "tool": null,
+    "visibility": "members",
   },
 }
 `;
