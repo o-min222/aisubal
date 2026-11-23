@@ -2544,3 +2544,18 @@ a.notif-pop-all:hover { background: var(--n-fafafa); }
 .moim-meta svg { color: var(--n-777); flex: 0 0 auto; }
 .moim-thread-link { display: flex; align-items: center; gap: 8px; min-height: 48px; padding: 0 14px; font-size: 14px; font-weight: 600; color: var(--n-111); min-width: 0; }
 .moim-thread-link:hover { background: var(--n-fafafa); }
+
+/* A30: a 모임 in the feed — neutral outlined card inside the post */
+.moim-feed-card { margin-top: 6px; padding: 12px 14px; border: 1px solid var(--n-e5e5e5); border-radius: 14px; background: var(--n-fafafa); display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.moim-feed-card.is-ended { opacity: .72; }
+.mfc-kicker { display: flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 600; color: var(--n-777); min-width: 0; }
+.mfc-ended { margin-left: auto; flex: 0 0 auto; padding: 0 8px; line-height: 20px; border-radius: 999px; background: var(--n-eee); color: var(--n-555); font-size: 11.5px; }
+.mfc-title { font-size: 16px; font-weight: 700; line-height: 1.35; color: var(--n-111); overflow-wrap: anywhere; }
+.mfc-title:hover { color: var(--n-111); text-decoration: none; }
+.moim-feed-card .mfc-meta { font-size: 13px; }
+.mfc-foot { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin-top: 4px; }
+.mfc-count { font-size: 12.5px; color: var(--n-666); margin-right: auto; }
+.mfc-join { height: 34px; padding: 0 14px; border-radius: 999px; background: var(--n-111); color: var(--n-fff); font-size: 13.5px; font-weight: 600; flex: 0 0 auto; }
+.mfc-join:disabled { opacity: .6; }
+.mfc-open { display: inline-flex; align-items: center; gap: 2px; height: 34px; padding: 0 4px 0 10px; border-radius: 999px; font-size: 13.5px; font-weight: 600; color: var(--n-333); flex: 0 0 auto; }
+.mfc-open:hover { background: var(--n-f1f1ef); color: var(--n-111); text-decoration: none; }

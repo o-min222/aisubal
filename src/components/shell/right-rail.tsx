@@ -7,8 +7,8 @@ import { getLocale, getT } from '@/i18n/server'
 import { AgentAvatar } from '@/components/agents/agent-avatar'
 import { RecDismiss } from './rec-dismiss'
 
-function fmtDate(iso: string, intl: string) {
-  return new Intl.DateTimeFormat(intl, { month: 'short', day: 'numeric', weekday: 'short', hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Seoul' }).format(new Date(iso))
+function fmtDate(iso: string, intl: string, dateOnly = false) {
+  return new Intl.DateTimeFormat(intl, { month: 'short', day: 'numeric', weekday: 'short', ...(!dateOnly && { hour: '2-digit', minute: '2-digit' }), timeZone: 'Asia/Seoul' }).format(new Date(iso))
 }
 
 /** Personalized right column (archive tags · likes · tools I use + co-usage). */
@@ -83,7 +83,7 @@ export async function RightRail({ data }: { data: RailData }) {
               <li key={m.id}>
                 <Link href={`/moim/${m.id}`} className="row-link group">
                   <div className="text-sm font-medium text-n-111 truncate">{m.title}</div>
-                  <div className="text-xs text-n-777">{fmtDate(m.startsAt, intl)} · {m.mode === 'online' ? t('온라인') : t('오프라인')} · {m.confirmed}/{m.capacity}{m.group ? ` · ${m.group}` : ''}</div>
+                  <div className="text-xs text-n-777">{fmtDate(m.startsAt, intl, m.timeTbd)} · {m.mode === 'online' ? t('온라인') : m.venueName || t('오프라인')} · {m.confirmed}/{m.capacity}{m.group ? ` · ${m.group}` : ''}</div>
                 </Link>
               </li>
             ))}

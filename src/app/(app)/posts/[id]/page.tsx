@@ -43,7 +43,7 @@ export default async function PostThreadPage({
       <Link href={`/moim/${moim.id}`} className="moim-thread-link card">
         <CalendarDays className="w-4 h-4 flex-shrink-0" />
         <span className="truncate">{moim.title}</span>
-        <span className="ml-auto inline-flex items-center flex-shrink-0 text-n-666"><T>모임 보기</T> <ChevronRight className="w-4 h-4" /></span>
+        <span className="ml-auto inline-flex items-center flex-shrink-0 text-n-666"><T>이 모임 보기</T> <ChevronRight className="w-4 h-4" /></span>
       </Link>
       <PostThreadView thread={thread} member={state.member} reply={reply} />
     </div>

@@ -1,5 +1,6 @@
 'use client'
 
+import { MoimFeedCard } from '@/components/moim/moim-feed-card'
 import { CollapsibleText } from '@/components/collapsible-text'
 import { useState, type ReactNode } from 'react'
 import { setRecHidden, useRecHidden } from './rec-hidden'
@@ -132,6 +133,8 @@ export function PostCard({
         <p className="mt-1 text-[15px] text-n-999 italic">
           {post.isDeleted ? <T>삭제된 글이에요.</T> : <T>신고가 누적되어 숨겨진 글이에요.</T>}
         </p>
+      ) : post.moim && !isReply ? (
+        <MoimFeedCard moim={post.moim} />
       ) : (
         <CollapsibleText lines={href ? 8 : 400} className="mt-1 text-[15px] leading-relaxed text-n-111 whitespace-pre-wrap break-words">
           {replyTo && <span className="reply-mention">@{replyTo}</span>}
@@ -225,7 +228,8 @@ export function PostCard({
             </div>
           )}
 
-          {href ? (
+          {/* a 모임 card has its own links + 참여하기, so it can't sit inside the post link */}
+          {href && !(post.moim && !isReply && !gone) ? (
             <Link href={href} className="block">
               {body}
             </Link>
