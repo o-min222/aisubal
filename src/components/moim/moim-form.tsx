@@ -11,6 +11,7 @@ import { T } from '@/i18n/t'
 import { tx, tn } from '@/i18n/client'
 import { GroupAvatar } from '@/components/groups/group-avatar'
 import { InviteInput } from './invite-input'
+import type { MoimInvitee } from '@/lib/data/moim'
 
 const field = 'w-full rounded-xl border border-n-ddd px-3 py-2.5 text-[15px] bg-n-fff focus:outline-none focus:border-n-111'
 const lbl = 'block text-[13px] font-semibold mb-1'
@@ -26,11 +27,14 @@ export function MoimForm({
   hostGroups,
   initialGroupId = null,
   edit,
+  invitees = null,
 }: {
   me: { name: string }
   hostGroups: MoimGroupRef[]
   initialGroupId?: string | null
   edit?: MoimDetail
+  /** A35: current invitees for the edit form (null = couldn't load → the list isn't shown or sent) */
+  invitees?: MoimInvitee[] | null
 }) {
   const router = useRouter()
   const start = moimStartToInput(edit?.startsAt, edit?.timeTbd ?? false)
@@ -41,7 +45,8 @@ export function MoimForm({
   const [venueName, setVenueName] = useState(edit?.venueName ?? '')
   const [date, setDate] = useState(start.date)
   const [time, setTime] = useState(start.time)
-  const [invites, setInvites] = useState<Array<{ handle: string; name: string; avatarUrl: string | null }>>([])
+  const [invites, setInvites] = useState<Array<{ handle: string; name: string; avatarUrl: string | null }>>(() => (invitees ?? []).map(({ handle, name, avatarUrl }) => ({ handle, name, avatarUrl })))
+  const showInvites = !edit || invitees !== null
   const [busy, setBusy] = useState(false)
 
   async function submit(e: React.FormEvent) {
@@ -58,7 +63,8 @@ export function MoimForm({
         venueName: mode === 'offline' ? venueName : '',
         ...when,
         groupId,
-        ...(edit ? { membersOnly: edit.membersOnly } : { invites: invites.map((p) => p.handle) }),
+        ...(edit ? { membersOnly: edit.membersOnly } : {}),
+        ...(showInvites ? { invites: invites.map((p) => p.handle) } : {}),
       }
       const res = await fetch(edit ? `/api/moim/${edit.id}` : '/api/moim', {
         method: edit ? 'PATCH' : 'POST',
@@ -67,7 +73,12 @@ export function MoimForm({
       })
       const data = await res.json().catch(() => ({}))
       if (!res.ok) throw new Error(data.error || '저장하지 못했어요.')
-      if (edit) toast.success(tn('모임을 수정했어요'))
+      if (edit) {
+        const inv = data.invites as { added?: number; error?: boolean } | null | undefined
+        if (inv?.error) toast.success(tn('모임을 수정했어요 · 초대 목록은 저장하지 못했어요'))
+        else if (inv?.added) toast.success(tn('모임을 수정했어요 · {n}명에게 초대를 보냈어요', { n: inv.added }))
+        else toast.success(tn('모임을 수정했어요'))
+      }
       else if (invites.length && data.invited == null) toast.success(tn('모임을 열었어요 · 초대는 보내지 못했어요'))
       else if (data.invited) toast.success(tn('모임을 열고 {n}명에게 초대를 보냈어요', { n: data.invited }))
       else toast.success(tn('모임을 열었어요'))
@@ -151,12 +162,13 @@ export function MoimForm({
           <textarea id="m-desc" className={field} rows={2} value={description} onChange={(e) => setDescription(e.target.value)} maxLength={4000} placeholder={tx('어떤 모임인지 한 줄로')} />
         </div>
 
-        {!edit && (
+        {showInvites && (
           <div>
             <label htmlFor="m-invite" className={lbl} style={{ color: 'var(--n-111)' }}>
-              <T>초대</T> <span className={opt}><T>(선택 · 알림이 가요)</T></span>
+              <T>초대</T> <span className={opt}>{edit ? <T>(새로 추가한 분께만 알림이 가요)</T> : <T>(선택 · 알림이 가요)</T>}</span>
             </label>
             <InviteInput value={invites} onChange={setInvites} />
+            {edit && <p className="text-[12px] text-n-888 mt-1.5"><T>빼면 초대만 취소돼요 · 알림은 가지 않고, 이미 참여 확정된 분은 그대로예요.</T></p>}
             {groupId && <p className="text-[12px] text-n-888 mt-1.5"><T>그룹 모임은 그 그룹 멤버에게만 초대가 가요.</T></p>}
           </div>
         )}

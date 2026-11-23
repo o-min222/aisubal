@@ -663,6 +663,53 @@ export async function inviteMoim(viewerId: string, id: string, handles: string[]
   return Number(data ?? 0)
 }
 
+export type MoimInvitee = { handle: string; name: string; avatarUrl: string | null; rsvp: string | null }
+
+/** A35: the current invitees (edit form chips). Managers only. */
+export async function listMoimInvitees(viewerId: string, id: string): Promise<MoimInvitee[]> {
+  if (isMock()) {
+    const viewer = me(viewerId)
+    const m = mockFind(id, viewerId)
+    if (!mockCanManage(m, viewer)) throw new Error('moim_forbidden')
+    return mockMoimInvites()
+      .filter((x) => x.moimId === id)
+      .map((x) => {
+        const p = mockPerson(x.memberId)
+        return { handle: mockHandle(x.memberId), name: p?.name ?? mockHandle(x.memberId), avatarUrl: null, rsvp: m.rsvps.find((r) => r.memberId === x.memberId)?.status ?? null }
+      })
+  }
+  const supabase = await sb()
+  const { data, error } = await supabase.rpc('moim_invitees', { p_id: id })
+  if (error) throw new Error(error.message)
+  return ((data as Array<{ handle: string; name: string; avatar_url: string | null; rsvp: string | null }>) ?? []).map((r) => ({ handle: r.handle, name: r.name, avatarUrl: r.avatar_url, rsvp: r.rsvp }))
+}
+
+/**
+ * A35: make the invitee list exactly these @handles (edit form). New invitees get the invite
+ * notification (+ push); removed ones lose the pending invite quietly; RSVPs are never touched.
+ */
+export async function setMoimInvites(viewerId: string, id: string, handles: string[]): Promise<{ added: number; removed: number }> {
+  const list = normalizeInvites(handles)
+  if (isMock()) {
+    const viewer = me(viewerId)
+    const m = mockFind(id, viewerId)
+    if (!mockCanManage(m, viewer)) throw new Error('moim_forbidden')
+    const want = MOCK_PEOPLE.filter((p) => p.id !== viewer && list.includes(mockHandle(p.id).toLowerCase())).filter((p) => !m.groupId || mockRoleIn(m.groupId, p.id)).map((p) => p.id)
+    const store = mockMoimInvites()
+    const before = store.filter((x) => x.moimId === id).map((x) => x.memberId)
+    const removed = before.filter((x) => !want.includes(x))
+    const added = want.filter((x) => !before.includes(x))
+    for (let i = store.length - 1; i >= 0; i--) if (store[i].moimId === id && removed.includes(store[i].memberId)) store.splice(i, 1)
+    for (const x of added) store.push({ moimId: id, memberId: x, by: viewer })
+    return { added: added.length, removed: removed.length }
+  }
+  const supabase = await sb()
+  const { data, error } = await supabase.rpc('moim_invites_set', { p_id: id, p_handles: list })
+  if (error) throw new Error(error.message)
+  const d = (data ?? {}) as { added?: number; removed?: number }
+  return { added: Number(d.added ?? 0), removed: Number(d.removed ?? 0) }
+}
+
 /** A30: feed cards for the 모임 thread posts on screen (moim_get visibility), by post id. */
 export async function moimCardsForThreads(viewerId: string, postIds: string[]): Promise<Map<string, TimelineMoim>> {
   const out = new Map<string, TimelineMoim>()

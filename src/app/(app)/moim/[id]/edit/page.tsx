@@ -1,6 +1,6 @@
 import { notFound, redirect } from 'next/navigation'
 import { getUserState } from '@/lib/auth'
-import { getMoim } from '@/lib/data/moim'
+import { getMoim, listMoimInvitees } from '@/lib/data/moim'
 import { MoimForm } from '@/components/moim/moim-form'
 import { getT } from '@/i18n/server'
 
@@ -17,5 +17,6 @@ export default async function EditMoimPage({ params }: { params: Promise<{ id: s
   const m = await getMoim(state.member.id, id).catch(() => null)
   if (!m) notFound()
   if (!m.canManage) redirect(`/moim/${id}`)
-  return <MoimForm me={{ name: state.member.display_name }} hostGroups={[]} edit={m} />
+  const invitees = await listMoimInvitees(state.member.id, id).catch(() => null)
+  return <MoimForm me={{ name: state.member.display_name }} hostGroups={[]} edit={m} invitees={invitees} />
 }

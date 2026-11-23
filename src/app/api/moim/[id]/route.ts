@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { getMember } from '@/lib/auth'
-import { getMoim, setMoimStatus, updateMoim } from '@/lib/data/moim'
+import { getMoim, setMoimInvites, setMoimStatus, updateMoim } from '@/lib/data/moim'
 import { moimInputSchema } from '@/lib/moim-input'
 import { moimErrorMessage } from '@/lib/moim-rules'
 import { msg } from '@/i18n/translate'
@@ -34,8 +34,11 @@ export async function PATCH(request: NextRequest, { params }: Ctx) {
     }
     const parsed = moimInputSchema.safeParse(body)
     if (!parsed.success) return NextResponse.json({ error: await te(parsed.error.issues[0]?.message || msg('입력값을 확인해주세요.')) }, { status: 400 })
-    await updateMoim(member.id, id, parsed.data)
-    return NextResponse.json({ ok: true })
+    const { invites, ...input } = parsed.data
+    await updateMoim(member.id, id, input)
+    // A35: invites only when the edit form sent its list (absent = leave invitees alone)
+    const inv = invites === undefined ? null : await setMoimInvites(member.id, id, invites).catch(() => undefined)
+    return NextResponse.json({ ok: true, invites: inv === undefined ? { error: true } : inv })
   } catch (e) {
     return NextResponse.json({ error: await te(moimErrorMessage(e)) }, { status: 400 })
   }
