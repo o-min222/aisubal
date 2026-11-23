@@ -146,7 +146,7 @@ export default async function MemberProfilePage({ params, searchParams }: { para
               {isMe && (social.incomingRequests ?? 0) > 0 && (
                 <Link href={socialHref('requests')} className="min-h-[32px] inline-flex items-center gap-1 text-c-e5484d font-medium"><T s="친구 요청 {incomingRequests}" vars={{ incomingRequests: social.incomingRequests }} /></Link>
               )}
-              <Link href={isMe ? networkHref() : networkHref({ root: member.id })} className="min-h-[32px] inline-flex items-center gap-1 text-c-06c">
+              <Link href={isMe ? networkHref() : networkHref({ root: member.id })} className="min-h-[32px] inline-flex items-center gap-1 text-link">
                 <Network className="w-3.5 h-3.5" /> <T>초대 네트워크</T>
               </Link>
             </div>
@@ -168,7 +168,7 @@ export default async function MemberProfilePage({ params, searchParams }: { para
               {isMe ? <T>내 AI 스택</T> : <T s="{name}님의 AI 스택" vars={{ name: member.display_name }} />}
             </h2>
             {isMe && (
-              <Link href="/settings/profile#stack" className="text-xs text-c-06c inline-flex items-center min-h-[32px]">
+              <Link href="/settings/profile#stack" className="text-xs text-link inline-flex items-center min-h-[32px]">
                 <T>편집</T> <ChevronRight className="w-3.5 h-3.5" />
               </Link>
             )}
@@ -182,7 +182,7 @@ export default async function MemberProfilePage({ params, searchParams }: { para
             </div>
           ) : (
             <p className="text-sm text-n-888">
-              <T s="쓰는 AI, 구독 중인 서비스, 에이전트를 {edit}에서 추가해 보세요." vars={{ edit: <Link href="/settings/profile#stack" className="text-c-06c"><T>프로필 편집</T></Link> }} />
+              <T s="쓰는 AI, 구독 중인 서비스, 에이전트를 {edit}에서 추가해 보세요." vars={{ edit: <Link href="/settings/profile#stack" className="text-link"><T>프로필 편집</T></Link> }} />
             </p>
           )}
         </section>
@@ -197,7 +197,7 @@ export default async function MemberProfilePage({ params, searchParams }: { para
           {isMe && (
             <div className="flex items-center gap-2">
               <UsageVisibility initial={usageVis} />
-              <Link href="/gallery?view=mine" className="text-xs text-c-06c inline-flex items-center min-h-[32px]">
+              <Link href="/gallery?view=mine" className="text-xs text-link inline-flex items-center min-h-[32px]">
                 <T>관리</T> <ChevronRight className="w-3.5 h-3.5" />
               </Link>
             </div>
@@ -207,7 +207,7 @@ export default async function MemberProfilePage({ params, searchParams }: { para
           <p className="text-sm text-n-888">
             {isMe ? (
               <>
-                <T s="아직 없어요. {tools}에서 ‘나도 써요’를 눌러 모아보세요." vars={{ tools: <Link href="/gallery" className="text-c-06c"><T>갤러리</T></Link> }} />
+                <T s="아직 없어요. {tools}에서 ‘나도 써요’를 눌러 모아보세요." vars={{ tools: <Link href="/gallery" className="text-link"><T>갤러리</T></Link> }} />
               </>
             ) : (
               <T>아직 표시한 게 없어요.</T>

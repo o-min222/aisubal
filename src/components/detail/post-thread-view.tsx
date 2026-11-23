@@ -75,7 +75,7 @@ export async function PostThreadView({
               <span>
                 <T s="{name}님에게 답글" vars={{ name: <b>{replyTarget.author.name}</b> }} />
               </span>
-              <Link href={pageHref} className="text-c-06c">
+              <Link href={pageHref} className="text-link">
                 <T>취소</T>
               </Link>
             </div>

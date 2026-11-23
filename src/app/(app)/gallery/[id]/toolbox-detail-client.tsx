@@ -174,7 +174,7 @@ export function ToolboxDetailClient({ entry: initial, mentionPosts, member, aiRa
                   href={entry.github_url}
                   target="_blank"
                   rel="noreferrer"
-                  className="text-c-06c inline-flex items-center gap-1"
+                  className="text-link inline-flex items-center gap-1"
                 >
                   GitHub <ExternalLink className="w-3.5 h-3.5" />
                 </a>
@@ -184,7 +184,7 @@ export function ToolboxDetailClient({ entry: initial, mentionPosts, member, aiRa
                   href={entry.homepage_url}
                   target="_blank"
                   rel="noreferrer"
-                  className="text-c-06c inline-flex items-center gap-1"
+                  className="text-link inline-flex items-center gap-1"
                 >
                   <T>홈페이지</T> <ExternalLink className="w-3.5 h-3.5" />
                 </a>
@@ -328,7 +328,7 @@ export function ToolboxDetailClient({ entry: initial, mentionPosts, member, aiRa
           <ul className="space-y-2">
             {mentionPosts.map((p) => (
               <li key={p.id}>
-                <Link href={`/posts/${p.id}`} className="text-c-06c text-sm hover:underline">
+                <Link href={`/posts/${p.id}`} className="text-link text-sm">
                   {p.title}
                 </Link>
                 <span className="text-xs text-n-888 ml-2">

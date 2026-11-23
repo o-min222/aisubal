@@ -138,7 +138,7 @@ export function ArchiveButton({
               />
             </label>
             <div className="flex items-center justify-between gap-2 pt-1">
-              <button type="button" onClick={() => void remove()} className="text-sm text-c-c0392b hover:underline">
+              <button type="button" onClick={() => void remove()} className="text-sm text-c-c0392b">
                 <T>아카이브에서 빼기</T>
               </button>
               <button type="submit" className="btn btn-primary btn-sm">

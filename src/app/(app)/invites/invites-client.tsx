@@ -124,10 +124,10 @@ export function InvitesClient({ inviterName, codes, codesActive, loadFailed }: {
                       <div className="mt-1 rounded-xl bg-n-f6f6f6 p-3 text-[13px] text-n-333 whitespace-pre-wrap break-all select-all">
                         {msg}
                         <div className="mt-2 flex gap-3 text-xs">
-                          <button type="button" className="text-c-06c" onClick={() => copy(inviteUrl(c.code, origin, locale), `url:${c.code}`, m('초대 링크만 복사했어요'))}>
+                          <button type="button" className="text-link" onClick={() => copy(inviteUrl(c.code, origin, locale), `url:${c.code}`, m('초대 링크만 복사했어요'))}>
                             <T>링크만 복사</T>
                           </button>
-                          <button type="button" className="text-c-06c" onClick={() => copy(c.code, `code:${c.code}`, m('초대 코드만 복사했어요'))}>
+                          <button type="button" className="text-link" onClick={() => copy(c.code, `code:${c.code}`, m('초대 코드만 복사했어요'))}>
                             <T>코드만 복사</T>
                           </button>
                         </div>

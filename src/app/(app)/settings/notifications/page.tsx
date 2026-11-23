@@ -21,7 +21,7 @@ export default async function NotificationSettingsPage() {
       <div className="mb-3"><PushSettings /></div>
       <NotificationSettings initial={prefs} />
       <p className="text-xs text-n-888 px-1 mt-3">
-        <Link href="/notifications" className="text-c-06c"><T>알림 보기</T> ›</Link>
+        <Link href="/notifications" className="text-link"><T>알림 보기</T> ›</Link>
       </p>
     </>
   )

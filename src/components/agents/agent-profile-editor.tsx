@@ -157,7 +157,7 @@ function AgentProfileForm({ agent, onOpenChange, onSaved }: SheetProps) {
           {avatarUrl && (
             <button
               type="button"
-              className="text-[12.5px] text-n-777 hover:underline mt-1"
+              className="text-[12.5px] text-n-777 hover:text-n-111 mt-1"
               onClick={removePhoto}
               disabled={busy}
             >

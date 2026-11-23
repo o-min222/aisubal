@@ -150,7 +150,7 @@ async function dashboardListChunk(meId: string, tab: DashboardTab, view: string,
       </ul>
     ) : (
       <Empty>
-        <T>아직 ‘쓰는 중’으로 표시한 게 없어요.</T> <Link href="/gallery" className="text-c-06c"><T>갤러리 둘러보기</T></Link>
+        <T>아직 ‘쓰는 중’으로 표시한 게 없어요.</T> <Link href="/gallery" className="text-link"><T>갤러리 둘러보기</T></Link>
       </Empty>
     )
   } else if (tab === 'moim') {
@@ -178,7 +178,7 @@ async function dashboardListChunk(meId: string, tab: DashboardTab, view: string,
       </ul>
     ) : (
       <Empty>
-        <T>신청했거나 주최한 모임이 없어요.</T> <Link href="/moim" className="text-c-06c"><T>모임 보기</T></Link>
+        <T>신청했거나 주최한 모임이 없어요.</T> <Link href="/moim" className="text-link"><T>모임 보기</T></Link>
       </Empty>
     )
   } else if (tab === 'groups') {
@@ -201,7 +201,7 @@ async function dashboardListChunk(meId: string, tab: DashboardTab, view: string,
       </ul>
     ) : (
       <Empty>
-        <T>가입한 그룹이 없어요.</T> <Link href="/groups" className="text-c-06c"><T>그룹 둘러보기</T></Link>
+        <T>가입한 그룹이 없어요.</T> <Link href="/groups" className="text-link"><T>그룹 둘러보기</T></Link>
       </Empty>
     )
   } else if (tab === 'network') {
@@ -303,7 +303,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
           <li key={a.id} className="px-4 py-3">
             <div className="flex items-center gap-2">
               <AgentAvatar name={a.agentName} model={a.agentModel || a.client} avatarUrl={a.avatarUrl} size={24} />
-              <Link href={`/agents/${a.id}`} className="font-bold text-n-111 hover:underline">{a.agentName}</Link>
+              <Link href={`/agents/${a.id}`} className="font-bold text-n-111">{a.agentName}</Link>
               {a.agentModel && <span className="text-xs text-n-888 truncate">{a.agentModel}</span>}
               <span className="ml-auto text-xs text-n-888">{a.lastUsedAt ? <><T>최근</T> <RelativeTime date={a.lastUsedAt} /></> : <T>아직 사용 안 함</T>}</span>
             </div>
@@ -312,7 +312,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
               <ul className="mt-2 space-y-1">
                 {a.recent.slice(0, 3).map((r) => (
                   <li key={r.id}>
-                    <Link href={r.href} className="clamp-2 text-[13px] text-n-444 hover:underline">
+                    <Link href={r.href} className="clamp-2 text-[13px] text-n-444 hover:text-n-111">
                       {r.snippet}
                     </Link>
                   </li>
@@ -324,7 +324,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
       </ul>
     ) : (
       <Empty>
-        <T>연결한 AI가 없어요.</T> <Link href="/agents/connect" className="text-c-06c"><T>에이전트 연결</T></Link>
+        <T>연결한 AI가 없어요.</T> <Link href="/agents/connect" className="text-link"><T>에이전트 연결</T></Link>
       </Empty>
     )
   } else if (tab === 'network') {
@@ -376,7 +376,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
         <p className="px-4 pt-3 text-sm text-n-555">
           <T s="초대 코드 {codes}개 중 {used}명이 가입했어요 · 남은 초대 {left}" vars={{ codes: codes.length, used: <b className="text-n-111">{used}</b>, left: profile.invitesLeft }} />
           {' · '}
-          <Link href={networkHref()} className="text-c-06c whitespace-nowrap"><T>초대 그래프 보기</T> ›</Link>
+          <Link href={networkHref()} className="text-link whitespace-nowrap"><T>초대 그래프 보기</T> ›</Link>
         </p>
         {codes.length ? (
           <ul className="divide-y divide-n-f0f0f0 mt-2">
@@ -402,7 +402,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
           <Empty><T>초대 코드가 없어요.</T></Empty>
         )}
         <div className="px-4 pb-3">
-          <Link href="/invites" className="text-sm text-c-06c">
+          <Link href="/invites" className="text-sm text-link">
             <T>초대 관리로 이동 →</T>
           </Link>
         </div>
@@ -416,7 +416,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
         <h1 className="text-xl font-bold flex-1 min-w-0" style={{ color: 'var(--n-111)' }}>
           <T>내 대시보드</T>
         </h1>
-        <Link href={`/members/${me.id}`} className="text-[13px] text-c-06c">
+        <Link href={`/members/${me.id}`} className="text-[13px] text-link">
           <T>공개 프로필 보기</T>
         </Link>
         <Link href="/settings" className="btn btn-secondary btn-sm min-h-[36px] min-w-[36px] rounded-full !px-0 justify-center" aria-label={st('설정')}>

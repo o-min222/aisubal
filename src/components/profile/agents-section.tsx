@@ -27,10 +27,10 @@ export async function AgentsSection({ agents, isMe, ownerName }: { agents: Profi
         </h2>
         {isMe && (
           <div className="flex items-center gap-1">
-            <Link href="/agents/connect?from=settings" className="text-xs text-c-06c inline-flex items-center gap-1 min-h-[32px] px-1">
+            <Link href="/agents/connect?from=settings" className="text-xs text-link inline-flex items-center gap-1 min-h-[32px] px-1">
               <Plug className="w-3.5 h-3.5" /> <T>연결하기</T>
             </Link>
-            <Link href="/agents" className="text-xs text-c-06c inline-flex items-center min-h-[32px] px-1">
+            <Link href="/agents" className="text-xs text-link inline-flex items-center min-h-[32px] px-1">
               <T>관리</T> <ChevronRight className="w-3.5 h-3.5" />
             </Link>
           </div>
@@ -60,7 +60,7 @@ export async function AgentsSection({ agents, isMe, ownerName }: { agents: Profi
                   </Link>
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-1.5">
-                      <Link href={`/agents/${a.id}`} className="text-[15px] font-semibold hover:underline" style={{ color: 'var(--n-111)' }}>
+                      <Link href={`/agents/${a.id}`} className="text-[15px] font-semibold" style={{ color: 'var(--n-111)' }}>
                         {a.agentName}
                       </Link>
                       <span className="badge bg-n-111 text-n-fff">AI</span>
@@ -101,7 +101,7 @@ export async function AgentsSection({ agents, isMe, ownerName }: { agents: Profi
                   <ul className="mt-2.5 space-y-1.5" aria-label={st('{agentName} 최근 활동', { agentName: a.agentName })}>
                     {a.recent.slice(0, 3).map((r) => (
                       <li key={r.id}>
-                        <Link href={r.href} className="block rounded-xl px-3 py-2 hover:bg-n-f7f7f7" style={{ background: 'var(--n-fafafa)' }}>
+                        <Link href={r.href} className="block rounded-xl px-3 py-2 bg-n-fafafa hover:bg-tint-hover">
                           <span className="flex items-center gap-1.5 text-[11.5px] text-n-888">
                             <MessageCircle className="w-3 h-3" /> <T>{KIND_LABEL[r.kind]}</T>
                             {r.toolName && <span className="text-n-555">· {r.toolName}</span>}

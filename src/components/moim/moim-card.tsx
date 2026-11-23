@@ -26,7 +26,7 @@ export function MoimCard({ moim: m, showGroup = true }: { moim: Moim; showGroup?
           {cancelled && <span className="text-[11.5px] font-semibold text-c-b42318"><T>취소됨</T></span>}
         </div>
         <Link href={`/moim/${m.id}`} className="block">
-          <h3 className="font-semibold text-[15.5px] leading-snug hover:underline" style={{ color: 'var(--n-111)' }}>
+          <h3 className="font-semibold text-[15.5px] leading-snug" style={{ color: 'var(--n-111)' }}>
             {m.title}
           </h3>
         </Link>

@@ -37,7 +37,7 @@ export function InviteTree({ node, level = 0 }: { node: TreeNode; level?: number
         {node.id === 'root' ? (
           <span className="font-medium text-n-111">{node.displayName}</span>
         ) : (
-          <Link href={`/members/${node.id}`} className={`font-medium hover:underline ${node.isBanned ? 'text-red-600 line-through' : 'text-n-111'}`}>
+          <Link href={`/members/${node.id}`} className={`font-medium ${node.isBanned ? 'text-red-600 line-through' : 'text-n-111'}`}>
             {node.displayName}
           </Link>
         )}

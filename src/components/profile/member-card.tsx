@@ -143,7 +143,7 @@ export function MemberCard({ data, variant = 'side' }: { data: MemberCardData; v
           </div>
         </div>
         <Link href={profileHref} className="block mt-2 min-w-0 group">
-          <span className="pc-name block font-semibold text-n-111 truncate group-hover:underline">{data.displayName}</span>
+          <span className="pc-name block font-semibold text-n-111 truncate">{data.displayName}</span>
           {data.handle && <span className="block text-xs text-n-888 truncate">@{data.handle}</span>}
         </Link>
         {data.bio && <p className="text-xs text-n-666 mt-1 line-clamp-2">{data.bio}</p>}

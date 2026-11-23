@@ -19,7 +19,7 @@ export function MentionText({ text }: { text: string }) {
     const agent = m[2]
     const label = agent ? `@${agent}.ai` : `@${m[3]}`
     parts.push(
-      <Link key={start} href={agent ? agentHandleHref(agent) : `/u/${m[3]}`} className={`mention text-c-06c hover:underline${agent ? ' mention-agent' : ''}`}>
+      <Link key={start} href={agent ? agentHandleHref(agent) : `/u/${m[3]}`} className={`mention body-link${agent ? ' mention-agent' : ''}`}>
         {label}
       </Link>
     )

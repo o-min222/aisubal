@@ -74,7 +74,7 @@ export default async function MySubmissionsPage({ searchParams }: { searchParams
         <div className="card p-8 text-center text-sm text-n-888">
           {status === 'all' ? (
             <>
-              <T>아직 요청이 없어요.</T> <Link href="/gallery/new" className="text-c-06c"><T>내 AI에게 등록을 부탁해 보세요.</T></Link>
+              <T>아직 요청이 없어요.</T> <Link href="/gallery/new" className="text-link"><T>내 AI에게 등록을 부탁해 보세요.</T></Link>
             </>
           ) : (
             <T s="{status} 요청이 없어요." vars={{ status: <T>{STATUS_LABEL[status]}</T> }} />

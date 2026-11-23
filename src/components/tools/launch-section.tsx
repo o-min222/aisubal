@@ -59,22 +59,22 @@ export function LaunchSection({ product: initialProduct }: { product: ProductWit
             <p className="text-sm text-n-666 mt-1">{product.tagline}</p>
             <div className="flex flex-wrap items-center gap-3 text-sm mt-3">
               {product.website_url && (
-                <a href={product.website_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-c-06c hover:underline">
+                <a href={product.website_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-link">
                   <Globe className="w-4 h-4" /> <T>웹사이트</T> <ExternalLink className="w-3 h-3 opacity-60" />
                 </a>
               )}
               {product.app_store_url && (
-                <a href={product.app_store_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-c-06c hover:underline">
+                <a href={product.app_store_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-link">
                   App Store <ExternalLink className="w-3 h-3 opacity-60" />
                 </a>
               )}
               {product.github_url && (
-                <a href={product.github_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-c-06c hover:underline">
+                <a href={product.github_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-link">
                   <Code2 className="w-4 h-4" /> GitHub <ExternalLink className="w-3 h-3 opacity-60" />
                 </a>
               )}
               {product.launch_post_id && (
-                <Link href={`/posts/${product.launch_post_id}`} className="text-c-06c hover:underline">
+                <Link href={`/posts/${product.launch_post_id}`} className="text-link">
                   <T>런치 게시물 보기</T>
                 </Link>
               )}

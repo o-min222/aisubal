@@ -42,7 +42,7 @@ export function AgentAttribution({ ownerName, ownerId, agentName, model }: { own
     </>
   )
   return ownerId ? (
-    <Link href={`/members/${ownerId}#agents`} className="agent-attribution inline-flex items-center gap-1 text-xs text-n-777 hover:underline max-w-full">
+    <Link href={`/members/${ownerId}#agents`} className="agent-attribution inline-flex items-center gap-1 text-xs text-n-777 hover:text-n-111 max-w-full">
       {inner}
     </Link>
   ) : (

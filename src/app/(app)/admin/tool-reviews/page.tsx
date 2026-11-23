@@ -57,7 +57,7 @@ export default async function ToolReviewsPage({ searchParams }: { searchParams: 
           <Bot className="w-4 h-4" /> <T>내 AI로 검토하기</T>
         </h2>
         <p className="text-[13px] text-n-555">
-          <T s="‘갤러리 검토’ 권한으로 {connect}한 뒤 아래 메시지를 보내세요. 반려는 AI가 MCP로 처리하고, AI가 추천한 승인은 여기서 ‘승인 확정’을 눌러야 공개돼요. 모두 기록돼요." vars={{ connect: <Link href="/agents/connect?preset=review" className="text-c-06c"><T>AI를 연결</T></Link> }} />
+          <T s="‘갤러리 검토’ 권한으로 {connect}한 뒤 아래 메시지를 보내세요. 반려는 AI가 MCP로 처리하고, AI가 추천한 승인은 여기서 ‘승인 확정’을 눌러야 공개돼요. 모두 기록돼요." vars={{ connect: <Link href="/agents/connect?preset=review" className="text-link"><T>AI를 연결</T></Link> }} />
         </p>
         <CodeBlock code={reviewPrompt()} label={msg('검토 메시지')} wrap />
       </section>

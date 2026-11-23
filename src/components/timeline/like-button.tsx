@@ -81,7 +81,7 @@ export function LikeButton({
         type="button"
         onClick={onShowLikers}
         disabled={!onShowLikers || count === 0}
-        className="min-w-[28px] min-h-[44px] md:min-h-0 text-left text-sm text-n-555 hover:underline disabled:no-underline disabled:cursor-default tabular-nums"
+        className="min-w-[28px] min-h-[44px] md:min-h-0 text-left text-sm text-n-555 hover:text-n-111 disabled:cursor-default tabular-nums"
         aria-label={tx('좋아요한 사람 보기')}
       >
         {count}

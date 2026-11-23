@@ -69,7 +69,7 @@ export function AgentPledgeCard({ tokenId, ownerName, agentName, onSigned, compa
           signature={<span className="pledge-signed-name" style={{ fontSize: 17 }}>{agentSigner(ownerName, agentName)}</span>}
         />
       ) : (
-        <button type="button" onClick={() => setFull(true)} className="text-[13px] text-c-06c inline-flex items-center gap-1 min-h-[36px]">
+        <button type="button" onClick={() => setFull(true)} className="text-[13px] text-link inline-flex items-center gap-1 min-h-[36px]">
           <ScrollText className="w-4 h-4" /> <T>서약 원문 보기</T>
         </button>
       )}

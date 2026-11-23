@@ -68,7 +68,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
               <div className="flex items-center justify-between px-1">
                 <h2 className="text-[14px] font-semibold text-n-333"><T>{SECTION[key]}</T></h2>
                 {tab === 'all' && res![key].length >= 5 && (
-                  <Link href={href(key)} className="text-[12.5px] text-c-06c"><T>더 보기</T></Link>
+                  <Link href={href(key)} className="text-[12.5px] text-link"><T>더 보기</T></Link>
                 )}
               </div>
               <CompactList label={SECTION[key]}>

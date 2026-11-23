@@ -109,7 +109,7 @@ export async function MoimDetailView({ m, variant = 'page' }: { m: MoimDetail; v
         <div className="flex items-center gap-2 pt-1">
           <UserAvatar id={m.host.id} name={m.host.name} avatarUrl={m.host.avatarUrl} size="sm" />
           <span className="text-[13px] text-n-555"><T s="호스트 {v} {v2}" vars={{ v: m.host.kind === 'real' ? (
-              <Link href={`/members/${m.host.id}`} className="font-semibold hover:underline" style={{ color: 'var(--n-111)' }}>
+              <Link href={`/members/${m.host.id}`} className="font-semibold" style={{ color: 'var(--n-111)' }}>
                 {m.host.name}
               </Link>
             ) : (

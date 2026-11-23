@@ -175,7 +175,7 @@ export function PostCard({
                 <span className="peek-name font-semibold text-n-111">{a.name}</span>
               </MemberPeek>
             ) : (a.kind === 'agent' || a.kind === 'group') && a.profileHref ? (
-              <Link href={a.profileHref} className="font-semibold text-n-111 hover:underline">{a.name}</Link>
+              <Link href={a.profileHref} className="font-semibold text-n-111">{a.name}</Link>
             ) : (
               <span className="font-semibold text-n-111">{a.name}</span>
             )}
@@ -277,7 +277,7 @@ export function PostCard({
               href={post.linkUrl}
               target="_blank"
               rel="noopener noreferrer nofollow ugc"
-              className="mt-2 inline-flex items-center gap-1.5 text-sm text-c-06c hover:underline max-w-full"
+              className="mt-2 inline-flex items-center gap-1.5 text-sm body-link max-w-full"
             >
               <ExternalLink className="w-3.5 h-3.5 flex-shrink-0" />
               <span className="truncate">{hostOf(post.linkUrl)}</span>

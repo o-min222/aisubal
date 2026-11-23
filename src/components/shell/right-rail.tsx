@@ -36,7 +36,7 @@ export async function RightRail({ data }: { data: RailData }) {
           <ul className="space-y-2.5">
             {data.agora.map((a) => (
               <RecDismiss key={a.id} kind="agora" refId={a.id}>
-                <Link href={`/agora/${a.id}`} className="block group">
+                <Link href={`/agora/${a.id}`} className="row-link group">
                   <div className="flex items-center gap-1.5 text-xs text-n-888">
                     <AgentAvatar name={a.agentName} model={a.agentModel} avatarUrl={a.avatarUrl} size={16} />
                     <span className="truncate">{a.agentName}</span>
@@ -46,7 +46,7 @@ export async function RightRail({ data }: { data: RailData }) {
                       <span className="inline-flex items-center gap-0.5 ml-auto"><Star className="w-3 h-3 fill-[#f5a623] text-[#f5a623]" />{a.rating}</span>
                     )}
                   </div>
-                  <p className="text-sm text-n-333 line-clamp-2 group-hover:underline">{a.body}</p>
+                  <p className="text-sm text-n-333 line-clamp-2">{a.body}</p>
                 </Link>
               </RecDismiss>
             ))}
@@ -57,15 +57,15 @@ export async function RightRail({ data }: { data: RailData }) {
       <div className="rail-card">
         <h3 className="rail-title"><Wrench className="w-4 h-4" /> {t('갤러리 추천')}</h3>
         {data.tools.length === 0 ? (
-          <p className="rail-empty"><Link href="/gallery" className="text-c-06c">{t('갤러리 둘러보기')}</Link></p>
+          <p className="rail-empty"><Link href="/gallery" className="text-link">{t('갤러리 둘러보기')}</Link></p>
         ) : (
           <ul className="space-y-2.5">
             {data.tools.map((tool) => (
               <RecDismiss key={tool.id} kind="tool" refId={tool.id}>
-                <Link href={`/gallery/${tool.slug}`} className="block group">
-                  <div className="text-sm font-medium text-n-111 group-hover:underline truncate">{tool.name}</div>
+                <Link href={`/gallery/${tool.slug}`} className="row-link group">
+                  <div className="text-sm font-medium text-n-111 truncate">{tool.name}</div>
                   <div className="text-xs text-n-777 line-clamp-1">{tool.oneLiner}</div>
-                  {tool.reason && <div className="text-[11px] text-c-06c mt-0.5">{t(tool.reason)}</div>}
+                  {tool.reason && <div className="text-[11px] text-n-888 mt-0.5">{t(tool.reason)}</div>}
                 </Link>
               </RecDismiss>
             ))}
@@ -76,13 +76,13 @@ export async function RightRail({ data }: { data: RailData }) {
       <div className="rail-card">
         <h3 className="rail-title"><CalendarDays className="w-4 h-4" /> {t('다가오는 모임')}</h3>
         {data.meetups.length === 0 ? (
-          <p className="rail-empty">{t('예정된 모임이 없어요.')} <Link href="/moim/new" className="text-c-06c">{t('열어보기')}</Link></p>
+          <p className="rail-empty">{t('예정된 모임이 없어요.')} <Link href="/moim/new" className="text-link">{t('열어보기')}</Link></p>
         ) : (
           <ul className="space-y-2.5">
             {data.meetups.map((m) => (
               <li key={m.id}>
-                <Link href={`/moim/${m.id}`} className="block group">
-                  <div className="text-sm font-medium text-n-111 group-hover:underline truncate">{m.title}</div>
+                <Link href={`/moim/${m.id}`} className="row-link group">
+                  <div className="text-sm font-medium text-n-111 truncate">{m.title}</div>
                   <div className="text-xs text-n-777">{fmtDate(m.startsAt, intl)} · {m.mode === 'online' ? t('온라인') : t('오프라인')} · {m.confirmed}/{m.capacity}{m.group ? ` · ${m.group}` : ''}</div>
                 </Link>
               </li>
@@ -99,10 +99,10 @@ export async function RightRail({ data }: { data: RailData }) {
           <ul className="space-y-2">
             {data.people.map((p) => (
               <RecDismiss key={p.id} kind="member" refId={p.id}>
-                <Link href={`/members/${p.id}`} className="flex items-center gap-2.5 group min-h-[44px]">
+                <Link href={`/members/${p.id}`} className="row-link flex items-center gap-2.5 group min-h-[44px]">
                   <UserAvatar id={p.id} name={p.name} avatarUrl={p.avatarUrl} size="sm" />
                   <div className="min-w-0">
-                    <div className="text-sm font-medium text-n-111 group-hover:underline truncate">{p.name}</div>
+                    <div className="text-sm font-medium text-n-111 truncate">{p.name}</div>
                     <div className="text-xs text-n-888 truncate">{t(p.reason)}</div>
                   </div>
                 </Link>

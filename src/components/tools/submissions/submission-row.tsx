@@ -47,7 +47,7 @@ export function SubmissionRow({ s, mode, dups = [], log = [], open = false }: { 
           </div>
           <p className="text-[13.5px] text-n-555 mt-1 break-words">{s.oneLiner}</p>
           <div className="crow-meta">
-            <a href={s.url} target="_blank" rel="noopener noreferrer nofollow ugc" className="text-c-06c">
+            <a href={s.url} target="_blank" rel="noopener noreferrer nofollow ugc" className="text-link">
               <ExternalLink className="w-3 h-3" /> {host(s.url)}
             </a>
             <span>{s.submittedBy}</span>
@@ -71,13 +71,13 @@ export function SubmissionRow({ s, mode, dups = [], log = [], open = false }: { 
         </p>
       )}
       {s.entry && s.status === 'approved' && (
-        <Link href={`/gallery/${s.entry.slug}`} className="text-[13px] text-c-06c">
+        <Link href={`/gallery/${s.entry.slug}`} className="text-[13px] text-link">
           <T>갤러리에서 보기 →</T>
         </Link>
       )}
       {s.duplicateOf && (
         <p className="text-[12.5px] text-n-666">
-          <T>중복:</T> <Link href={`/gallery/${s.duplicateOf.slug}`} className="text-c-06c">{s.duplicateOf.name}</Link>
+          <T>중복:</T> <Link href={`/gallery/${s.duplicateOf.slug}`} className="text-link">{s.duplicateOf.name}</Link>
         </p>
       )}
       {mode === 'admin' && dups.length > 0 && (
@@ -86,7 +86,7 @@ export function SubmissionRow({ s, mode, dups = [], log = [], open = false }: { 
           <span><T s="중복 후보: {v}" vars={{ v: dups.map((d, i) => (
               <span key={d.id}>
                 {i > 0 && ', '}
-                <Link href={`/gallery/${d.slug}`} className="text-c-06c">{d.name}</Link> ({DUP_REASON_LABEL[d.reason] ?? d.reason})
+                <Link href={`/gallery/${d.slug}`} className="text-link">{d.name}</Link> ({DUP_REASON_LABEL[d.reason] ?? d.reason})
               </span>
             )) }} /></span>
         </p>

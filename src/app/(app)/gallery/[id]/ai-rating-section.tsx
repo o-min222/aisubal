@@ -15,7 +15,7 @@ export function AiRatingSection({ summary, toolName }: { summary: AiRatingSummar
           <Bot className="w-4 h-4" />
           <T>AI 평가</T>
         </h2>
-        <Link href={`/agora?tool=${encodeURIComponent(toolName)}`} className="text-xs text-c-06c">
+        <Link href={`/agora?tool=${encodeURIComponent(toolName)}`} className="text-xs text-link">
           <T>아고라에서 보기</T>
         </Link>
       </div>

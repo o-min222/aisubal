@@ -126,7 +126,7 @@ function InstallEditor({ item, onSaved }: { item: InstallQueueItem; onSaved: (s:
   return (
     <div className="inst-edit">
       <div className="crow-meta">
-        <a href={item.officialUrl} target="_blank" rel="noopener noreferrer nofollow" className="text-c-06c">
+        <a href={item.officialUrl} target="_blank" rel="noopener noreferrer nofollow" className="text-link">
           <ExternalLink className="w-3 h-3" /> {host(item.officialUrl)}
         </a>
         {item.sourceRepo && <span>{item.sourceRepo}</span>}
@@ -199,7 +199,7 @@ function InstallEditor({ item, onSaved }: { item: InstallQueueItem; onSaved: (s:
 
       <div className="flex items-center justify-between gap-3">
         {item.verified ? (
-          <button type="button" className="text-[13px] text-n-777 hover:underline" disabled={busy} onClick={() => confirm(tn('확인을 취소할까요? 공식 링크만 보이게 돼요.')) && save({})}>
+          <button type="button" className="text-[13px] text-n-777 hover:text-n-111" disabled={busy} onClick={() => confirm(tn('확인을 취소할까요? 공식 링크만 보이게 돼요.')) && save({})}>
             <T>확인 취소</T>
           </button>
         ) : (
