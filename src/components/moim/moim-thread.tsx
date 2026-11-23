@@ -18,8 +18,8 @@ export async function MoimThread({ moimId, postId, reply }: { moimId: string; po
         variant="pane"
         pageHref={`/moim/${moimId}`}
         rootNode={
-          <h2 className="flex items-center gap-1.5 px-4 pt-3.5 text-[15px] font-bold" style={{ color: 'var(--n-111)' }}>
-            <MessageCircle className="w-4 h-4" /> <T>모임 이야기</T>
+          <h2 className="moim-thread-title">
+            <MessageCircle className="w-3 h-3" aria-hidden /> <T>모임 이야기</T>
           </h2>
         }
         meta={<span><T>장소·시간·준비물은 여기 댓글로 정해요</T></span>}
