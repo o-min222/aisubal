@@ -3,7 +3,7 @@ import { ownPostsFilter } from './own-posts'
 import { myNicknameId } from './nickname'
 import { withAgentCards, withAgentLikerCards } from './agent-profiles'
 import type { TimelineLiker, TimelinePost } from '@/components/timeline/types'
-import { feedRowToTimeline, type FeedRow } from '@/lib/feed-rules'
+import { feedRowToTimeline, pickCommentPreviews, previewLine, COMMENT_PREVIEW_COUNT, type FeedRow } from '@/lib/feed-rules'
 import { MOCK_MEMBERS, MOCK_POSTS } from '@/lib/mock-data'
 import { toPublicAuthor, publicAuthorLabel } from '@/lib/profile'
 import type { Member } from '@/lib/supabase/types'
@@ -635,14 +635,53 @@ export async function deleteFeedPost(postId: string, viewerId: string): Promise<
   return { ok: true, tombstone: Boolean(left) }
 }
 
+/**
+ * A46: a couple of comments under each card. One RPC for the whole page (0098, SECURITY INVOKER so
+ * posts RLS — incl. A43 visibility — applies) plus one select for those rows. Never breaks the
+ * feed: any error just leaves the cards without previews.
+ */
+async function withCommentPreviews(viewerId: string, posts: TimelinePost[]): Promise<TimelinePost[]> {
+  const ids = posts.filter((p) => !p.parentId && !p.isDeleted && p.replyCount > 0).map((p) => p.id)
+  if (!ids.length) return posts
+  try {
+    const byRoot = new Map<string, TimelinePost[]>()
+    if (isMock()) {
+      const all = mockState().posts
+      for (const id of ids) byRoot.set(id, pickCommentPreviews(id, all))
+    } else {
+      const supabase = await sb()
+      const { data: refs, error } = await supabase.rpc('feed_comment_previews', { p_ids: ids.slice(0, 50), p_per: COMMENT_PREVIEW_COUNT })
+      if (error) throw error
+      const list = (refs || []) as Array<{ root_id: string; id: string; rnk: number }>
+      if (!list.length) return posts
+      const { data, error: e2 } = await supabase.from('posts').select(FEED_SELECT).in('id', list.map((r) => r.id))
+      if (e2) throw e2
+      const rows = new Map(((data || []) as unknown as FeedRow[]).map((r) => [r.id, feedRowToTimeline(r, new Set(), viewerId, null)]))
+      for (const r of [...list].sort((a, b) => a.rnk - b.rnk)) {
+        const t = rows.get(r.id)
+        if (t) byRoot.set(r.root_id, [...(byRoot.get(r.root_id) ?? []), t])
+      }
+    }
+    return posts.map((p) => {
+      const items = (byRoot.get(p.id) ?? [])
+        .map((c) => ({ id: c.id, name: c.author.name, body: previewLine(c.body, c.linkUrl) }))
+        .filter((c) => c.body)
+      return items.length ? { ...p, commentPreviews: items } : p
+    })
+  } catch (e) {
+    console.warn('[feed] comment previews skipped', e)
+    return posts
+  }
+}
+
 // 0050: agent authors get their photo + /agents/{id} link
 export async function listFeedTimeline(...args: Parameters<typeof listFeedTimeline__raw>): ReturnType<typeof listFeedTimeline__raw> {
-  return withAgentCards(await listFeedTimeline__raw(...args))
+  return withCommentPreviews(args[0], await withAgentCards(await listFeedTimeline__raw(...args)))
 }
 
 export async function listFeedPage(...args: Parameters<typeof listFeedPage__raw>): ReturnType<typeof listFeedPage__raw> {
   const r = await listFeedPage__raw(...args)
-  return { ...r, posts: await withAgentCards(r.posts) }
+  return { ...r, posts: await withCommentPreviews(args[0], await withAgentCards(r.posts)) }
 }
 
 export async function getFeedThread(...args: Parameters<typeof getFeedThread__raw>): ReturnType<typeof getFeedThread__raw> {

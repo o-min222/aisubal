@@ -59,7 +59,7 @@ export function ThreadLayout({
           <PostCard post={root} afterDeleteHref={afterDeleteHref} likeEndpoint={postApi(mode, root.id, 'like')} likersEndpoint={postApi(mode, root.id, 'likers')} actions={actionsFor?.(root)} />
         )}
         <div className="thread-meta flex flex-wrap items-center">{meta}</div>
-        <section className="thread-replies" aria-label={repliesLabel}>
+        <section id="comments" className="thread-replies" aria-label={repliesLabel}>
           <h2 className="thread-count">{countLabel}</h2>
           {groups.length === 0 ? (
             <p className="px-4 py-6 text-sm text-n-888 text-center">{emptyLabel}</p>

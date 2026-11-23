@@ -43,6 +43,8 @@ export type TimelinePost = {
   /** A43: who can see it (root's value on replies); undefined = members */
   visibility?: import('@/lib/post-visibility').PostVisibility
   replyCount: number
+  /** A46: up to 2 top-level comments shown under feed cards (most-reacted, then latest) */
+  commentPreviews?: CommentPreview[]
   createdAt: string
   isHidden?: boolean
   /** human feed: optional headline kept from legacy long posts */
@@ -116,3 +118,6 @@ export type TimelineLiker = {
   profileHref?: string | null
   createdAt: string
 }
+
+/** A46: one line under a feed card; name is the alias (익명/익명N) on the 익명 board */
+export type CommentPreview = { id: string; name: string; body: string }

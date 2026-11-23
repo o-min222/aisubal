@@ -1,3 +1,4 @@
+import { pickCommentPreviews, previewLine, COMMENT_PREVIEW_COUNT } from '@/lib/feed-rules'
 import type { TimelinePost } from '@/components/timeline/types'
 import {
   ANON_MAX_CHARS,
@@ -164,7 +165,7 @@ export async function listAnon(
       if (opts.before) rows = rows.filter((p) => p.createdAt < opts.before!)
     }
     rows = rows.slice(opts.offset ?? 0)
-    return rows.slice(0, limit).map((p) => anonRowToTimeline(view(p, viewerId)))
+    return withAnonPreviews(viewerId, rows.slice(0, limit).map((p) => anonRowToTimeline(view(p, viewerId))))
   }
   const rows = await rpc<AnonRow[]>('anon_list', {
     p_category: opts.category ?? null,
@@ -173,7 +174,28 @@ export async function listAnon(
     p_offset: opts.offset ?? 0,
     p_limit: limit,
   })
-  return (rows || []).map(anonRowToTimeline)
+  return withAnonPreviews(viewerId, (rows || []).map(anonRowToTimeline))
+}
+
+/** A46: two comments under each 익명 card, by alias only (0098 anon_comment_previews). Fails soft. */
+async function withAnonPreviews(viewerId: string, posts: TimelinePost[]): Promise<TimelinePost[]> {
+  const ids = posts.filter((p) => !p.isDeleted && !p.isHidden && p.replyCount > 0).map((p) => p.id)
+  if (!ids.length) return posts
+  try {
+    const rows = isMock()
+      ? ids.flatMap((id) => pickCommentPreviews(id, mock().posts.map((p) => ({ ...p, reactionCount: 0 }))).map((p) => view(p, viewerId)))
+      : await rpc<AnonRow[]>('anon_comment_previews', { p_ids: ids.slice(0, 50), p_per: COMMENT_PREVIEW_COUNT })
+    const byRoot = new Map<string, { id: string; name: string; body: string }[]>()
+    for (const r of rows || []) {
+      if (!r.parentId || r.isHidden || r.isDeleted) continue
+      const body = previewLine(r.body)
+      if (body) byRoot.set(r.parentId, [...(byRoot.get(r.parentId) ?? []), { id: r.id, name: r.alias, body }])
+    }
+    return posts.map((p) => (byRoot.has(p.id) ? { ...p, commentPreviews: byRoot.get(p.id) } : p))
+  } catch (e) {
+    console.warn('[anon] comment previews skipped', e)
+    return posts
+  }
 }
 
 export async function getAnonThread(id: string, viewerId: string): Promise<AnonThread | null> {

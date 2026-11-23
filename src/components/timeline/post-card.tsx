@@ -1,6 +1,7 @@
 'use client'
 
 import { AnonName } from '@/components/anon/anon-name'
+import { CommentPreviews } from '@/components/timeline/comment-previews'
 import { MoimFeedCard } from '@/components/moim/moim-feed-card'
 import { CollapsibleText } from '@/components/collapsible-text'
 import { useState, type ReactNode } from 'react'
@@ -353,6 +354,9 @@ export function PostCard({
             )}
             {actions && <div className="ml-auto flex items-center gap-1">{actions}</div>}
           </footer>
+          {!isReply && !gone && href && post.commentPreviews?.length ? (
+            <CommentPreviews items={post.commentPreviews} total={counts.replyCount} href={href} anon={anon} />
+          ) : null}
         </div>
       </div>
       <LikerList endpoint={likersEndpoint} open={likersOpen} onOpenChange={setLikersOpen} anonymous={anon} />

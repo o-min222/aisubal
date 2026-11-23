@@ -2664,3 +2664,13 @@ a.notif-pop-all:hover { background: var(--n-fafafa); }
 .composer-compact .composer-previews, .composer-compact .pii-warning { margin-top: 2px; }
 .just-posted { animation: just-posted 1.6s ease-out; }
 @keyframes just-posted { from { background-color: var(--tint-hover); } to { background-color: transparent; } }
+
+/* A46: comment previews under feed cards — quiet, one line each */
+.cmt-preview { display: flex; flex-direction: column; gap: 1px; margin: 0 0 2px; padding: 6px 0 4px; min-height: 32px; border-radius: 8px; color: var(--n-666); font-size: 13.5px; line-height: 1.45; text-decoration: none; }
+.cmt-preview:hover { color: var(--n-444); }
+.cmt-preview:hover .cmt-preview-more { color: var(--n-555); }
+.cmt-preview-row { display: flex; gap: 6px; min-width: 0; }
+.cmt-preview-name { flex: 0 0 auto; max-width: 40%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; color: var(--n-333); }
+.cmt-preview-body { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cmt-preview-more { margin-top: 2px; font-size: 13px; color: var(--n-888); }
+.thread-replies { scroll-margin-top: 64px; }

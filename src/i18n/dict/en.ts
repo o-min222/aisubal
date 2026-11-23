@@ -453,6 +453,7 @@ const en: Record<string, string> = {
   "로그아웃": "Sign out",
   "로그인 · 멤버십 · 언어": "Sign-in · membership · language",
   "로그인 이메일": "Sign-in email",
+  "댓글 {n}개 모두 보기": "View all {n} comments",
   "익명 라운지 오픈 기준 (활성 멤버 수)": "Anonymous lounge opens at (active members)",
   "멤버 {threshold}명부터 열려요 · 현재 {count}명": "Opens at {threshold} members · {count} now",
   "멤버가 모이면 누가 썼는지 보이지 않는 익명 글을 쓸 수 있어요.": "Once enough members join, you can post here without showing who you are.",

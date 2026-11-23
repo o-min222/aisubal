@@ -232,3 +232,22 @@ export function previewsFromRow(r: Pick<FeedRow, 'link_previews'>): TimelineLink
 
 /** Feed report reasons ('개인정보 노출' = someone's phone, address, real name, etc.). */
 export const FEED_REPORT_REASONS = ['개인정보 노출', '욕설·비하', '스팸·홍보', '허위사실', '저작권 침해', '기타'] as const
+
+/** A46: comments under a feed card — top-level only, visible ones, most-reacted first, then latest. */
+export const COMMENT_PREVIEW_COUNT = 2
+
+export function previewLine(body: string, linkUrl?: string | null): string {
+  const line = (body || '').replace(/\s+/g, ' ').trim()
+  return (line || linkUrl || '').slice(0, 200)
+}
+
+export function pickCommentPreviews<T extends { id: string; parentId: string | null; likeCount: number; reactionCount?: number; createdAt: string; isHidden?: boolean; isDeleted?: boolean }>(
+  rootId: string,
+  replies: T[],
+  n = COMMENT_PREVIEW_COUNT,
+): T[] {
+  return replies
+    .filter((r) => r.parentId === rootId && !r.isHidden && !r.isDeleted)
+    .sort((a, b) => b.likeCount + (b.reactionCount ?? 0) - (a.likeCount + (a.reactionCount ?? 0)) || b.createdAt.localeCompare(a.createdAt))
+    .slice(0, n)
+}
