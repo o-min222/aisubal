@@ -1,7 +1,7 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { idFromLikeEndpoint, publishLike, useCounts } from '@/lib/count-store'
+import { useState } from 'react'
+import { idFromLikeEndpoint, publishLike, useCounts, type Counts } from '@/lib/count-store'
 import { Heart } from 'lucide-react'
 import { toast } from 'sonner'
 import { tx, tn } from '@/i18n/client'
@@ -29,33 +29,28 @@ export function LikeButton({
   const postId = idFromLikeEndpoint(endpoint)
   // replies don't matter here; the store keeps every view of this post in step
   const synced = useCounts(postId, { likeCount: initialCount, liked: initialLiked, replyCount: 0 })
-  const [liked, setLiked] = useState(synced.liked)
-  const [count, setCount] = useState(synced.likeCount)
   const [busy, setBusy] = useState(false)
-  useEffect(() => {
-    if (busy) return
-    setLiked(synced.liked)
-    setCount(synced.likeCount)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [synced.liked, synced.likeCount])
+  // this button's own optimistic value: shown while its request runs, then until the store moves past `base`
+  const [mine, setMine] = useState<{ liked: boolean; count: number; base: Pick<Counts, 'liked' | 'likeCount'> } | null>(null)
+  const own = mine && (busy || (mine.base.liked === synced.liked && mine.base.likeCount === synced.likeCount)) ? mine : null
+  const liked = own ? own.liked : synced.liked
+  const count = own ? own.count : synced.likeCount
 
   async function toggle() {
     if (busy || disabled || self) return
     const next = !liked
     setBusy(true)
-    setLiked(next)
-    setCount((c) => Math.max(0, c + (next ? 1 : -1)))
+    setMine({ liked: next, count: Math.max(0, count + (next ? 1 : -1)), base: { liked: synced.liked, likeCount: synced.likeCount } })
     try {
       const res = await fetch(endpoint, { method: next ? 'POST' : 'DELETE' })
       const data = await res.json().catch(() => ({}))
       if (!res.ok) throw new Error(data.error || '좋아요 실패')
       if (typeof data.likeCount === 'number') {
-        setCount(data.likeCount)
+        setMine((m) => m && { ...m, count: data.likeCount })
         if (postId) publishLike(postId, data.likeCount, next)
       }
     } catch (e) {
-      setLiked(!next)
-      setCount((c) => Math.max(0, c + (next ? -1 : 1)))
+      setMine(null)
       toast.error(e instanceof Error ? e.message : tn('좋아요 실패'))
     } finally {
       setBusy(false)

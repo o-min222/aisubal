@@ -1,6 +1,5 @@
 'use client'
 
-import { useEffect, useState } from 'react'
 import { formatDistanceToNow } from 'date-fns'
 import { enUS, ko, type Locale as DateLocale } from 'date-fns/locale'
 import { useLocale } from '@/i18n/client'
@@ -21,11 +20,7 @@ export function RelativeTime({
   addSuffix?: boolean
 }) {
   const locale = useLocale()
-  const [label, setLabel] = useState(() => format(date, addSuffix, locale))
-
-  useEffect(() => {
-    setLabel(format(date, addSuffix, locale))
-  }, [date, addSuffix, locale])
+  const label = format(date, addSuffix, locale)
 
   return (
     <span suppressHydrationWarning data-testid="relative-time">

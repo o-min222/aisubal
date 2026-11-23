@@ -18,30 +18,34 @@ export function HandleField({ initial, onChanged }: { initial: string; onChanged
   const locale = useLocale()
   const [current, setCurrent] = useState(initial)
   const [value, setValue] = useState(initial)
-  const [status, setStatus] = useState<HandleStatus | null>(null)
-  const [checking, setChecking] = useState(false)
+  // the status plus when it arrived, so '보호 중' is judged against that moment instead of a clock read in render
+  const [received, setReceived] = useState<{ status: HandleStatus; at: number } | null>(null)
+  const setStatus = (status: HandleStatus) => setReceived({ status, at: Date.now() })
+  const status = received?.status ?? null
+  // the check query whose answer came back last; any other candidate is still being checked
+  const [answered, setAnswered] = useState<string | null>(null)
   const [confirming, setConfirming] = useState(false)
   const [busy, setBusy] = useState(false)
   const [err, setErr] = useState<string | null>(null)
   const seq = useRef(0)
   const v = normalizeHandle(value)
   const dirty = v !== current
+  const q = dirty && v ? `?h=${encodeURIComponent(v)}` : ''
+  const checking = Boolean(q) && answered !== q
 
   // quota + history once, then a debounced check whenever the candidate changes
   useEffect(() => {
     const n = ++seq.current
-    const q = dirty && v ? `?h=${encodeURIComponent(v)}` : ''
-    setChecking(Boolean(q))
     const t = setTimeout(async () => {
       try {
         const res = await fetch(`/api/profile/handle${q}`, { cache: 'no-store' })
         const d = await res.json()
         if (n === seq.current && res.ok && d.quota) setStatus(d as HandleStatus)
       } catch {}
-      if (n === seq.current) setChecking(false)
+      if (n === seq.current) setAnswered(q)
     }, q ? 300 : 0)
     return () => clearTimeout(t)
-  }, [v, dirty])
+  }, [q])
 
   const check = dirty && status?.check?.handle === v ? status.check : null
   const quota = status?.quota
@@ -144,7 +148,7 @@ export function HandleField({ initial, onChanged }: { initial: string; onChanged
             {status.history.map((r) => (
               <li key={r.changedAt}>
                 @{r.old} → @{r.new} · {formatHandleDate(r.changedAt, locale)}
-                {new Date(r.releasedAt).getTime() > Date.now() ? <> · <T s="@{h} 보호 중 ({date}까지)" vars={{ h: r.old, date: formatHandleDate(r.releasedAt, locale) }} /></> : null}
+                {new Date(r.releasedAt).getTime() > (received?.at ?? 0) ? <> · <T s="@{h} 보호 중 ({date}까지)" vars={{ h: r.old, date: formatHandleDate(r.releasedAt, locale) }} /></> : null}
               </li>
             ))}
           </ul>

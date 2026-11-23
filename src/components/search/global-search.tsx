@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useEffectEvent, useRef, useState, useSyncExternalStore } from 'react'
 import { Dialog as DialogPrimitive } from '@base-ui/react/dialog'
 import { Bot, FileText, Loader2, Search, User, Wrench } from 'lucide-react'
 import type { SearchHit, SearchResults } from '@/lib/data/search'
@@ -15,6 +15,10 @@ const GROUPS = [
   { key: 'gallery', label: '갤러리', Icon: Wrench },
 ] as const
 
+// the ⌘K / Ctrl K hint: the server (and the first client render) says ⌘K, then the real platform
+const noSubscribe = () => () => {}
+const isMacClient = () => /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent)
+
 /**
  * Top-bar search: a compact field with a ⌘K hint on desktop, an icon on mobile. Both open
  * the same quick-results dialog; Enter (or '모두 보기') goes to /search.
@@ -26,15 +30,25 @@ export function GlobalSearch() {
   const [q, setQ] = useState('')
   const [res, setRes] = useState<SearchResults | null>(null)
   const [busy, setBusy] = useState(false)
-  const [mac, setMac] = useState(true)
+  const mac = useSyncExternalStore(noSubscribe, isMacClient, () => true)
   const inputRef = useRef<HTMLInputElement>(null)
 
+  // quick results only live while the dialog is open with a term: clear them wherever that stops being true
+  function changeOpen(next: boolean) {
+    setOpen(next)
+    if (!next) setRes(null)
+  }
+  function changeQ(next: string) {
+    setQ(next)
+    if (!next.trim()) setRes(null)
+  }
+  const toggleOpen = useEffectEvent(() => changeOpen(!open))
+
   useEffect(() => {
-    setMac(/Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent))
     const onKey = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault()
-        setOpen((v) => !v)
+        toggleOpen()
       }
     }
     window.addEventListener('keydown', onKey)
@@ -43,10 +57,7 @@ export function GlobalSearch() {
 
   useEffect(() => {
     const term = q.trim()
-    if (!open || !term) {
-      setRes(null)
-      return
-    }
+    if (!open || !term) return
     const ctl = new AbortController()
     const timer = setTimeout(async () => {
       setBusy(true)
@@ -66,14 +77,14 @@ export function GlobalSearch() {
   }, [q, open])
 
   function go(href: string) {
-    setOpen(false)
+    changeOpen(false)
     router.push(href)
   }
   const all = `/search?q=${encodeURIComponent(q.trim())}`
   const total = res ? res.people.length + res.feed.length + res.agora.length + res.gallery.length : 0
 
   return (
-    <DialogPrimitive.Root open={open} onOpenChange={setOpen}>
+    <DialogPrimitive.Root open={open} onOpenChange={changeOpen}>
       <DialogPrimitive.Trigger className="gsearch-field only-desktop" aria-label={t('검색')}>
         <Search aria-hidden />
         <span className="gsearch-ph">{t('검색')}</span>
@@ -98,7 +109,7 @@ export function GlobalSearch() {
             <input
               ref={inputRef}
               value={q}
-              onChange={(e) => setQ(e.target.value)}
+              onChange={(e) => changeQ(e.target.value)}
               placeholder={t('사람 · 글 · 갤러리 검색')}
               aria-label={t('검색어')}
               maxLength={60}
@@ -120,7 +131,7 @@ export function GlobalSearch() {
                     <ul>
                       {res[key].map((h: SearchHit) => (
                         <li key={h.id}>
-                          <Link href={h.href} onClick={() => setOpen(false)} className="gsearch-hit">
+                          <Link href={h.href} onClick={() => changeOpen(false)} className="gsearch-hit">
                             <Icon aria-hidden />
                             <span className="min-w-0">
                               <b>{h.title}</b>
@@ -136,7 +147,7 @@ export function GlobalSearch() {
             )}
           </div>
           {q.trim() && (
-            <Link href={all} onClick={() => setOpen(false)} className="gsearch-all">
+            <Link href={all} onClick={() => changeOpen(false)} className="gsearch-all">
               {t('‘{q}’ 모든 결과 보기', { q: q.trim() })}
             </Link>
           )}
