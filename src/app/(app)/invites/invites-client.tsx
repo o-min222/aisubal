@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Users, Copy, Check, AlertCircle, User, Share2, ChevronDown, Link2, Send, UserPlus, Crown } from 'lucide-react'
+import { Users, Copy, Check, AlertCircle, User, Share2, ChevronDown, Crown } from 'lucide-react'
 import { toast } from 'sonner'
 import type { InviteCodeRow } from '@/lib/data/invites'
 import type { BatchProgress } from '@/lib/invite-batch'
@@ -47,7 +47,9 @@ export function InvitesClient({ inviterName, codes, codesActive, loadFailed, all
     }
   }
 
-  const available = codes.filter((c) => !c.isUsed).length
+  const availableCodes = codes.filter((c) => !c.isUsed)
+  // who joined, most recent first (A33: folded away, closed by default)
+  const usedCodes = codes.filter((c) => c.isUsed).sort((x, y) => Date.parse(y.usedAt ?? '') - Date.parse(x.usedAt ?? '') || 0)
 
   return (
     <div className="max-w-2xl mx-auto space-y-4">
@@ -56,14 +58,8 @@ export function InvitesClient({ inviterName, codes, codesActive, loadFailed, all
           <Users className="w-6 h-6" /> <T>초대하기</T>
         </h1>
         <p className="text-sm text-n-666 mt-1">
-          <T>초대 메시지를 복사해 카톡·문자·DM 어디로든 조용히 전하세요.</T>{' '}
-          <T s="남은 초대 {n}장" vars={{ n: <b className="text-n-111">{available}</b> }} />
+          <T>초대 메시지를 복사해 카톡·문자·DM 어디로든 조용히 전하세요.</T>
         </p>
-        <ol className="invite-steps" aria-label={tx('초대 순서')}>
-          <li><Link2 className="w-3.5 h-3.5" aria-hidden /> <T>메시지 복사</T></li>
-          <li><Send className="w-3.5 h-3.5" aria-hidden /> <T>원하는 곳에 전달</T></li>
-          <li><UserPlus className="w-3.5 h-3.5" aria-hidden /> <T>링크로 가입</T></li>
-        </ol>
       </div>
 
       {!codesActive && (
@@ -78,50 +74,41 @@ export function InvitesClient({ inviterName, codes, codesActive, loadFailed, all
 
       <div className="card overflow-hidden">
         <div className="p-4 border-b border-n-e5e5e5">
-          <div className="flex items-baseline justify-between gap-3">
-            <h2 className="font-semibold" style={{ color: 'var(--n-111)' }}>
-              <T>내 초대 코드</T>
-            </h2>
-            {codesActive && !loadFailed && (
-              <span className="text-sm text-n-555 tabular-nums whitespace-nowrap" data-testid="invite-progress">
-                <T s="{n}/{total}명 가입" vars={{ n: <b className="text-n-111">{progress.joined}</b>, total: progress.size }} />
-              </span>
-            )}
-          </div>
+          <h2 className="font-semibold" style={{ color: 'var(--n-111)' }}>
+            <T s="초대 가능한 코드 {n}장" vars={{ n: availableCodes.length }} />
+          </h2>
           {codesActive && !loadFailed && (
-            <div className="invite-progress mt-2" role="progressbar" aria-valuemin={0} aria-valuemax={progress.size} aria-valuenow={progress.joined} aria-label={tx('초대 진행')}>
-              <span style={{ width: `${progress.size ? Math.round((progress.joined / progress.size) * 100) : 0}%` }} />
-            </div>
+            <>
+              <p className="text-sm text-n-555 mt-1" data-testid="invite-progress">
+                <T s="초대한 {n}/{total}명 가입" vars={{ n: <b className="text-n-111 tabular-nums">{progress.joined}</b>, total: progress.size }} />
+                {' · '}
+                <T s="모두 가입하면 바로 {n}장이 다시 채워져요" vars={{ n: allowance }} />
+              </p>
+              <div className="invite-progress mt-2" role="progressbar" aria-valuemin={0} aria-valuemax={progress.size} aria-valuenow={progress.joined} aria-label={tx('초대 진행')}>
+                <span style={{ width: `${progress.size ? Math.round((progress.joined / progress.size) * 100) : 0}%` }} />
+              </div>
+              {progress.completed > 0 && (
+                <p className="text-xs text-n-888 mt-2 inline-flex items-center gap-1">
+                  <Crown className="w-3.5 h-3.5" aria-hidden /> <T s="초대장 {n}번 다시 채움" vars={{ n: progress.completed }} />
+                </p>
+              )}
+            </>
           )}
-          <p className="text-xs text-n-888 mt-2">
-            <T s="모두 가입하면 바로 {n}장이 다시 채워져요" vars={{ n: allowance }} /> · <T>쓰지 않은 코드는 계속 쓸 수 있어요</T>
-            {progress.completed > 0 && (
-              <span className="inline-flex items-center gap-1 ml-1 whitespace-nowrap">
-                · <Crown className="w-3.5 h-3.5" aria-hidden /> <T s="초대장 {n}번 다시 채움" vars={{ n: progress.completed }} />
-              </span>
-            )}
-          </p>
         </div>
         {loadFailed && <p className="p-6 text-center text-sm text-n-888"><T>초대 코드를 불러오지 못했어요. 잠시 후 다시 시도해 주세요.</T></p>}
-        {!loadFailed && codes.length === 0 && <p className="p-6 text-center text-sm text-n-888"><T>아직 받은 초대 코드가 없어요.</T></p>}
+        {!loadFailed && availableCodes.length === 0 && (
+          <p className="p-6 text-center text-sm text-n-888">{codes.length ? <T>지금은 초대 가능한 코드가 없어요.</T> : <T>아직 받은 초대 코드가 없어요.</T>}</p>
+        )}
         <ul className="divide-y divide-n-eee">
-          {codes.map((c, i) => {
-            const earlier = c.batch < progress.batch && (i === 0 || codes[i - 1].batch !== c.batch)
-            const usable = !c.isUsed && codesActive
+          {availableCodes.map((c) => {
+            const usable = codesActive
             const msg = inviteShareText(inviterName, c.code, origin, tx, locale)
             return (
-              <li key={c.code} className={earlier ? 'p-4 invite-earlier' : 'p-4'}>
-                {earlier && <p className="text-xs text-n-888 mb-2"><T>지난 초대장</T></p>}
+              <li key={c.code} className="p-4">
                 <div className="flex items-center justify-between gap-3 flex-wrap">
                   <div className="flex items-center gap-3 min-w-0">
                     <span className={`font-mono text-lg tracking-wider ${usable ? 'text-n-111' : 'text-n-aaa'}`}>{c.code}</span>
-                    {c.isUsed ? (
-                      <span className="badge bg-c-dcfce7 text-c-166534"><T>사용됨</T></span>
-                    ) : !codesActive ? (
-                      <span className="badge bg-n-f3f3f3 text-n-666"><T>비활성</T></span>
-                    ) : (
-                      <span className="badge bg-c-dbeafe text-c-1e40af"><T>사용 가능</T></span>
-                    )}
+                    {!codesActive && <span className="badge bg-n-f3f3f3 text-n-666"><T>비활성</T></span>}
                   </div>
                   {usable && (
                     <div className="flex gap-2 ml-auto">
@@ -156,25 +143,32 @@ export function InvitesClient({ inviterName, codes, codesActive, loadFailed, all
                     )}
                   </div>
                 )}
-                {c.isUsed && (
-                  <div className="flex items-center gap-2 mt-2 text-sm text-n-666">
-                    <User className="w-4 h-4" />
-                    <span>{c.usedBy?.displayName ?? <T>가입 완료</T>}</span>
-                    {c.usedAt && (
-                      <>
-                        <span>·</span>
-                        <span>
-                          <RelativeTime date={c.usedAt} /> <T>사용</T>
-                        </span>
-                      </>
-                    )}
-                  </div>
-                )}
               </li>
             )
           })}
         </ul>
       </div>
+
+      {usedCodes.length > 0 && (
+        <details className="card overflow-hidden invite-used" data-testid="invite-used">
+          <summary className="p-4 flex items-center justify-between gap-3 cursor-pointer select-none">
+            <span className="font-semibold" style={{ color: 'var(--n-111)' }}><T s="사용한 초대장 {n}장" vars={{ n: usedCodes.length }} /></span>
+            <ChevronDown className="w-4 h-4 text-n-888 invite-used-chev" aria-hidden />
+          </summary>
+          <ul className="divide-y divide-n-eee border-t border-n-e5e5e5">
+            {usedCodes.map((c) => (
+              <li key={c.code} className="px-4 py-3 flex items-center gap-3 text-sm">
+                <User className="w-4 h-4 text-n-888 flex-shrink-0" aria-hidden />
+                <span className="text-n-111 truncate">{c.usedBy?.displayName ?? <T>가입 완료</T>}</span>
+                <span className="ml-auto flex items-center gap-2 text-xs text-n-888 whitespace-nowrap">
+                  <span className="font-mono">{c.code}</span>
+                  {c.usedAt && <>· <RelativeTime date={c.usedAt} /></>}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </details>
+      )}
 
       <div className="card p-4 space-y-2 text-sm text-n-555">
         <h2 className="font-semibold mb-1" style={{ color: 'var(--n-111)' }}>

@@ -2105,9 +2105,6 @@ button.rp-link { width: 100%; text-align: left; font: inherit; cursor: pointer; 
 .svc-chips { display: flex; flex-wrap: wrap; gap: 4px; min-width: 0; }
 
 /* invites: the 3-step flow line */
-.invite-steps { list-style: none; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; margin: 10px 0 0; padding: 0; font-size: 12.5px; color: var(--n-555); }
-.invite-steps li { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 999px; background: var(--n-f2f2f2); font-weight: 500; }
-.invite-steps li + li::before { content: '→'; margin: 0 6px 0 -2px; color: var(--n-aaa); order: -1; }
 /* ---------- Two-level comments (댓글 + 대댓글) ---------- */
 .comment-list, .comment-replies { list-style: none; margin: 0; padding: 0; }
 .comment-group { border-bottom: 1px solid var(--n-eee); }
@@ -2563,4 +2560,7 @@ a.notif-pop-all:hover { background: var(--n-fafafa); }
 /* A31 invites: progress of the current batch toward the next refill */
 .invite-progress { height: 4px; border-radius: 999px; background: var(--n-eee); overflow: hidden; }
 .invite-progress > span { display: block; height: 100%; border-radius: inherit; background: var(--n-111); transition: width .3s ease; }
-.invite-earlier { background: color-mix(in srgb, var(--n-eee) 30%, transparent); }
+.invite-used > summary { list-style: none; min-height: 52px; }
+.invite-used > summary::-webkit-details-marker { display: none; }
+.invite-used[open] .invite-used-chev { transform: rotate(180deg); }
+.invite-used-chev { transition: transform .2s ease; }
