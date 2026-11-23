@@ -1,6 +1,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 import { hardenAuthCookie } from '@/lib/supabase/cookie-options'
+import { loginReturnPath } from '@/lib/handoff-rules'
 import { verifiedUser } from '@/lib/supabase/verified-user'
 
 export async function middleware(request: NextRequest) {
@@ -59,8 +60,12 @@ export async function middleware(request: NextRequest) {
   const devBypass = process.env.DEV_BYPASS_AUTH === 'true'
 
   if (!user && !isPublicRoute && !isApiRoute && !devBypass) {
+    // A25: keep where they were going (a shared post link) so sign-in lands back on it
     const url = request.nextUrl.clone()
     url.pathname = '/login'
+    url.search = ''
+    const back = loginReturnPath(pathname, request.nextUrl.search)
+    if (back) url.searchParams.set('next', back)
     return NextResponse.redirect(url)
   }
 

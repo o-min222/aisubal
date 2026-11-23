@@ -49,3 +49,18 @@ export function detectPlatform(ua: string, opts: { standalone: boolean; touch: b
   if (/Mobi/i.test(ua)) return 'mobile'
   return 'desktop'
 }
+
+/**
+ * A25: a signed-out visit (e.g. a shared post link opened in KakaoTalk) goes to /login?next=<this>,
+ * and sign-in comes back here. The feed is the default anyway, so it isn't carried.
+ */
+export function loginReturnPath(pathname: string, search = ''): string | null {
+  if (pathname === '/' || pathname === '/feed' || pathname === '/login') return null
+  return safeNextPath(`${pathname}${search}`)
+}
+
+/** Which kind of shared post a ?next path points at (for the sign-in page's link preview). */
+export function sharedPostKind(next: string | null | undefined): 'post' | 'agora' | 'anon' | null {
+  const m = /^\/(posts|agora|anon)\/[0-9a-f-]{8,}(?:[/?#]|$)/i.exec(safeNextPath(next) ?? '')
+  return m ? (m[1] === 'posts' ? 'post' : (m[1] as 'agora' | 'anon')) : null
+}
