@@ -2487,3 +2487,41 @@ a.notif-pop-all:hover { background: var(--n-fafafa); }
 .network-search > svg { position: absolute; left: 10px; pointer-events: none; }
 .network-search > .input { width: 100%; padding-left: 32px; min-height: 36px; }
 #people { scroll-margin-top: 72px; }
+
+/* A25: the logged-out hero (/, /login) is always dark, whatever the theme. Fixed colours, never the
+   theme tokens (they invert in .dark: --n-111 → #ececec, which turned the hero light grey for anyone
+   whose phone is in dark mode, e.g. KakaoTalk following Android). Plain unlayered CSS with a solid
+   colour first, so older Chromium webviews without @layer / color-mix / dvh still get the design. */
+.auth-hero {
+  background-color: #111111;
+  color: #ffffff;
+  color-scheme: dark;
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  box-sizing: border-box;
+}
+.auth-hero-brand { display: flex; flex-direction: column; align-items: center; margin-bottom: 48px; }
+.auth-hero-brand > * + * { margin-top: 20px; }
+.auth-hero-logo { height: 56px; width: auto; }
+.auth-hero-logo-lg { height: 64px; }
+.auth-hero-actions { width: 100%; max-width: 384px; }
+.auth-hero-btn {
+  display: flex; align-items: center; justify-content: center; width: 100%; box-sizing: border-box;
+  padding: 12px 24px; min-height: 48px; border: 0; border-radius: 8px; cursor: pointer;
+  background-color: #ffffff; color: #111111; font-weight: 500; font-size: 16px; text-decoration: none;
+  transition: background-color .15s;
+}
+.auth-hero-btn > svg { margin-right: 12px; flex: none; }
+.auth-hero-btn:hover { background-color: #f3f3f3; color: #111111; }
+.auth-hero-btn-inline { display: inline-flex; width: auto; padding: 12px 32px; }
+.auth-hero-locale { margin-top: 40px; }
+.auth-inapp { text-align: center; }
+.auth-inapp-title { color: #ffffff; font-weight: 600; font-size: 15px; line-height: 1.5; word-break: keep-all; }
+.auth-inapp-hint { color: rgba(255, 255, 255, .62); font-size: 13px; line-height: 1.6; margin: 6px 0 16px; word-break: keep-all; }
+/* the hero's language pill stays light-on-dark in the dark theme too (beats .dark .locale-seg button.on) */
+.auth-hero .locale-on-dark .locale-seg button.on { background: #ffffff; color: #111111; box-shadow: none; }

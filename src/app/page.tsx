@@ -21,16 +21,16 @@ export default async function HomePage() {
   const t = await getT()
   // Landing page for unauthenticated users
   return (
-    <div className="min-h-screen bg-n-111 flex flex-col items-center justify-center p-6">
+    <div className="auth-hero">
       {/* Logo */}
-      <div className="mb-12 flex flex-col items-center gap-5">
+      <div className="auth-hero-brand">
         <Image
           src="/images/logo-white.png"
           alt={st('AI쓰발')}
           width={240}
           height={72}
           priority
-          className="h-16 w-auto"
+          className="auth-hero-logo auth-hero-logo-lg"
         />
         <Slogan />
       </div>
@@ -38,12 +38,12 @@ export default async function HomePage() {
       {/* CTA */}
       <Link
         href="/login"
-        className="inline-flex items-center justify-center gap-3 px-8 py-3 bg-n-fff hover:bg-n-f3f3f3 text-n-111 font-medium rounded-lg transition-colors"
+        className="auth-hero-btn auth-hero-btn-inline"
       >
         <GoogleIcon />
         {t('Google로 시작하기')}
       </Link>
-      <div className="mt-10 locale-on-dark">
+      <div className="auth-hero-locale locale-on-dark">
         <LocaleSwitch />
       </div>
     </div>

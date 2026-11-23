@@ -4,16 +4,41 @@ import { createClient } from '@/lib/supabase/client'
 import { useSearchParams } from 'next/navigation'
 import Image from 'next/image'
 import { Slogan } from '@/components/slogan'
-import { Suspense } from 'react'
+import { Suspense, useEffect, useSyncExternalStore } from 'react'
 import { useT, tx } from '@/i18n/client'
 import { LocaleSwitch } from '@/components/i18n/locale-switch'
 import { AFTER_LOGIN_COOKIE, safeNextPath } from '@/lib/handoff-rules'
+import { IN_APP_LABEL, detectInApp, externalOpenUrl } from '@/lib/in-app-browser'
+import { toast } from 'sonner'
+
+const noSubscribe = () => () => {}
+/** the webview we're in (client only; the server renders the normal screen) */
+function useInApp() {
+  return useSyncExternalStore(noSubscribe, () => detectInAppOnce(), () => null)
+}
+let inAppMemo: ReturnType<typeof detectInApp> | undefined
+const detectInAppOnce = () => (inAppMemo === undefined ? (inAppMemo = detectInApp(navigator.userAgent)) : inAppMemo)
 
 function LoginContent() {
   const searchParams = useSearchParams()
   const error = searchParams.get('error')
   const t = useT()
-  
+  const inApp = useInApp()
+  const external = inApp && typeof window !== 'undefined' ? externalOpenUrl(inApp, window.location.href) : null
+  // KakaoTalk: Google sign-in can't work in its webview, so reopen this page (next= included) in the browser
+  useEffect(() => {
+    if (inApp?.app === 'kakaotalk' && external) window.location.href = external
+  }, [inApp, external])
+
+  async function copyLink() {
+    try {
+      await navigator.clipboard.writeText(window.location.href)
+      toast.success(tx('링크를 복사했어요'))
+    } catch {
+      toast.error(tx('복사하지 못했어요.'))
+    }
+  }
+
   async function handleGoogleLogin() {
     // A25: a shared link that sent them here opens after sign-in (/auth/callback reads this)
     const next = safeNextPath(searchParams.get('next'))
@@ -28,35 +53,50 @@ function LoginContent() {
   }
 
   return (
-    <div className="min-h-screen bg-n-111 flex flex-col items-center justify-center p-6">
-      <div className="mb-12 flex flex-col items-center gap-5">
+    <div className="auth-hero">
+      <div className="auth-hero-brand">
         <Image
           src="/images/logo-white.png"
           alt={tx('AI쓰발')}
           width={200}
           height={60}
           priority
-          className="h-14 w-auto"
+          className="auth-hero-logo"
         />
         <Slogan />
       </div>
 
-      <div className="w-full max-w-sm">
+      <div className="auth-hero-actions">
         {error && (
           <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-red-400 text-sm text-center">
             {t('로그인에 실패했습니다. 다시 시도해주세요.')}
           </div>
         )}
 
-        <button
-          onClick={handleGoogleLogin}
-          className="w-full flex items-center justify-center gap-3 px-6 py-3 bg-n-fff hover:bg-n-fafafa text-n-111 font-medium rounded-lg transition-colors"
-        >
-          <GoogleIcon />
-          {t('Google로 로그인')}
-        </button>
+        {inApp ? (
+          // Google blocks sign-in inside app webviews (disallowed_useragent)
+          <div className="auth-inapp" role="status">
+            <p className="auth-inapp-title">{t('{app} 안에서는 Google 로그인이 막혀 있어요.', { app: t(IN_APP_LABEL[inApp.app]) })}</p>
+            {external ? (
+              <>
+                <p className="auth-inapp-hint">{t('외부 브라우저에서 열면 로그인한 뒤 바로 이 글로 이동해요.')}</p>
+                <a href={external} className="auth-hero-btn">{t('외부 브라우저로 열기')}</a>
+              </>
+            ) : (
+              <>
+                <p className="auth-inapp-hint">{t("오른쪽 아래(또는 위) ⋯ 메뉴에서 'Safari로 열기'를 누르거나, 링크를 복사해 Safari에 붙여넣어 주세요.")}</p>
+                <button type="button" onClick={copyLink} className="auth-hero-btn">{t('링크 복사')}</button>
+              </>
+            )}
+          </div>
+        ) : (
+          <button type="button" onClick={handleGoogleLogin} className="auth-hero-btn">
+            <GoogleIcon />
+            {t('Google로 로그인')}
+          </button>
+        )}
       </div>
-      <div className="mt-10 locale-on-dark">
+      <div className="auth-hero-locale locale-on-dark">
         <LocaleSwitch />
       </div>
     </div>
@@ -77,8 +117,8 @@ function GoogleIcon() {
 export function LoginScreen() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-n-111 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-n-fff"></div>
+      <div className="auth-hero">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2" style={{ borderColor: '#fff' }}></div>
       </div>
     }>
       <LoginContent />
