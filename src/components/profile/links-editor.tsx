@@ -1,112 +1,150 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Plus, Trash2 } from 'lucide-react'
+import { X } from 'lucide-react'
 import { toast } from 'sonner'
-import { LINK_KINDS, LINK_VISIBILITY, MAX_LINKS, validateLink, type LinkKind, type LinkVisibility, type ProfileLink } from '@/lib/profile-rules'
+import { LINK_KINDS, MAX_LINKS, detectLinkKind, shortLinkLabel, validateLink, type LinkKind, type LinkVisibility, type ProfileLink } from '@/lib/profile-rules'
 import { LinkIcon } from './link-icon'
 import { T } from '@/i18n/t'
 import { tx, tn } from '@/i18n/client'
 
 type Row = { kind: LinkKind; url: string; visibility: LinkVisibility }
 
-/** 설정 > 프로필 편집: SNS links, each with its own visibility. */
+/**
+ * A47: SNS links as compact rows. Paste a URL to add one (platform read from the URL); tap a row to
+ * edit it inline with a small × to delete. Saves on every change. Each link keeps the visibility it
+ * was stored with (the per-link picker is gone from the UI, like A41).
+ */
 export function LinksEditor({ initial }: { initial: ProfileLink[] }) {
   const router = useRouter()
-  const [rows, setRows] = useState<Row[]>(initial.length ? initial : [])
+  const [rows, setRows] = useState<Row[]>(initial)
+  const [draft, setDraft] = useState('')
+  const [draftErr, setDraftErr] = useState<string | null>(null)
+  const [editing, setEditing] = useState<number | null>(null)
+  const [editVal, setEditVal] = useState('')
+  const [editErr, setEditErr] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
-  const errors = rows.map((r) => (r.url.trim() ? validateLink(r.kind, r.url) : null))
-  const invalid = errors.some((e) => e && !e.ok)
+  const listRef = useRef<HTMLUListElement>(null)
 
-  async function save() {
-    if (invalid || busy) return
+  useEffect(() => {
+    if (editing === null) return
+    const close = (e: Event) => { if (!listRef.current?.contains(e.target as Node)) setEditing(null) }
+    document.addEventListener('pointerdown', close)
+    return () => document.removeEventListener('pointerdown', close)
+  }, [editing])
+
+  async function persist(next: Row[]): Promise<boolean> {
+    const prev = rows
+    setRows(next)
     setBusy(true)
     try {
-      const res = await fetch('/api/profile/links', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ links: rows }) })
+      const res = await fetch('/api/profile/links', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ links: next }) })
       const d = await res.json().catch(() => ({}))
       if (!res.ok) throw new Error(d.error || '저장하지 못했어요.')
       setRows(d.links)
-      toast.success(tn('링크를 저장했어요'))
       router.refresh()
+      return true
     } catch (e) {
+      setRows(prev)
       toast.error(e instanceof Error ? e.message : tn('저장하지 못했어요.'))
+      return false
     } finally {
       setBusy(false)
     }
   }
 
-  const used = new Set(rows.map((r) => r.kind))
-  const nextKind = (LINK_KINDS.find((k) => !used.has(k.kind)) ?? LINK_KINDS[LINK_KINDS.length - 1]).kind
+  function check(raw: string, prev?: LinkKind): { ok: true; row: Omit<Row, 'visibility'> } | { ok: false; reason: string } {
+    const kind = detectLinkKind(raw, prev)
+    const v = validateLink(kind, raw)
+    return v.ok ? { ok: true, row: { kind, url: v.url } } : { ok: false, reason: v.reason }
+  }
+
+  async function add() {
+    if (!draft.trim() || busy) return
+    const c = check(draft)
+    if (!c.ok) return setDraftErr(c.reason)
+    if (rows.some((r) => r.url === c.row.url)) return setDraftErr(tx('이미 있는 링크예요.'))
+    if (await persist([...rows, { ...c.row, visibility: 'members' }])) setDraft('')
+  }
+
+  async function saveEdit(i: number) {
+    const r = rows[i]
+    if (!r) return setEditing(null)
+    if (!editVal.trim()) return remove(i)
+    const c = check(editVal, r.kind)
+    if (!c.ok) return setEditErr(c.reason)
+    if (c.row.url !== r.url && !(await persist(rows.map((x, j) => (j === i ? { ...x, ...c.row } : x))))) return
+    setEditing(null)
+  }
+
+  async function remove(i: number) {
+    setEditing(null)
+    await persist(rows.filter((_, j) => j !== i))
+  }
 
   return (
-    <section className="card p-4 space-y-3" aria-label={tx('SNS 링크')}>
-      <div>
-        <h2 className="text-[15px] font-bold" style={{ color: 'var(--n-111)' }}>
-          <T>SNS · 링크</T>
-        </h2>
-        <p className="text-[12px] text-n-777"><T>링크마다 누구에게 보일지 정할 수 있어요. AI 에이전트에게는 보이지 않아요.</T></p>
-      </div>
-      {rows.length === 0 && <p className="text-[13px] text-n-888"><T>아직 링크가 없어요.</T></p>}
-      {rows.map((r, i) => {
-        const def = LINK_KINDS.find((k) => k.kind === r.kind)!
-        const err = errors[i]
-        return (
-          <div key={i} className="link-row rounded-xl p-2.5 space-y-2" style={{ border: '1px solid var(--n-eee)' }}>
-            <div className="flex items-center gap-2">
-              <LinkIcon kind={r.kind} />
-              <select
-                aria-label={tx('링크 {v} 종류', { v: i + 1 })}
-                value={r.kind}
-                onChange={(e) => setRows(rows.map((x, j) => (j === i ? { ...x, kind: e.target.value as LinkKind } : x)))}
-                className="rounded-lg border border-n-ddd bg-n-fff px-2 text-[14px] min-h-[40px]"
-              >
-                {LINK_KINDS.map((k) => (
-                  <option key={k.kind} value={k.kind}>
-                    <T>{k.label}</T>
-                  </option>
-                ))}
-              </select>
-              <select
-                aria-label={tx('링크 {v} 공개 범위', { v: i + 1 })}
-                value={r.visibility}
-                onChange={(e) => setRows(rows.map((x, j) => (j === i ? { ...x, visibility: e.target.value as LinkVisibility } : x)))}
-                className="ml-auto rounded-lg border border-n-ddd bg-n-fff px-2 text-[13px] min-h-[40px]"
-              >
-                {LINK_VISIBILITY.map((v) => (
-                  <option key={v.id} value={v.id}>
-                    <T>{v.label}</T>
-                  </option>
-                ))}
-              </select>
-              <button type="button" onClick={() => setRows(rows.filter((_, j) => j !== i))} className="tap-target inline-flex items-center justify-center rounded-full icon-btn" aria-label={tx('링크 {v} 삭제', { v: i + 1 })}>
-                <Trash2 className="w-4 h-4" />
-              </button>
-            </div>
-            <input
-              aria-label={tx('{label} 주소', { label: tx(def.label) })}
-              value={r.url}
-              inputMode="url"
-              autoCapitalize="none"
-              placeholder={def.placeholder}
-              onChange={(e) => setRows(rows.map((x, j) => (j === i ? { ...x, url: e.target.value } : x)))}
-              className="w-full rounded-lg border px-3 py-2 text-[14.5px]"
-              style={{ borderColor: err && !err.ok ? 'var(--c-e5484d)' : 'var(--n-ddd)' }}
-            />
-            {err && !err.ok && <p className="text-[12px] text-c-b42318">{err.reason}</p>}
-          </div>
-        )
-      })}
-      <div className="flex flex-wrap gap-2">
-        {rows.length < MAX_LINKS && (
-          <button type="button" onClick={() => setRows([...rows, { kind: nextKind, url: '', visibility: 'members' }])} className="btn btn-secondary btn-sm min-h-[40px] rounded-full">
-            <Plus className="w-4 h-4" /> <T>링크 추가</T>
+    <div className="lk-editor">
+      {rows.length > 0 && (
+        <ul className="lk-list" ref={listRef}>
+          {rows.map((r, i) => {
+            const label = tx(LINK_KINDS.find((k) => k.kind === r.kind)?.label ?? '')
+            return (
+              <li key={`${r.url}-${i}`} className={`lk-row${editing === i ? ' on' : ''}`}>
+                <LinkIcon kind={r.kind} size={22} />
+                {editing === i ? (
+                  <>
+                    <input
+                      className="lk-input"
+                      autoFocus
+                      value={editVal}
+                      inputMode="url"
+                      autoCapitalize="none"
+                      aria-label={tx('{label} 주소', { label })}
+                      onChange={(e) => { setEditVal(e.target.value); setEditErr(null) }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') { e.preventDefault(); void saveEdit(i) }
+                        if (e.key === 'Escape') { e.stopPropagation(); setEditing(null) }
+                      }}
+                      onBlur={(e) => { if (!e.relatedTarget?.closest?.('.lk-x')) void saveEdit(i) }}
+                    />
+                    <button type="button" className="lk-x" aria-label={tx('{label} 링크 삭제', { label })} onClick={() => void remove(i)}>
+                      <X className="w-3.5 h-3.5" strokeWidth={2.25} />
+                    </button>
+                  </>
+                ) : (
+                  <button
+                    type="button"
+                    className="lk-row-btn"
+                    aria-label={tx('{label} 링크 편집: {url}', { label, url: r.url })}
+                    onClick={() => { setEditing(i); setEditVal(r.url); setEditErr(null) }}
+                  >
+                    {shortLinkLabel(r.kind, r.url)}
+                  </button>
+                )}
+              </li>
+            )
+          })}
+        </ul>
+      )}
+      {editErr && editing !== null && <p className="lk-err" role="alert">{editErr}</p>}
+      {rows.length < MAX_LINKS && (
+        <form className="lk-add" onSubmit={(e) => { e.preventDefault(); void add() }}>
+          <input
+            className="lk-input"
+            value={draft}
+            inputMode="url"
+            autoCapitalize="none"
+            placeholder={tx('링크 붙여넣기')}
+            aria-label={tx('추가할 링크 주소')}
+            onChange={(e) => { setDraft(e.target.value); setDraftErr(null) }}
+          />
+          <button type="submit" className="lk-add-btn" disabled={!draft.trim() || busy}>
+            <T>추가</T>
           </button>
-        )}
-        <button type="button" onClick={save} disabled={busy || invalid} className="btn btn-primary btn-sm min-h-[40px] rounded-full ml-auto">
-          {busy ? <T>저장 중…</T> : <T>링크 저장</T>}
-        </button>
-      </div>
-    </section>
+        </form>
+      )}
+      {draftErr ? <p className="lk-err" role="alert">{draftErr}</p> : <p className="lk-hint"><T>X·GitHub·인스타 등은 주소로 알아서 맞춰요 · 에이전트에겐 안 보여요</T></p>}
+    </div>
   )
 }

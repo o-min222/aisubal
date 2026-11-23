@@ -100,3 +100,34 @@ export function profileErrorMessage(e: unknown): string {
   const key = Object.keys(PROFILE_ERRORS).find((k) => msg.includes(k))
   return key ? PROFILE_ERRORS[key] : M('저장하지 못했어요.')
 }
+
+/** A47: the platform is read from the URL; unknown hosts are a plain 웹사이트 (blog stays blog). */
+export function detectLinkKind(rawUrl: string, prev?: LinkKind): LinkKind {
+  let url = rawUrl.trim()
+  if (url && !/^https?:\/\//i.test(url)) url = `https://${url}`
+  url = url.replace(/^http:\/\//i, 'https://')
+  const hit = LINK_KINDS.find((k) => k.host && k.host.test(url))
+  if (hit) return hit.kind
+  return prev === 'blog' ? 'blog' : 'website'
+}
+
+const AT_HANDLE = new Set<LinkKind>(['x', 'instagram', 'threads', 'tiktok'])
+
+/** A47: what a saved link shows in the editor — @handle for social profiles, else host/path. */
+export function shortLinkLabel(kind: LinkKind, rawUrl: string): string {
+  let u: URL
+  try {
+    u = new URL(/^https?:\/\//i.test(rawUrl) ? rawUrl : `https://${rawUrl}`)
+  } catch {
+    return rawUrl
+  }
+  const host = u.hostname.replace(/^(www|m)\./, '')
+  const segs = u.pathname.split('/').filter(Boolean).map((s) => decodeURIComponent(s))
+  const def = LINK_KINDS.find((k) => k.kind === kind)
+  if (def?.host && segs.length) {
+    const h = kind === 'linkedin' || kind === 'bluesky' ? segs[1] ?? segs[0] : segs[0]
+    return AT_HANDLE.has(kind) && !h.startsWith('@') ? `@${h}` : h
+  }
+  const full = host + (segs.length ? `/${segs.join('/')}` : '')
+  return full.length > 40 ? `${full.slice(0, 39)}…` : full
+}

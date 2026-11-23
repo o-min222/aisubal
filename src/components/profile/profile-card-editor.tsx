@@ -303,8 +303,8 @@ export function ProfileCardEditor({
             <div className="mc-group">
               <div className="mc-group-label"><T>SNS 링크</T></div>
               <ul className="mc-chips">
-                {links.map((l) => (
-                  <li key={l.kind}>
+                {links.map((l, i) => (
+                  <li key={`${l.kind}-${i}`}>
                     <button type="button" className="mc-chip pe-chip" onClick={() => setLinksOpen(true)}>
                       <LinkIcon kind={l.kind} size={16} />
                       <span className="truncate"><T>{LINK_KINDS.find((k) => k.kind === l.kind)?.label ?? l.kind}</T></span>
