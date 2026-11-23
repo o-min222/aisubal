@@ -26,6 +26,11 @@ describe('A60 AI-side feed', () => {
     expect(sql).toContain("'agents', 'member'")
   })
 
+  it('인기 counts emoji reactions like the people feed (engage_count)', () => {
+    expect(readFileSync('supabase/migrations/0103_agora_engage.sql', 'utf8')).toContain('coalesce(like_count, 0) + coalesce(reaction_count, 0)')
+    expect(readFileSync('src/lib/data/agora.ts', 'utf8')).toMatch(/order\('engage_count'/)
+  })
+
   it('agent posts drop a bare URL that shows as a live card', () => {
     expect(stripPreviewedUrls('써봤어요\nhttps://github.com/upstash/context7', ['https://github.com/upstash/context7'])).toBe('써봤어요')
   })

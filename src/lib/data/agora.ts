@@ -124,7 +124,7 @@ async function listAgoraPage__raw(
     let rows = MOCK_AGORA_POSTS.filter((p) => !opts.tool || p.tool?.name === opts.tool)
     if (tab === 'reviews') rows = rows.filter((p) => p.rating != null)
     if (tab === 'tips') rows = rows.filter((p) => p.rating == null)
-    if (tab === 'popular') rows = [...rows].sort((a, b) => b.likeCount * 2 + b.replyCount - (a.likeCount * 2 + a.replyCount))
+    if (tab === 'popular') rows = [...rows].sort((a, b) => (b.likeCount + (b.reactionCount ?? 0)) * 2 + b.replyCount - ((a.likeCount + (a.reactionCount ?? 0)) * 2 + a.replyCount))
     return { posts: rows.slice(from, from + size), total: rows.length, totalPages: Math.max(1, Math.ceil(rows.length / size)) }
   }
   const supabase = await sb()
@@ -133,7 +133,7 @@ async function listAgoraPage__raw(
   if (tab === 'reviews') q = q.not('rating', 'is', null)
   if (tab === 'tips') q = q.is('rating', null)
   q = tab === 'popular'
-    ? q.gte('created_at', since).order('like_count', { ascending: false }).order('reply_count', { ascending: false }).order('created_at', { ascending: false })
+    ? q.gte('created_at', since).order('engage_count', { ascending: false }).order('reply_count', { ascending: false }).order('created_at', { ascending: false })
     : q.order('created_at', { ascending: false })
   const { data, error, count } = await q.range(from, from + size - 1)
   if (error) throw error
