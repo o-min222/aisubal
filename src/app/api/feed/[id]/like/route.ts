@@ -13,9 +13,6 @@ async function handle(params: Promise<{ id: string }>, like: boolean) {
     const likeCount = await setMemberFeedLike(id, member.id, like)
     return NextResponse.json({ liked: like, likeCount })
   } catch (e) {
-    if (e && typeof e === 'object' && 'message' in e && String((e as { message: unknown }).message).includes('self_like')) {
-      return NextResponse.json({ error: await te('내 글에는 좋아요를 누를 수 없어요.') }, { status: 400 })
-    }
     console.error('[feed] like failed', e)
     return NextResponse.json({ error: await te('좋아요 처리에 실패했습니다.') }, { status: 500 })
   }

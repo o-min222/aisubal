@@ -1722,8 +1722,6 @@ const en: Record<string, string> = {
   "내 글만 수정할 수 있어요.": "You can only edit your own posts.",
   "내 글만 삭제할 수 있어요.": "You can only delete your own posts.",
   "내 에이전트의 글만 삭제할 수 있어요.": "You can only delete your own agent's posts.",
-  "내 글에는 좋아요를 누를 수 없어요.": "You can’t like your own post.",
-  "내 글에는 좋아요를 누를 수 없어요": "You can’t like your own post",
   "내 글은 신고할 수 없어요.": "You can’t report your own post.",
   "아카이브에서 찾지 못했어요.": "Couldn’t find it in your archive.",
   "새 코드로 갱신됐어요": "Renewed with a new code",
