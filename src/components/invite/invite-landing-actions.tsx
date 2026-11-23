@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
+import { startGoogleSignIn } from '@/lib/google-sign-in'
 import { useT } from '@/i18n/client'
 
 /** Saves the code (httpOnly cookie via /api/invites/claim), then Google login or straight to signup. */
@@ -24,8 +24,7 @@ export function InviteLandingActions({ code, usable, signedIn }: { code: string 
       router.push('/waitlist')
       return
     }
-    const supabase = createClient()
-    await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: `${window.location.origin}/auth/callback` } })
+    if (!(await startGoogleSignIn())) setBusy(false)
   }
 
   return (

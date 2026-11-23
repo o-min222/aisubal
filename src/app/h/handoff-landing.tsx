@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Loader2, ShieldAlert, Smartphone } from 'lucide-react'
-import { createClient } from '@/lib/supabase/client'
+import { startGoogleSignIn } from '@/lib/google-sign-in'
 import { AFTER_LOGIN_COOKIE, HANDOFF_PATH, HANDOFF_STORAGE_KEY, isHandoffToken, tokenFromFragment } from '@/lib/handoff-rules'
 import { T } from '@/i18n/t'
 import { tx } from '@/i18n/client'
@@ -36,7 +36,7 @@ export function HandoffLanding() {
   async function signIn() {
     // come back here after Google; the token stays in this tab's sessionStorage, never in a URL or cookie
     document.cookie = `${AFTER_LOGIN_COOKIE}=${encodeURIComponent(HANDOFF_PATH)}; path=/; max-age=600; samesite=lax; secure`
-    await createClient().auth.signInWithOAuth({ provider: 'google', options: { redirectTo: `${window.location.origin}/auth/callback` } })
+    await startGoogleSignIn()
   }
 
   return (

@@ -40,7 +40,12 @@ export function ProfileForm({ me, mode }: { me: ProfileFormMember; mode: 'onboar
   const [remote, setRemote] = useState<{ h: string; state: HandleState } | null>(null)
   const [busy, setBusy] = useState(false)
   const [uploading, setUploading] = useState(false)
+  // A32: errors show after the first submit (or once a field has content), never a silent no-op
+  const [submitted, setSubmitted] = useState(false)
+  const [serverName, setServerName] = useState<{ v: string; reason: string } | null>(null)
   const fileRef = useRef<HTMLInputElement>(null)
+  const nameRef = useRef<HTMLInputElement>(null)
+  const handleRef = useRef<HTMLInputElement>(null)
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const normHandle = normalizeHandle(handle)
@@ -55,6 +60,17 @@ export function ProfileForm({ me, mode }: { me: ProfileFormMember; mode: 'onboar
         : remote?.h === normHandle
           ? remote.state
           : { status: 'checking' }
+
+  async function checkHandleNow(h: string): Promise<HandleState> {
+    try {
+      const d = await (await fetch(`/api/profile/handle?h=${encodeURIComponent(h)}`)).json()
+      const state: HandleState = d.available ? { status: 'ok' } : { status: 'bad', reason: d.reason || tx('이미 쓰는 핸들이에요.') }
+      setRemote({ h, state })
+      return state
+    } catch {
+      return { status: 'idle' } // the server checks again on save
+    }
+  }
 
   useEffect(() => {
     if (!needsRemote) return
@@ -95,22 +111,52 @@ export function ProfileForm({ me, mode }: { me: ProfileFormMember; mode: 'onboar
   }
 
   const nameCheck = validateDisplayName(displayName)
-  const canSubmit = nameCheck.ok && hs.status === 'ok' && avatarChosen && !busy && !uploading
+  const nameError = serverName && serverName.v === displayName
+    ? serverName.reason
+    : !nameCheck.ok && (displayName || submitted)
+      ? displayName.trim() ? tx(nameCheck.reason) : tx('닉네임을 입력해 주세요.')
+      : null
+  const handleError = hs.status === 'bad' ? (hs.reason ? tx(hs.reason) : tx('사용할 수 없는 핸들이에요.')) : submitted && !normHandle ? tx('핸들을 입력해 주세요.') : null
+
+  function focusInvalid(el: HTMLElement | null, message: string) {
+    toast.error(message)
+    el?.scrollIntoView({ block: 'center', behavior: 'smooth' })
+    el?.focus({ preventScroll: true })
+  }
 
   async function submit(e: React.FormEvent) {
     e.preventDefault()
-    if (!canSubmit) return
+    if (busy) return
+    if (uploading) {
+      toast.message(tn('사진을 올리는 중이에요. 잠시 후 다시 눌러 주세요.'))
+      return
+    }
+    setSubmitted(true)
+    // validate on submit: inline errors + scroll/focus the first one + a toast
+    if (!nameCheck.ok) return focusInvalid(nameRef.current, displayName.trim() ? tx(nameCheck.reason) : tx('닉네임을 입력해 주세요.'))
+    if (!normHandle) return focusInvalid(handleRef.current, tx('핸들을 입력해 주세요.'))
+    const handleState = hs.status === 'checking' ? await checkHandleNow(normHandle) : hs
+    if (handleState.status === 'bad') return focusInvalid(handleRef.current, handleState.reason ? tx(handleState.reason) : tx('사용할 수 없는 핸들이에요.'))
+    // no avatar picked: start with the default avatar already shown in the preview (the initial circle)
+    const avatarToSave = avatarChosen ? avatar : preview ? 'keep' : 'none'
     setBusy(true)
     try {
       const res = await fetch('/api/profile', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ handle: normalizeHandle(handle), displayName, bio, avatar, showRealName: showReal }),
+        body: JSON.stringify({ handle: normalizeHandle(handle), displayName, bio, avatar: avatarToSave, showRealName: showReal }),
       })
       const d = await res.json().catch(() => ({}))
       if (!res.ok) {
-        if (d.field === 'handle') setRemote({ h: normHandle, state: { status: 'bad', reason: d.error } })
-        throw new Error(d.error || '저장하지 못했어요.')
+        if (d.field === 'handle') {
+          setRemote({ h: normHandle, state: { status: 'bad', reason: d.error } })
+          return focusInvalid(handleRef.current, d.error || tx('사용할 수 없는 핸들이에요.'))
+        }
+        if (d.field === 'displayName') {
+          setServerName({ v: displayName, reason: d.error })
+          return focusInvalid(nameRef.current, d.error || tx('닉네임을 확인해 주세요.'))
+        }
+        throw new Error(d.error || tn('저장하지 못했어요.'))
       }
       toast.success(mode === 'onboarding' ? tx('@{handle} 님, 환영해요!', { handle: d.handle }) : tx('프로필을 저장했어요'))
       if (mode === 'onboarding') router.replace('/pledge?from=signup')
@@ -137,6 +183,7 @@ export function ProfileForm({ me, mode }: { me: ProfileFormMember; mode: 'onboar
           <div className="min-w-0">
             <p className="text-[14px] font-semibold" style={{ color: 'var(--n-111)' }}><T s="아바타 {v}" vars={{ v: mode === 'onboarding' && <span className="text-c-b42318">*</span> }} /></p>
             <p className="text-[12px] text-n-777"><T>직접 고른 사진이나 기본 아바타가 프로필이 돼요. 구글 사진은 고르지 않으면 쓰지 않아요.</T></p>
+            {mode === 'onboarding' && !avatarChosen && !preview && <p className="text-[12px] text-n-888 mt-0.5"><T>고르지 않으면 지금 보이는 기본 아바타로 시작해요.</T></p>}
           </div>
         </div>
         <div className="flex flex-wrap gap-1.5">
@@ -147,6 +194,7 @@ export function ProfileForm({ me, mode }: { me: ProfileFormMember; mode: 'onboar
           <button
             type="button"
             className="btn btn-sm min-h-[40px] rounded-full"
+            aria-pressed={avatarChosen && avatar === 'none'}
             style={avatarChosen && avatar === 'none' ? { border: '2px solid var(--n-111)' } : { border: '1px solid var(--n-ddd)' }}
             onClick={() => {
               setAvatar('none')
@@ -180,7 +228,10 @@ export function ProfileForm({ me, mode }: { me: ProfileFormMember; mode: 'onboar
           </label>
           <input
             id="pf-name"
-            className={field}
+            ref={nameRef}
+            className={`${field} ${nameError ? '!border-c-b42318' : ''}`}
+            aria-invalid={nameError ? true : undefined}
+            aria-describedby={nameError ? 'pf-name-error' : undefined}
             value={displayName}
             maxLength={24}
             placeholder={tx('커뮤니티에서 불릴 이름')}
@@ -190,11 +241,11 @@ export function ProfileForm({ me, mode }: { me: ProfileFormMember; mode: 'onboar
               if (!handleTouched) setHandle(suggestHandle(e.target.value))
             }}
           />
-          {displayName && !nameCheck.ok && <p className="text-[12px] text-c-b42318 mt-1">{nameCheck.reason}</p>}
+          {nameError && <p id="pf-name-error" className="text-[12px] text-c-b42318 mt-1">{nameError}</p>}
           {mode === 'onboarding' && me.privateRealName && (
             <p className="text-[12px] text-n-888 mt-1">
-              구글 이름은 공개되지 않아요.{' '}
-              <button type="button" className="underline" onClick={() => setDisplayName(me.privateRealName || '')}>
+              <T>구글 이름은 공개되지 않아요.</T>{' '}
+              <button type="button" className="text-link" onClick={() => setDisplayName(me.privateRealName || '')}>
                 <T>그래도 구글 이름을 닉네임으로 쓰기</T>
               </button>
             </p>
@@ -204,10 +255,12 @@ export function ProfileForm({ me, mode }: { me: ProfileFormMember; mode: 'onboar
           <label htmlFor="pf-handle" className="block text-[13px] font-semibold mb-1" style={{ color: 'var(--n-111)' }}>
             <T>핸들</T> <span className="text-c-b42318">*</span> <span className="font-normal text-n-888"><T>(@멘션·모임 명단에 쓰여요)</T></span>
           </label>
-          <div className="flex items-center gap-1 rounded-xl border border-n-ddd bg-n-fff px-3 focus-within:border-n-111">
+          <div className={`flex items-center gap-1 rounded-xl border bg-n-fff px-3 focus-within:border-n-111 ${handleError ? 'border-c-b42318' : 'border-n-ddd'}`}>
             <span className="text-[15px] text-n-999">@</span>
             <input
               id="pf-handle"
+              ref={handleRef}
+              aria-invalid={handleError ? true : undefined}
               className="flex-1 py-2.5 text-[15px] bg-transparent focus:outline-none"
               value={handle}
               maxLength={21}
@@ -227,7 +280,7 @@ export function ProfileForm({ me, mode }: { me: ProfileFormMember; mode: 'onboar
               {hs.status === 'bad' && <X className="w-4 h-4 text-c-b42318" aria-label={tx('사용 불가')} />}
             </span>
           </div>
-          {hs.status === 'bad' && <p className="text-[12px] text-c-b42318 mt-1">{hs.reason}</p>}
+          {handleError && <p className="text-[12px] text-c-b42318 mt-1" role="alert">{handleError}</p>}
           {hs.status === 'ok' && handle && <p className="text-[12px] text-c-1f7a4d mt-1"><T s="{handle} 사용할 수 있어요" vars={{ handle: '@' + normalizeHandle(handle) }} /></p>}
         </div>
         <div>
@@ -262,10 +315,9 @@ export function ProfileForm({ me, mode }: { me: ProfileFormMember; mode: 'onboar
         )}
       </section>
 
-      <button type="submit" disabled={!canSubmit} className="btn btn-primary w-full min-h-[48px] rounded-full text-[15px]">
+      <button type="submit" disabled={busy} aria-busy={busy || uploading} className="btn btn-primary w-full min-h-[48px] rounded-full text-[15px]">
         {busy ? <T>저장 중…</T> : mode === 'onboarding' ? <T>이 프로필로 시작하기</T> : <T>프로필 저장</T>}
       </button>
-      {mode === 'onboarding' && !avatarChosen && <p className="text-center text-[12px] text-n-888"><T>사진을 올리거나 기본 아바타를 골라주세요.</T></p>}
     </form>
   )
 }

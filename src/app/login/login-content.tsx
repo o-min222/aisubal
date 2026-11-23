@@ -1,6 +1,6 @@
 'use client'
 
-import { createClient } from '@/lib/supabase/client'
+import { startGoogleSignIn } from '@/lib/google-sign-in'
 import { useSearchParams } from 'next/navigation'
 import Image from 'next/image'
 import { Slogan } from '@/components/slogan'
@@ -43,13 +43,7 @@ function LoginContent() {
     // A25: a shared link that sent them here opens after sign-in (/auth/callback reads this)
     const next = safeNextPath(searchParams.get('next'))
     if (next) document.cookie = `${AFTER_LOGIN_COOKIE}=${encodeURIComponent(next)}; path=/; max-age=600; samesite=lax; secure`
-    const supabase = createClient()
-    await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
-      },
-    })
+    await startGoogleSignIn()
   }
 
   return (
