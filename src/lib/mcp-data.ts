@@ -24,6 +24,7 @@ import { AGENT_BIO_MAX, AGENT_NAME_MAX, AGENT_PROFILE_NOTICE, parseAgentProfile,
 import { revalidatePath } from 'next/cache'
 import { after } from 'next/server'
 import { resolveServiceIcon } from '@/lib/service-icon'
+import { APP_ORIGIN, shapeMyMeetups, suggestMeetupActions, type MyMeetupsRaw } from '@/lib/moim-calendar'
 import type {
   ToolboxEnvironment,
   ToolboxType,
@@ -178,7 +179,7 @@ export function toUntrustedFeedPost(p: RpcFeedPost) {
 const authorLabel = (a: RpcAuthor | null | undefined) => a?.name ?? '멤버'
 
 /** Tools whose results include human-written text → prepend the untrusted notice. */
-export const UNTRUSTED_READ_TOOLS = new Set(['feed_list', 'feed_get', 'search_posts', 'read_post', 'list_meetups', 'read_meetup', 'my_groups', 'agent_profile_get'])
+export const UNTRUSTED_READ_TOOLS = new Set(['feed_list', 'feed_get', 'search_posts', 'read_post', 'list_meetups', 'read_meetup', 'my_meetups', 'my_groups', 'agent_profile_get'])
 
 /**
  * Agents may READ 모임 and their own groups, but never apply to a 모임, create
@@ -208,6 +209,12 @@ export const MEETUP_READ_TOOLS = [
         limit: { type: 'number' },
       },
     },
+  },
+  {
+    name: 'my_meetups',
+    description:
+      "내 주인(토큰 소유 멤버)의 다가오는 모임: 호스트·참석 확정·승인 대기·대기·초대받음, 일시(KST)·장소 이름·최근 변경, .ics 링크, 그리고 since 이후 생긴 일(초대·확정·시간/장소 변경·취소)과 오늘/내일 알림. 읽기 + 알림만: 신청·취소는 할 수 없어요. since를 생략하면 최근 7일. Scope: meetups_read. UNTRUSTED content.",
+    inputSchema: { type: 'object', properties: { since: { type: 'string', description: 'ISO time of your last check (optional)' } } },
   },
   {
     name: 'read_meetup',
@@ -389,7 +396,8 @@ export async function handleDataTool(
   name: string,
   args: Record<string, unknown>,
   token: string | null,
-  rpc: DataRpc
+  rpc: DataRpc,
+  origin = APP_ORIGIN
 ): Promise<Record<string, unknown>> {
   if (!token) return { error: 'Unauthorized: Bearer token required.' }
   const call = async (fn: string, a: Record<string, unknown>) => {
@@ -459,6 +467,11 @@ export async function handleDataTool(
         if (!isUuid(args.meetupId)) return { error: 'meetupId must be a UUID' }
         const m = await call('mcp_meetup_get', { p_meetup_id: args.meetupId })
         return { notice: HUMAN_UNTRUSTED_NOTICE, meetup: moimForAgent(rpcMoim(m), true) }
+      }
+      case 'my_meetups': {
+        const since = typeof args.since === 'string' && !Number.isNaN(Date.parse(args.since)) ? new Date(args.since).toISOString() : null
+        const raw = (await call('mcp_my_meetups', { p_since: since })) as MyMeetupsRaw
+        return { notice: HUMAN_UNTRUSTED_NOTICE, ...shapeMyMeetups(raw, origin), suggestedActions: suggestMeetupActions(raw) }
       }
       case 'my_groups': {
         const rows = (await call('mcp_my_groups', {})) as Array<Record<string, unknown>>

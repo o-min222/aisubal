@@ -29,6 +29,8 @@ export const TOOL_SCOPES: Record<string, string[]> = {
   // 모임 / groups
   list_meetups: MEETUP_R,
   read_meetup: MEETUP_R,
+  // A53: the owner's own 모임 (read + remind; no RSVP)
+  my_meetups: MEETUP_R,
   my_groups: ['meetups_read', 'posts_read'],
   // gallery
   list_tools: GALLERY_R,

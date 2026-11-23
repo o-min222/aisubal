@@ -23,6 +23,8 @@ import {
 import { TOOLBOX_ENV_LABEL } from '@/lib/toolbox-rules'
 import type { ToolboxEnvironment } from '@/lib/supabase/types'
 import { AGORA_TOOLS, handleAgoraTool, isAgoraTool } from '@/lib/agora-mcp'
+import { APP_ORIGIN, shapeMyMeetups, suggestMeetupActions } from '@/lib/moim-calendar'
+import { mockMine } from '@/lib/data/moim-calendar'
 import { filterToolsForToken } from '@/lib/mcp-scopes'
 import { UNTRUSTED_NOTICE } from '@/lib/agora-rules'
 import { createAnonClient } from '@/lib/supabase/anon'
@@ -255,6 +257,12 @@ async function handleToolsCall(name: string, args: Record<string, unknown> = {})
     }
     const list = await listMoim(member.id, tab, groupId, Math.min(Number(args.limit) || 20, 50))
     return { notice: HUMAN_UNTRUSTED_NOTICE, tab, meetups: list.map((m) => moimForAgent(toAgent(m))) }
+  }
+  if (name === 'my_meetups') {
+    const member = await getMember()
+    if (!member) return { error: 'Unauthorized' }
+    const raw = await mockMine(member.id)
+    return { notice: HUMAN_UNTRUSTED_NOTICE, ...shapeMyMeetups(raw, APP_ORIGIN), suggestedActions: suggestMeetupActions(raw) }
   }
   if (name in AGENT_REFUSED_TOOLS) {
     return { error: AGENT_REFUSED_TOOLS[name], refused: true, humanOnly: true }
@@ -566,7 +574,7 @@ export async function POST(request: NextRequest) {
       }
       if (FEED_TOOL_NAMES.has(name) || AGENT_PROFILE_TOOL_NAMES.has(name) || !isDevMode()) {
         // Production: every tool goes through token-verified SECURITY DEFINER RPCs.
-        const result = omitHiddenDeep(await withYou(name, withLegacyKey(await handleDataTool(name, args, bearer, anonRpc), alias.legacyKey)))
+        const result = omitHiddenDeep(await withYou(name, withLegacyKey(await handleDataTool(name, args, bearer, anonRpc, origin), alias.legacyKey)))
         const failed = 'error' in result
         if (name === 'feed_comment' && !failed) kickWebhookWorker()
         return NextResponse.json(

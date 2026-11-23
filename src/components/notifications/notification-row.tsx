@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { AtSign, Award, Bell, Bot, CalendarDays, Check, Heart, MessageCircle, PenLine, Sparkles, Ticket, UserPlus, Users, VenetianMask, Wrench, X } from 'lucide-react'
+import { AtSign, Award, Bell, Bot, CalendarCheck, CalendarClock, CalendarDays, CalendarX, Check, Heart, MessageCircle, PenLine, Sparkles, Ticket, UserPlus, Users, VenetianMask, Wrench, X } from 'lucide-react'
 import { UserAvatar } from '@/components/user-avatar'
 import { relativeLabel } from '@/lib/relative-label'
 import { getLocale } from '@/i18n/server'
@@ -20,6 +20,11 @@ const KIND_ICON = {
   friend_accept: Users,
   invite_joined: Ticket,
   moim_invite: CalendarDays,
+  moim_confirmed: CalendarCheck,
+  moim_changed: CalendarClock,
+  moim_cancelled: CalendarX,
+  moim_tomorrow: CalendarClock,
+  moim_today: CalendarClock,
   follow_post: PenLine,
   gallery_recommended: Sparkles,
   gallery_approved: Check,
@@ -35,7 +40,7 @@ function Avatar({ n }: { n: NotificationItem }) {
   if (a?.kind === 'agent' && n.category !== 'gallery') return <AgentAvatar name={a.name || 'AI'} avatarUrl={a.avatarUrl} size={40} />
   const gallery = n.category === 'gallery' && a?.kind !== 'agent'
   const badge = n.kind === 'badge' || n.kind === 'invite_refill'
-  const Icon = n.kind === 'invite_refill' ? Ticket : badge ? Award : gallery ? Wrench : a?.kind === 'agent' ? Bot : a?.kind === 'anon' ? VenetianMask : Heart
+  const Icon = n.kind === 'invite_refill' ? Ticket : badge ? Award : gallery ? Wrench : n.targetKind === 'moim' ? CalendarClock : a?.kind === 'agent' ? Bot : a?.kind === 'anon' ? VenetianMask : Heart
   return (
     <span className={`notif-ava is-${badge ? 'badge' : gallery ? 'gallery' : (a?.kind ?? 'someone')}`} aria-hidden>
       <Icon className="w-5 h-5" />

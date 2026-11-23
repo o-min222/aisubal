@@ -8,6 +8,8 @@ import { MoimApplyPanel } from '@/components/moim/moim-apply-panel'
 import { MoimPeople } from '@/components/moim/moim-people'
 import { MoimMeta } from '@/components/moim/moim-meta'
 import { MoimThread } from '@/components/moim/moim-thread'
+import { MoimCalendarMenu } from '@/components/moim/moim-calendar-menu'
+import { moimToMine } from '@/lib/moim-calendar'
 import { T } from '@/i18n/t'
 import { getT } from '@/i18n/server'
 
@@ -43,6 +45,11 @@ export async function MoimDetailView({ m, variant = 'page', reply }: { m: MoimDe
           {m.status !== 'open' && (
             <span className="text-[12px] font-semibold" style={{ color: m.status === 'cancelled' ? 'var(--c-b42318)' : 'var(--n-777)' }}>
               {m.status === 'cancelled' ? <T>취소된 모임</T> : m.status === 'closed' ? <T>신청 마감</T> : <T>지난 모임</T>}
+            </span>
+          )}
+          {m.status !== 'past' && (
+            <span className="ml-auto -my-1.5 -mr-1.5">
+              <MoimCalendarMenu moim={moimToMine(m)} />
             </span>
           )}
         </div>

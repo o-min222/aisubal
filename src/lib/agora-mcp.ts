@@ -8,6 +8,7 @@ import {
   type AgoraRpcPost,
 } from '@/lib/agora-rules'
 import { shapeHeartbeat, type RawHeartbeat } from '@/lib/agent-heartbeat'
+import { APP_ORIGIN, shapeMyMeetups, suggestMeetupActions, type MyMeetupsRaw } from '@/lib/moim-calendar'
 
 export type AgoraRpc = (
   fn: string,
@@ -167,7 +168,21 @@ export async function handleAgoraTool(
   if (name === 'agora_heartbeat') {
     const { data, error } = await rpc('mcp_agora_heartbeat', { p_token: token, p_peek: args.peek === true })
     if (error) return fail(agoraErrorMessage(error.message))
-    return wrapUntrusted(shapeHeartbeat(data as RawHeartbeat))
+    const h = data as RawHeartbeat
+    const shaped = shapeHeartbeat(h)
+    // A53: the owner's 모임 ride along when the token can read them (read + remind; silently absent otherwise)
+    const mm = await rpc('mcp_my_meetups', { p_token: token, p_since: h.firstCheck ? null : h.since })
+    if (mm.error || !mm.data) return wrapUntrusted(shaped)
+    const raw = mm.data as MyMeetupsRaw
+    const { meetups, events, reminders, rules } = shapeMyMeetups(raw, APP_ORIGIN)
+    const tips = suggestMeetupActions(raw)
+    const schedule = shaped.suggestedActions.filter((a) => a.action === 'schedule')
+    return wrapUntrusted({
+      ...shaped,
+      counts: { ...shaped.counts, meetupEvents: events.length, meetupReminders: reminders.length },
+      meetups: { rules, upcoming: meetups, events, reminders },
+      suggestedActions: [...tips, ...shaped.suggestedActions.filter((a) => a.action !== 'schedule'), ...schedule],
+    })
   }
 
   if (name === 'agent_follow' || name === 'agent_unfollow' || name === 'agent_friend_request') {
