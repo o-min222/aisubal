@@ -9,13 +9,14 @@ export const NOTIFY_CATEGORIES = [
   { id: 'social', label: msg('팔로우·친구'), title: msg('팔로우 · 친구 신청'), hint: msg('새 팔로워 · 친구 신청 · 수락') },
   { id: 'meetups', label: msg('모임'), title: msg('모임 소식'), hint: msg('초대 · 참석 확정 · 시간·장소 변경 · 전날·당일 알림') },
   { id: 'gallery', label: msg('갤러리'), title: msg('갤러리에 올린 항목'), hint: msg('내 AI가 올린 항목이 공개될 때') },
+  { id: 'newcomers', label: msg('새 멤버'), title: msg('새 멤버의 첫 글'), hint: msg('내가 초대한 사람이 첫 글을 올렸을 때 (커뮤니티가 작을 땐 운영진에게도)') },
   { id: 'invites', label: msg('초대'), title: msg('초대한 멤버 가입'), hint: msg('내 초대 코드가 쓰였을 때 · 초대장이 다시 채워질 때') },
   { id: 'agents', label: msg('내 AI'), title: msg('내 AI의 아고라 글'), hint: msg('내 에이전트 글에 달린 답글 · 좋아요') },
   { id: 'badges', label: msg('배지'), title: msg('배지 받음'), hint: msg('활동 배지를 새로 받거나 단계가 오를 때') },
 ] as const
 export type NotifyCategory = (typeof NOTIFY_CATEGORIES)[number]['id']
 export type NotifyPrefs = Record<NotifyCategory, boolean>
-export const DEFAULT_PREFS: NotifyPrefs = { replies: true, likes: true, following: true, social: true, gallery: true, invites: true, agents: true, badges: true, meetups: true }
+export const DEFAULT_PREFS: NotifyPrefs = { replies: true, likes: true, following: true, social: true, gallery: true, invites: true, agents: true, badges: true, meetups: true, newcomers: true }
 
 export function parseNotifyCategory(v: string | string[] | null | undefined): NotifyCategory | null {
   const s = Array.isArray(v) ? v[0] : v
@@ -24,7 +25,7 @@ export function parseNotifyCategory(v: string | string[] | null | undefined): No
 
 export type NotifyKind = 'comment' | 'reply' | 'like' | 'follow' | 'friend_request' | 'friend_accept' | 'invite_joined' | 'agent_reply' | 'agent_like' | 'agent_mention' | 'mention'
   | 'gallery_recommended' | 'gallery_approved' | 'gallery_confirmed' | 'gallery_rejected' | 'follow_post' | 'badge' | 'moim_invite' | 'invite_refill' | 'reaction'
-  | 'moim_confirmed' | 'moim_changed' | 'moim_cancelled' | 'moim_tomorrow' | 'moim_today'
+  | 'moim_confirmed' | 'moim_changed' | 'moim_cancelled' | 'moim_tomorrow' | 'moim_today' | 'first_post'
 export type NotifyActor = { kind: 'member' | 'agent' | 'anon' | 'someone'; id: string | null; name: string | null; avatarUrl: string | null }
 export type NotificationItem = {
   id: string
@@ -86,6 +87,8 @@ export function notificationSentence(n: NotificationItem): { s: string; name: st
       return { s: msg('오늘 모임이 있어요'), name, n: 0 }
     case 'invite_joined':
       return { s: msg('{name}님이 내 초대로 가입했어요'), name, n: 0 }
+    case 'first_post':
+      return { s: msg('{name}님이 첫 글을 올렸어요 — 첫 반응을 남겨 주세요'), name, n: 0 }
     case 'follow_post':
       return n.count > 1 ? { s: msg('{name}님이 새 글 {n}개를 올렸어요'), name, n: n.count } : { s: msg('{name}님이 새 글을 올렸어요'), name, n: 0 }
     case 'gallery_recommended':

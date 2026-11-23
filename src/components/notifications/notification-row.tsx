@@ -25,6 +25,7 @@ const KIND_ICON = {
   moim_cancelled: CalendarX,
   moim_tomorrow: CalendarClock,
   moim_today: CalendarClock,
+  first_post: Sparkles,
   follow_post: PenLine,
   gallery_recommended: Sparkles,
   gallery_approved: Check,

@@ -12,6 +12,7 @@ type S = {
   inviteRequired: boolean
   invitesPerMember: number
   anonUnlockThreshold: number
+  newcomerAlertMax: number
 }
 
 export function SiteSettingsForm({ initial }: { initial: S }) {
@@ -57,6 +58,11 @@ export function SiteSettingsForm({ initial }: { initial: S }) {
           <input type="number" min={1} className="input" value={s.anonUnlockThreshold} onChange={(e) => setS({ ...s, anonUnlockThreshold: Number(e.target.value) })} />
         </label>
       </div>
+      <label className="block">
+        <span className="block text-sm font-medium text-n-333 mb-1.5"><T>새 멤버 첫 글 알림 — 운영진에게도 보내는 기준 (가입 멤버 수)</T></span>
+        <input type="number" min={0} className="input" value={s.newcomerAlertMax} onChange={(e) => setS({ ...s, newcomerAlertMax: Number(e.target.value) })} />
+        <span className="block text-xs text-n-888 mt-1"><T>가입 멤버가 이 수 이하일 때 새 멤버의 첫 글을 모든 운영진에게도 알려요. 0이면 초대한 사람에게만 가요.</T></span>
+      </label>
       <div className="flex items-center justify-between gap-3 min-h-[44px]">
         <span className="text-sm text-n-333"><T>가입에 초대 코드 필요</T></span>
         <ToggleSwitch checked={s.inviteRequired} onChange={(v) => setS({ ...s, inviteRequired: v })} label={tx('가입에 초대 코드 필요')} />

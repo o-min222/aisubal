@@ -16,6 +16,7 @@ const DEV_MEMBER: Member = {
   show_real_name: false,
   public_real_name: null,
   profile_completed_at: '2026-10-01T00:00:00Z',
+  first_mission_at: '2026-10-01T00:00:00Z',
   private_real_name: '김구글',
   private_google_avatar_url: null,
   bio: '로컬 리뷰용 시드 멤버',

@@ -156,6 +156,7 @@ export async function adminGetSettings() {
       inviteRequired: true,
       invitesPerMember: MOCK_SITE_SETTINGS.invites_per_member,
       anonUnlockThreshold: MOCK_SITE_SETTINGS.anon_unlock_threshold,
+      newcomerAlertMax: mockNewcomerMax(),
     }
   }
 
@@ -170,7 +171,15 @@ export async function adminGetSettings() {
     inviteRequired: map.invite_required !== 'false',
     invitesPerMember: settings.invites_per_member,
     anonUnlockThreshold: settings.anon_unlock_threshold,
+    // A55: first-post alerts go to every admin while completed members <= this (0 = off)
+    newcomerAlertMax: map.newcomer_alert_max != null && map.newcomer_alert_max !== '' ? Number(map.newcomer_alert_max) : 100,
   }
+}
+
+function mockNewcomerMax(set?: number): number {
+  const g = globalThis as unknown as { __aisubalNewcomerMax?: number }
+  if (set !== undefined) g.__aisubalNewcomerMax = set
+  return g.__aisubalNewcomerMax ?? 100
 }
 
 export async function adminUpdateSettings(input: {
@@ -179,15 +188,18 @@ export async function adminUpdateSettings(input: {
   inviteRequired?: boolean
   invitesPerMember?: number
   anonUnlockThreshold?: number
+  newcomerAlertMax?: number
 }) {
   if (isMock()) {
     if (input.anonUnlockThreshold !== undefined) MOCK_SITE_SETTINGS.anon_unlock_threshold = input.anonUnlockThreshold
+    if (input.newcomerAlertMax !== undefined) mockNewcomerMax(input.newcomerAlertMax)
     return {
       siteName: input.siteName ?? 'AI쓰발',
       siteDescription: input.siteDescription ?? '',
       inviteRequired: input.inviteRequired ?? true,
       invitesPerMember: input.invitesPerMember ?? 2,
       anonUnlockThreshold: MOCK_SITE_SETTINGS.anon_unlock_threshold,
+      newcomerAlertMax: mockNewcomerMax(),
     }
   }
 
@@ -205,6 +217,8 @@ export async function adminUpdateSettings(input: {
       key: 'anon_unlock_threshold',
       value: String(input.anonUnlockThreshold),
     })
+
+  if (input.newcomerAlertMax !== undefined) upserts.push({ key: 'newcomer_alert_max', value: String(Math.max(0, Math.floor(input.newcomerAlertMax))) })
 
   if (upserts.length) {
     const { error } = await supabase.from('site_config').upsert(upserts, { onConflict: 'key' })

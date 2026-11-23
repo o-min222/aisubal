@@ -26,6 +26,7 @@ const updateSettingsSchema = z.object({
   inviteRequired: z.boolean().optional(),
   invitesPerMember: z.number().min(0).max(10).optional(),
   anonUnlockThreshold: z.number().min(1).max(100000).optional(),
+  newcomerAlertMax: z.number().int().min(0).max(100000).optional(),
 })
 
 export async function PATCH(request: NextRequest) {

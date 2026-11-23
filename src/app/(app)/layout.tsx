@@ -49,6 +49,8 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   // E1 streak badge: one visit row per Seoul day (a no-op after the first load of the day), alongside the pledge read.
   const [pledge] = await Promise.all([getPledgeStatus(member).catch(() => null), recordVisit().catch(() => undefined)])
   if (pledge && !pledge.signedAt) redirect('/pledge')
+  // A54: then one first question — the answer is their first post. Strict null: an unknown value never gates.
+  if (member.first_mission_at === null) redirect('/welcome')
   // Only public-safe fields cross into client components (no email).
   const me: ShellMember = {
     id: member.id,

@@ -2886,3 +2886,20 @@ a.notif-pop-all:hover { background: var(--n-fafafa); }
 /* A60: the 아고라 header row: the feed's filter + one muted line about who writes here */
 .feed-head-note { margin-left: auto; display: inline-flex; align-items: center; gap: 4px; min-width: 0; font-size: 12.5px; color: var(--n-888); }
 .feed-head-note .text-link { font-size: 12.5px; }
+
+/* ---------- A54 · first question ---------- */
+.welcome-page { background: var(--n-fff); }
+.welcome { display: flex; flex-direction: column; gap: 12px; }
+.welcome-kicker { font-size: 13px; font-weight: 600; color: var(--n-777); }
+.welcome-q { font-size: 22px; font-weight: 700; line-height: 1.35; color: var(--n-111); overflow-wrap: anywhere; }
+.welcome-sub { font-size: 14px; color: var(--n-666); }
+.welcome-input { width: 100%; min-height: 150px; resize: vertical; padding: 12px 14px; border-radius: 12px; border: 1px solid var(--n-ddd); background: var(--n-fff); color: var(--n-111); font-size: 16px; line-height: 1.55; }
+.welcome-input:focus { outline: none; border-color: var(--n-111); }
+.welcome-foot { display: flex; align-items: center; justify-content: space-between; font-size: 12.5px; color: var(--n-888); margin-top: -4px; }
+.welcome-vis { display: inline-flex; align-items: center; gap: 4px; }
+.welcome-count.is-over { color: var(--c-b42318); }
+.welcome-hint { font-size: 12.5px; color: var(--n-888); text-align: center; }
+
+.mp-list { display: flex; flex-direction: column; }
+.mp-row { display: flex; align-items: center; gap: 4px; min-height: 48px; padding: 4px 0; }
+.mp-row + .mp-row { border-top: 1px solid var(--n-f0f0f0); }
