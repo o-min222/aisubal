@@ -82,7 +82,7 @@ export default async function TeaserPage({ params, searchParams }: Props & { sea
         ) : (
           <div className="teaser-cta">
             <p className="teaser-cta-line"><Lock className="w-4 h-4" /> {t('초대장이 있어야 볼 수 있어요')}</p>
-            <Link href="/join" className="btn btn-primary teaser-cta-btn">{t('대기 명단에 이름 올리기')}</Link>
+            <Link href="/join?from=teaser" className="btn btn-primary teaser-cta-btn">{t('대기 명단에 이름 올리기')}</Link>
             <Link href={`/login?next=${encodeURIComponent(`/t/${slug}`)}`} className="text-link teaser-cta-sub">{t('초대장이 있거나 이미 회원이에요')}</Link>
           </div>
         )}

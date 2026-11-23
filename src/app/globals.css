@@ -2928,3 +2928,33 @@ a.notif-pop-all:hover { background: var(--n-fafafa); }
 .teaser-share-link { display: flex; align-items: center; gap: 8px; border: 1px solid var(--n-e5e5e5); border-radius: 10px; padding: 8px 8px 8px 12px; font-size: 13px; color: var(--n-333); min-width: 0; }
 .teaser-share-link code { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: inherit; }
 .teaser-share-off { align-self: center; font-size: 13px; color: var(--n-777); }
+
+/* A57: public waitlist /join */
+.join-card { gap: 12px; }
+.join-title { font-size: 21px; font-weight: 700; color: var(--n-111); margin: 0; }
+.join-sub { font-size: 14px; line-height: 1.6; color: var(--n-666); margin: 0; }
+.join-form { display: flex; flex-direction: column; gap: 8px; margin-top: 4px; }
+.join-label { font-size: 13px; font-weight: 600; color: var(--n-333); margin-top: 4px; }
+.join-count { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--n-555); margin: 0; }
+.join-dot { width: 8px; height: 8px; border-radius: 999px; background: #3ccf7c; }
+.join-error { font-size: 13px; color: #dc2626; margin: 0; }
+.join-fine { font-size: 12px; color: var(--n-888); text-align: center; margin: 0; }
+.join-hp { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
+.join-login { align-self: center; font-size: 13px; }
+.join-done { display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center; padding: 8px 0; color: var(--n-111); }
+.join-done svg { color: #16a34a; }
+.join-done-title { font-size: 17px; font-weight: 700; margin: 0; }
+.wl-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 4px; }
+.wl-tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+.wl-open { font-size: 13px; }
+.wl-empty { padding: 20px 4px; font-size: 14px; color: var(--n-888); }
+.wl-list { list-style: none; margin: 0; padding: 0; }
+.wl-row { display: flex; align-items: flex-start; gap: 12px; padding: 12px 4px; border-top: 1px solid var(--n-eee); }
+.wl-row:first-child { border-top: 0; }
+.wl-main { flex: 1; min-width: 0; }
+.wl-email { font-size: 14px; font-weight: 600; color: var(--n-111); margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.wl-reason { font-size: 13px; line-height: 1.5; color: var(--n-444); margin: 2px 0 0; word-break: break-word; }
+.wl-meta { font-size: 12px; color: var(--n-888); margin: 2px 0 0; }
+.wl-actions { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
+.wl-invite { min-height: 32px; padding: 0 14px; border-radius: 999px; font-size: 13px; }
+.wl-code { font-size: 13px; font-weight: 600; letter-spacing: 0.06em; padding: 4px 8px; border-radius: 8px; background: var(--n-f3f3f3); color: var(--n-111); }
