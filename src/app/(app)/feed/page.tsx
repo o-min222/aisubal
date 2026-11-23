@@ -1,4 +1,6 @@
+import Link from 'next/link'
 import { redirect } from 'next/navigation'
+import { networkHref } from '@/lib/dashboard-tabs'
 import { getUserState, getNicknameUnlockState } from '@/lib/auth'
 import { listFeedPage } from '@/lib/data/feed'
 import { managedGroupIdentities } from '@/lib/data/groups'
@@ -59,6 +61,15 @@ export default async function FeedPage({ searchParams }: { searchParams: Promise
         />
       </div>
       {<Composer me={{ ...composerIdentity(state.member, unlock.unlocked), groupIdentities }} className="only-desktop" />}
+      {/* A26: whose posts these are, and where to manage that list */}
+      {(scope === 'following' || scope === 'friends') && (
+        <p className="text-xs text-n-888 px-1 flex items-center gap-2">
+          <span className="min-w-0 truncate">{scope === 'following' ? <T>내가 팔로우한 사람의 글</T> : <T>친구의 글</T>}</span>
+          <Link href={`${networkHref({ view: scope })}#people`} className="text-link ml-auto whitespace-nowrap">
+            {scope === 'following' ? <T>팔로잉 관리</T> : <T>친구 관리</T>} ›
+          </Link>
+        </p>
+      )}
       {scope === 'popular' && <p className="text-xs text-n-888 px-1"><T>최근 2주 · 좋아요와 답글 순</T></p>}
       {scope === 'for_you' && <p className="text-xs text-n-888 px-1"><T>팔로우·친구 관계, 내 관심사, 반응과 최신순을 함께 봐요 · 글 메뉴에서 관심 없음</T></p>}
       <FeedBoard

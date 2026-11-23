@@ -30,11 +30,31 @@ export function parseNetworkView(v: string | string[] | null | undefined): Netwo
 }
 
 /** /network?root=X (old URL) and graph links → dashboard 네트워크 tab. */
-export function networkHref(opts: { view?: NetworkView; root?: string | null } = {}): string {
+export function networkHref(opts: { view?: NetworkView; root?: string | null; q?: string | null } = {}): string {
   const p = new URLSearchParams({ tab: 'network' })
   if (opts.view && opts.view !== 'graph') p.set('view', opts.view)
   if (opts.root) p.set('root', opts.root)
+  const q = cleanPeopleQuery(opts.q)
+  if (q) p.set('q', q)
   return `/me?${p.toString()}`
+}
+
+/** A26: the 네트워크 lists' name search (trimmed, at most 40 chars). */
+export function cleanPeopleQuery(q: string | string[] | null | undefined): string {
+  const s = Array.isArray(q) ? q[0] : q
+  return (s ?? '').normalize('NFC').trim().slice(0, 40)
+}
+
+/** People whose name contains the query, ignoring case and spaces. */
+export function filterPeople<P extends { name: string }>(people: P[], q: string | null | undefined): P[] {
+  const norm = (s: string) => s.normalize('NFC').toLowerCase().replace(/\s+/g, '')
+  const needle = norm(cleanPeopleQuery(q))
+  return needle ? people.filter((p) => norm(p.name).includes(needle)) : people
+}
+
+/** A26: the feed tab showing the posts of a list's people (followers have none). */
+export function networkFeedHref(view: NetworkView): string | null {
+  return view === 'following' ? '/feed?scope=following' : view === 'friends' ? '/feed?scope=friends' : null
 }
 
 export type DashboardTab = (typeof DASHBOARD_TABS)[number]['id']

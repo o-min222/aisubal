@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { ChipBar } from '@/components/chip-bar'
 import { redirect } from 'next/navigation'
 import type { ReactNode } from 'react'
-import { Heart, MessageCircle, ScrollText, Settings } from 'lucide-react'
+import { Heart, MessageCircle, ScrollText, Search, Settings } from 'lucide-react'
 import { ProfileCardEditor } from '@/components/profile/profile-card-editor'
 import { BadgeChips } from '@/components/profile/badge-chips'
 import { listMemberBadges } from '@/lib/data/badges'
@@ -18,7 +18,7 @@ import { listMoim, type Moim } from '@/lib/data/moim'
 import { listMyGroups } from '@/lib/data/groups'
 import { listProfileAgents } from '@/lib/data/tokens'
 import { listMyInviteCodes } from '@/lib/data/invites'
-import { DASHBOARD_TABS, dashboardHref, NETWORK_VIEWS, networkHref, pageSlice, parseDashboardTab, parseNetworkView, type DashboardTab } from '@/lib/dashboard-tabs'
+import { DASHBOARD_TABS, cleanPeopleQuery, dashboardHref, filterPeople, NETWORK_VIEWS, networkFeedHref, networkHref, pageSlice, parseDashboardTab, parseNetworkView, type DashboardTab } from '@/lib/dashboard-tabs'
 import { getSocialSummary, listSocial, type SocialListKind } from '@/lib/data/social'
 import { getInviteGraph, GRAPH_HOPS } from '@/lib/data/graph'
 import { InviteGraph } from '@/components/network/invite-graph'
@@ -98,7 +98,7 @@ async function myMoims(meId: string): Promise<Moim[]> {
   return [...new Map([...hosting, ...mine].map((m) => [m.id, m])).values()].sort((x, y) => y.startsAt.localeCompare(x.startsAt))
 }
 
-async function dashboardListChunk(meId: string, tab: DashboardTab, view: string, page: number): Promise<{ nodes: ReactNode; totalPages: number }> {
+async function dashboardListChunk(meId: string, tab: DashboardTab, view: string, page: number, q = ''): Promise<{ nodes: ReactNode; totalPages: number }> {
   const t = await getT()
   const st = t
   const locale = await getLocale()
@@ -206,7 +206,7 @@ async function dashboardListChunk(meId: string, tab: DashboardTab, view: string,
     )
   } else if (tab === 'network') {
     const kind = view as SocialListKind
-    const people = await listSocial(meId, meId, kind).catch(() => [])
+    const people = filterPeople(await listSocial(meId, meId, kind).catch(() => []), q)
     const s = pageSlice(people, page, PAGE_SIZE)
     totalPages = s.totalPages
     body = s.items.length ? (
@@ -219,14 +219,14 @@ async function dashboardListChunk(meId: string, tab: DashboardTab, view: string,
       </ul>
     ) : (
       <Empty>
-        {{ followers: st('아직 팔로워가 없어요.'), following: st('아직 팔로우한 사람이 없어요.'), friends: st('아직 친구가 없어요. 친구는 친구 신청 → 수락으로 생겨요 (맞팔과 별개).'), requests: st('받은 친구 요청이 없어요.'), sent: <T>보낸 친구 요청이 없어요.</T> }[kind]}
+        {q ? <T s="'{q}'와(과) 맞는 사람이 없어요." vars={{ q }} /> : { followers: st('아직 팔로워가 없어요.'), following: st('아직 팔로우한 사람이 없어요.'), friends: st('아직 친구가 없어요. 친구는 친구 신청 → 수락으로 생겨요 (맞팔과 별개).'), requests: st('받은 친구 요청이 없어요.'), sent: <T>보낸 친구 요청이 없어요.</T> }[kind]}
       </Empty>
     )
   }
   return { nodes: body, totalPages }
 }
 
-export default async function DashboardPage({ searchParams }: { searchParams: Promise<{ tab?: string; view?: string; root?: string }> }) {
+export default async function DashboardPage({ searchParams }: { searchParams: Promise<{ tab?: string; view?: string; root?: string; q?: string }> }) {
   const st = await getT()
   const t = await getT()
   const locale = await getLocale()
@@ -281,12 +281,13 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
 
   let body: ReactNode = null
   const listView = parseNetworkView(sp.view)
-  const listKey = tab === 'network' ? networkHref({ view: listView }) : dashboardHref(tab)
+  const peopleQ = tab === 'network' && listView !== 'graph' ? cleanPeopleQuery(sp.q) : ''
+  const listKey = tab === 'network' ? networkHref({ view: listView, q: peopleQ }) : dashboardHref(tab)
   async function more(p: number) {
     'use server'
     const s = await getUserState()
     if (s.type !== 'member') return { nodes: null, hasMore: false }
-    const r = await dashboardListChunk(s.member.id, tab, listView, p)
+    const r = await dashboardListChunk(s.member.id, tab, listView, p, peopleQ)
     return { nodes: r.nodes, hasMore: p < r.totalPages }
   }
   const infinite = (c: { nodes: ReactNode; totalPages: number }) => (
@@ -347,10 +348,29 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
         </div>
       )
     } else {
-      inner = infinite(await dashboardListChunk(me.id, 'network', view, 1))
+      const feedHref = networkFeedHref(view)
+      inner = (
+        <>
+          {/* A26: find someone in the list; following / friends jump to their posts */}
+          <div className="network-tools px-3 pt-2 pb-1">
+            <form action="/me" className="network-search">
+              <input type="hidden" name="tab" value="network" />
+              <input type="hidden" name="view" value={view} />
+              <Search className="w-4 h-4 text-n-888" aria-hidden="true" />
+              <input type="search" name="q" defaultValue={peopleQ} placeholder={st('이름으로 찾기')} aria-label={st('이름으로 찾기')} maxLength={40} className="input" enterKeyHint="search" />
+            </form>
+            {feedHref && (
+              <Link href={feedHref} className="text-link text-sm whitespace-nowrap">
+                {view === 'following' ? <T>팔로잉한 사람들의 글</T> : <T>친구들의 글</T>} ›
+              </Link>
+            )}
+          </div>
+          {infinite(await dashboardListChunk(me.id, 'network', view, 1, peopleQ))}
+        </>
+      )
     }
     body = (
-      <div>
+      <div id="people">
         <ChipBar as="div" role="tablist" label={st('네트워크 보기')} className="px-3 pt-3 pb-1">
           {NETWORK_VIEWS.map((v) => (
             <Link

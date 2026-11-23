@@ -2479,3 +2479,10 @@ a.notif-pop-all:hover { background: var(--n-fafafa); }
 .timeline-card.just-posted { animation: just-posted 2.6s ease-out; }
 @keyframes just-posted { 0%, 35% { background-color: var(--tint-hover); } 100% { background-color: transparent; } }
 @media (prefers-reduced-motion: reduce) { .timeline-card.just-posted { animation: none; background-color: var(--tint-hover); } }
+
+/* A26: 네트워크 list tools: name search + "their posts" link on one line */
+.network-tools { display: flex; align-items: center; gap: 12px; }
+.network-search { position: relative; flex: 1 1 auto; min-width: 0; max-width: 360px; display: flex; align-items: center; }
+.network-search > svg { position: absolute; left: 10px; pointer-events: none; }
+.network-search > .input { width: 100%; padding-left: 32px; min-height: 36px; }
+#people { scroll-margin-top: 72px; }
