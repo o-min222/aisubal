@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { useMockData } from '@/lib/data/client'
+import { isMock } from '@/lib/data/client'
 import { INVITE_COOKIE } from '@/lib/invite-share'
 import { msg } from '@/i18n/translate'
 import { te } from '@/i18n/server'
@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Dev bypass: accept any 8-char code for local review
-    if (useMockData()) {
+    if (isMock()) {
       return withClearedInvite({
         success: true,
         member: {

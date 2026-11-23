@@ -1,6 +1,6 @@
 import { MOCK_MEMBERS, MOCK_POSTS, MOCK_SITE_SETTINGS } from '@/lib/mock-data'
 import type { Member } from '@/lib/supabase/types'
-import { sb, useMockData } from './client'
+import { sb, isMock } from './client'
 import { getSiteSettings } from './members'
 
 export type AdminUserRow = {
@@ -17,7 +17,7 @@ export type AdminUserRow = {
 }
 
 export async function adminListUsers(): Promise<AdminUserRow[]> {
-  if (useMockData()) {
+  if (isMock()) {
     return MOCK_MEMBERS.filter((m) => m.signup_completed_at).map((m) => ({
       id: m.id,
       name: m.display_name,
@@ -47,7 +47,7 @@ export async function adminListUsers(): Promise<AdminUserRow[]> {
 
 /** Ban/unban goes through the admin-checked SECURITY DEFINER RPC (members has no client UPDATE grant). */
 async function setBan(id: string, banned: boolean, reason?: string) {
-  if (useMockData()) {
+  if (isMock()) {
     return { id, isBanned: banned, bannedReason: banned ? (reason ?? null) : null, bannedAt: banned ? new Date().toISOString() : null }
   }
   const supabase = await sb()
@@ -66,7 +66,7 @@ export async function adminUnbanUser(id: string) {
 }
 
 export async function adminListReports() {
-  if (useMockData()) {
+  if (isMock()) {
     return [
       {
         id: 'report-1',
@@ -107,7 +107,7 @@ export async function adminResolveReport(
   action: 'ignore' | 'delete',
   adminId: string
 ) {
-  if (useMockData()) {
+  if (isMock()) {
     return {
       id: reportId,
       resolved: true,
@@ -149,7 +149,7 @@ export async function adminResolveReport(
 }
 
 export async function adminGetSettings() {
-  if (useMockData()) {
+  if (isMock()) {
     return {
       siteName: MOCK_SITE_SETTINGS.site_name,
       siteDescription: 'AI 파워유저들을 위한 초대 전용 에셋 공유 커뮤니티',
@@ -180,7 +180,7 @@ export async function adminUpdateSettings(input: {
   invitesPerMember?: number
   nicknameUnlockThreshold?: number
 }) {
-  if (useMockData()) {
+  if (isMock()) {
     return {
       siteName: input.siteName ?? 'AI쓰발',
       siteDescription: input.siteDescription ?? '',
@@ -214,7 +214,7 @@ export async function adminUpdateSettings(input: {
 }
 
 export async function adminSetPostHidden(id: string, hidden: boolean) {
-  if (useMockData()) {
+  if (isMock()) {
     return { id, isHidden: hidden, updatedAt: new Date().toISOString() }
   }
 
@@ -227,7 +227,7 @@ export async function adminSetPostHidden(id: string, hidden: boolean) {
 }
 
 export async function adminDeletePost(id: string) {
-  if (useMockData()) return { deletedId: id }
+  if (isMock()) return { deletedId: id }
 
   const supabase = await sb()
   const { data, error } = await supabase.rpc('posts__delete', { p_post_id: id })
@@ -237,7 +237,7 @@ export async function adminDeletePost(id: string) {
 }
 
 export async function createReport(memberId: string, postId: string, reason: string) {
-  if (useMockData()) {
+  if (isMock()) {
     return {
       id: `report-${Date.now()}`,
       postId,

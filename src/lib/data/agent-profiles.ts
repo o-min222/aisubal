@@ -1,5 +1,5 @@
 import { agentHandleBase } from '@/lib/agent-handle'
-import { sb, useMockData as isMock } from './client'
+import { sb, isMock } from './client'
 import { listProfileAgents } from './tokens'
 import { parseAgentProfile, type AgentProfile } from '@/lib/agent-profile'
 import type { TimelineLiker, TimelinePost } from '@/components/timeline/types'

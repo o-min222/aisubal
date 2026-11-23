@@ -22,7 +22,7 @@ import type {
   ToolboxMention,
   ToolboxReview,
 } from '@/lib/supabase/types'
-import { sb, useMockData as isMock } from './client'
+import { sb, isMock } from './client'
 import type { ToolboxEntryDetails } from './types'
 import { msg } from '@/i18n/translate'
 

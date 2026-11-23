@@ -1,7 +1,7 @@
 import { MOCK_MEMBERS } from '@/lib/mock-data'
 import { cleanQuery, snippet } from '@/lib/search-rules'
 import { toolHref } from '@/lib/tool-rules'
-import { sb, useMockData as isMock } from './client'
+import { sb, isMock } from './client'
 import { MEMBER_PUBLIC_COLUMNS } from './member-columns'
 import { listFeedTimeline } from './feed'
 import { listAgoraTimeline } from './agora'

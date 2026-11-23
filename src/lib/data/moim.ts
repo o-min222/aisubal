@@ -17,7 +17,7 @@ import {
   type RsvpStatus,
 } from '@/lib/moim-rules'
 import { mockGroups } from './groups'
-import { sb, useMockData as isMock } from './client'
+import { sb, isMock } from './client'
 
 /**
  * 모임 (formerly 밋업). Production reads and writes go through the 0007

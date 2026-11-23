@@ -1,4 +1,4 @@
-import { sb, useMockData as isMock } from './client'
+import { sb, isMock } from './client'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { HANDOFF_TTL_MS, hashHandoffToken, newHandoffToken } from '@/lib/handoff-rules'
 

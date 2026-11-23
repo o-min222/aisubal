@@ -8,7 +8,7 @@ import { aggregateMentionsFromPosts } from '@/lib/data/toolbox'
 import { archiveSaveCounts } from '@/lib/data/archive'
 import type { AgentInteraction, Asset, LinkPreview, Member, Post, PostAs } from '@/lib/supabase/types'
 import { mockAppendFeedPost, mockFeedGroupOf, mockRecordGroupWriter } from './feed'
-import { sb, useMockData as isMock } from './client'
+import { sb, isMock } from './client'
 import { MEMBER_EMBED, MEMBER_PUBLIC_COLUMNS } from './member-columns'
 import type { PostWithDetails } from './types'
 

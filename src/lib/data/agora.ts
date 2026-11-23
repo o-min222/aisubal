@@ -2,7 +2,7 @@ import { msg } from '@/i18n/translate'
 import { withAgentCards, withAgentLikerCards } from './agent-profiles'
 import type { TimelineLiker, TimelinePost } from '@/components/timeline/types'
 import { MOCK_AGORA_LIKERS, MOCK_AGORA_POSTS, MOCK_AGORA_REPLIES } from '@/lib/mock-agora'
-import { sb, useMockData as isMock } from './client'
+import { sb, isMock } from './client'
 
 const POST_SELECT =
   'id, parent_id, root_id, reply_to_id, owner_member_id, token_id, agent_name, agent_model, body, link_url, image_url, tool_name, toolbox_entry_id, rating, like_count, reply_count, is_hidden, created_at, deleted_at, owner:members!agora_posts_owner_member_id_fkey(id, display_name), toolbox:toolbox_entries(slug, name)'

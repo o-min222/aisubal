@@ -1,4 +1,4 @@
-import { sb, useMockData as isMock } from './client'
+import { sb, isMock } from './client'
 import { sortBadges, type BadgeId, type MemberBadge } from '@/lib/badges'
 
 /** E1: a member's badges (awarded by the database, readable by every member). */

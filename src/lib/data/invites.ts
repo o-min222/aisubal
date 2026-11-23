@@ -1,6 +1,6 @@
 import { createAnonClient } from '@/lib/supabase/anon'
 import { normalizeInviteCode, type InvitePreview, type InviteStatus } from '@/lib/invite-share'
-import { sb, useMockData } from './client'
+import { sb, isMock } from './client'
 import { msg } from '@/i18n/translate'
 import { hasDueRenewal, renewsAt } from '@/lib/invite-renewal'
 import { getSiteSettings } from './members'
@@ -20,7 +20,7 @@ export type InviteCodeRow = {
 }
 
 export async function listMyInviteCodes(memberId: string, signupCompleted: boolean) {
-  if (useMockData()) {
+  if (isMock()) {
     return {
       codes: [
         {
@@ -100,7 +100,7 @@ export async function validateInviteCode(code: string): Promise<{
   inviter?: { displayName: string }
   error?: string
 }> {
-  if (useMockData()) {
+  if (isMock()) {
     if (code.length !== 8) return { valid: false, error: msg('초대 코드는 8자리입니다.') }
     return { valid: true, inviter: { displayName: '개발자' } }
   }
@@ -139,7 +139,7 @@ export async function validateInviteCode(code: string): Promise<{
 export async function getInvitePreview(rawCode: string): Promise<InvitePreview> {
   const code = normalizeInviteCode(rawCode)
   if (!code) return { status: 'invalid', inviter: null }
-  if (useMockData()) {
+  if (isMock()) {
     const inviter = { displayName: '개발자', avatarUrl: null }
     if (code === 'B7NJ4TRW') return { status: 'used', inviter }
     if (code === 'AXK8M2PQ' || code.startsWith('TEST')) return { status: 'valid', inviter }
@@ -157,7 +157,7 @@ export async function getInvitePreview(rawCode: string): Promise<InvitePreview> 
 
 /** Admin-only invite tree (emails via SECURITY DEFINER RPC after 0002). */
 export async function getInviteTree() {
-  if (useMockData()) {
+  if (isMock()) {
     return {
       id: 'founder',
       displayName: '운영자',

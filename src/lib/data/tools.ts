@@ -18,7 +18,7 @@ import { mockHandle, mockPerson } from '@/lib/mock-social'
 import { rankToolsForMember } from '@/lib/recommend-rules'
 import { sortByRelation, type Relation } from '@/lib/social-rules'
 import type { LinkVisibility } from '@/lib/profile-rules'
-import { sb, useMockData as isMock } from './client'
+import { sb, isMock } from './client'
 import { getRelations, socialAuthorIds } from './social'
 import { MEMBER_PUBLIC_COLUMNS } from './member-columns'
 

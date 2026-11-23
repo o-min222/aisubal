@@ -10,7 +10,7 @@ import {
 } from '@/lib/archive-rules'
 import { fetchLinkPreview } from '@/lib/link-preview-server'
 import { checkFetchUrl } from '@/lib/safe-fetch'
-import { sb, useMockData as isMock } from './client'
+import { sb, isMock } from './client'
 
 const fromRow = archiveFromRow
 

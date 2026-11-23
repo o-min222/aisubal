@@ -5,7 +5,7 @@ import { deleteAgentWebhook, getAgentWebhook, pingAgentWebhook, saveAgentWebhook
 import { checkWebhookUrl, resolvesPublic } from '@/lib/safe-fetch'
 import { kickWebhookWorker } from '@/lib/agent-webhooks'
 import { te } from '@/i18n/server'
-import { useMockData as isMock } from '@/lib/data/client'
+import { isMock } from '@/lib/data/client'
 
 const NO_STORE = { 'Cache-Control': 'no-store' }
 

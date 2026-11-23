@@ -7,7 +7,7 @@ import {
   type AnonRow,
   type AnonSort,
 } from '@/lib/anon-rules'
-import { sb, useMockData as isMock } from './client'
+import { sb, isMock } from './client'
 
 /**
  * 익명 board data access. Production goes exclusively through the anon_* RPCs

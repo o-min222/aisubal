@@ -6,7 +6,7 @@ import {
 } from '@/lib/mock-data'
 import type { Member, SiteSettings } from '@/lib/supabase/types'
 import { DEV_NICKNAME_UNLOCK_THRESHOLD, isNicknameUnlocked } from '@/lib/profile'
-import { sb, useMockData } from './client'
+import { sb, isMock } from './client'
 import { MEMBER_PUBLIC_COLUMNS } from './member-columns'
 
 function asMember(row: Record<string, unknown> | null): Member | null {
@@ -15,7 +15,7 @@ function asMember(row: Record<string, unknown> | null): Member | null {
 }
 
 export async function listMembers(): Promise<Member[]> {
-  if (useMockData()) return MOCK_MEMBERS
+  if (isMock()) return MOCK_MEMBERS
 
   const supabase = await sb()
   const { data, error } = await supabase
@@ -30,7 +30,7 @@ export async function listMembers(): Promise<Member[]> {
 }
 
 export async function getMemberById(id: string): Promise<Member | null> {
-  if (useMockData()) {
+  if (isMock()) {
     return MOCK_MEMBERS.find((m) => m.id === id) ?? null
   }
 
@@ -45,7 +45,7 @@ export async function getMemberById(id: string): Promise<Member | null> {
 }
 
 export async function countActiveMembers(): Promise<number> {
-  if (useMockData()) return MOCK_ACTIVE_MEMBER_COUNT
+  if (isMock()) return MOCK_ACTIVE_MEMBER_COUNT
 
   const supabase = await sb()
   const { data, error } = await supabase.rpc('count_active_members')
@@ -54,7 +54,7 @@ export async function countActiveMembers(): Promise<number> {
 }
 
 export async function getSiteSettings(): Promise<SiteSettings> {
-  if (useMockData()) return MOCK_SITE_SETTINGS
+  if (isMock()) return MOCK_SITE_SETTINGS
 
   const supabase = await sb()
   const { data, error } = await supabase.rpc('get_site_config')
@@ -79,7 +79,7 @@ export async function getSiteSettings(): Promise<SiteSettings> {
 }
 
 export async function getNicknameUnlockFromConfig(activeCount?: number) {
-  if (useMockData()) {
+  if (isMock()) {
     const count = activeCount ?? MOCK_ACTIVE_MEMBER_COUNT
     const threshold = DEV_NICKNAME_UNLOCK_THRESHOLD
     return {
@@ -104,7 +104,7 @@ export async function getNicknameUnlockFromConfig(activeCount?: number) {
 /** Resolve a unique @handle to a member id (mentions resolve to handles only). */
 export async function getMemberIdByHandle(handle: string): Promise<string | null> {
   if (!/^[a-z0-9_]{3,20}$/.test(handle)) return null
-  if (useMockData()) {
+  if (isMock()) {
     if (handle === 'dev') return 'dev-user-id'
     return MOCK_MEMBERS.find((m) => m.handle === handle)?.id ?? null
   }

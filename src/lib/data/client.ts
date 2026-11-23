@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 
 /** True when the app should serve in-memory mock data (local DEV bypass). */
-export function useMockData(): boolean {
+export function isMock(): boolean {
   return process.env.DEV_BYPASS_AUTH === 'true'
 }
 

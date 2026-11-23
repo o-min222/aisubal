@@ -1,6 +1,6 @@
 import { DEV_ID, MOCK_PEOPLE, mockPerson, mockRelation } from '@/lib/mock-social'
 import { relationFromRow, type Relation } from '@/lib/social-rules'
-import { sb, useMockData as isMock } from './client'
+import { sb, isMock } from './client'
 
 /**
  * Invite network graph (members only). The first load returns up to 3 hops

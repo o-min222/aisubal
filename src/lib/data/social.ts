@@ -1,6 +1,6 @@
 import { DEV_ID, MOCK_PEOPLE, mockHandle, mockPerson, mockRelation, mockSocial } from '@/lib/mock-social'
 import { NO_RELATION, relationFromRow, type Relation } from '@/lib/social-rules'
-import { sb, useMockData as isMock } from './client'
+import { sb, isMock } from './client'
 
 /**
  * Follow / friend data. Real mode reads through RLS and writes through the

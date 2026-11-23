@@ -2,7 +2,7 @@ import { after, NextRequest, NextResponse } from 'next/server'
 import { getMember } from '@/lib/auth'
 import { queuePushTest } from '@/lib/data/push'
 import { dispatchPush } from '@/lib/push-server'
-import { useMockData as isMock } from '@/lib/data/client'
+import { isMock } from '@/lib/data/client'
 
 const H = { 'Cache-Control': 'no-store' }
 

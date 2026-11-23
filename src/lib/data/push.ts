@@ -1,4 +1,4 @@
-import { sb, useMockData as isMock } from './client'
+import { sb, isMock } from './client'
 
 /** This member's push devices (0075). Mock mode keeps them in memory for local review. */
 const g = globalThis as unknown as { __pushMock?: Map<string, { p256dh: string; auth: string; lastTest: number }> }

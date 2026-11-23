@@ -2,7 +2,7 @@ import { cache } from 'react'
 import { DEV_ID, mockPerson } from '@/lib/mock-social'
 import type { GroupMemberStatus, GroupRole, JoinPolicy } from '@/lib/group-rules'
 import { uniqueGroupSlug } from '@/lib/group-rules'
-import { sb, useMockData as isMock } from './client'
+import { sb, isMock } from './client'
 
 /**
  * Topic groups. Reads go through RLS (hidden groups only for people with a

@@ -1,7 +1,7 @@
 import { cache } from 'react'
 import { createClient } from '@/lib/supabase/server'
 import type { Member, WaitlistEntry, UserState } from '@/lib/supabase/types'
-import { useMockData as isMock } from '@/lib/data/client'
+import { isMock } from '@/lib/data/client'
 import { getNicknameUnlockFromConfig } from '@/lib/data/members'
 import { mockProfileOf } from '@/lib/data/profile'
 

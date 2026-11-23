@@ -1,7 +1,7 @@
 import { MUTABLE_TOOLBOX } from '@/lib/mock-toolbox'
 import { parseInstallQueue, type InstallQueueItem } from '@/lib/install-admin'
 import type { Snippets } from '@/lib/install-catalog'
-import { sb, useMockData as isMock } from './client'
+import { sb, isMock } from './client'
 
 // dev mock: route handlers and pages load separate module copies, so share edits via globalThis
 const g = globalThis as unknown as { __aisubalInstallEdits?: Map<string, Snippets> }

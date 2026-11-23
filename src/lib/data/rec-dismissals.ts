@@ -1,5 +1,5 @@
 import { cache } from 'react'
-import { sb, useMockData as isMock } from './client'
+import { sb, isMock } from './client'
 
 /** "관심 없음" on a recommendation: hidden refs per kind, private to the member (0068). */
 export const REC_KINDS = ['tool', 'member', 'agora', 'post'] as const

@@ -9,7 +9,7 @@ import {
 } from '@/lib/profile-stack'
 import { listMemberTools } from './tools'
 import { listProfileAgents } from './tokens'
-import { sb, useMockData as isMock } from './client'
+import { sb, isMock } from './client'
 
 /**
  * Profile stack (0016, 0026): 활용하는 AI / 구독 / 스킬 extras (per-chip visibility)

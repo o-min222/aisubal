@@ -3,7 +3,7 @@ import { agentSigner } from '@/lib/pledge'
 import { createHash, randomBytes } from 'crypto'
 import type { TokenScope } from '@/lib/supabase/types'
 import type { ClientId, ConnectionStatus } from '@/lib/agent-connect'
-import { sb, useMockData as isMock } from './client'
+import { sb, isMock } from './client'
 
 const gAgents = globalThis as unknown as { __aisubalAgentNames?: Map<string, string> }
 /** DEV mock: agent names of tokens issued in this process */

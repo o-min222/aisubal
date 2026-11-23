@@ -1,4 +1,4 @@
-import { sb, useMockData as isMock } from './client'
+import { sb, isMock } from './client'
 import { searchMembers } from './social'
 
 export type MentionSuggestion = { kind: 'member' | 'agent'; handle: string; name: string; avatarUrl: string | null }

@@ -1,4 +1,4 @@
-export { useMockData, sb } from './client'
+export { isMock, sb } from './client'
 export type {
   PostWithDetails,
   ProductWithDetails,

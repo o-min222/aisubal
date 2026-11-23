@@ -1,4 +1,4 @@
-import { sb, useMockData as isMock } from './client'
+import { sb, isMock } from './client'
 import { DEFAULT_PREFS, type NotificationItem, type NotifyCategory, type NotifyPrefs } from '@/lib/notifications'
 
 type ListResult = { items: NotificationItem[]; total: number; unread: number }

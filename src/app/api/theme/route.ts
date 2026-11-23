@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getMember } from '@/lib/auth'
-import { sb, useMockData as isMock } from '@/lib/data/client'
+import { sb, isMock } from '@/lib/data/client'
 import { THEME_COOKIE, isTheme } from '@/lib/theme'
 import { te } from '@/i18n/server'
 

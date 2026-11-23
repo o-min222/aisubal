@@ -2,7 +2,7 @@ import type { Member } from '@/lib/supabase/types'
 import { ownPostsFilter } from './own-posts'
 import { myNicknameId } from './nickname'
 import { PAGE_SIZE } from '@/lib/paging'
-import { sb, useMockData as isMock } from './client'
+import { sb, isMock } from './client'
 import { listFeedTimeline } from './feed'
 
 export type DashItem = {

@@ -1,4 +1,4 @@
-import { useMockData as isMock } from '@/lib/data/client'
+import { isMock } from '@/lib/data/client'
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 

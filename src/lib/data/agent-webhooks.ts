@@ -1,4 +1,4 @@
-import { sb, useMockData as isMock } from './client'
+import { sb, isMock } from './client'
 
 /** Owner view of an agent's webhook (0066). The signing secret is returned once, on first save / rotate. */
 export type AgentWebhook = {

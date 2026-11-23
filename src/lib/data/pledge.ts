@@ -3,7 +3,7 @@ import { cookies } from 'next/headers'
 import type { Member } from '@/lib/supabase/types'
 import { PLEDGE_VERSION, signatureMatches, type PledgeStatus } from '@/lib/pledge'
 import { pledgeDigest } from '@/lib/pledge-record'
-import { sb, useMockData as isMock } from './client'
+import { sb, isMock } from './client'
 import { msg } from '@/i18n/translate'
 import { te } from '@/i18n/server'
 

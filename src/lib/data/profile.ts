@@ -1,6 +1,6 @@
 import type { Member } from '@/lib/supabase/types'
 import { LINK_KIND_SET, MAX_LINKS, validateLink, type LinkVisibility, type ProfileLink } from '@/lib/profile-rules'
-import { sb, useMockData as isMock } from './client'
+import { sb, isMock } from './client'
 import { msg } from '@/i18n/translate'
 import { quotaFrom, type HandleCheckState, type HandleHistoryRow, type HandleStatus } from '@/lib/handle-policy'
 import { validateHandle } from '@/lib/profile-rules'

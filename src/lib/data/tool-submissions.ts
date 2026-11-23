@@ -3,7 +3,7 @@
  * admins read everything through RLS (0013). Writes happen only through the
  * MCP RPCs. The only web write is a submitter withdrawing a pending request.
  */
-import { sb, useMockData as isMock } from './client'
+import { sb, isMock } from './client'
 import type { PageSnapshot } from '@/lib/safe-fetch'
 import type { SubmissionStatus } from '@/lib/tool-review'
 import { msg } from '@/i18n/translate'
