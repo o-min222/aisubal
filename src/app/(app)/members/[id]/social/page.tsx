@@ -7,6 +7,9 @@ import { getSocialSummary, listSocial, type SocialListKind } from '@/lib/data/so
 import { isFeedId } from '@/lib/feed-ids'
 import { LinkTabs } from '@/components/link-tabs'
 import { PersonRow } from '@/components/social/person-row'
+import { SocialManager } from '@/components/social/social-manager'
+import { parseManageTab, type ManageTab } from '@/lib/social-manage'
+import type { SocialPerson } from '@/lib/data/social'
 import { T } from '@/i18n/t'
 import { getT } from '@/i18n/server'
 import { msg } from '@/i18n/translate'
@@ -42,6 +45,35 @@ export default async function SocialListPage({
   const isMe = id === viewer.id
   const member = isMe ? viewer : await getMemberById(id)
   if (!member) notFound()
+
+  if (isMe) {
+    // A48: own list = 친구·팔로워 관리 (all tabs in one load; a handful of people at this size)
+    const LIM = 100
+    const kinds: SocialListKind[] = ['friends', 'followers', 'following', 'requests', 'sent']
+    const [lists, summary] = await Promise.all([
+      Promise.all(kinds.map((k) => listSocial(viewer.id, viewer.id, k, 0, LIM).catch(() => [] as SocialPerson[]))),
+      getSocialSummary(viewer.id, viewer.id).catch(() => null),
+    ])
+    const byId = new Map<string, SocialPerson>()
+    for (const l of lists) for (const p of l) if (!byId.has(p.id)) byId.set(p.id, p)
+    const over = (i: number, total: number | undefined) => (lists[i].length >= LIM && total ? Math.max(0, total - lists[i].length) : 0)
+    const overflow: Partial<Record<ManageTab, number>> = { friends: over(0, summary?.friends), followers: over(1, summary?.followers), following: over(2, summary?.following) }
+    const ids = (i: number) => lists[i].map((p) => p.id)
+    const order: Partial<Record<ManageTab, string[]>> = { friends: ids(0), followers: ids(1), following: ids(2), requests: [...ids(3), ...ids(4)] }
+    return (
+      <div className="space-y-3">
+        <div className="flex items-center gap-1">
+          <Link href="/members/me" className="tap-target inline-flex items-center justify-center rounded-full icon-btn" aria-label={st('프로필로')}>
+            <ChevronLeft className="w-5 h-5" />
+          </Link>
+          <h1 className="text-lg font-bold" style={{ color: 'var(--n-111)' }}>
+            <T>친구·팔로워 관리</T>
+          </h1>
+        </div>
+        <SocialManager people={[...byId.values()]} order={order} initialTab={parseManageTab((await searchParams).tab)} overflow={overflow} />
+      </div>
+    )
+  }
 
   const allowed: SocialListKind[] = isMe ? ['followers', 'following', 'friends', 'requests', 'sent'] : ['followers', 'following', 'friends']
   const raw = (await searchParams).tab as SocialListKind

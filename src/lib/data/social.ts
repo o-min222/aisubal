@@ -8,7 +8,7 @@ import { sb, isMock } from './client'
  * friend_remove). Edges are always between real-name identities.
  */
 
-export type SocialPerson = { id: string; name: string; avatarUrl: string | null; bio: string; relation: Relation }
+export type SocialPerson = { id: string; name: string; handle?: string | null; avatarUrl: string | null; bio: string; relation: Relation }
 export type SocialSummary = { followers: number; following: number; friends: number; incomingRequests: number | null; relation: Relation }
 export type SocialListKind = 'followers' | 'following' | 'friends' | 'requests' | 'sent'
 
@@ -20,6 +20,7 @@ function personFromRow(r: Record<string, unknown>): SocialPerson {
   return {
     id: String(r.id),
     name: String(r.name ?? ''),
+    handle: (r.handle as string | null) ?? null,
     avatarUrl: (r.avatar_url as string | null) ?? null,
     bio: String(r.bio ?? ''),
     relation: relationFromRow(r.relation as Record<string, unknown>),
@@ -28,7 +29,7 @@ function personFromRow(r: Record<string, unknown>): SocialPerson {
 
 export function mockSocialPerson(viewer: string, id: string): SocialPerson {
   const p = mockPerson(id)
-  return { id, name: p.name, avatarUrl: null, bio: p.bio, relation: mockRelation(mockViewer(viewer), id) }
+  return { id, name: p.name, handle: mockHandle(id), avatarUrl: null, bio: p.bio, relation: mockRelation(mockViewer(viewer), id) }
 }
 
 /** Viewer's relation to many members (feed cards, tool users, graph). */
@@ -145,6 +146,21 @@ export async function friendAction(viewerId: string, memberId: string, action: F
         ? supabase.rpc('friend_remove', { p_member: memberId })
         : supabase.rpc('friend_respond', { p_member: memberId, p_accept: action === 'accept' })
   const { data, error } = await call
+  if (error) throw new Error(error.message)
+  return relationFromRow(data as Record<string, unknown>)
+}
+
+/** A48: take someone off MY followers (deletes only their edge → me). 0099 follower_remove. */
+export async function removeFollower(viewerId: string, memberId: string): Promise<Relation> {
+  if (isMock()) {
+    const v = mockViewer(viewerId)
+    if (v === memberId) throw new Error('social_self')
+    const s = mockSocial()
+    s.follows = s.follows.filter((f) => !(f.follower === memberId && f.followee === v))
+    return mockRelation(v, memberId)
+  }
+  const supabase = await sb()
+  const { data, error } = await supabase.rpc('follower_remove', { p_member: memberId })
   if (error) throw new Error(error.message)
   return relationFromRow(data as Record<string, unknown>)
 }
