@@ -7,6 +7,7 @@ import { listTools, socialToolUsers } from '@/lib/data/tools'
 import {
   TOOL_CATEGORIES,
   TOOL_SORTS,
+  DEFAULT_TOOL_SORT,
   categoryFromLegacyType,
   parseToolSort,
   topTags,
@@ -39,7 +40,7 @@ function hrefWith(base: Params, patch: Partial<Record<keyof Params, string | nul
   delete next.mine
   delete next.open
   if (next.page === '1') delete next.page
-  if (next.sort === 'popular') delete next.sort
+  if (next.sort === DEFAULT_TOOL_SORT) delete next.sort
   const s = new URLSearchParams(next).toString()
   return s ? `/gallery?${s}` : '/gallery'
 }

@@ -18,10 +18,12 @@ export type ToolCategory = (typeof TOOL_CATEGORIES)[number]['id']
 export type ToolSort = 'popular' | 'users' | 'newest' | 'ai'
 export type ToolKind = 'tool' | 'service'
 
+/** A49: newest member uploads first by default; the others stay one tap away. */
+export const DEFAULT_TOOL_SORT: ToolSort = 'newest'
 export const TOOL_SORTS: { id: ToolSort; label: string }[] = [
+  { id: 'newest', label: msg('최신') },
   { id: 'popular', label: msg('인기') },
   { id: 'users', label: msg('많이 쓰는') },
-  { id: 'newest', label: msg('최신') },
   { id: 'ai', label: msg('AI 평가') },
 ]
 
@@ -57,8 +59,8 @@ export function isToolCategory(v: unknown): v is ToolCategory {
 
 /** Accepts the old toolbox/product sort names too (trending, rated, …). */
 export function parseToolSort(v: string | null | undefined): ToolSort {
-  if (v === 'users' || v === 'newest' || v === 'ai') return v
-  return 'popular'
+  if (v === 'users' || v === 'popular' || v === 'ai') return v
+  return DEFAULT_TOOL_SORT
 }
 
 /** Old category ids and ?type= values that now live in another category. */
@@ -85,7 +87,7 @@ export function typesForCategory(category: ToolCategory | null): readonly Toolbo
   return TOOL_CATEGORIES.find((c) => c.id === category)?.types ?? null
 }
 
-export type ToolListItem = ToolboxEntry & { used_by_me: boolean }
+export type ToolListItem = ToolboxEntry & { used_by_me: boolean; liked_by_me?: boolean }
 
 export function popularityScore(e: ToolboxEntry): number {
   return (
@@ -101,7 +103,8 @@ export function popularityScore(e: ToolboxEntry): number {
 export function sortTools<T extends ToolboxEntry>(list: T[], sort: ToolSort): T[] {
   const out = [...list]
   const time = (e: ToolboxEntry) => new Date(e.launched_at || e.created_at).getTime()
-  if (sort === 'newest') return out.sort((a, b) => time(b) - time(a))
+  // 최신 = when it was added to the gallery (a member's upload), not the upstream launch date
+  if (sort === 'newest') return out.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
   if (sort === 'users') return out.sort((a, b) => (b.user_count ?? 0) - (a.user_count ?? 0) || popularityScore(b) - popularityScore(a) || time(b) - time(a))
   if (sort === 'ai') {
     return out.sort(

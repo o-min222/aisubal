@@ -1,22 +1,17 @@
-import { Bot, ShieldCheck } from 'lucide-react'
 import { composerIdentity } from '@/lib/composer-identity'
 import { toolHref } from '@/lib/tool-rules'
 import { getToolboxEntry } from '@/lib/data/toolbox'
 import { getPost } from '@/lib/data/posts'
 import { getToolboxAiRating } from '@/lib/data/agora'
 import { getProductDetails } from '@/lib/data/products'
-import { getMockLaunchEntry, getToolUsers } from '@/lib/data/tools'
+import { getMockLaunchEntry, getToolUsers, myLikedToolIds } from '@/lib/data/tools'
 import { getProfileStack } from '@/lib/data/profile-stack'
 import { getToolProvenance } from '@/lib/data/tool-submissions'
 import type { ToolboxEntryDetails } from '@/lib/data/types'
 import type { Member } from '@/lib/supabase/types'
 import { compatSummary } from '@/lib/toolbox-rules'
-import { ToolUsersCard } from '@/components/tools/tool-users'
 import { LaunchSection } from '@/components/tools/launch-section'
-import { RelativeTime } from '@/components/relative-time'
 import { ToolboxDetailClient } from '@/app/(app)/gallery/[id]/toolbox-detail-client'
-import { T } from '@/i18n/t'
-import { getT } from '@/i18n/server'
 
 export async function loadToolEntry(id: string): Promise<ToolboxEntryDetails | null> {
   const entry = await getToolboxEntry(id)
@@ -27,8 +22,7 @@ export async function loadToolEntry(id: string): Promise<ToolboxEntryDetails | n
 
 /** Tool detail. Used by /gallery/[id] and the 툴 reading pane. */
 export async function ToolDetailView({ entry, member, variant = 'page' }: { entry: ToolboxEntryDetails; member: Member; variant?: 'page' | 'pane' }) {
-  const st = await getT()
-  const [mentionPostsRaw, aiRating, usage, launch, prov] = await Promise.all([
+  const [mentionPostsRaw, aiRating, usage, launch, prov, liked] = await Promise.all([
     Promise.all(
       entry.mentions.map(async (m) => {
         const post = await getPost(m.post_id)
@@ -40,6 +34,7 @@ export async function ToolDetailView({ entry, member, variant = 'page' }: { entr
     getToolUsers(entry.id, member.id).catch(() => ({ count: entry.user_count ?? 0, users: [], usedByMe: false })),
     entry.product_id ? getProductDetails(entry.product_id, member.id).catch(() => null) : Promise.resolve(null),
     getToolProvenance(entry.id).catch(() => null),
+    myLikedToolIds(member.id).catch(() => new Set<string>()),
   ])
   // each person's AI stack as compact chips (visibility enforced by profile_stack)
   const stacks = Object.fromEntries(
@@ -59,29 +54,18 @@ export async function ToolDetailView({ entry, member, variant = 'page' }: { entr
       member={member}
       aiRating={aiRating}
       variant={variant}
-      provenanceSlot={
-        prov ? (
-          <section className="card p-4 text-[13px] space-y-1" aria-label={st('등록 이력')} style={{ color: 'var(--n-555)' }}>
-            <p className="flex items-center gap-1.5">
-              <Bot className="w-3.5 h-3.5" /> <T>올린 사람</T> <b style={{ color: 'var(--n-111)' }}>{prov.submittedBy}</b> · <RelativeTime date={prov.submittedAt} />
-            </p>
-            {prov.approvedBy && prov.approvedAt && !prov.approvedBy.startsWith('바로 공개') && (
-              <p className="flex items-center gap-1.5">
-                <ShieldCheck className="w-3.5 h-3.5" style={{ color: 'var(--c-1f7a4d)' }} /> <T>검토·승인</T> <b style={{ color: 'var(--n-111)' }}>{prov.approvedBy}</b> · <RelativeTime date={prov.approvedAt} />
-              </p>
-            )}
-          </section>
-        ) : null
+      likedByMe={liked.has(entry.id)}
+      provenance={
+        prov
+          ? {
+              by: prov.submittedBy,
+              at: prov.submittedAt,
+              approvedBy: prov.approvedBy && prov.approvedAt && !prov.approvedBy.startsWith('바로 공개') ? prov.approvedBy : null,
+              approvedAt: prov.approvedAt ?? null,
+            }
+          : null
       }
-      usersSlot={
-        <ToolUsersCard
-          entryId={entry.id}
-          usage={usage}
-          stacks={stacks}
-          tool={{ name: entry.name, url: toolUrl }}
-          me={composerIdentity(member)}
-        />
-      }
+      people={{ usage, stacks, tool: { name: entry.name, url: toolUrl }, me: composerIdentity(member) }}
       launchSlot={launch ? <LaunchSection product={launch} /> : null}
     />
   )

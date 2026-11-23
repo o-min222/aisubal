@@ -74,7 +74,10 @@ describe('tool rules (unified 툴 list)', () => {
     expect(categoryFromLegacyType('cli')).toBe('cli')
     expect(categoryFromLegacyType('nope')).toBeNull()
     expect(parseToolSort('ai')).toBe('ai')
-    expect(parseToolSort('trending')).toBe('popular')
+    // A49: unknown / missing sort → 최신 (newest member uploads first)
+    expect(parseToolSort('trending')).toBe('newest')
+    expect(parseToolSort(undefined)).toBe('newest')
+    expect(parseToolSort('popular')).toBe('popular')
   })
 
   it('filters by category, tag, query and my tools', () => {
@@ -90,13 +93,14 @@ describe('tool rules (unified 툴 list)', () => {
     expect(topTags(list)[0]).toBe('db')
   })
 
-  it('sorts by 인기 (users weigh most), 최신 (launch date) and AI 평가', () => {
+  it('sorts by 인기 (users weigh most), 최신 (added to the gallery) and AI 평가', () => {
     const a = entry({ id: 'a', user_count: 3, created_at: '2026-01-01T00:00:00Z' })
     const b = entry({ id: 'b', mention_count: 4, created_at: '2026-11-20T00:00:00Z' })
     const c = entry({ id: 'c', ai_rating_avg: 4.8, ai_rating_count: 2, launched_at: '2026-11-21T00:00:00Z', created_at: '2025-01-01T00:00:00Z' })
     expect(popularityScore(a)).toBeGreaterThan(popularityScore(b))
     expect(sortTools([b, c, a], 'popular')[0].id).toBe('a')
-    expect(sortTools([a, b, c], 'newest').map((e) => e.id)).toEqual(['c', 'b', 'a'])
+    // A49: 최신 = created_at (a member's upload), not the upstream launch date
+    expect(sortTools([a, b, c], 'newest').map((e) => e.id)).toEqual(['b', 'a', 'c'])
     expect(sortTools([a, b, c], 'ai')[0].id).toBe('c')
     expect(toolHref({ slug: 'claude-code' })).toBe('/gallery/claude-code')
   })

@@ -331,6 +331,8 @@ export type ToolboxEntry = {
   product_id?: string | null
   launched_at?: string | null
   user_count?: number
+  /** 0100: one-tap 좋아요 total */
+  like_count?: number
   upvote_count?: number
   ai_rating_avg?: number
   ai_rating_count?: number

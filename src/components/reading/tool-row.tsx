@@ -5,6 +5,7 @@ import { usageLine, type ToolUsageStack } from '@/lib/tool-usage-rules'
 import { ToolIcon } from '@/components/tools/tool-icon'
 import { UserAvatar } from '@/components/user-avatar'
 import { CompactRow } from './compact-row'
+import { ToolQuickActions } from '@/components/tools/tool-quick-actions'
 import { T } from '@/i18n/t'
 
 /** Compact 툴 row: name, kind, one-liner, the stats that matter for that kind. */
@@ -17,12 +18,22 @@ export function ToolRow({ tool, href, active, usage }: { tool: ToolListItem; hre
       save={{ kind: 'tool', refId: tool.id, hint: { title: tool.name } }}
       href={href}
       active={active}
+      actions={
+        <ToolQuickActions
+          key={`${tool.liked_by_me}-${tool.like_count}-${tool.used_by_me}-${tool.user_count}`}
+          entryId={tool.id}
+          name={tool.name}
+          liked={Boolean(tool.liked_by_me)}
+          likeCount={tool.like_count ?? 0}
+          using={tool.used_by_me}
+          useCount={tool.user_count ?? 0}
+        />
+      }
       leading={<ToolIcon name={tool.name} iconUrl={tool.icon_url} dim="w-9 h-9" />}
       title={tool.name}
       badge={
         <>
           <ToolTypeChips entry={tool} />
-          {tool.used_by_me && <span className="crow-chip" style={{ background: 'var(--c-e8f5ee)', color: 'var(--c-1f7a4d)' }}><T>사용 중</T></span>}
         </>
       }
       preview={tool.one_liner}

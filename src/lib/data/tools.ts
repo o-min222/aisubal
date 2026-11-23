@@ -10,6 +10,7 @@ import {
   filterTools,
   kindOfType,
   sortTools,
+  DEFAULT_TOOL_SORT,
   type ToolCategory,
   type ToolListItem,
   type ToolSort,
@@ -33,7 +34,10 @@ export type ToolUsers = { count: number; users: ToolUser[]; usedByMe: boolean }
 
 // ------------------------------------------------------------------ mock (DEV)
 type MockState = { usage: Array<{ entry_id: string; member_id: string; created_at: string }> }
-const g = globalThis as unknown as { __aisubalToolUsage?: MockState; __aisubalUsageVis?: LinkVisibility }
+const g = globalThis as unknown as { __aisubalToolUsage?: MockState; __aisubalUsageVis?: LinkVisibility; __aisubalToolLikes?: Array<{ entry_id: string; member_id: string }> }
+function mockLikes() {
+  return (g.__aisubalToolLikes ??= MUTABLE_TOOLBOX.slice(0, 4).flatMap((e, i) => ['member-2', 'member-3', 'member-4'].slice(0, 3 - (i % 3)).map((m) => ({ entry_id: e.id, member_id: m }))))
+}
 const DEV_VIEWER = 'dev-user-id' // DEV_BYPASS member in lib/auth
 
 function mockUsage(): MockState {
@@ -60,6 +64,7 @@ function mockEntries(): ToolboxEntry[] {
   const tools = MUTABLE_TOOLBOX.map((e, i) => ({
     ...e,
     user_count: usage.filter((u) => u.entry_id === e.id).length,
+    like_count: mockLikes().filter((l) => l.entry_id === e.id).length,
     upvote_count: 0,
     ai_rating_avg: [4.6, 4.2, 0, 3.8, 4.9, 0, 4.1][i % 7],
     ai_rating_count: [5, 3, 0, 2, 4, 0, 1][i % 7],
@@ -96,6 +101,7 @@ function mockEntries(): ToolboxEntry[] {
     product_id: p.id,
     launched_at: p.launched_at,
     user_count: usage.filter((u) => u.entry_id === `tool-${p.id}`).length,
+    like_count: mockLikes().filter((l) => l.entry_id === `tool-${p.id}`).length,
     upvote_count: MUTABLE_UPVOTES.filter((u) => u.product_id === p.id).length,
     ai_rating_avg: 0,
     ai_rating_count: 0,
@@ -129,20 +135,48 @@ export const myToolIds = cache(async (memberId: string): Promise<Set<string>> =>
   return new Set(((data || []) as Array<{ entry_id: string }>).map((r) => r.entry_id))
 })
 
+/** 0100: entries I liked (one-tap 좋아요). */
+export const myLikedToolIds = cache(async (memberId: string): Promise<Set<string>> => {
+  if (isMock()) return new Set(mockLikes().filter((l) => l.member_id === memberId).map((l) => l.entry_id))
+  const supabase = await sb()
+  const { data, error } = await supabase.from('toolbox_likes').select('entry_id').eq('member_id', memberId).limit(1000)
+  if (error) throw error
+  return new Set(((data || []) as Array<{ entry_id: string }>).map((r) => r.entry_id))
+})
+
+export async function setToolLike(entryId: string, memberId: string, like: boolean): Promise<number> {
+  if (isMock()) {
+    const all = mockLikes().filter((l) => !(l.entry_id === entryId && l.member_id === memberId))
+    if (like) all.push({ entry_id: entryId, member_id: memberId })
+    g.__aisubalToolLikes = all
+    return all.filter((l) => l.entry_id === entryId).length
+  }
+  const supabase = await sb()
+  if (like) {
+    const { error } = await supabase.from('toolbox_likes').upsert({ entry_id: entryId, member_id: memberId }, { onConflict: 'entry_id,member_id', ignoreDuplicates: true })
+    if (error) throw error
+  } else {
+    const { error } = await supabase.from('toolbox_likes').delete().eq('entry_id', entryId).eq('member_id', memberId)
+    if (error) throw error
+  }
+  const { data } = await supabase.from('toolbox_entries').select('like_count').eq('id', entryId).maybeSingle()
+  return (data as { like_count: number } | null)?.like_count ?? 0
+}
+
 export async function listTools(
   viewerId: string,
   opts: { category?: ToolCategory | null; tag?: string | null; q?: string | null; sort?: ToolSort; mine?: boolean; rec?: boolean } = {},
 ): Promise<ToolListItem[]> {
-  const [entries, mine] = await Promise.all([allEntries(), myToolIds(viewerId)])
+  const [entries, mine, liked] = await Promise.all([allEntries(), myToolIds(viewerId), myLikedToolIds(viewerId).catch(() => new Set<string>())])
   const filtered = filterTools(entries, { ...opts, onlyIds: opts.mine ? mine : null })
   if (opts.rec) {
     // 추천: what people who use what I use also use, then tags of my tools, then popularity.
     // Things I already use are left out. Same scoring as the right rail (recommend-rules).
     const pairs = await usagePairsAround(viewerId).catch(() => [])
     const myTags = [...new Set(entries.filter((e) => mine.has(e.id)).flatMap((e) => e.tags.map((t) => t.toLowerCase())))]
-    return rankToolsForMember(filtered, myTags, mine, filtered.length, coUsage(pairs, viewerId)).map((e) => ({ ...e, used_by_me: false }))
+    return rankToolsForMember(filtered, myTags, mine, filtered.length, coUsage(pairs, viewerId)).map((e) => ({ ...e, used_by_me: false, liked_by_me: liked.has(e.id) }))
   }
-  return sortTools(filtered, opts.sort ?? 'popular').map((e) => ({ ...e, used_by_me: mine.has(e.id) }))
+  return sortTools(filtered, opts.sort ?? DEFAULT_TOOL_SORT).map((e) => ({ ...e, used_by_me: mine.has(e.id), liked_by_me: liked.has(e.id) }))
 }
 
 /** Tools a member marked '사용 중' (profile: 내가 쓰는 것). */
