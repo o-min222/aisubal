@@ -27,3 +27,13 @@ describe('홈 화면에 추가', () => {
     expect(installMode({ standalone: true, hasPrompt: false, ua: IPHONE_SAFARI })).toBe(null)
   })
 })
+
+describe('boot script (D1)', () => {
+  it('parses, keeps install capture, registers the worker off localhost and marks installs done', async () => {
+    const { PWA_BOOT_SCRIPT, APP_SETUP_KEY } = await import('@/lib/pwa-install')
+    expect(() => new Function(PWA_BOOT_SCRIPT)).not.toThrow()
+    expect(PWA_BOOT_SCRIPT).toContain('beforeinstallprompt')
+    expect(PWA_BOOT_SCRIPT).toContain("register('/sw.js'")
+    expect(PWA_BOOT_SCRIPT).toContain(APP_SETUP_KEY)
+  })
+})

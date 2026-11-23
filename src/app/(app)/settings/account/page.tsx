@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import { getUserState } from '@/lib/auth'
 import { SubPageHeader } from '@/components/shell/sub-nav-layout'
+import { AppSetupReminder } from '@/components/app-setup/app-setup-reminder'
 import { AccountSettings } from './account-settings'
 import { msg } from '@/i18n/translate'
 import { getT } from '@/i18n/server'
@@ -17,6 +18,7 @@ export default async function AccountSettingsPage() {
   return (
     <>
       <SubPageHeader title={msg('계정')} description={msg('로그인 · 멤버십 · 언어 · 화면 모드')} />
+      <AppSetupReminder />
       <AccountSettings email={m.email} joinedAt={m.signup_completed_at} isAdmin={Boolean(m.is_admin)} />
     </>
   )

@@ -28,7 +28,7 @@ export default async function PledgePage({ searchParams }: { searchParams: Promi
   if (!m.profile_completed_at) redirect('/onboarding')
   const status = await getPledgeStatus(m)
   const fromSignup = (await searchParams).from === 'signup'
-  const next = fromSignup ? '/agents/connect?from=signup' : '/feed'
+  const next = fromSignup ? '/onboarding/app?from=signup' : '/feed'
   const locale = await getLocale()
   const t = await getT()
   // a signed pledge shows the year it was signed (KST); a new one, this year

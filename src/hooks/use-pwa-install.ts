@@ -1,17 +1,13 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
-import { INSTALL_EVENT, installMode, type BeforeInstallPromptEvent, type InstallMode } from '@/lib/pwa-install'
+import { INSTALL_EVENT, installMode, isStandalone, type BeforeInstallPromptEvent, type InstallMode } from '@/lib/pwa-install'
 
 type W = Window & { __aisubalBip?: BeforeInstallPromptEvent | null; __aisubalInstalled?: boolean }
 
 function read(): InstallMode {
   const w = window as W
-  const standalone =
-    window.matchMedia?.('(display-mode: standalone)').matches ||
-    window.matchMedia?.('(display-mode: fullscreen)').matches ||
-    (navigator as Navigator & { standalone?: boolean }).standalone === true
-  return installMode({ standalone, installed: w.__aisubalInstalled, hasPrompt: !!w.__aisubalBip, ua: navigator.userAgent, maxTouchPoints: navigator.maxTouchPoints })
+  return installMode({ standalone: isStandalone(), installed: w.__aisubalInstalled, hasPrompt: !!w.__aisubalBip, ua: navigator.userAgent, maxTouchPoints: navigator.maxTouchPoints })
 }
 
 /** null until mounted (SSR) and whenever install isn't possible. */

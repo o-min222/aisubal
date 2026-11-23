@@ -1,6 +1,8 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 import { INVITE_COOKIE } from '@/lib/invite-share'
+import { cookies } from 'next/headers'
+import { AFTER_LOGIN_COOKIE, safeNextPath } from '@/lib/handoff-rules'
 
 /**
  * OAuth callback.
@@ -13,9 +15,9 @@ import { INVITE_COOKIE } from '@/lib/invite-share'
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url)
   const code = searchParams.get('code')
-  const rawNext = searchParams.get('next') ?? '/feed'
-  // Only allow same-origin relative paths.
-  const next = rawNext.startsWith('/') && !rawNext.startsWith('//') ? rawNext : '/feed'
+  // ?next, or the path /h saved before a phone sign-in (same-origin relative paths only)
+  const jar = await cookies()
+  const next = safeNextPath(searchParams.get('next')) ?? safeNextPath(jar.get(AFTER_LOGIN_COOKIE)?.value) ?? '/feed'
 
   if (!code) {
     return NextResponse.redirect(`${origin}/login?error=auth_failed`)
@@ -43,6 +45,7 @@ export async function GET(request: Request) {
     // already a member: an invite link they followed has nothing left to do
     const res = NextResponse.redirect(`${origin}${next}`)
     res.cookies.delete(INVITE_COOKIE)
+    res.cookies.delete(AFTER_LOGIN_COOKIE)
     return res
   }
 
