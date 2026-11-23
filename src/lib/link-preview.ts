@@ -12,6 +12,37 @@ export function detectLinkType(url: string): LinkType {
   }
 }
 
+/**
+ * Real icons for hosts people link most, checked to return an image (2026-11-23). Used when a page's
+ * own icon can't be read at unfurl time (blocked, rate-limited, JS-only), so GitHub never shows a letter.
+ */
+const KNOWN_SITE_ICONS: [RegExp, string][] = [
+  [/(^|\.)github\.(com|io)$|^gist\.github\.com$/, 'https://github.githubassets.com/apple-touch-icon-180x180.png'],
+  [/(^|\.)youtube\.com$|^youtu\.be$/, 'https://www.youtube.com/favicon.ico'],
+  [/(^|\.)(x|twitter)\.com$/, 'https://abs.twimg.com/responsive-web/client-web/icon-ios.77d25eba.png'],
+  [/(^|\.)npmjs\.(com|org)$/, 'https://static.npmjs.com/58a19602036db1daee0d7863c94673a4.png'],
+  [/(^|\.)huggingface\.co$|(^|\.)hf\.co$/, 'https://huggingface.co/favicon.ico'],
+  [/(^|\.)notion\.(so|site)$/, 'https://www.notion.so/images/logo-ios.png'],
+  [/(^|\.)vercel\.(com|app)$/, 'https://vercel.com/apple-touch-icon.png'],
+  [/(^|\.)reddit\.com$/, 'https://www.reddit.com/favicon.ico'],
+  [/^news\.ycombinator\.com$/, 'https://news.ycombinator.com/favicon.ico'],
+  [/(^|\.)wikipedia\.org$/, 'https://en.wikipedia.org/static/apple-touch/wikipedia.png'],
+  [/(^|\.)arxiv\.org$/, 'https://arxiv.org/static/browse/0.3.4/images/icons/apple-touch-icon.png'],
+  [/(^|\.)openai\.com$/, 'https://openai.com/apple-icon.png'],
+  [/(^|\.)chatgpt\.com$/, 'https://cdn.oaistatic.com/assets/apple-touch-icon-mz9nytnj.webp'],
+  [/(^|\.)anthropic\.com$|(^|\.)claude\.ai$/, 'https://www.anthropic.com/favicon.ico'],
+]
+
+export function knownSiteIcon(url: string): string | null {
+  let host: string
+  try {
+    host = new URL(url).hostname.toLowerCase().replace(/^www\./, '')
+  } catch {
+    return null
+  }
+  return KNOWN_SITE_ICONS.find(([re]) => re.test(host))?.[1] ?? null
+}
+
 export function getYoutubeId(url: string): string | null {
   try {
     const u = new URL(url)

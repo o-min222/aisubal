@@ -1,11 +1,13 @@
 import type { LinkPreview } from '@/lib/supabase/types'
 import { safeFetchText, BLOCKED_FETCH_ERRORS, BlockedUrlError } from '@/lib/safe-fetch'
+import { resolvePageIcon } from '@/lib/service-icon'
 import {
   absoluteUrl,
   detectLinkType,
   getMeta,
   getYoutubeId,
   githubOgImage,
+  knownSiteIcon,
   MAX_LINK_PREVIEWS,
   sanitizePreview,
   tweetTextFromOembed,
@@ -47,7 +49,7 @@ function fallback(url: string): LinkPreview {
     description: null,
     image: type === 'youtube' ? youtubeThumbnail(url) : type === 'github' ? githubOgImage(url) : null,
     site_name: type === 'x' ? 'X' : type === 'github' ? 'GitHub' : type === 'youtube' ? 'YouTube' : host,
-    favicon: null,
+    favicon: knownSiteIcon(url),
     link_type: type,
   }
 }
@@ -72,7 +74,7 @@ async function youtubePreview(url: string): Promise<LinkPreview> {
     description: str(o?.author_name) ? `${o!.author_name} · YouTube` : null,
     image: id ? `https://i.ytimg.com/vi/${id}/hqdefault.jpg` : str(o?.thumbnail_url),
     site_name: 'YouTube',
-    favicon: 'https://www.youtube.com/favicon.ico',
+    favicon: knownSiteIcon(url),
     link_type: 'youtube',
   }
 }
@@ -90,7 +92,7 @@ async function xPreview(url: string): Promise<LinkPreview> {
     description: text,
     image: null,
     site_name: 'X',
-    favicon: 'https://abs.twimg.com/favicons/twitter.3.ico',
+    favicon: knownSiteIcon(url),
     link_type: 'x',
   }
 }
@@ -105,8 +107,8 @@ async function htmlPreview(url: string): Promise<LinkPreview> {
   const title = getMeta(html, 'og:title') || getMeta(html, 'twitter:title') || html.match(/<title[^>]*>([^<]+)<\/title>/i)?.[1]?.trim() || null
   const description = getMeta(html, 'og:description') || getMeta(html, 'twitter:description') || getMeta(html, 'description')
   const image = absoluteUrl(base, getMeta(html, 'og:image') || getMeta(html, 'twitter:image'))
-  const favicon =
-    absoluteUrl(base, html.match(/<link[^>]+rel=["'](?:shortcut )?icon["'][^>]+href=["']([^"']+)["']/i)?.[1] || null) || absoluteUrl(base, '/favicon.ico')
+  // the site's real icon, checked through the SSRF-safe fetch; a known host's icon if none checks out
+  const favicon = (await resolvePageIcon(html, base).catch(() => null)) || knownSiteIcon(base) || knownSiteIcon(url)
   return {
     url,
     title: title || hostOf(url),

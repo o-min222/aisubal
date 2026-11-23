@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Play } from 'lucide-react'
 import type { LinkType } from '@/lib/supabase/types'
 import { T } from '@/i18n/t'
@@ -47,6 +47,14 @@ export function LinkCard({
   const host = useMemo(() => hostnameOf(link.url), [link.url])
   const [imgFailed, setImgFailed] = useState(false)
   const [faviconFailed, setFaviconFailed] = useState(false)
+  const favRef = useRef<HTMLImageElement>(null)
+  const imgRef = useRef<HTMLImageElement>(null)
+  useEffect(() => {
+    // a server-rendered <img> can fail before hydration attaches onError: fall back to the letter then too
+    const broken = (el: HTMLImageElement | null) => Boolean(el?.complete && el.naturalWidth === 0)
+    if (broken(favRef.current)) setFaviconFailed(true)
+    if (broken(imgRef.current)) setImgFailed(true)
+  }, [link.favicon, link.image])
 
   const showImage = Boolean(link.image) && !imgFailed
   const showFavicon = Boolean(link.favicon) && !faviconFailed
@@ -63,6 +71,7 @@ export function LinkCard({
       {showImage ? (
         <div className={`link-card-media ${isYoutube ? 'is-video' : ''}`}>
           <img
+            ref={imgRef}
             src={link.image!}
             alt=""
             className="link-card-img"
@@ -97,6 +106,7 @@ export function LinkCard({
         <div className="link-card-site">
           {showFavicon ? (
             <img
+              ref={favRef}
               src={link.favicon!}
               alt=""
               className="link-card-favicon"
