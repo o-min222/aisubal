@@ -43,6 +43,9 @@ async function drain(jobs, next) {
     await page.waitForLoadState('networkidle', { timeout: 15000 }).catch(() => {}) // polling pages never go idle
     await page.waitForTimeout(300)
     snap[`${r} @${w}-${loc}`] = await page.evaluate(() => {
+      // the phone-handoff QR row shows live server state (QR, expiry, or the 5-per-10-min limit, which a run's
+      // own earlier views use up in a timing-dependent order), so it is pinned as one placeholder
+      for (const el of document.querySelectorAll('.app-setup-qr-row')) el.replaceChildren(Object.assign(document.createElement('p'), { textContent: '[handoff QR state]' }))
       // digits (relative times, counts) and the anon mock's random ids/aliases vary per run by design
       const mask = (s) => (s || '').replace(/\s+/g, ' ').trim().replace(/(anon-\d+-)[a-z0-9]{5}/g, '$1*').replace(/익명의 \S+/g, '익명의 *').replace(/\d+/g, '#')
       const vis = (el) => { const b = el.getBoundingClientRect(); return b.width > 0 && b.height > 0 && getComputedStyle(el).visibility !== 'hidden' }
