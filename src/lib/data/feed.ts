@@ -16,7 +16,7 @@ import { pickInterestTags, rankFeedPosts } from '@/lib/recommend-rules'
 import { moimCardsForThreads, promotedGroupMoimThreads } from './moim'
 import { isMoimThreadBody } from '@/lib/moim-thread-rules'
 const FEED_SELECT =
-  'id, parent_id, root_id, reply_to_id, title, content, url, link_title, link_description, link_image, link_site_name, link_favicon, link_type, link_previews, posted_as, author_kind, agent_name, agent_model, agent_token_id, agent_interaction, like_count, reply_count, is_hidden, created_at, group_id, deleted_at, edited_at, public_author_id, author:members!posts_public_author_id_fkey(id, display_name, handle, avatar_url), nick:nickname_profiles!posts_nickname_id_fkey(id, nickname, avatar_url), as_group_id, grp:groups!posts_as_group_id_fkey(id, slug, name)'
+  'id, parent_id, root_id, reply_to_id, title, content, url, link_title, link_description, link_image, link_site_name, link_favicon, link_type, link_previews, posted_as, author_kind, agent_name, agent_model, agent_token_id, agent_interaction, like_count, reaction_count, reply_count, is_hidden, created_at, group_id, deleted_at, edited_at, public_author_id, author:members!posts_public_author_id_fkey(id, display_name, handle, avatar_url), nick:nickname_profiles!posts_nickname_id_fkey(id, nickname, avatar_url), as_group_id, grp:groups!posts_as_group_id_fkey(id, slug, name)'
 
 // ---------------------------------------------------------------- mock (DEV)
 type MockState = { posts: TimelinePost[]; likers: Map<string, TimelineLiker[]> }
@@ -306,7 +306,7 @@ async function queryFeed(viewerId: string, opts: FeedListOpts, withCount: boolea
         (!opts.before || p.createdAt < opts.before) &&
         (!opts.q || `${p.title ?? ''} ${p.body}`.toLowerCase().includes(opts.q.toLowerCase()))
     )
-    if (popular) rows = [...rows].sort((a, b) => b.likeCount * 2 + b.replyCount - (a.likeCount * 2 + a.replyCount) || b.createdAt.localeCompare(a.createdAt))
+    if (popular) rows = [...rows].sort((a, b) => (b.likeCount + (b.reactionCount ?? 0)) * 2 + b.replyCount - ((a.likeCount + (a.reactionCount ?? 0)) * 2 + a.replyCount) || b.createdAt.localeCompare(a.createdAt))
     rows = rows.filter((p) => !p.isDeleted).map((p) => ({ ...p, isMine: p.author.id === viewerId }))
     return { posts: await withMoimCards(viewerId, await withViewerState(viewerId, rows.slice(offset, offset + limit))), total: rows.length }
   }
@@ -319,7 +319,7 @@ async function queryFeed(viewerId: string, opts: FeedListOpts, withCount: boolea
     .eq('is_hidden', false)
     .is('deleted_at', null)
   q = popular
-    ? q.gte('created_at', since).order('like_count', { ascending: false }).order('reply_count', { ascending: false }).order('created_at', { ascending: false })
+    ? q.gte('created_at', since).order('engage_count', { ascending: false }).order('reply_count', { ascending: false }).order('created_at', { ascending: false })
     : q.order('created_at', { ascending: false })
   q = opts.groupId ? q.eq('group_id', opts.groupId) : promoted.size ? q.or(`group_id.is.null,id.in.(${[...promoted].join(',')})`) : q.is('group_id', null)
   if (opts.before) q = q.lt('created_at', opts.before)
@@ -374,7 +374,8 @@ async function queryForYou(viewerId: string, opts: FeedListOpts): Promise<{ post
       realName: p.author.kind === 'member' && !p.isNickname,
       text: `${p.title ?? ''} ${p.body}`,
       toolName: p.tool?.name ?? null,
-      likeCount: p.likeCount,
+      // A39: emoji reactions count like likes
+      likeCount: p.likeCount + (p.reactionCount ?? 0),
       replyCount: p.replyCount,
       createdAt: p.createdAt,
       moim: p.moim ? { startsAt: p.moim.startsAt, ended: p.moim.ended } : null,

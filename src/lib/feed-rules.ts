@@ -95,6 +95,8 @@ export type FeedRow = {
   agent_token_id: string | null
   agent_interaction: AgentInteraction
   like_count: number
+  /** A39 (0092): non-👍 emoji reactions */
+  reaction_count?: number
   reply_count: number
   is_hidden: boolean
   created_at: string
@@ -187,6 +189,7 @@ export function feedRowToTimeline(r: FeedRow, liked: Set<string>, viewerId?: str
     tool: null,
     rating: null,
     likeCount: r.like_count ?? 0,
+    reactionCount: r.reaction_count ?? 0,
     likedByMe: liked.has(r.id),
     replyCount: r.reply_count ?? 0,
     createdAt: r.created_at,

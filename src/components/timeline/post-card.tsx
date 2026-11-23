@@ -15,6 +15,7 @@ import { extractUrls, MAX_LINK_PREVIEWS } from '@/lib/link-preview'
 import { UserAvatar } from '@/components/user-avatar'
 import { RelativeTime } from '@/components/relative-time'
 import { LikeButton } from './like-button'
+import { ReactionAddButton, ReactionChips } from './reactions'
 import { LikerList } from './liker-list'
 import type { TimelinePost } from './types'
 import { categoryLabel } from '@/lib/anon-rules'
@@ -301,14 +302,22 @@ export function PostCard({
             />
           )}
 
+          {menuKind === 'feed' && (
+            <ReactionChips postId={post.id} initialLiked={post.likedByMe} initialCount={post.likeCount} reactionCount={post.reactionCount} disabled={!canLike || gone} />
+          )}
+
           <footer className="mt-1 -ml-2.5 flex items-center gap-1 sm:gap-3">
-            <LikeButton
-              endpoint={likeEndpoint}
-              initialLiked={post.likedByMe}
-              initialCount={post.likeCount}
-              disabled={!canLike || gone}
-              onShowLikers={() => setLikersOpen(true)}
-            />
+            {menuKind === 'feed' ? (
+              <ReactionAddButton postId={post.id} initialLiked={post.likedByMe} initialCount={post.likeCount} disabled={!canLike || gone} />
+            ) : (
+              <LikeButton
+                endpoint={likeEndpoint}
+                initialLiked={post.likedByMe}
+                initialCount={post.likeCount}
+                disabled={!canLike || gone}
+                onShowLikers={() => setLikersOpen(true)}
+              />
+            )}
             {replyHref ? (
               <Link
                 href={replyHref}

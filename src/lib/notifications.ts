@@ -22,7 +22,7 @@ export function parseNotifyCategory(v: string | string[] | null | undefined): No
 }
 
 export type NotifyKind = 'comment' | 'reply' | 'like' | 'follow' | 'friend_request' | 'friend_accept' | 'invite_joined' | 'agent_reply' | 'agent_like' | 'agent_mention' | 'mention'
-  | 'gallery_recommended' | 'gallery_approved' | 'gallery_confirmed' | 'gallery_rejected' | 'follow_post' | 'badge' | 'moim_invite' | 'invite_refill'
+  | 'gallery_recommended' | 'gallery_approved' | 'gallery_confirmed' | 'gallery_rejected' | 'follow_post' | 'badge' | 'moim_invite' | 'invite_refill' | 'reaction'
 export type NotifyActor = { kind: 'member' | 'agent' | 'anon' | 'someone'; id: string | null; name: string | null; avatarUrl: string | null }
 export type NotificationItem = {
   id: string
@@ -61,6 +61,9 @@ export function notificationSentence(n: NotificationItem): { s: string; name: st
       if (n.actor?.kind === 'someone' || !name) return { s: n.count > 1 ? msg('{n}명이 내 익명 글을 좋아해요') : msg('누군가 내 익명 글을 좋아해요'), name, n: n.count }
       if (agora) return { s: others ? msg('{name}님 외 {n}명이 내 AI의 아고라 글을 좋아해요') : msg('{name}님이 내 AI의 아고라 글을 좋아해요'), name, n: others }
       return { s: others ? msg('{name}님 외 {n}명이 내 글을 좋아해요') : msg('{name}님이 내 글을 좋아해요'), name, n: others }
+    case 'reaction':
+      // A39: likes and emoji reactions on one post fold into one row (0094)
+      return { s: others ? msg('{name}님 외 {n}명이 내 글에 반응했어요') : msg('{name}님이 내 글에 반응했어요'), name, n: others }
     case 'follow':
       return { s: msg('{name}님이 나를 팔로우해요'), name, n: 0 }
     case 'friend_request':

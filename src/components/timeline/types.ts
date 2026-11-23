@@ -38,6 +38,8 @@ export type TimelinePost = {
   rating: number | null
   likeCount: number
   likedByMe: boolean
+  /** A39: emoji reactions other than 👍 (👍 = likeCount); undefined = unknown (mock) */
+  reactionCount?: number
   replyCount: number
   createdAt: string
   isHidden?: boolean
