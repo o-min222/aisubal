@@ -48,7 +48,7 @@ export function ComposerFrame({
 
 /** Auto-growing textarea for composers (no character counter). `mentions` adds @-autocomplete. */
 export function ComposerTextarea(props: React.TextareaHTMLAttributes<HTMLTextAreaElement> & { onSubmitShortcut?: () => void; mentions?: boolean }) {
-  const { onSubmitShortcut, mentions = false, className = '', onKeyDown, onInput, onBlur, ...rest } = props
+  const { onSubmitShortcut, mentions = false, className = '', onKeyDown, onInput, onBlur, onFocus, ...rest } = props
   const ref = useRef<HTMLTextAreaElement>(null)
   const ms = useMentionSuggest(ref, mentions)
   const textarea = (
@@ -64,6 +64,11 @@ export function ComposerTextarea(props: React.TextareaHTMLAttributes<HTMLTextAre
       }}
       onKeyUp={mentions ? ms.update : undefined}
       onClick={mentions ? ms.update : undefined}
+      onFocus={(e) => {
+        if (mentions) ms.prefetch()
+        onFocus?.(e)
+      }}
+      onCompositionEnd={mentions ? ms.update : undefined}
       onBlur={(e) => {
         if (mentions) ms.close()
         onBlur?.(e)
