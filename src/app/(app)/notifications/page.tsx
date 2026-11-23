@@ -35,7 +35,7 @@ export default async function NotificationsPage({ searchParams }: { searchParams
         <h1 className="text-2xl font-bold flex items-center gap-2 text-n-111">
           <Bell className="w-6 h-6" /> <T>알림</T>
         </h1>
-        <Link href="/settings/notifications" className="ml-auto tap-target inline-flex items-center justify-center rounded-full text-n-666 hover:bg-n-f2f2f2" aria-label={st('알림 설정')} title={st('알림 설정')}>
+        <Link href="/settings/notifications" className="ml-auto tap-target inline-flex items-center justify-center rounded-full text-n-666 icon-btn" aria-label={st('알림 설정')} title={st('알림 설정')}>
           <Settings className="w-5 h-5" />
         </Link>
       </div>

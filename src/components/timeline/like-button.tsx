@@ -72,7 +72,7 @@ export function LikeButton({
         aria-label={self ? tx('내 글에는 좋아요를 누를 수 없어요') : liked ? tx('좋아요 취소') : tx('좋아요')}
         title={self ? tx('내 글에는 좋아요를 누를 수 없어요') : undefined}
         className={`tap-target inline-flex items-center justify-center rounded-full transition-colors active:scale-90 ${
-          liked ? 'text-c-e0245e hover:bg-c-fde8ef' : 'text-n-666 hover:bg-n-f2f2f2 hover:text-c-e0245e'
+          liked ? 'text-c-e0245e hover:bg-c-fde8ef' : 'text-n-666 hover:bg-tint-hover hover:text-c-e0245e'
         } disabled:opacity-60`}
       >
         <Heart className={`w-[18px] h-[18px] ${liked ? 'fill-current' : ''}`} />

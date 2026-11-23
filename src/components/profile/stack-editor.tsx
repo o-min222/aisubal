@@ -111,7 +111,7 @@ function Chips({ items, onRemove }: { items: Item[]; onRemove: (i: number) => vo
               {it.label.charAt(0).toUpperCase()}
             </span>
             <span className="truncate"><T>{it.label}</T></span>
-            <button type="button" onClick={() => onRemove(i)} className="inline-flex items-center justify-center w-6 h-6 rounded-full hover:bg-n-eee" aria-label={tx('{label} 빼기', { label: it.label })}>
+            <button type="button" onClick={() => onRemove(i)} className="inline-flex items-center justify-center w-6 h-6 rounded-full icon-btn" aria-label={tx('{label} 빼기', { label: it.label })}>
               <X className="w-3.5 h-3.5" />
             </button>
           </span>

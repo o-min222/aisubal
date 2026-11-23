@@ -93,7 +93,7 @@ export function MoimForm({
   return (
     <form onSubmit={submit} className="space-y-3 pb-24 md:pb-0">
       <div className="flex items-center gap-1">
-        <Link href={edit ? `/moim/${edit.id}` : '/moim'} className="tap-target inline-flex items-center justify-center rounded-full hover:bg-n-f2f2f2" aria-label={tx('뒤로')}>
+        <Link href={edit ? `/moim/${edit.id}` : '/moim'} className="tap-target inline-flex items-center justify-center rounded-full icon-btn" aria-label={tx('뒤로')}>
           <ChevronLeft className="w-5 h-5" />
         </Link>
         <h1 className="text-lg font-bold" style={{ color: 'var(--n-111)' }}>
@@ -269,7 +269,7 @@ export function MoimForm({
                 >
                   <T>필수</T>
                 </button>
-                <button type="button" onClick={() => setQuestions(questions.filter((_, j) => j !== i))} className="tap-target inline-flex items-center justify-center rounded-full hover:bg-n-f2f2f2" aria-label={tx('질문 {v} 삭제', { v: i + 1 })}>
+                <button type="button" onClick={() => setQuestions(questions.filter((_, j) => j !== i))} className="tap-target inline-flex items-center justify-center rounded-full icon-btn" aria-label={tx('질문 {v} 삭제', { v: i + 1 })}>
                   <Trash2 className="w-4 h-4" />
                 </button>
               </div>

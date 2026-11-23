@@ -498,7 +498,7 @@ a {
   color: inherit;
   text-decoration: none;
 }
-a:focus-visible, .text-link:focus-visible, .row-link:focus-visible {
+a:focus-visible, .icon-btn:focus-visible, .text-link:focus-visible, .row-link:focus-visible {
   outline: 2px solid var(--focus-ring);
   outline-offset: 2px;
   border-radius: 6px;
@@ -510,8 +510,9 @@ a:focus-visible, .text-link:focus-visible, .row-link:focus-visible {
 .body-link, .markdown-body .md-a { color: inherit; font-weight: 500; text-decoration: none; text-underline-offset: 2px; }
 .body-link:hover, .markdown-body .md-a:hover { text-decoration: underline; }
 .gsearch-all:hover, .composer-link:hover, .mc-more-row:hover, .mc-empty:hover, .pr-verify-btn:hover, .pe-agents-link:hover, .profile-stat-sub:hover { color: var(--link-hover); }
-/* rows and cards without their own hover background */
-.row-link:hover { background: var(--tint-hover); }
+/* round icon buttons and rows/cards without their own hover background: one neutral tint, the icon keeps its colour */
+.icon-btn { transition: background-color .12s, color .12s; }
+.icon-btn:hover, .row-link:hover { background: var(--tint-hover); }
 .row-link { display: block; margin: -4px -8px; padding: 4px 8px; border-radius: 10px; transition: background-color .12s; }
 .row-link.flex { display: flex; }
 
@@ -1654,7 +1655,7 @@ body { -webkit-tap-highlight-color: transparent; }
 .sheet-row:hover { background: var(--n-f6f6f6); }
 .post-menu-btn { flex-shrink: 0; width: 32px; height: 32px; margin: -6px -8px -6px 0; border-radius: 999px; display: inline-flex; align-items: center; justify-content: center; color: var(--n-888); position: relative; }
 .post-menu-btn::after { content: ''; position: absolute; inset: -6px; }
-.post-menu-btn:hover { background: var(--n-f2f2f2); color: var(--n-111); }
+.post-menu-btn:hover { background: var(--tint-hover); color: var(--n-111); }
 @media (max-width: 767px) {
   .anon-toolbar {
     /* solid page colour: a translucent bar let the list show through while scrolling (G1b) */
@@ -1860,7 +1861,7 @@ html:has(.reading-pane.is-open) body { overflow: hidden; }
 .pane-back { display: inline-flex; align-items: center; gap: 4px; min-height: 44px; padding: 0 8px; font-weight: 600; color: var(--n-111); font-size: 15px; }
 .pane-title { flex: 1; min-width: 0; font-size: 14px; font-weight: 600; color: var(--n-444); }
 .pane-icon { display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 999px; color: var(--n-555); }
-.pane-icon:hover { background: var(--n-f2f2f2); color: var(--n-111); }
+.pane-icon:hover { background: var(--tint-hover); color: var(--n-111); }
 .pane-close { display: none; }
 .reading-pane-body {
   flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain;
@@ -2110,7 +2111,7 @@ button.rp-link { width: 100%; text-align: left; font: inherit; cursor: pointer; 
 .archive-guide code.say { font-family: inherit; font-size: 13px; }
 .agent-row { display: flex; align-items: flex-start; gap: 12px; padding: 14px 12px 14px 16px; min-width: 0; }
 .row-menu-btn { flex-shrink: 0; width: 36px; height: 36px; margin-top: -4px; border-radius: 999px; display: inline-flex; align-items: center; justify-content: center; color: var(--n-777); }
-.row-menu-btn:hover, .row-menu-btn[data-popup-open] { background: var(--n-f2f2f0); color: var(--n-111); }
+.row-menu-btn:hover, .row-menu-btn[data-popup-open] { background: var(--tint-hover); color: var(--n-111); }
 .scope-chip { font: 500 11px/1 ui-monospace, SFMono-Regular, Menlo, monospace; background: var(--n-f3f3f1); color: var(--n-555); border-radius: 6px; padding: 4px 6px; }
 .agent-advanced > summary { list-style: none; }
 .agent-advanced > summary::-webkit-details-marker { display: none; }
@@ -2241,11 +2242,11 @@ button.rp-link { width: 100%; text-align: left; font: inherit; cursor: pointer; 
 .graph-card-actions { display: flex; align-items: center; gap: 6px; margin-top: 12px; flex-wrap: nowrap; min-width: 0; }
 .graph-card-actions > * { flex: none; }
 .graph-icon-btn { width: 40px; height: 40px; display: inline-flex; align-items: center; justify-content: center; border-radius: 999px; border: 1px solid var(--n-e5e5e5); color: var(--n-333); background: var(--n-fff); }
-.graph-icon-btn:hover { background: var(--n-f5f5f5); color: var(--n-111); text-decoration: none; }
+.graph-icon-btn:hover { background: var(--tint-hover); color: var(--n-111); text-decoration: none; }
 
 /* ---- notifications (0048) ---- */
 .notif-bell { position: relative; display: inline-flex; align-items: center; justify-content: center; border-radius: 999px; color: var(--n-333); }
-.notif-bell:hover, .notif-bell.on { background: var(--n-f2f2f0); color: var(--n-111); }
+.notif-bell:hover, .notif-bell.on { background: var(--tint-hover); color: var(--n-111); }
 .notif-badge {
   position: absolute; top: 4px; right: 2px; min-width: 17px; height: 17px; padding: 0 4px; border-radius: 999px;
   background: #e5484d; color: #fff; font-size: 10.5px; font-weight: 700; line-height: 17px; text-align: center;
@@ -2397,7 +2398,7 @@ a.tc-act:hover { color: var(--n-111); text-decoration: none; }
 .notif-pop-head { display: flex; align-items: center; gap: 8px; padding: 12px 12px 4px 16px; }
 .notif-pop-title { font-size: 16px; font-weight: 700; color: var(--n-111); }
 .notif-pop-icon { margin-left: auto; display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 999px; color: var(--n-666); }
-.notif-pop-icon:hover { background: var(--n-f2f2f2); color: var(--n-111); }
+.notif-pop-icon:hover { background: var(--tint-hover); color: var(--n-111); }
 .notif-pop-chips { padding: 6px 12px 8px; }
 .notif-pop-list { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; border-top: 1px solid var(--n-f0f0f0); }
 .notif-pop-empty { padding: 36px 16px; text-align: center; font-size: 13.5px; color: var(--n-888); margin: 0; }
@@ -2451,7 +2452,7 @@ a.notif-pop-all:hover { background: var(--n-fafafa); }
 /* C: 관심 없음 on rail recommendations — a quiet × at the item's top-right (always on touch, hover on pointer) */
 .rec-item { position: relative; padding-right: 22px; }
 .rec-x { position: absolute; top: 0; right: -4px; width: 24px; height: 24px; display: inline-flex; align-items: center; justify-content: center; border-radius: 999px; color: var(--n-999); background: transparent; }
-.rec-x:hover { background: var(--n-f3f3f3); color: var(--n-333); }
+.rec-x:hover { background: var(--tint-hover); color: var(--n-333); }
 .rec-x:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 1px; }
 @media (hover: hover) and (pointer: fine) { .rec-x { opacity: 0; } .rec-item:hover .rec-x, .rec-x:focus-visible { opacity: 1; } }
 .rec-undo { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 12px; color: var(--n-888); padding: 6px 0; }

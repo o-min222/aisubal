@@ -19,7 +19,7 @@ export default async function NewGroupPage() {
   return (
     <div className="space-y-3">
       <div className="flex items-center gap-1">
-        <Link href="/groups" className="tap-target inline-flex items-center justify-center rounded-full hover:bg-n-f2f2f2" aria-label={st('그룹 목록')}>
+        <Link href="/groups" className="tap-target inline-flex items-center justify-center rounded-full icon-btn" aria-label={st('그룹 목록')}>
           <ChevronLeft className="w-5 h-5" />
         </Link>
         <h1 className="text-lg font-bold" style={{ color: 'var(--n-111)' }}>

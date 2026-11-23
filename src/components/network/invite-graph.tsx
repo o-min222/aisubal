@@ -293,7 +293,7 @@ export function InviteGraph({ initial }: { initial: GraphPayload }) {
 
       {sel && (
         <div className="graph-card absolute left-2 right-2 bottom-2 md:right-auto md:w-[340px] rounded-2xl bg-n-fff p-3.5 shadow-lg" style={{ border: '1px solid var(--n-eee)' }} role="dialog" aria-label={tx('{name} 미니 프로필', { name: sel.name })}>
-          <button onClick={() => setSelected(null)} className="absolute top-1.5 right-1.5 tap-target inline-flex items-center justify-center rounded-full hover:bg-n-f2f2f2" aria-label={tx('닫기')}>
+          <button onClick={() => setSelected(null)} className="absolute top-1.5 right-1.5 tap-target inline-flex items-center justify-center rounded-full icon-btn" aria-label={tx('닫기')}>
             <X className="w-4 h-4" />
           </button>
           <div className="flex items-center gap-3 pr-8">

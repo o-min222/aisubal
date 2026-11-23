@@ -101,7 +101,7 @@ export function ArchiveButton({
         className={
           variant === 'pill'
             ? `archive-pill ${saved ? 'is-saved' : ''} ${className}`
-            : `tap-target inline-flex items-center justify-center rounded-full hover:bg-[var(--hover,#f2f2f2)] ${saved ? 'text-n-111' : 'text-n-555 hover:text-n-111'} ${className}`
+            : `tap-target inline-flex items-center justify-center rounded-full icon-btn ${saved ? 'text-n-111' : 'text-n-555 hover:text-n-111'} ${className}`
         }
       >
         <Icon className={variant === 'pill' ? 'w-4 h-4' : 'w-[17px] h-[17px]'} fill={saved ? 'currentColor' : 'none'} strokeWidth={saved ? 1.6 : 2} />

@@ -79,7 +79,7 @@ export function LinksEditor({ initial }: { initial: ProfileLink[] }) {
                   </option>
                 ))}
               </select>
-              <button type="button" onClick={() => setRows(rows.filter((_, j) => j !== i))} className="tap-target inline-flex items-center justify-center rounded-full hover:bg-n-f2f2f2" aria-label={tx('링크 {v} 삭제', { v: i + 1 })}>
+              <button type="button" onClick={() => setRows(rows.filter((_, j) => j !== i))} className="tap-target inline-flex items-center justify-center rounded-full icon-btn" aria-label={tx('링크 {v} 삭제', { v: i + 1 })}>
                 <Trash2 className="w-4 h-4" />
               </button>
             </div>

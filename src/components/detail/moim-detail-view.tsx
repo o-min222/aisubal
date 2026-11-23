@@ -19,7 +19,7 @@ export async function MoimDetailView({ m, variant = 'page' }: { m: MoimDetail; v
     <div className="space-y-3 pb-6">
       <div className="flex items-center gap-1">
         {variant === 'page' && (
-        <Link href="/moim" className="tap-target inline-flex items-center justify-center rounded-full hover:bg-n-f2f2f2" aria-label={st('모임 목록')}>
+        <Link href="/moim" className="tap-target inline-flex items-center justify-center rounded-full icon-btn" aria-label={st('모임 목록')}>
           <ChevronLeft className="w-5 h-5" />
         </Link>
         )}

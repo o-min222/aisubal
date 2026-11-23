@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 /**
- * Link tone: no blue links and no hover underlines; rows tint on hover instead.
+ * Link tone: no blue links and no hover underlines; one shared hover tint for icon buttons and rows.
  * The tokens and utilities live in globals.css ("Link tone"): --link/--link-hover, --tint-hover, --focus-ring,
  * .text-link (text links and text buttons), .body-link (URLs and mentions inside post bodies),
- * .row-link (rows and cards without their own hover background).
+ * .icon-btn (round icon buttons), .row-link (rows and cards without their own hover background).
  *   node scripts/codemods/link-tone.mjs          # rewrite src/ (safe to rerun)
- *   node scripts/codemods/link-tone.mjs --check  # exit 1 if a blue link or hover underline is back
+ *   node scripts/codemods/link-tone.mjs --check  # exit 1 if a blue link, hover underline or ad-hoc icon hover is back
  */
 import { readFileSync, writeFileSync } from 'node:fs'
 import { execSync } from 'node:child_process'
@@ -23,9 +23,13 @@ const SPECIFIC = {
   'src/components/profile/agents-section.tsx': [
     [/className="block rounded-xl px-3 py-2 hover:bg-n-f7f7f7" style=\{\{ background: 'var\(--n-fafafa\)' \}\}/g, 'className="block rounded-xl px-3 py-2 bg-n-fafafa hover:bg-tint-hover"'],
   ],
+  'src/components/timeline/like-button.tsx': [[/'text-n-666 hover:bg-n-f2f2f2 hover:text-c-e0245e'/g, "'text-n-666 hover:bg-tint-hover hover:text-c-e0245e'"]],
   'src/app/(app)/me/page.tsx': [[/className="clamp-2 text-\[13px\] text-n-444 hover:underline"/g, 'className="clamp-2 text-[13px] text-n-444 hover:text-n-111"']],
 }
 const GENERAL = [
+  // round icon buttons: one shared hover tint (the archive button's undefined --hover fell back to near-white in dark)
+  [/rounded-full hover:bg-(?:n-f2f2f2|n-eee|\[var\(--hover,#f2f2f2\)\])/g, 'rounded-full icon-btn'],
+  [/rounded-full text-n-(555|666|999) hover:bg-n-f2f2f2/g, 'rounded-full text-n-$1 icon-btn'],
   // blue text links → the link token
   [/\btext-c-06c hover:underline\b/g, 'text-link'],
   [/\btext-c-06c\b/g, 'text-link'],
@@ -35,7 +39,7 @@ const GENERAL = [
   [/ disabled:no-underline\b/g, ''],
 ]
 const SKIP = new Set(['src/components/ui/button.tsx', 'src/components/ui/badge.tsx']) // shadcn 'link' variants, unused
-const BAD = [/\btext-c-06c\b/, /\bhover:underline\b/]
+const BAD = [/\btext-c-06c\b/, /\bhover:underline\b/, /var\(--hover,/, /rounded-full hover:bg-n-f2f2f2/, /rounded-full text-n-\d+ hover:bg-n-f2f2f2/]
 
 const files = execSync("git ls-files 'src/**/*.tsx' 'src/**/*.ts'", { encoding: 'utf8' }).split('\n').filter((f) => f && !SKIP.has(f))
 const check = process.argv.includes('--check')

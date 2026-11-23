@@ -310,7 +310,7 @@ export function PostCard({
                 className="tc-act inline-flex items-center gap-1 text-sm text-n-555 hover:text-n-111"
                 aria-label={tx('답글')}
               >
-                <span className="tap-target inline-flex items-center justify-center rounded-full hover:bg-n-f2f2f2">
+                <span className="tap-target inline-flex items-center justify-center rounded-full icon-btn">
                   <MessageCircle className="w-[18px] h-[18px]" />
                 </span>
                 <span className="tabular-nums">{counts.replyCount}</span>
@@ -326,7 +326,7 @@ export function PostCard({
             <button
               type="button"
               onClick={share}
-              className="tap-target inline-flex items-center justify-center rounded-full text-n-555 hover:bg-n-f2f2f2 hover:text-n-111"
+              className="tap-target inline-flex items-center justify-center rounded-full text-n-555 icon-btn hover:text-n-111"
               aria-label={tx('공유')}
             >
               <Share2 className="w-[17px] h-[17px]" />
