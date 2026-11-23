@@ -1,5 +1,6 @@
 import { cache } from 'react'
 import { createClient } from '@/lib/supabase/server'
+import { verifiedUser } from '@/lib/supabase/verified-user'
 import type { Member, WaitlistEntry, UserState } from '@/lib/supabase/types'
 import { isMock } from '@/lib/data/client'
 import { getNicknameUnlockFromConfig } from '@/lib/data/members'
@@ -48,9 +49,7 @@ export const getUserState = cache(async function getUserState(): Promise<UserSta
   }
 
   const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const user = await verifiedUser(supabase)
 
   if (!user) {
     return { type: 'unauthenticated' }

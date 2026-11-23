@@ -1,6 +1,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 import { hardenAuthCookie } from '@/lib/supabase/cookie-options'
+import { verifiedUser } from '@/lib/supabase/verified-user'
 
 export async function middleware(request: NextRequest) {
   let response = NextResponse.next({
@@ -42,8 +43,8 @@ export async function middleware(request: NextRequest) {
     return response
   }
 
-  // Refresh session
-  const { data: { user } } = await supabase.auth.getUser()
+  // Refresh session; verify the token locally (see verifiedUser)
+  const user = await verifiedUser(supabase)
   
   // Public routes that don't require auth
   const publicRoutes = ['/', '/login', '/h', '/auth/callback', '/waitlist', '/i', '/api/auth', '/api/setup', '/api/mcp', '/skill.md']
