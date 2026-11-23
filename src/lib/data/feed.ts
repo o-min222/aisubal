@@ -13,6 +13,8 @@ import { getRelations, socialAuthorIds } from './social'
 import { listDismissed } from './rec-dismissals'
 import { pickInterestTags, rankFeedPosts } from '@/lib/recommend-rules'
 
+import { moimCardsForThreads, promotedGroupMoimThreads } from './moim'
+import { isMoimThreadBody } from '@/lib/moim-thread-rules'
 const FEED_SELECT =
   'id, parent_id, root_id, reply_to_id, title, content, url, link_title, link_description, link_image, link_site_name, link_favicon, link_type, link_previews, posted_as, author_kind, agent_name, agent_model, agent_token_id, agent_interaction, like_count, reply_count, is_hidden, created_at, group_id, deleted_at, edited_at, public_author_id, author:members!posts_public_author_id_fkey(id, display_name, handle, avatar_url), nick:nickname_profiles!posts_nickname_id_fkey(id, nickname, avatar_url), as_group_id, grp:groups!posts_as_group_id_fkey(id, slug, name)'
 
@@ -291,12 +293,14 @@ async function queryFeed(viewerId: string, opts: FeedListOpts, withCount: boolea
   const limit = Math.min(opts.limit ?? 30, 100)
   const offset = Math.max(0, opts.offset ?? 0)
   const since = new Date(Date.now() - POPULAR_DAYS * 86400_000).toISOString()
+  // A30: the main feed also carries open groups' public 모임 (their thread posts)
+  const promoted = !opts.groupId && !opts.authorId ? new Set(await promotedGroupMoimThreads().catch(() => [] as string[])) : new Set<string>()
   if (isMock()) {
     const st = mockState()
     let rows = st.posts.filter(
       (p) =>
         !p.parentId &&
-        (opts.groupId ? p.groupId === opts.groupId : !p.groupId) &&
+        (opts.groupId ? p.groupId === opts.groupId : !p.groupId || promoted.has(p.id)) &&
         (!opts.authorId || p.author.id === opts.authorId) &&
         (!authorIds || (authorIds.includes(p.author.id) && !p.isNickname)) &&
         (!opts.before || p.createdAt < opts.before) &&
@@ -304,7 +308,7 @@ async function queryFeed(viewerId: string, opts: FeedListOpts, withCount: boolea
     )
     if (popular) rows = [...rows].sort((a, b) => b.likeCount * 2 + b.replyCount - (a.likeCount * 2 + a.replyCount) || b.createdAt.localeCompare(a.createdAt))
     rows = rows.filter((p) => !p.isDeleted).map((p) => ({ ...p, isMine: p.author.id === viewerId }))
-    return { posts: await withViewerState(viewerId, rows.slice(offset, offset + limit)), total: rows.length }
+    return { posts: await withMoimCards(viewerId, await withViewerState(viewerId, rows.slice(offset, offset + limit))), total: rows.length }
   }
   if (authorIds && authorIds.length === 0) return { posts: [], total: 0 }
   const supabase = await sb()
@@ -317,7 +321,7 @@ async function queryFeed(viewerId: string, opts: FeedListOpts, withCount: boolea
   q = popular
     ? q.gte('created_at', since).order('like_count', { ascending: false }).order('reply_count', { ascending: false }).order('created_at', { ascending: false })
     : q.order('created_at', { ascending: false })
-  q = opts.groupId ? q.eq('group_id', opts.groupId) : q.is('group_id', null)
+  q = opts.groupId ? q.eq('group_id', opts.groupId) : promoted.size ? q.or(`group_id.is.null,id.in.(${[...promoted].join(',')})`) : q.is('group_id', null)
   if (opts.before) q = q.lt('created_at', opts.before)
   if (opts.q) q = q.or(`title.ilike.%${opts.q}%,content.ilike.%${opts.q}%`)
   if (authorIds) q = q.in('public_author_id', authorIds.slice(0, 500)).eq('posted_as', 'real').eq('author_kind', 'member')
@@ -329,8 +333,16 @@ async function queryFeed(viewerId: string, opts: FeedListOpts, withCount: boolea
   if (error) throw error
   const rows = (data || []) as unknown as FeedRow[]
   const [liked, nickId] = await Promise.all([likedSet(viewerId, rows.map((r) => r.id)), myNicknameId()])
-  const posts = await withViewerState(viewerId, rows.map((r) => feedRowToTimeline(r, liked, viewerId, nickId)))
+  const posts = await withMoimCards(viewerId, await withViewerState(viewerId, rows.map((r) => feedRowToTimeline(r, liked, viewerId, nickId))))
   return { posts, total: withCount ? (count ?? null) : null }
+}
+
+/** A30: 모임 thread posts render as 모임 cards; a card failing to load just leaves the text. */
+async function withMoimCards(viewerId: string, posts: TimelinePost[]): Promise<TimelinePost[]> {
+  const ids = posts.filter((p) => !p.parentId && !p.isDeleted && isMoimThreadBody(p.body)).map((p) => p.id)
+  if (!ids.length) return posts
+  const cards = await moimCardsForThreads(viewerId, ids).catch(() => null)
+  return cards?.size ? posts.map((p) => (cards.has(p.id) ? { ...p, moim: cards.get(p.id) } : p)) : posts
 }
 
 /** 추천 pool size: the newest top-level posts (same filters as 전체) re-ranked per viewer. */
@@ -365,6 +377,7 @@ async function queryForYou(viewerId: string, opts: FeedListOpts): Promise<{ post
       likeCount: p.likeCount,
       replyCount: p.replyCount,
       createdAt: p.createdAt,
+      moim: p.moim ? { startsAt: p.moim.startsAt, ended: p.moim.ended } : null,
     }),
     { following: new Set(following), friends: new Set(friends), interestTags }
   )

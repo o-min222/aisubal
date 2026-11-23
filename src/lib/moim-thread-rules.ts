@@ -49,3 +49,37 @@ export function moimThreadContent(m: { title: string; startsAt: string; timeTbd:
 export function isMoimThreadBody(body: string | null | undefined): boolean {
   return Boolean(body?.startsWith('[모임] '))
 }
+
+type CardSource = {
+  id: string; title: string; startsAt: string; timeTbd: boolean; mode: 'offline' | 'online'; venueName: string | null
+  status: string; confirmed: number; capacity: number; applyDeadline: string | null; canManage: boolean; isHost: boolean
+  membersOnly: boolean; isGroupMember: boolean | null; questions: Array<{ required: boolean }>
+  myRsvp: { status: string } | null; group: { name: string } | null
+}
+/** A30: a 모임 → its feed card. A date-only 모임 counts as ended once that (KST) day is over. */
+export function toTimelineMoim(m: CardSource, invited: number, now = Date.now()) {
+  const ended = m.status === 'past' || m.status === 'cancelled' || Date.parse(m.startsAt) < now
+  const deadlineOk = !m.applyDeadline || Date.parse(m.applyDeadline) > now
+  // a cancelled application is no application: they may apply again (applyBlock only stops 'rejected')
+  const rsvp = m.myRsvp && m.myRsvp.status !== 'cancelled' ? m.myRsvp.status : null
+  const canJoin =
+    !ended && m.status === 'open' && deadlineOk && !m.canManage && !m.isHost && !rsvp &&
+    !m.questions.some((q) => q.required) && !(m.membersOnly && !m.isGroupMember)
+  return {
+    id: m.id, title: m.title, startsAt: m.startsAt, timeTbd: m.timeTbd, mode: m.mode, venueName: m.venueName,
+    confirmed: m.confirmed, capacity: m.capacity, invited,
+    myRsvp: rsvp as 'pending' | 'confirmed' | 'waitlisted' | 'rejected' | 'cancelled' | null,
+    canManage: m.canManage, canJoin, ended, cancelled: m.status === 'cancelled', groupName: m.group?.name ?? null,
+  }
+}
+
+/**
+ * A30 추천: an upcoming 모임 gets a small lift that grows as the day nears (≤7 days), and its
+ * age decay is capped (a 모임 posted last week for tomorrow is still news). Ended → nothing.
+ */
+export function moimRecBoost(m: { startsAt: string; ended: boolean } | null | undefined, now = Date.now()): { boost: number; maxAgeH: number | null } {
+  if (!m || m.ended) return { boost: 0, maxAgeH: null }
+  const days = (Date.parse(m.startsAt) - now) / 86400_000
+  if (days < 0) return { boost: 0, maxAgeH: null }
+  return { boost: days <= 3 ? 1.5 : days <= 7 ? 1 : 0.5, maxAgeH: 48 }
+}

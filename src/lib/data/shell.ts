@@ -19,7 +19,7 @@ export type RailData = {
   interestTags: string[]
   tools: Array<{ id: string; slug: string; name: string; oneLiner: string; reason: string | null }>
   agora: Array<{ id: string; agentName: string; agentModel: string | null; avatarUrl: string | null; body: string; toolName: string | null; rating: number | null; likeCount: number }>
-  meetups: Array<{ id: string; title: string; startsAt: string; mode: string; confirmed: number; capacity: number; group: string | null }>
+  meetups: Array<{ id: string; title: string; startsAt: string; timeTbd: boolean; mode: string; venueName: string | null; confirmed: number; capacity: number; group: string | null }>
   people: Array<{ id: string; name: string; avatarUrl: string | null; reason: string }>
 }
 
@@ -52,7 +52,7 @@ export const getRailData = cache(async (member: Member): Promise<RailData> => {
   const [toolbox, agoraPosts, meetups, mine, pairs, dismissed] = await Promise.all([
     listTools(member.id, { sort: 'popular' }).catch(() => [] as ToolboxEntry[]),
     listAgoraTimeline(member.id, { limit: 30 }).catch(() => []),
-    upcomingMoim(member.id, 2).catch(() => []),
+    upcomingMoim(member.id, 3).catch(() => []),
     myToolIds(member.id).catch(() => new Set<string>()),
     usagePairsAround(member.id).catch(() => []),
     listDismissed(member.id).catch(() => null),
@@ -163,7 +163,9 @@ export const getRailData = cache(async (member: Member): Promise<RailData> => {
       id: m.id,
       title: m.title,
       startsAt: m.startsAt,
+      timeTbd: m.timeTbd,
       mode: m.mode,
+      venueName: m.venueName,
       confirmed: m.confirmed,
       capacity: m.capacity,
       group: m.group?.name ?? null,

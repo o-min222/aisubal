@@ -64,8 +64,32 @@ export type TimelinePost = {
   groupWriter?: { id: string; name: string; handle: string | null } | null
   /** group timeline post (never shown in the main feed / to agents) */
   groupId?: string | null
+  /** A30: this post is a 모임's thread — the feed shows it as a 모임 card */
+  moim?: TimelineMoim | null
   /** 추천 feed scope only: why this post was recommended (i18n key + vars); enables 관심 없음 */
   recReason?: { s: string; vars?: Record<string, string> } | null
+}
+
+/** A30: what a 모임 card in the feed needs (from moim_cards). */
+export type TimelineMoim = {
+  id: string
+  title: string
+  startsAt: string
+  timeTbd: boolean
+  mode: 'offline' | 'online'
+  venueName: string | null
+  confirmed: number
+  capacity: number
+  invited: number
+  /** my application, if any */
+  myRsvp: 'pending' | 'confirmed' | 'waitlisted' | 'rejected' | 'cancelled' | null
+  canManage: boolean
+  /** one tap is enough: open, upcoming, no required questions, I may apply and haven't */
+  canJoin: boolean
+  /** started, or closed by the host as past/cancelled */
+  ended: boolean
+  cancelled: boolean
+  groupName: string | null
 }
 
 export type TimelineLinkPreview = {

@@ -1,3 +1,4 @@
+import { moimRecBoost } from '@/lib/moim-thread-rules'
 import { interpolate, msg, type T } from '@/i18n/translate'
 /** Pure helpers for the right-rail recommendations (tested in tests/shell.test.ts). */
 
@@ -80,6 +81,8 @@ export type FeedRecSignals = {
   likeCount: number
   replyCount: number
   createdAt: string
+  /** A30: the post is a 모임's thread */
+  moim?: { startsAt: string; ended: boolean } | null
 }
 export type FeedRecReason = { s: string; vars?: Record<string, string> }
 
@@ -108,11 +111,14 @@ export function scoreFeedPost(
   const tag = matchInterest(sig, ctx.interestTags)
   const interest = tag ? 1.5 : 0
   const eng = Math.log2(1 + 2 * Math.max(0, sig.likeCount) + Math.max(0, sig.replyCount))
-  const ageH = Math.max(0, (now - new Date(sig.createdAt).getTime()) / 3600_000)
+  const { boost, maxAgeH } = moimRecBoost(sig.moim, now)
+  const rawAgeH = Math.max(0, (now - new Date(sig.createdAt).getTime()) / 3600_000)
+  const ageH = maxAgeH == null ? rawAgeH : Math.min(rawAgeH, maxAgeH)
   const decay = 1 / Math.pow(1 + ageH / 24, 0.8)
-  const score = (1 + rel + interest + eng) * decay
+  const score = (1 + rel + interest + eng + boost) * decay
   const reason: FeedRecReason =
-    rel === 3 ? { s: msg('친구의 글') }
+    boost > 0 ? (rel === 3 ? { s: msg('친구가 연 모임') } : rel === 2 ? { s: msg('팔로우하는 사람이 연 모임') } : { s: msg('다가오는 모임') })
+    : rel === 3 ? { s: msg('친구의 글') }
     : rel === 2 ? { s: msg('팔로우하는 사람의 글') }
     : tag ? { s: msg('#{tag} 관심사와 비슷해요'), vars: { tag } }
     : eng >= Math.log2(11) ? { s: msg('반응이 많은 글') }

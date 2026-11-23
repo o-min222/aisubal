@@ -19,7 +19,8 @@ import {
 import { mockGroups } from './groups'
 import { mockAppendFeedPost, mockFeedPost } from './feed'
 import { sb, isMock } from './client'
-import { moimThreadContent, normalizeInvites } from '@/lib/moim-thread-rules'
+import { moimThreadContent, normalizeInvites, toTimelineMoim } from '@/lib/moim-thread-rules'
+import type { TimelineMoim } from '@/components/timeline/types'
 
 /** Seats when the host doesn't say (A29: the minimal form doesn't ask; matches moim__validate). */
 export const DEFAULT_CAPACITY = 30
@@ -367,6 +368,13 @@ export function mockMoims(): MockMoim[] {
       rsvps: [seedRsvp('r15', 'member-2', 'confirmed', 400)],
     },
   ]
+  // A30: seeded 모임 have their thread posts too (public upcoming, past, and members-only group ones)
+  const seeded: Record<string, number> = { 'moim-3': 5, 'moim-5': 30, 'moim-6': 400, 'moim-2': 8 }
+  for (const m of gm.__aisubalMoim) {
+    const h = seeded[m.id]
+    if (h == null) continue
+    m.threadPostId = mockThreadPost(m.hostId, m.groupId, { ...m, timeTbd: false }, new Date(Date.now() - h * 3600_000).toISOString())
+  }
   return gm.__aisubalMoim
 }
 
@@ -454,8 +462,9 @@ function mockFind(id: string, viewerId: string) {
 }
 
 /** DEV: the 모임's thread post, like moim_create does in 0083. */
-function mockThreadPost(hostId: string, groupId: string | null, m: Parameters<typeof moimThreadContent>[0]): string {
-  const id = `post-moim-${Date.now()}`
+let mockThreadSeq = 0
+function mockThreadPost(hostId: string, groupId: string | null, m: Parameters<typeof moimThreadContent>[0], createdAt = new Date().toISOString()): string {
+  const id = `post-moim-${Date.now()}-${++mockThreadSeq}`
   mockAppendFeedPost({
     id,
     parentId: null,
@@ -471,7 +480,7 @@ function mockThreadPost(hostId: string, groupId: string | null, m: Parameters<ty
     likeCount: 0,
     likedByMe: false,
     replyCount: 0,
-    createdAt: new Date().toISOString(),
+    createdAt,
     agentsAllowed: false,
     isNickname: false,
     groupId,
@@ -652,6 +661,51 @@ export async function inviteMoim(viewerId: string, id: string, handles: string[]
   const { data, error } = await supabase.rpc('moim_invite', { p_id: id, p_handles: list })
   if (error) throw new Error(error.message)
   return Number(data ?? 0)
+}
+
+/** A30: feed cards for the 모임 thread posts on screen (moim_get visibility), by post id. */
+export async function moimCardsForThreads(viewerId: string, postIds: string[]): Promise<Map<string, TimelineMoim>> {
+  const out = new Map<string, TimelineMoim>()
+  if (!postIds.length) return out
+  if (isMock()) {
+    const viewer = me(viewerId)
+    for (const m of mockMoims()) {
+      if (!m.threadPostId || !postIds.includes(m.threadPostId) || !mockVisible(m, viewer)) continue
+      const invited = mockMoimInvites().filter((x) => x.moimId === m.id).length
+      out.set(m.threadPostId, toTimelineMoim(mockToMoim(m, viewerId), invited))
+    }
+    return out
+  }
+  const ids = postIds.filter((id) => /^[0-9a-f-]{36}$/i.test(id)).slice(0, 100)
+  if (!ids.length) return out
+  const supabase = await sb()
+  const { data, error } = await supabase.rpc('moim_cards', { p_post_ids: ids })
+  if (error) throw new Error(error.message)
+  for (const r of (data || []) as Array<Record<string, unknown>>) {
+    const m = fromRow(r)
+    if (m.threadPostId) out.set(m.threadPostId, toTimelineMoim(m, Number(r.invited ?? 0)))
+  }
+  return out
+}
+
+/**
+ * A30: group 모임 threads allowed in the main feed — open, non-hidden group (anyone can read
+ * its posts and open the 모임) and not members-only. Everything else stays in its group.
+ */
+export async function promotedGroupMoimThreads(): Promise<string[]> {
+  if (isMock()) {
+    const groups = mockGroups().groups
+    return mockMoims()
+      .filter((m) => {
+        const g = m.groupId ? groups.find((x) => x.id === m.groupId) : null
+        return Boolean(m.threadPostId && g && g.join_policy === 'open' && !g.is_hidden && !m.membersOnly && (m.status === 'open' || m.status === 'closed'))
+      })
+      .map((m) => m.threadPostId as string)
+  }
+  const supabase = await sb()
+  const { data, error } = await supabase.rpc('moim_feed_threads')
+  if (error) throw new Error(error.message)
+  return ((data || []) as string[]).filter((id) => /^[0-9a-f-]{36}$/i.test(id))
 }
 
 /** The 모임 a thread post belongs to (for "모임 보기" on /posts/[id]); null when it isn't one or isn't visible. */
