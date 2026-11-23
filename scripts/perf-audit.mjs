@@ -27,7 +27,11 @@ for (const page of pages) for (const ff of ['mobile', 'desktop']) {
     const file = join(tmp, `r.json`)
     const flags = ['-y', 'lighthouse@13', base + page, '--quiet', '--output=json', `--output-path=${file}`, '--only-categories=performance',
       '--chrome-flags=--headless=new --no-sandbox', ...(ff === 'desktop' ? ['--preset=desktop'] : [])]
-    execFileSync('npx', flags, { stdio: 'ignore', env: { ...process.env, CHROME_PATH: chrome } })
+    // one Chrome crash shouldn't sink a 10-minute run: retry a cell up to twice
+    for (let attempt = 0; ; attempt++) {
+      try { execFileSync('npx', flags, { stdio: 'ignore', env: { ...process.env, CHROME_PATH: chrome } }); break }
+      catch (e) { if (attempt >= 2) throw e }
+    }
     const j = JSON.parse(readFileSync(file, 'utf8'))
     const a = j.audits
     const items = a['resource-summary']?.details?.items ?? []
