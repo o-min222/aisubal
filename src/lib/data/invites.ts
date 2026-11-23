@@ -3,6 +3,7 @@ import { normalizeInviteCode, type InvitePreview, type InviteStatus } from '@/li
 import { sb, useMockData } from './client'
 import { msg } from '@/i18n/translate'
 import { hasDueRenewal, renewsAt } from '@/lib/invite-renewal'
+import { getSiteSettings } from './members'
 
 export type InviteCodeRow = {
   code: string
@@ -24,6 +25,16 @@ export async function listMyInviteCodes(memberId: string, signupCompleted: boole
       codes: [
         {
           code: 'AXK8M2PQ',
+          isUsed: false,
+          isActive: signupCompleted,
+          usedBy: null,
+          usedAt: null,
+          renewedAt: null,
+          renewsAt: null,
+          isRenewal: false,
+        },
+        {
+          code: 'C3HQ9VXE',
           isUsed: false,
           isActive: signupCompleted,
           usedBy: null,
@@ -57,8 +68,10 @@ export async function listMyInviteCodes(memberId: string, signupCompleted: boole
   let { data, error } = await load()
   if (error) throw error
 
-  // lazy auto-renewal: only when a used code is past its 7 days (no extra call otherwise)
-  if (signupCompleted && hasDueRenewal((data || []).map((r) => ({ usedAt: r.used_at, renewedAt: r.renewed_at })))) {
+  // lazy top-up + auto-renewal (0073): only when a slot is missing or a used code is past its 7 days
+  const rows = data || []
+  const slotsShort = rows.filter((r) => !r.renewed_from_id).length < (await getSiteSettings()).invites_per_member
+  if (signupCompleted && (slotsShort || hasDueRenewal(rows.map((r) => ({ usedAt: r.used_at, renewedAt: r.renewed_at }))))) {
     const { data: n, error: renewError } = await supabase.rpc('invites__renew_mine')
     if (renewError) console.error('invites__renew_mine', renewError)
     else if (Number(n) > 0) ({ data, error } = await load())

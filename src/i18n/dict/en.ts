@@ -1737,7 +1737,7 @@ const en: Record<string, string> = {
   "{date}에 새 코드가 다시 생겨요": "A new code arrives {date}",
   "{date} 새 코드": "new code {date}",
   "각 코드는 1회만 쓸 수 있어요 · 쓰인 코드는 7일 뒤 새 코드로 다시 생겨요": "Each code works once · a used code comes back as a new one 7 days later",
-  "5. 초대가 쓰이면 7일 뒤 그 자리에 새 코드가 자동으로 생겨요. 쓰지 않은 코드는 늘어나지 않아요.": "5. 7 days after a code is used, a new one appears in its place. Unused codes don't multiply.",
+  "5. 멤버마다 초대 자리가 3개 있어요. 초대가 쓰이면 7일 뒤 그 자리에 새 코드가 자동으로 생겨요. 쓰지 않은 코드는 늘어나지 않아요.": "5. Every member has 3 invite slots. 7 days after a code is used, a new one appears in its place. Unused codes don't multiply.",
   "내 글에 댓글·답글": "Comments & replies on my posts",
   "피드 · 그룹 · 익명 라운지": "Feed · groups · anonymous lounge",
   "같은 글의 좋아요는 한 줄로 모아요": "Likes on the same post are grouped into one line",

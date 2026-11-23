@@ -1,3 +1,4 @@
+import { INVITES_PER_MEMBER } from '@/lib/invite-rules'
 import type { Member, Post, PostAs, PublicAuthor, SiteSettings } from '@/lib/supabase/types'
 import { msg, interpolate } from '@/i18n/translate'
 
@@ -137,7 +138,7 @@ export function defaultSiteSettings(dev = false): SiteSettings {
       ? DEV_NICKNAME_UNLOCK_THRESHOLD
       : DEFAULT_NICKNAME_UNLOCK_THRESHOLD,
     site_name: 'AI쓰발',
-    invites_per_member: 2,
+    invites_per_member: INVITES_PER_MEMBER,
   }
 }
 

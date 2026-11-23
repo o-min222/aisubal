@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest'
+import { INVITES_PER_MEMBER } from '../src/lib/invite-rules'
 
 const BASE_URL = process.env.TEST_BASE_URL || 'http://127.0.0.1:43256'
 
@@ -35,11 +36,11 @@ describe('권한 / 멤버 전용 API (DEV_BYPASS_AUTH)', () => {
     expect(data.tree.displayName).toBeTruthy()
   })
 
-  it('멤버는 초대 코드 2개를 조회할 수 있다', async () => {
+  it('멤버는 초대 코드 3개를 조회할 수 있다', async () => {
     const res = await fetch(`${BASE_URL}/api/invites`)
     expect(res.status).toBe(200)
     const data = await res.json()
-    expect(data.codes).toHaveLength(2)
+    expect(data.codes).toHaveLength(INVITES_PER_MEMBER)
     expect(data.codesActive).toBe(true)
   })
 })

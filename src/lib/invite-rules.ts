@@ -1,7 +1,7 @@
 /**
  * Invite system rules for AI쓰발.
  *
- * - Each completed member gets exactly 2 invite codes
+ * - Each completed member gets 3 invite slots (an original code + its 7-day renewals; 0073)
  * - Codes become active only after their creator completed signup
  * - Codes are single-use (consumed on successful signup)
  * - No grace period
@@ -21,7 +21,7 @@ export type MemberRecord = {
   is_admin?: boolean
 }
 
-export const INVITES_PER_MEMBER = 2
+export const INVITES_PER_MEMBER = 3
 
 export function isInviteCodeActive(
   code: InviteCodeRecord,
@@ -73,7 +73,7 @@ export function consumeInviteCode(
   }
 }
 
-export function createInactiveCodesForMember(memberId: string, codes: [string, string]): InviteCodeRecord[] {
+export function createInactiveCodesForMember(memberId: string, codes: [string, string, string]): InviteCodeRecord[] {
   return codes.map((code) => ({
     code,
     created_by_id: memberId,

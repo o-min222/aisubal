@@ -109,14 +109,15 @@ describe('단일 사용 초대 코드', () => {
   })
 })
 
-describe('멤버당 초대 코드 2개 제한', () => {
-  it('멤버는 정확히 2개의 초대 코드를 가진다', () => {
-    const codes = createInactiveCodesForMember('member-1', ['AAAA1111', 'BBBB2222'])
+describe('멤버당 초대 자리 3개', () => {
+  it('멤버는 정확히 3개의 초대 코드를 가진다', () => {
+    const codes = createInactiveCodesForMember('member-1', ['AAAA1111', 'BBBB2222', 'CCCC3333'])
+    expect(INVITES_PER_MEMBER).toBe(3)
     expect(codes).toHaveLength(INVITES_PER_MEMBER)
     expect(validateInviteCodeCount(codes)).toBe(true)
   })
 
-  it('1개 또는 3개는 유효하지 않다', () => {
+  it('0·1·2·4개는 유효하지 않다', () => {
     expect(validateInviteCodeCount([])).toBe(false)
     expect(
       validateInviteCodeCount([
@@ -128,6 +129,13 @@ describe('멤버당 초대 코드 2개 제한', () => {
         { code: 'A', created_by_id: 'm', used_by_id: null, used_at: null },
         { code: 'B', created_by_id: 'm', used_by_id: null, used_at: null },
         { code: 'C', created_by_id: 'm', used_by_id: null, used_at: null },
+        { code: 'D', created_by_id: 'm', used_by_id: null, used_at: null },
+      ])
+    ).toBe(false)
+    expect(
+      validateInviteCodeCount([
+        { code: 'A', created_by_id: 'm', used_by_id: null, used_at: null },
+        { code: 'B', created_by_id: 'm', used_by_id: null, used_at: null },
       ])
     ).toBe(false)
   })

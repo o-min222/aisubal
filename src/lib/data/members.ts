@@ -1,3 +1,4 @@
+import { INVITES_PER_MEMBER } from '@/lib/invite-rules'
 import {
   MOCK_ACTIVE_MEMBER_COUNT,
   MOCK_MEMBERS,
@@ -65,7 +66,7 @@ export async function getSiteSettings(): Promise<SiteSettings> {
     return {
       nickname_unlock_threshold: Number(map.nickname_unlock_threshold) || 100,
       site_name: map.site_name || 'AI쓰발',
-      invites_per_member: Number(map.invites_per_member) || 2,
+      invites_per_member: Number(map.invites_per_member) || INVITES_PER_MEMBER,
     }
   }
 
@@ -73,7 +74,7 @@ export async function getSiteSettings(): Promise<SiteSettings> {
   return {
     nickname_unlock_threshold: Number(cfg.nickname_unlock_threshold) || 100,
     site_name: cfg.site_name || 'AI쓰발',
-    invites_per_member: Number(cfg.invites_per_member) || 2,
+    invites_per_member: Number(cfg.invites_per_member) || INVITES_PER_MEMBER,
   }
 }
 
