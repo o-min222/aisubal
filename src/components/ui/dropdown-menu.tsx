@@ -52,15 +52,23 @@ function DropdownMenuGroup({ ...props }: MenuPrimitive.Group.Props) {
   return <MenuPrimitive.Group data-slot="dropdown-menu-group" {...props} />
 }
 
+/**
+ * Menu heading. Base UI's GroupLabel throws ("MenuGroupContext is missing")
+ * unless it sits inside <Menu.Group>, which crashed /settings/profile the
+ * moment a chip menu opened (A40). A plain element works anywhere; when the
+ * label does head a group, wrap both in DropdownMenuGroup and pass
+ * aria-labelledby yourself.
+ */
 function DropdownMenuLabel({
   className,
   inset,
   ...props
-}: MenuPrimitive.GroupLabel.Props & {
+}: React.ComponentProps<"div"> & {
   inset?: boolean
 }) {
   return (
-    <MenuPrimitive.GroupLabel
+    <div
+      role="presentation"
       data-slot="dropdown-menu-label"
       data-inset={inset}
       className={cn(
