@@ -11,7 +11,7 @@ import { T } from '@/i18n/t'
 import { msg as m } from '@/i18n/translate'
 import { tx, tn, useLocale } from '@/i18n/client'
 
-/** Real invite codes (no mock data): copy the link (send it anywhere) or the Web Share sheet. */
+/** Real invite codes (no mock data): copy the invite message (send it anywhere) or the Web Share sheet. */
 export function InvitesClient({ inviterName, codes, codesActive, loadFailed }: { inviterName: string; codes: InviteCodeRow[]; codesActive: boolean; loadFailed: boolean }) {
   const locale = useLocale()
   const [copied, setCopied] = useState<string | null>(null)
@@ -34,7 +34,7 @@ export function InvitesClient({ inviterName, codes, codesActive, loadFailed }: {
       setTimeout(() => setCopied((k) => (k === key ? null : k)), 2000)
     } catch {
       toast.error(tn('복사하지 못했어요. 길게 눌러 직접 복사해 주세요.'))
-      setOpen(key.replace(/^(msg|code):/, ''))
+      setOpen(key.replace(/^(link|url|code):/, ''))
     }
   }
 
@@ -56,11 +56,11 @@ export function InvitesClient({ inviterName, codes, codesActive, loadFailed }: {
           <Users className="w-6 h-6" /> <T>초대하기</T>
         </h1>
         <p className="text-sm text-n-666 mt-1">
-          <T>링크를 복사해 카톡·문자·DM 어디로든 조용히 전하세요.</T>{' '}
+          <T>초대 메시지를 복사해 카톡·문자·DM 어디로든 조용히 전하세요.</T>{' '}
           <T s="남은 초대 {n}장" vars={{ n: <b className="text-n-111">{available}</b> }} />
         </p>
         <ol className="invite-steps" aria-label={tx('초대 순서')}>
-          <li><Link2 className="w-3.5 h-3.5" aria-hidden /> <T>링크 복사</T></li>
+          <li><Link2 className="w-3.5 h-3.5" aria-hidden /> <T>메시지 복사</T></li>
           <li><Send className="w-3.5 h-3.5" aria-hidden /> <T>원하는 곳에 전달</T></li>
           <li><UserPlus className="w-3.5 h-3.5" aria-hidden /> <T>링크로 가입</T></li>
         </ol>
@@ -104,8 +104,8 @@ export function InvitesClient({ inviterName, codes, codesActive, loadFailed }: {
                   </div>
                   {usable && (
                     <div className="flex gap-2 ml-auto">
-                      <button type="button" onClick={() => copy(inviteUrl(c.code, origin, locale), `link:${c.code}`, m('초대 링크를 복사했어요. 원하는 곳에 붙여넣어 보내세요.'))} className="btn btn-primary btn-sm min-h-[40px] rounded-full">
-                        {copied === `link:${c.code}` ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />} <T>링크 복사</T>
+                      <button type="button" onClick={() => copy(msg, `link:${c.code}`, m('초대 메시지를 복사했어요. 원하는 곳에 붙여넣어 보내세요.'))} className="btn btn-primary btn-sm min-h-[40px] rounded-full">
+                        {copied === `link:${c.code}` ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />} <T>초대 메시지 복사</T>
                       </button>
                       {canShare && (
                         <button type="button" onClick={() => share(c.code)} className="btn btn-secondary btn-sm min-h-[40px] rounded-full">
@@ -124,8 +124,8 @@ export function InvitesClient({ inviterName, codes, codesActive, loadFailed }: {
                       <div className="mt-1 rounded-xl bg-n-f6f6f6 p-3 text-[13px] text-n-333 whitespace-pre-wrap break-all select-all">
                         {msg}
                         <div className="mt-2 flex gap-3 text-xs">
-                          <button type="button" className="text-c-06c" onClick={() => copy(msg, `msg:${c.code}`, m('초대 메시지를 복사했어요'))}>
-                            <T>메시지 복사</T>
+                          <button type="button" className="text-c-06c" onClick={() => copy(inviteUrl(c.code, origin, locale), `url:${c.code}`, m('초대 링크만 복사했어요'))}>
+                            <T>링크만 복사</T>
                           </button>
                           <button type="button" className="text-c-06c" onClick={() => copy(c.code, `code:${c.code}`, m('초대 코드만 복사했어요'))}>
                             <T>코드만 복사</T>
@@ -165,7 +165,7 @@ export function InvitesClient({ inviterName, codes, codesActive, loadFailed }: {
         <h2 className="font-semibold mb-1" style={{ color: 'var(--n-111)' }}>
           <T>초대는 이렇게 동작해요</T>
         </h2>
-        <p><T>1. ‘링크 복사’를 눌러 카카오톡·문자·메일·DM 등 원하는 곳에 붙여넣어 보내세요. 대부분의 메신저에서 미리보기 카드가 함께 보여요.</T></p>
+        <p><T>1. ‘초대 메시지 복사’를 눌러 카카오톡·문자·메일·DM 등 원하는 곳에 붙여넣어 보내세요. 이름·코드·링크가 함께 담기고, 대부분의 메신저에서 미리보기 카드도 보여요.</T></p>
         <p><T>2. 받은 분이 링크를 열면 누가 초대했는지와 코드 상태를 보고 Google로 로그인해요.</T></p>
         <p><T>3. 로그인 후 가입 화면에 코드가 자동으로 들어가 있어요. 버튼 한 번이면 가입 완료.</T></p>
         <p><T>4. 이미 쓰인 코드면 받은 분은 웨이트리스트로 가요. 각 코드는 1회용이에요.</T></p>

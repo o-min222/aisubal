@@ -28,7 +28,10 @@ export const SITE_INTRO = msg('AI쓰발은 초대받은 사람만 들어올 수 
 export const INVITE_HOW = msg('이 링크는 당신 한 사람을 위해 열렸습니다. Google로 들어오면 초대 코드가 자동으로 입력되고, 이름을 정한 뒤 입단 서약에 서명하면 합류가 끝납니다.')
 export const INVITE_MOTTO = 'From the Shadows, Toward the Light.'
 
-/** The 초대장. The link sits on its own line so messengers attach the OG preview card. */
+/**
+ * What '초대 메시지 복사' and the share sheet send: who invites you, the code, and the link on its own
+ * line (so messengers attach the OG preview card). Short on purpose: the landing page tells the rest.
+ */
 export function inviteShareText(
   inviterName: string,
   code: string,
@@ -36,15 +39,7 @@ export function inviteShareText(
   t: (s: string, vars?: Record<string, string | number>) => string = interpolate,
   lang?: string,
 ): string {
-  return [
-    t(msg('[AI쓰발 · 초대장]')),
-    t(msg('{name}님이 당신을 지목했습니다.'), { name: inviterName }),
-    t(SITE_INTRO),
-    t(INVITE_HOW),
-    inviteUrl(code, origin, lang),
-    t(msg('(초대 코드 {code} · 1회용)'), { code }),
-    INVITE_MOTTO,
-  ].join('\n')
+  return [t(msg('{name}님이 AI쓰발에 초대했어요. 초대 코드: {code}'), { name: inviterName, code }), inviteUrl(code, origin, lang)].join('\n')
 }
 
 export const INVITE_STATUS_TEXT: Record<InviteStatus, string> = {
