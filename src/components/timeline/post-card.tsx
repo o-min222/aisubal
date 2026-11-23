@@ -2,7 +2,8 @@
 
 import { CollapsibleText } from '@/components/collapsible-text'
 import { useState, type ReactNode } from 'react'
-import { postRecDismiss, setRecHidden, useRecHidden } from './rec-hidden'
+import { setRecHidden, useRecHidden } from './rec-hidden'
+import { postRecDismiss } from '@/lib/rec-dismiss'
 import Link from 'next/link'
 import { Bot, MessageCircle, Star, Wrench, ExternalLink, Share2, VenetianMask, Sparkles } from 'lucide-react'
 import { toast } from 'sonner'
@@ -157,7 +158,7 @@ export function PostCard({
     recHidden && post.recReason ? (
       <div className="timeline-card rec-hidden-card" aria-live="polite">
         <span><T>이 글을 추천에서 뺐어요. 비슷한 글이 줄어들어요.</T></span>
-        <button type="button" className="rec-undo-btn" onClick={async () => { setRecHidden(post.id, false); if (!(await postRecDismiss(post.id, false))) setRecHidden(post.id, true) }}>
+        <button type="button" className="rec-undo-btn" onClick={async () => { setRecHidden(post.id, false); if (!(await postRecDismiss('post', post.id, false))) setRecHidden(post.id, true) }}>
           <T>되돌리기</T>
         </button>
       </div>

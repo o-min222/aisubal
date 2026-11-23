@@ -9,7 +9,8 @@ import { FEED_REPORT_REASONS } from '@/lib/feed-rules'
 import { ANON_MAX_CHARS, ANON_REPORT_REASONS } from '@/lib/anon-rules'
 import { publishReplyDelta } from '@/lib/count-store'
 import type { TimelinePost } from './types'
-import { postRecDismiss, setRecHidden } from './rec-hidden'
+import { setRecHidden } from './rec-hidden'
+import { postRecDismiss } from '@/lib/rec-dismiss'
 import { T } from '@/i18n/t'
 import { tx, tn } from '@/i18n/client'
 
@@ -43,7 +44,7 @@ export function PostMenu({ post, kind, afterDeleteHref }: { post: TimelinePost; 
     setBusy(true)
     setRecHidden(post.id, true)
     close(false)
-    const ok = await postRecDismiss(post.id, true)
+    const ok = await postRecDismiss('post', post.id, true)
     setBusy(false)
     if (!ok) {
       setRecHidden(post.id, false)

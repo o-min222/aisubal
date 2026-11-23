@@ -4,15 +4,7 @@ import { useState, type ReactNode } from 'react'
 import { X } from 'lucide-react'
 import { useT } from '@/i18n/client'
 import type { RecKind } from '@/lib/data/rec-dismissals'
-
-async function post(kind: RecKind, ref: string, dismissed: boolean) {
-  const res = await fetch('/api/recommendations/dismiss', {
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ kind, ref, dismissed }),
-  })
-  return res.ok
-}
+import { postRecDismiss } from '@/lib/rec-dismiss'
 
 /** One recommended item with a quiet "관심 없음" ×; collapses to an undo line when dismissed. */
 export function RecDismiss({ kind, refId, children }: { kind: RecKind; refId: string; children: ReactNode }) {
@@ -24,7 +16,7 @@ export function RecDismiss({ kind, refId, children }: { kind: RecKind; refId: st
     if (busy) return
     setBusy(true)
     setHidden(next)
-    const ok = await post(kind, refId, next).catch(() => false)
+    const ok = await postRecDismiss(kind, refId, next)
     if (!ok) setHidden(!next)
     setBusy(false)
   }

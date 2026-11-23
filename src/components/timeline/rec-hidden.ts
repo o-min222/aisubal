@@ -23,12 +23,3 @@ export function useRecHidden(id: string): boolean {
     () => false
   )
 }
-
-export async function postRecDismiss(id: string, dismissed: boolean): Promise<boolean> {
-  const res = await fetch('/api/recommendations/dismiss', {
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ kind: 'post', ref: id, dismissed }),
-  }).catch(() => null)
-  return Boolean(res?.ok)
-}
