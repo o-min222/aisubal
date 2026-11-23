@@ -250,6 +250,12 @@ export async function withGroupIdentity(viewerId: string, posts: TimelinePost[])
   return posts.map((p) => (p.author.kind === 'group' ? { ...p, isMine: mine.has(p.id), groupWriter: writers[p.id] ?? null } : p))
 }
 
+/** Follow chips (member posts) and group identity (group posts) touch disjoint rows, so fetch both at once. */
+async function withViewerState(viewerId: string, posts: TimelinePost[]): Promise<TimelinePost[]> {
+  const [followed, grouped] = await Promise.all([withFollowState(viewerId, posts), withGroupIdentity(viewerId, posts)])
+  return followed.map((p, i) => (p.author.kind === 'group' ? grouped[i] : p))
+}
+
 /** Attach the viewer's follow state to real-name member authors (follow chip on cards). */
 export async function withFollowState(viewerId: string, posts: TimelinePost[]): Promise<TimelinePost[]> {
   const ids = posts.filter((p) => p.author.kind === 'member' && !p.isNickname).map((p) => p.author.id)
@@ -298,7 +304,7 @@ async function queryFeed(viewerId: string, opts: FeedListOpts, withCount: boolea
     )
     if (popular) rows = [...rows].sort((a, b) => b.likeCount * 2 + b.replyCount - (a.likeCount * 2 + a.replyCount) || b.createdAt.localeCompare(a.createdAt))
     rows = rows.filter((p) => !p.isDeleted).map((p) => ({ ...p, isMine: p.author.id === viewerId }))
-    return { posts: await withGroupIdentity(viewerId, await withFollowState(viewerId, rows.slice(offset, offset + limit))), total: rows.length }
+    return { posts: await withViewerState(viewerId, rows.slice(offset, offset + limit)), total: rows.length }
   }
   if (authorIds && authorIds.length === 0) return { posts: [], total: 0 }
   const supabase = await sb()
@@ -323,8 +329,8 @@ async function queryFeed(viewerId: string, opts: FeedListOpts, withCount: boolea
   if (error) throw error
   const rows = (data || []) as unknown as FeedRow[]
   const [liked, nickId] = await Promise.all([likedSet(viewerId, rows.map((r) => r.id)), myNicknameId()])
-  const posts = await withFollowState(viewerId, rows.map((r) => feedRowToTimeline(r, liked, viewerId, nickId)))
-  return { posts: await withGroupIdentity(viewerId, posts), total: withCount ? (count ?? null) : null }
+  const posts = await withViewerState(viewerId, rows.map((r) => feedRowToTimeline(r, liked, viewerId, nickId)))
+  return { posts, total: withCount ? (count ?? null) : null }
 }
 
 /** 추천 pool size: the newest top-level posts (same filters as 전체) re-ranked per viewer. */
@@ -402,26 +408,30 @@ async function getFeedThread__raw(
     .maybeSingle()
   if (error) throw error
   if (!first) return null
-  let root = first as unknown as FeedRow
-  if (root.root_id) {
-    const { data: r } = await supabase
+  const f = first as unknown as FeedRow
+  const rootId = f.root_id ?? f.id
+  // the root row (when `id` is a reply) and the replies only need rootId: fetch them together
+  const [rootRes, { data: rep }] = await Promise.all([
+    f.root_id ? supabase.from('posts').select(FEED_SELECT).eq('id', f.root_id).maybeSingle() : Promise.resolve({ data: f }),
+    supabase
       .from('posts')
       .select(FEED_SELECT)
-      .eq('id', root.root_id)
-      .maybeSingle()
-    if (!r) return null
-    root = r as unknown as FeedRow
-  }
-  const { data: rep } = await supabase
-    .from('posts')
-    .select(FEED_SELECT)
-    .eq('root_id', root.id)
-    .eq('is_hidden', false)
-    .order('created_at', { ascending: true })
-    .limit(500)
+      .eq('root_id', rootId)
+      .eq('is_hidden', false)
+      .order('created_at', { ascending: true })
+      .limit(500),
+  ])
+  if (!rootRes.data) return null
+  const root = rootRes.data as unknown as FeedRow
   const replies = (rep || []) as unknown as FeedRow[]
-  const [liked, nickId] = await Promise.all([likedSet(viewerId, [root.id, ...replies.map((r) => r.id)]), myNicknameId()])
-  const [rootPost] = await withGroupIdentity(viewerId, [feedRowToTimeline(root, liked, viewerId, nickId)])
+  // group identity only sets isMine / groupWriter on group rows, so it needn't wait for likes
+  const [liked, nickId, [g]] = await Promise.all([
+    likedSet(viewerId, [root.id, ...replies.map((r) => r.id)]),
+    myNicknameId(),
+    withGroupIdentity(viewerId, [feedRowToTimeline(root, new Set(), viewerId, null)]),
+  ])
+  const base = feedRowToTimeline(root, liked, viewerId, nickId)
+  const rootPost = base.author.kind === 'group' ? { ...base, isMine: g.isMine, groupWriter: g.groupWriter } : base
   return {
     root: rootPost,
     replies: replies.map((r) => feedRowToTimeline(r, liked, viewerId, nickId)),

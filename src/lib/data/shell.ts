@@ -40,6 +40,15 @@ export const getProfileStats = cache(async (member: Member): Promise<ProfileStat
 })
 
 export const getRailData = cache(async (member: Member): Promise<RailData> => {
+  const personal = isMock()
+    ? null
+    : sb().then((supabase) =>
+        Promise.all([
+          supabase.from('archive_entries').select('kind, ref, tags').eq('owner_id', member.id).limit(300),
+          supabase.from('toolbox_reviews').select('entry_id').eq('member_id', member.id).limit(200),
+          supabase.from('post_likes').select('post_id').eq('liker_type', 'member').eq('member_id', member.id).limit(200),
+        ])
+      )
   const [toolbox, agoraPosts, meetups, mine, pairs, dismissed] = await Promise.all([
     listTools(member.id, { sort: 'popular' }).catch(() => [] as ToolboxEntry[]),
     listAgoraTimeline(member.id, { limit: 30 }).catch(() => []),
@@ -61,11 +70,7 @@ export const getRailData = cache(async (member: Member): Promise<RailData> => {
     ]
   } else {
     const supabase = await sb()
-    const [{ data: arch }, { data: reviews }, { data: likes }] = await Promise.all([
-      supabase.from('archive_entries').select('kind, ref, tags').eq('owner_id', member.id).limit(300),
-      supabase.from('toolbox_reviews').select('entry_id').eq('member_id', member.id).limit(200),
-      supabase.from('post_likes').select('post_id').eq('liker_type', 'member').eq('member_id', member.id).limit(200),
-    ])
+    const [{ data: arch }, { data: reviews }, { data: likes }] = await personal!
     const archRows = (arch || []) as Array<{ kind: string; ref: string; tags: string[] }>
     archiveTags = archRows.map((r) => r.tags)
     usedToolIds = new Set([
@@ -78,30 +83,34 @@ export const getRailData = cache(async (member: Member): Promise<RailData> => {
 
     const likedIds = ((likes || []) as Array<{ post_id: string }>).map((l) => l.post_id)
     const seen = new Set<string>([member.id, ...(dismissed?.member ?? [])])
-    if (likedIds.length) {
-      const { data: authors } = await supabase
-        .from('posts')
-        .select('author:members!posts_public_author_id_fkey(id, display_name, avatar_url)')
-        .in('id', likedIds.slice(0, 100))
-        .eq('posted_as', 'real')
-        .eq('author_kind', 'member')
-      for (const row of (authors || []) as unknown as Array<{ author: { id: string; display_name: string; avatar_url: string | null } | null }>) {
-        const a = row.author
-        if (!a || seen.has(a.id)) continue
-        seen.add(a.id)
-        people.push({ id: a.id, name: a.display_name, avatarUrl: a.avatar_url, reason: msg('내가 좋아한 글의 작성자') })
-      }
-    }
-    if (people.length < 3) {
-      const { data: recent } = await supabase
+    // both sources at once; 'liked' authors still come first, 'recent' only fills up to 3
+    const [{ data: authors }, { data: recent }] = await Promise.all([
+      likedIds.length
+        ? supabase
+            .from('posts')
+            .select('author:members!posts_public_author_id_fkey(id, display_name, avatar_url)')
+            .in('id', likedIds.slice(0, 100))
+            .eq('posted_as', 'real')
+            .eq('author_kind', 'member')
+        : Promise.resolve({ data: [] }),
+      supabase
         .from('posts')
         .select('author:members!posts_public_author_id_fkey(id, display_name, avatar_url)')
         .eq('posted_as', 'real')
         .eq('author_kind', 'member')
         .is('parent_id', null)
         .order('created_at', { ascending: false })
-        .limit(30)
-      for (const row of (recent || []) as unknown as Array<{ author: { id: string; display_name: string; avatar_url: string | null } | null }>) {
+        .limit(30),
+    ])
+    type AuthorRow = { author: { id: string; display_name: string; avatar_url: string | null } | null }
+    for (const row of (authors || []) as unknown as AuthorRow[]) {
+      const a = row.author
+      if (!a || seen.has(a.id)) continue
+      seen.add(a.id)
+      people.push({ id: a.id, name: a.display_name, avatarUrl: a.avatar_url, reason: msg('내가 좋아한 글의 작성자') })
+    }
+    if (people.length < 3) {
+      for (const row of (recent || []) as unknown as AuthorRow[]) {
         const a = row.author
         if (!a || seen.has(a.id)) continue
         seen.add(a.id)

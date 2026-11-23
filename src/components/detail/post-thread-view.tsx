@@ -28,12 +28,14 @@ export async function PostThreadView({
   reply?: string
   variant?: 'page' | 'pane'
 }) {
-  const st = await getT()
-  const unlock = await getNicknameUnlockState()
-  const legacy = await getPost(thread.root.id)
+  const [st, unlock, legacy, group] = await Promise.all([
+    getT(),
+    getNicknameUnlockState(),
+    getPost(thread.root.id),
+    thread.root.groupId ? getGroupById(member.id, thread.root.groupId).catch(() => null) : null,
+  ])
   const showLegacy = Boolean(legacy && legacy.assets.length > 0)
   const replyTarget = reply ? thread.replies.find((r) => r.id === reply && !r.isDeleted) : undefined
-  const group = thread.root.groupId ? await getGroupById(member.id, thread.root.groupId).catch(() => null) : null
   const baseMe = composerIdentity(member, unlock.unlocked)
   const me = group ? { ...baseMe, nicknameAvailable: false } : baseMe
   const pageHref = `/posts/${thread.root.id}`
