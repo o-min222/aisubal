@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation'
 import { VenetianMask, ShieldAlert } from 'lucide-react'
 import { toast } from 'sonner'
 import { postedHref } from '@/lib/posted-rules'
+import { offerPushAfterPosting } from '@/lib/push-client'
 import { ANON_NOTICE, type AnonCategory } from '@/lib/anon-rules'
 import { T } from '@/i18n/t'
 import { tx, tn } from '@/i18n/client'
@@ -66,6 +67,10 @@ export function AnonComposer({
       setBody('')
       toast.success(isReply ? tx('{alias}(으)로 답글을 남겼어요', { alias: data.alias }) : tx('{alias}(으)로 게시했어요', { alias: data.alias }))
       if (isReply && countIds?.length) publishReplyDelta(countIds, 1)
+      offerPushAfterPosting(
+        { ask: tn('답글이 달리면 바로 알려드릴까요?'), action: tn('알림 켜기'), on: tn('이 기기에서 알림을 받아요'), failed: tn('알림을 켜지 못했어요. 설정 → 알림에서 다시 켤 수 있어요.') },
+        toast,
+      )
       if (redirectTo === 'timeline' && !isReply && data.id) router.push(postedHref('/anon', data.id))
       else router.refresh()
     } catch (e) {

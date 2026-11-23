@@ -1,5 +1,5 @@
 import { isStandalone } from '@/lib/pwa-install'
-import { pushPlan, vapidKeyBytes, type PushPlan } from '@/lib/push-rules'
+import { PUSH_OFFER_KEY, pushPlan, shouldOfferPush, vapidKeyBytes, type PushPlan } from '@/lib/push-rules'
 
 /** Browser side of web push (D1). Only this device's endpoint ever leaves the browser, in a POST body. */
 const VAPID = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || ''
@@ -67,4 +67,23 @@ export async function sendTestPush(): Promise<'queued' | 'rate_limited' | 'not_s
   if (!r) return 'error'
   const s = ((await r.json().catch(() => ({}))) as { status?: string }).status
   return s === 'queued' || s === 'rate_limited' || s === 'not_subscribed' ? s : 'error'
+}
+
+/** A28: right after you post or comment (you'll want to hear the replies), offer push with one tap. */
+export function offerPushAfterPosting(t: { ask: string; action: string; on: string; failed: string }, toast: { message: (m: string, o: { action: { label: string; onClick: () => void }; duration: number }) => unknown; success: (m: string) => unknown; error: (m: string) => unknown }) {
+  try {
+    const plan = currentPushPlan()
+    const last = Number(localStorage.getItem(PUSH_OFFER_KEY)) || null
+    if (!shouldOfferPush(plan, last, Date.now())) return
+    localStorage.setItem(PUSH_OFFER_KEY, String(Date.now()))
+    toast.message(t.ask, {
+      duration: 8000,
+      action: {
+        label: t.action,
+        onClick: () => void enablePush().then((r) => (r === 'on' ? toast.success(t.on) : r === 'dismissed' ? null : toast.error(t.failed))),
+      },
+    })
+  } catch {
+    /* storage blocked: skip the offer */
+  }
 }

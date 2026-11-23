@@ -69,3 +69,11 @@ export function safePath(link: string | null | undefined): string {
 export function pushErrorKind(status: number | undefined): 'gone' | 'failed' {
   return status === 404 || status === 410 ? 'gone' : 'failed'
 }
+
+/** A28: after you post or comment, offer push once in a while (a tap, so iOS allows it too). */
+export const PUSH_OFFER_KEY = 'aisubal_push_offered_at'
+export const PUSH_OFFER_EVERY_MS = 14 * 24 * 60 * 60 * 1000
+export function shouldOfferPush(plan: PushPlan, lastOfferedAt: number | null, now: number): boolean {
+  if (plan !== 'auto' && plan !== 'ask') return false
+  return lastOfferedAt === null || !Number.isFinite(lastOfferedAt) || now - lastOfferedAt >= PUSH_OFFER_EVERY_MS
+}

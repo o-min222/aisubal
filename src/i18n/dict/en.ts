@@ -453,6 +453,8 @@ const en: Record<string, string> = {
   "로그아웃": "Sign out",
   "로그인 · 멤버십 · 언어": "Sign-in · membership · language",
   "로그인 이메일": "Sign-in email",
+  "답글이 달리면 바로 알려드릴까요?": "Want a heads-up when someone replies?",
+  "알림을 켜지 못했어요. 설정 → 알림에서 다시 켤 수 있어요.": "Couldn't turn on notifications. You can try again in Settings → Notifications.",
   "팔로잉한 사람들의 글": "Posts from people you follow",
   "친구들의 글": "Posts from friends",
   "'{q}'와(과) 맞는 사람이 없어요.": "No one matches '{q}'.",

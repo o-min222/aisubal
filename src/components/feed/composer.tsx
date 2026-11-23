@@ -8,6 +8,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import { Users, ShieldAlert } from 'lucide-react'
 import { toast } from 'sonner'
 import { postedHref } from '@/lib/posted-rules'
+import { offerPushAfterPosting } from '@/lib/push-client'
 import { UserAvatar } from '@/components/user-avatar'
 import { ComposerFrame, ComposerTextarea } from '@/components/composer/composer-frame'
 import { AgentReactionPicker } from '@/components/composer/agent-reaction-picker'
@@ -116,6 +117,10 @@ export function Composer({
       previews.reset()
       toast.success(isReply ? tn('답글을 남겼어요') : tn('게시했어요'))
       if (isReply && countIds?.length) publishReplyDelta(countIds, 1)
+      offerPushAfterPosting(
+        { ask: tn('답글이 달리면 바로 알려드릴까요?'), action: tn('알림 켜기'), on: tn('이 기기에서 알림을 받아요'), failed: tn('알림을 켜지 못했어요. 설정 → 알림에서 다시 켤 수 있어요.') },
+        toast,
+      )
       onPosted?.(data.id)
       // A23: a reply stays put; a new post opens the timeline it went to, scrolled to it
       if (isReply || !data.id) router.refresh()
