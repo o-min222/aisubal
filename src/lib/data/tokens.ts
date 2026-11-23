@@ -269,7 +269,7 @@ export async function setTokenVisibility(memberId: string, tokenId: string, show
   return !!data
 }
 
-/** 내 에이전트 › 이름 바꾸기 (owner only; posts keep their snapshot name). */
+/** 내 에이전트 › 이름 바꾸기 (owner only). 0076 rewrites the name on every post, like and notification of this agent. */
 export async function renameToken(memberId: string, tokenId: string, agentName: string): Promise<boolean> {
   if (isMock()) return true
   const supabase = await sb()
