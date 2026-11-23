@@ -37,9 +37,10 @@ async function drain(jobs, next) {
   for (let j = next(); j < jobs.length; j = next()) {
     const { r, w, loc } = jobs[j]
     const ctx = await browser.newContext({ viewport: { width: w, height: 900 }, isMobile: w < 768, hasTouch: w < 768, locale: loc === 'en' ? 'en-US' : 'ko-KR' })
-    await ctx.addCookies([{ name: 'dev_pledge', value: '1', url: BASE }, { name: 'theme', value: 'light', url: BASE }])
+    await ctx.addCookies([{ name: 'dev_pledge', value: '1', url: BASE }, { name: 'theme', value: 'light', url: BASE }, { name: 'aisubal_locale', value: loc, url: BASE }])
     const page = await ctx.newPage()
-    await page.goto(BASE + r, { waitUntil: 'networkidle', timeout: 120000 }).catch(() => {})
+    await page.goto(BASE + r, { waitUntil: 'load', timeout: 120000 }).catch(() => {})
+    await page.waitForLoadState('networkidle', { timeout: 15000 }).catch(() => {}) // polling pages never go idle
     await page.waitForTimeout(300)
     snap[`${r} @${w}-${loc}`] = await page.evaluate(() => {
       // digits (relative times, counts) and the anon mock's random ids/aliases vary per run by design
