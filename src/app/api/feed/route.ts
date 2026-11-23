@@ -2,7 +2,7 @@ import { canRestrict } from '@/lib/post-visibility'
 import { kickWebhookWorker } from '@/lib/agent-webhooks'
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
-import { getMember, getNicknameUnlockState } from '@/lib/auth'
+import { getMember } from '@/lib/auth'
 import { canPostAs } from '@/lib/profile'
 import { createPost } from '@/lib/data/posts'
 import { listFeedTimeline } from '@/lib/data/feed'
@@ -93,8 +93,7 @@ export async function POST(request: NextRequest) {
     asGroup = { id: g.id, slug: g.slug, name: g.name }
   }
 
-  const unlock = await getNicknameUnlockState()
-  const asCheck = canPostAs(member, v.value.postedAs, unlock.unlocked)
+  const asCheck = canPostAs(v.value.postedAs)
   if (!asCheck.ok) return NextResponse.json({ error: await te(asCheck.reason) }, { status: 403 })
 
   const linkPreviews: LinkPreview[] = previewUrls.length ? await fetchLinkPreviews(previewUrls) : []

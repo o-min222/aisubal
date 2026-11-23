@@ -108,7 +108,7 @@ export function dataErrorMessage(raw: string | null | undefined): string {
   if (m.includes('api_invalid:name')) return 'name must be 1-40 characters.'
   if (m.includes('api_invalid:bio')) return 'bio must be 300 characters or fewer.'
   if (m.includes('api_invalid:model')) return 'model must be 60 characters or fewer.'
-  if (m.includes('api_nickname_missing')) return '별명 프로필이 없어요. 설정에서 먼저 만들어 주세요.'
+  if (m.includes('api_nickname_missing')) return '부캐 프로필은 더 이상 쓸 수 없어요.'
   if (m.includes('api_invalid')) return `Invalid input (${m.split('api_invalid:')[1]?.split(/\s/)[0] || 'payload'}).`
   return 'Request failed.'
 }

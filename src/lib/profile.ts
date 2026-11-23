@@ -2,8 +2,8 @@ import { INVITES_PER_MEMBER } from '@/lib/invite-rules'
 import type { Member, Post, PostAs, PublicAuthor, SiteSettings } from '@/lib/supabase/types'
 import { msg, interpolate } from '@/i18n/translate'
 
-export const DEFAULT_NICKNAME_UNLOCK_THRESHOLD = 100
-export const DEV_NICKNAME_UNLOCK_THRESHOLD = 3 // low so both modes are reviewable in seed
+export const DEFAULT_ANON_UNLOCK_THRESHOLD = 100
+export const DEV_ANON_UNLOCK_THRESHOLD = 3 // low so both modes are reviewable in seed
 
 export const NICKNAME_MIN = 2
 export const NICKNAME_MAX = 24
@@ -21,9 +21,9 @@ export function memberHasNicknameProfile(member: Member): boolean {
   return Boolean(member.nickname && member.nickname_created_at)
 }
 
-export function isNicknameUnlocked(
+export function isAnonUnlocked(
   activeMemberCount: number,
-  threshold: number = DEFAULT_NICKNAME_UNLOCK_THRESHOLD
+  threshold: number = DEFAULT_ANON_UNLOCK_THRESHOLD
 ): boolean {
   return activeMemberCount >= threshold
 }
@@ -45,19 +45,10 @@ export function validateNickname(
   return { ok: true, nickname }
 }
 
-export function canPostAs(
-  member: Member,
-  postedAs: PostAs,
-  unlocked: boolean
-): { ok: true } | { ok: false; reason: string } {
+/** A42: 부캐 (nickname) posting is retired; old nickname rows still render as before */
+export function canPostAs(postedAs: PostAs): { ok: true } | { ok: false; reason: string } {
   if (postedAs === 'real') return { ok: true }
-  if (!unlocked) {
-    return { ok: false, reason: msg('아직 별명 프로필이 오픈되지 않았습니다.') }
-  }
-  if (!memberHasNicknameProfile(member)) {
-    return { ok: false, reason: msg('먼저 설정에서 별명 프로필을 만들어 주세요.') }
-  }
-  return { ok: true }
+  return { ok: false, reason: msg('부캐 프로필은 더 이상 쓸 수 없어요.') }
 }
 
 /** Build the public author object for a post — never links nickname ↔ real identity */
@@ -134,9 +125,9 @@ export function assertNoIdentityLeak(payload: unknown, secrets: string[] = []) {
 
 export function defaultSiteSettings(dev = false): SiteSettings {
   return {
-    nickname_unlock_threshold: dev
-      ? DEV_NICKNAME_UNLOCK_THRESHOLD
-      : DEFAULT_NICKNAME_UNLOCK_THRESHOLD,
+    anon_unlock_threshold: dev
+      ? DEV_ANON_UNLOCK_THRESHOLD
+      : DEFAULT_ANON_UNLOCK_THRESHOLD,
     site_name: 'AI쓰발',
     invites_per_member: INVITES_PER_MEMBER,
   }

@@ -98,7 +98,7 @@ function mockCreate(author: string, input: { body: string; category: AnonCategor
   if (!threadAliases) s.aliases.set(rootId, (threadAliases = new Map()))
   let alias = threadAliases.get(author)
   if (!alias) {
-    alias = pickAlias(threadAliases.values())
+    alias = pickAlias(threadAliases.values(), !parent || root?.author === author)
     threadAliases.set(author, alias)
   }
   // same two-level rule as the DB trigger (0029): a reply to a reply joins its comment

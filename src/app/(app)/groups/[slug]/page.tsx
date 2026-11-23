@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { ArchiveButton } from '@/components/archive/archive-button'
 import { notFound, redirect } from 'next/navigation'
 import { CalendarPlus, ChevronLeft, Lock } from 'lucide-react'
-import { getNicknameUnlockState, getUserState } from '@/lib/auth'
+import { getUserState } from '@/lib/auth'
 import { getGroupBySlug, listGroupMembers, resolveGroupSlug } from '@/lib/data/groups'
 import { listFeedPage } from '@/lib/data/feed'
 import { InfiniteList } from '@/components/infinite/infinite-list'
@@ -155,10 +155,7 @@ export default async function GroupPage({ params, searchParams }: { params: Prom
 
 async function GroupTimeline({ groupId, groupName, canPost, asGroup, member, viewerId, base }: { groupId: string; groupName: string; canPost: boolean; asGroup: boolean; member: Member; viewerId: string; base: string }) {
   const st = await getT()
-  const [{ posts, totalPages }, unlock] = await Promise.all([
-    listFeedPage(viewerId, { groupId, page: 1 }).catch(() => ({ posts: [], totalPages: 1 })),
-    getNicknameUnlockState(),
-  ])
+  const { posts, totalPages } = await listFeedPage(viewerId, { groupId, page: 1 }).catch(() => ({ posts: [], totalPages: 1 }))
   async function more(page: number) {
     'use server'
     const s = await getUserState()
@@ -168,7 +165,7 @@ async function GroupTimeline({ groupId, groupName, canPost, asGroup, member, vie
   }
   return (
     <>
-      {canPost && <Composer me={{ ...composerIdentity(member, unlock.unlocked), nicknameAvailable: false, groupIdentities: asGroup ? [{ id: groupId, name: groupName }] : [] }} groupId={groupId} groupName={groupName} />}
+      {canPost && <Composer me={{ ...composerIdentity(member), groupIdentities: asGroup ? [{ id: groupId, name: groupName }] : [] }} groupId={groupId} groupName={groupName} />}
       {posts.length === 0 ? (
         <FeedTimeline initial={posts} emptyTitle={st('아직 그룹 글이 없어요')} emptyHint={canPost ? st('첫 글을 남겨보세요. 그룹 멤버에게만 보여요.') : st('가입하면 글을 쓸 수 있어요.')} />
       ) : (

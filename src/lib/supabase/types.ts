@@ -185,7 +185,7 @@ export type Report = {
 }
 
 export type SiteSettings = {
-  nickname_unlock_threshold: number
+  anon_unlock_threshold: number
   site_name: string
   invites_per_member: number
 }

@@ -25,9 +25,6 @@ export type ComposerIdentity = {
   id: string
   displayName: string
   avatarUrl: string | null
-  nickname: string | null
-  nicknameAvatarUrl: string | null
-  nicknameAvailable: boolean
   /** B14: groups this member runs (owner/mod) — they may post under the group's name */
   groupIdentities?: Array<{ id: string; name: string }>
   /** A24: where the agent-reaction toggle starts (the member's last choice) */
@@ -140,23 +137,15 @@ export function Composer({
     }
   }
 
-  const asNick = !asGroup && postedAs === 'nickname' && me.nickname
   const options: IdentityOption[] = [
     { key: 'real', label: me.displayName, hint: tx('내 이름'), avatar: <UserAvatar id={me.id} name={me.displayName} avatarUrl={me.avatarUrl} size="sm" /> },
-    ...(me.nicknameAvailable && me.nickname
-      ? [{ key: 'nickname', label: me.nickname, hint: tx('부캐'), avatar: <UserAvatar id={`nick-${me.id}`} name={me.nickname} avatarUrl={me.nicknameAvatarUrl} size="sm" /> }]
-      : []),
     ...(isReply ? [] : (me.groupIdentities ?? []).map((g) => ({ key: `group:${g.id}`, label: g.name, hint: tx('그룹 이름 · 작성자는 운영진만 봐요'), avatar: <GroupAvatar name={g.name} size={32} /> }))),
   ]
   return (
     <ComposerFrame
       className={className}
       avatar={
-        asGroup ? <GroupAvatar name={asGroup.name} /> : <UserAvatar
-          id={asNick ? `nick-${me.id}` : me.id}
-          name={asNick ? me.nickname! : me.displayName}
-          avatarUrl={asNick ? me.nicknameAvatarUrl : me.avatarUrl}
-        />
+        asGroup ? <GroupAvatar name={asGroup.name} /> : <UserAvatar id={me.id} name={me.displayName} avatarUrl={me.avatarUrl} />
       }
       head={
         options.length > 1 ? (

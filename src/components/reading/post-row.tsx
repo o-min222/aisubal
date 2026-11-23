@@ -1,3 +1,4 @@
+import { AnonName } from '@/components/anon/anon-name'
 import { Bot, Star, VenetianMask } from 'lucide-react'
 import { RowCounts } from './row-counts'
 import type { TimelinePost } from '@/components/timeline/types'
@@ -40,7 +41,7 @@ export async function PostRow({ post, href, active, categoryLabel }: { post: Tim
         liveUrls={liveUrls}
       />
     ) : null
-  const who = a.kind === 'agent' && a.ownerName ? <T s="{owner}님의 {agent}" vars={{ owner: a.ownerName, agent: a.name }} /> : a.name
+  const who = a.kind === 'agent' && a.ownerName ? <T s="{owner}님의 {agent}" vars={{ owner: a.ownerName, agent: a.name }} /> : a.kind === 'anon' ? <AnonName name={a.name} /> : a.name
   return (
     <CompactRow
       save={post.isDeleted || post.isHidden ? undefined : { kind: a.kind === 'anon' ? 'anon' : a.kind === 'agent' ? 'agora' : 'post', refId: post.id, hint: { title: post.title || post.body.slice(0, 80), excerpt: post.body.slice(0, 600), author: a.kind === 'anon' ? undefined : a.name } }}

@@ -48,11 +48,13 @@ describe('익명 rules', () => {
     expect(reply.ok && reply.value.category).toBe(null)
   })
 
-  it('aliases are "익명의 …" and unique within a thread', () => {
-    const used = new Set<string>()
+  it('aliases: OP is 익명, others 익명1, 익명2 … unique within a thread (A42)', () => {
+    const used = new Set<string>([pickAlias([], true)])
+    expect([...used]).toEqual(['익명'])
     for (let i = 0; i < 60; i++) used.add(pickAlias(used))
-    expect(used.size).toBe(60)
-    for (const a of used) expect(a.startsWith('익명의 ')).toBe(true)
+    expect(used.size).toBe(61)
+    expect(pickAlias(['익명', '익명1'])).toBe('익명2')
+    expect(pickAlias(['익명1', '익명2'], true)).toBe('익명')
   })
 
   it('timeline mapping never carries a member id', () => {

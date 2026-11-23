@@ -23,12 +23,6 @@ export const ANON_NOTICE = M(
   '회원에게는 익명으로 보여요. 단, 신고된 악용은 운영자가 작성자를 확인하고 조치할 수 있어요.',
 )
 
-export const ANON_ANIMALS = [
-  '고양이', '강아지', '수달', '너구리', '펭귄', '판다', '여우', '토끼', '다람쥐', '고래',
-  '돌고래', '코알라', '햄스터', '부엉이', '올빼미', '사슴', '라쿤', '알파카', '기린', '코끼리', '하마', '거북이',
-  '해달', '물개', '미어캣', '카피바라', '두더지', '고슴도치', '오리', '참새', '까치', '독수리', '앵무새', '문어',
-  '해파리', '치타', '호랑이', '사자', '곰', '늑대', '고라니', '청설모', '오소리', '두루미', '백조', '홍학', '라마', '바다표범',
-]
 
 export function isAnonCategory(v: unknown): v is AnonCategory {
   return typeof v === 'string' && ANON_CATEGORIES.some((c) => c.id === v)
@@ -42,12 +36,18 @@ export function parseSort(v: string | null | undefined): AnonSort {
   return v === 'popular' ? 'popular' : 'latest'
 }
 
-/** Picks an unused "익명의 {동물}" for a thread (mirrors anon_private.alias_for). */
-export function pickAlias(used: Iterable<string>, rand: () => number = Math.random): string {
-  const taken = new Set(used)
-  const free = ANON_ANIMALS.map((a) => `익명의 ${a}`).filter((a) => !taken.has(a))
-  if (free.length) return free[Math.floor(rand() * free.length)]
-  return `익명의 ${ANON_ANIMALS[Math.floor(rand() * ANON_ANIMALS.length)]} ${taken.size + 1}`
+/** The thread author's alias; their replies also carry the 글쓴이 chip (isOp). */
+export const ANON_OP_ALIAS = '익명'
+
+/**
+ * A42: per-thread aliases (mirrors anon_private.alias_for, 0097). The OP is "익명" and everyone else
+ * gets the next number in order of first reply: 익명1, 익명2, …
+ */
+export function pickAlias(used: Iterable<string>, isOp = false): string {
+  if (isOp) return ANON_OP_ALIAS
+  let n = 0
+  for (const a of used) if (/^익명\d+$/.test(a)) n++
+  return `익명${n + 1}`
 }
 
 export type AnonInput = { body: string; category: AnonCategory | null; parentId: string | null }
@@ -131,6 +131,7 @@ const ERRORS: Record<string, [number, string]> = {
   anon_report_reason: [400, '신고 사유를 골라주세요.'],
   anon_report_own: [400, '내 글은 신고할 수 없어요.'],
   anon_trace_reason: [400, '조회 사유를 입력해주세요.'],
+  anon_locked: [403, M('익명 라운지는 아직 열리지 않았어요.')],
 }
 
 /** Maps RPC exception codes to HTTP status + Korean copy. Unknown → 500. */

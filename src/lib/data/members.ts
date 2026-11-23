@@ -5,7 +5,7 @@ import {
   MOCK_SITE_SETTINGS,
 } from '@/lib/mock-data'
 import type { Member, SiteSettings } from '@/lib/supabase/types'
-import { DEV_NICKNAME_UNLOCK_THRESHOLD, isNicknameUnlocked } from '@/lib/profile'
+import { isAnonUnlocked } from '@/lib/profile'
 import { sb, isMock } from './client'
 import { MEMBER_PUBLIC_COLUMNS } from './member-columns'
 
@@ -64,7 +64,7 @@ export async function getSiteSettings(): Promise<SiteSettings> {
     if (rowErr) throw rowErr
     const map = Object.fromEntries((rows || []).map((r: { key: string; value: string }) => [r.key, r.value]))
     return {
-      nickname_unlock_threshold: Number(map.nickname_unlock_threshold) || 100,
+      anon_unlock_threshold: Number(map.anon_unlock_threshold) || 100,
       site_name: map.site_name || 'AI쓰발',
       invites_per_member: Number(map.invites_per_member) || INVITES_PER_MEMBER,
     }
@@ -72,18 +72,19 @@ export async function getSiteSettings(): Promise<SiteSettings> {
 
   const cfg = (data || {}) as Record<string, string>
   return {
-    nickname_unlock_threshold: Number(cfg.nickname_unlock_threshold) || 100,
+    anon_unlock_threshold: Number(cfg.anon_unlock_threshold) || 100,
     site_name: cfg.site_name || 'AI쓰발',
     invites_per_member: Number(cfg.invites_per_member) || INVITES_PER_MEMBER,
   }
 }
 
-export async function getNicknameUnlockFromConfig(activeCount?: number) {
+export async function getAnonUnlockFromConfig(activeCount?: number) {
   if (isMock()) {
     const count = activeCount ?? MOCK_ACTIVE_MEMBER_COUNT
-    const threshold = DEV_NICKNAME_UNLOCK_THRESHOLD
+    // dev: MOCK_SITE_SETTINGS is editable from 관리 › 사이트 (A42), so both states are reviewable
+    const threshold = MOCK_SITE_SETTINGS.anon_unlock_threshold
     return {
-      unlocked: isNicknameUnlocked(count, threshold),
+      unlocked: isAnonUnlocked(count, threshold),
       threshold,
       activeCount: count,
     }
@@ -93,9 +94,9 @@ export async function getNicknameUnlockFromConfig(activeCount?: number) {
     getSiteSettings(),
     activeCount !== undefined ? Promise.resolve(activeCount) : countActiveMembers(),
   ])
-  const threshold = settings.nickname_unlock_threshold
+  const threshold = settings.anon_unlock_threshold
   return {
-    unlocked: isNicknameUnlocked(count, threshold),
+    unlocked: isAnonUnlocked(count, threshold),
     threshold,
     activeCount: count,
   }

@@ -25,7 +25,7 @@ const updateSettingsSchema = z.object({
   siteDescription: z.string().optional(),
   inviteRequired: z.boolean().optional(),
   invitesPerMember: z.number().min(0).max(10).optional(),
-  nicknameUnlockThreshold: z.number().min(1).max(100000).optional(),
+  anonUnlockThreshold: z.number().min(1).max(100000).optional(),
 })
 
 export async function PATCH(request: NextRequest) {

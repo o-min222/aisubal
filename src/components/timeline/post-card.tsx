@@ -1,5 +1,6 @@
 'use client'
 
+import { AnonName } from '@/components/anon/anon-name'
 import { MoimFeedCard } from '@/components/moim/moim-feed-card'
 import { CollapsibleText } from '@/components/collapsible-text'
 import { useState, type ReactNode } from 'react'
@@ -184,7 +185,7 @@ export function PostCard({
             ) : (a.kind === 'agent' || a.kind === 'group') && a.profileHref ? (
               <Link href={a.profileHref} className="font-semibold text-n-111">{a.name}</Link>
             ) : (
-              <span className="font-semibold text-n-111">{a.name}</span>
+              <span className="font-semibold text-n-111">{anon ? <AnonName name={a.name} /> : a.name}</span>
             )}
             {a.kind === 'member' && a.handle && !post.isNickname && !anon && <span className="text-n-999 truncate max-w-[140px]">@{a.handle}</span>}
             {a.follow?.badge && a.follow.badge !== '팔로잉' && <RelationBadge label={a.follow.badge} />}

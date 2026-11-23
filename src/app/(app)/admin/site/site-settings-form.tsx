@@ -11,7 +11,7 @@ type S = {
   siteDescription: string
   inviteRequired: boolean
   invitesPerMember: number
-  nicknameUnlockThreshold: number
+  anonUnlockThreshold: number
 }
 
 export function SiteSettingsForm({ initial }: { initial: S }) {
@@ -53,8 +53,8 @@ export function SiteSettingsForm({ initial }: { initial: S }) {
           <span className="block text-xs text-n-888 mt-1"><T>모두 가입하면 바로 이 수만큼 새 초대장이 다시 채워져요 (시간이 지나서 생기지는 않아요)</T></span>
         </label>
         <label className="block">
-          <span className="block text-sm font-medium text-n-333 mb-1.5"><T>별명 언락 기준 (활성 멤버 수)</T></span>
-          <input type="number" min={1} className="input" value={s.nicknameUnlockThreshold} onChange={(e) => setS({ ...s, nicknameUnlockThreshold: Number(e.target.value) })} />
+          <span className="block text-sm font-medium text-n-333 mb-1.5"><T>익명 라운지 오픈 기준 (활성 멤버 수)</T></span>
+          <input type="number" min={1} className="input" value={s.anonUnlockThreshold} onChange={(e) => setS({ ...s, anonUnlockThreshold: Number(e.target.value) })} />
         </label>
       </div>
       <div className="flex items-center justify-between gap-3 min-h-[44px]">

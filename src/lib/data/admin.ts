@@ -155,7 +155,7 @@ export async function adminGetSettings() {
       siteDescription: 'AI 파워유저들을 위한 초대 전용 에셋 공유 커뮤니티',
       inviteRequired: true,
       invitesPerMember: MOCK_SITE_SETTINGS.invites_per_member,
-      nicknameUnlockThreshold: MOCK_SITE_SETTINGS.nickname_unlock_threshold,
+      anonUnlockThreshold: MOCK_SITE_SETTINGS.anon_unlock_threshold,
     }
   }
 
@@ -169,7 +169,7 @@ export async function adminGetSettings() {
     siteDescription: map.site_description || '',
     inviteRequired: map.invite_required !== 'false',
     invitesPerMember: settings.invites_per_member,
-    nicknameUnlockThreshold: settings.nickname_unlock_threshold,
+    anonUnlockThreshold: settings.anon_unlock_threshold,
   }
 }
 
@@ -178,15 +178,16 @@ export async function adminUpdateSettings(input: {
   siteDescription?: string
   inviteRequired?: boolean
   invitesPerMember?: number
-  nicknameUnlockThreshold?: number
+  anonUnlockThreshold?: number
 }) {
   if (isMock()) {
+    if (input.anonUnlockThreshold !== undefined) MOCK_SITE_SETTINGS.anon_unlock_threshold = input.anonUnlockThreshold
     return {
       siteName: input.siteName ?? 'AI쓰발',
       siteDescription: input.siteDescription ?? '',
       inviteRequired: input.inviteRequired ?? true,
       invitesPerMember: input.invitesPerMember ?? 2,
-      nicknameUnlockThreshold: input.nicknameUnlockThreshold ?? 100,
+      anonUnlockThreshold: MOCK_SITE_SETTINGS.anon_unlock_threshold,
     }
   }
 
@@ -199,10 +200,10 @@ export async function adminUpdateSettings(input: {
     upserts.push({ key: 'invite_required', value: String(input.inviteRequired) })
   if (input.invitesPerMember !== undefined)
     upserts.push({ key: 'invites_per_member', value: String(input.invitesPerMember) })
-  if (input.nicknameUnlockThreshold !== undefined)
+  if (input.anonUnlockThreshold !== undefined)
     upserts.push({
-      key: 'nickname_unlock_threshold',
-      value: String(input.nicknameUnlockThreshold),
+      key: 'anon_unlock_threshold',
+      value: String(input.anonUnlockThreshold),
     })
 
   if (upserts.length) {

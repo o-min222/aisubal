@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { verifiedUser } from '@/lib/supabase/verified-user'
 import type { Member, WaitlistEntry, UserState } from '@/lib/supabase/types'
 import { isMock } from '@/lib/data/client'
-import { getNicknameUnlockFromConfig } from '@/lib/data/members'
+import { getAnonUnlockFromConfig } from '@/lib/data/members'
 import { mockProfileOf } from '@/lib/data/profile'
 import { mockAgentInteractionDefault, mockPostVisibilityDefault } from '@/lib/data/agent-interaction-default'
 
@@ -144,7 +144,7 @@ export function isDevMode(): boolean {
   return isMock()
 }
 
-/** Nickname unlock — reads site_config + active member count when not in mock mode. */
-export async function getNicknameUnlockState(activeCount?: number) {
-  return getNicknameUnlockFromConfig(activeCount)
+/** 익명 라운지 unlock (A42) — reads site_config + active member count when not in mock mode. */
+export async function getAnonUnlockState(activeCount?: number) {
+  return getAnonUnlockFromConfig(activeCount)
 }

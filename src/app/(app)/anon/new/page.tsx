@@ -1,7 +1,8 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { ArrowLeft } from 'lucide-react'
-import { getUserState } from '@/lib/auth'
+import { getAnonUnlockState, getUserState } from '@/lib/auth'
+import { AnonLocked } from '@/components/anon/anon-locked'
 import { isAnonCategory } from '@/lib/anon-rules'
 import { AnonComposer } from '@/components/anon/anon-composer'
 import { T } from '@/i18n/t'
@@ -16,6 +17,8 @@ export default async function AnonNewPage({ searchParams }: { searchParams: Prom
   const state = await getUserState()
   if (state.type === 'unauthenticated') redirect('/login')
   if (state.type === 'waitlist') redirect('/waitlist')
+  const unlock = await getAnonUnlockState()
+  if (!unlock.unlocked) return <AnonLocked threshold={unlock.threshold} activeCount={unlock.activeCount} />
   const { category } = await searchParams
   return (
     <div className="space-y-3">

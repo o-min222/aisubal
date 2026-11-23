@@ -1,13 +1,13 @@
 import { describe, it, expect } from 'vitest'
 import {
   canPostAs,
-  isNicknameUnlocked,
+  isAnonUnlocked,
   toPublicAuthor,
   toPublicPost,
   assertNoIdentityLeak,
   collectForbiddenKeys,
-  DEV_NICKNAME_UNLOCK_THRESHOLD,
-  DEFAULT_NICKNAME_UNLOCK_THRESHOLD,
+  DEV_ANON_UNLOCK_THRESHOLD,
+  DEFAULT_ANON_UNLOCK_THRESHOLD,
   nicknameProfilePublicId,
 } from '@/lib/profile'
 import { MOCK_MEMBERS, MOCK_POSTS, MOCK_SITE_SETTINGS } from '@/lib/mock-data'
@@ -17,30 +17,20 @@ const noNickMember = MOCK_MEMBERS[2]
 
 describe('별명 프로필 임계값 게이팅', () => {
   it('기본 임계값은 100이다', () => {
-    expect(DEFAULT_NICKNAME_UNLOCK_THRESHOLD).toBe(100)
-    expect(isNicknameUnlocked(99, 100)).toBe(false)
-    expect(isNicknameUnlocked(100, 100)).toBe(true)
+    expect(DEFAULT_ANON_UNLOCK_THRESHOLD).toBe(100)
+    expect(isAnonUnlocked(99, 100)).toBe(false)
+    expect(isAnonUnlocked(100, 100)).toBe(true)
   })
 
   it('dev 시드 임계값은 낮아서 양쪽 모드를 리뷰할 수 있다', () => {
-    expect(MOCK_SITE_SETTINGS.nickname_unlock_threshold).toBe(DEV_NICKNAME_UNLOCK_THRESHOLD)
-    expect(DEV_NICKNAME_UNLOCK_THRESHOLD).toBeLessThan(10)
-    expect(isNicknameUnlocked(3, DEV_NICKNAME_UNLOCK_THRESHOLD)).toBe(true)
+    expect(MOCK_SITE_SETTINGS.anon_unlock_threshold).toBe(DEV_ANON_UNLOCK_THRESHOLD)
+    expect(DEV_ANON_UNLOCK_THRESHOLD).toBeLessThan(10)
+    expect(isAnonUnlocked(3, DEV_ANON_UNLOCK_THRESHOLD)).toBe(true)
   })
 
-  it('언락 전에는 nickname으로 게시할 수 없다', () => {
-    const r = canPostAs(realMember, 'nickname', false)
-    expect(r.ok).toBe(false)
-  })
-
-  it('언락 후 별명 프로필이 없으면 nickname 게시 불가', () => {
-    const r = canPostAs(noNickMember, 'nickname', true)
-    expect(r.ok).toBe(false)
-  })
-
-  it('언락 + 별명 프로필이 있으면 nickname 게시 가능', () => {
-    expect(canPostAs(realMember, 'nickname', true).ok).toBe(true)
-    expect(canPostAs(realMember, 'real', true).ok).toBe(true)
+  it('A42: 부캐 게시는 더 이상 안 되고, 실명 게시만 된다', () => {
+    expect(canPostAs('nickname').ok).toBe(false)
+    expect(canPostAs('real').ok).toBe(true)
   })
 })
 

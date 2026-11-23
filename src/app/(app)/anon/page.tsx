@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import { VenetianMask } from 'lucide-react'
-import { getUserState } from '@/lib/auth'
+import { getAnonUnlockState, getUserState } from '@/lib/auth'
+import { AnonLocked } from '@/components/anon/anon-locked'
 import { listAnon } from '@/lib/data/anon'
 import { ANON_CATEGORIES, ANON_NOTICE, isAnonCategory, parseSort, type AnonCategory, type AnonSort } from '@/lib/anon-rules'
 import { isFeedId } from '@/lib/feed-ids'
@@ -38,6 +39,8 @@ export default async function AnonBoardPage({ searchParams }: { searchParams: Pr
   const state = await getUserState()
   if (state.type === 'unauthenticated') redirect('/login')
   if (state.type === 'waitlist') redirect('/waitlist')
+  const unlock = await getAnonUnlockState()
+  if (!unlock.unlocked) return <AnonLocked threshold={unlock.threshold} activeCount={unlock.activeCount} />
   const sp = await searchParams
   if (sp.open && isFeedId(sp.open)) redirect(`/anon/${sp.open}`)
   const category = isAnonCategory(sp.category) ? sp.category : null

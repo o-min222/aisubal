@@ -1,7 +1,6 @@
 import type { ReactNode } from 'react'
 import Link from 'next/link'
 import { Bot, BotOff } from 'lucide-react'
-import { getNicknameUnlockState } from '@/lib/auth'
 import { getPost } from '@/lib/data/posts'
 import { getFeedThread } from '@/lib/data/feed'
 import { getGroupById } from '@/lib/data/groups'
@@ -38,16 +37,14 @@ export async function PostThreadView({
   meta?: ReactNode
   pageHref?: string
 }) {
-  const [st, unlock, legacy, group] = await Promise.all([
+  const [st, legacy, group] = await Promise.all([
     getT(),
-    getNicknameUnlockState(),
     getPost(thread.root.id),
     thread.root.groupId ? getGroupById(member.id, thread.root.groupId).catch(() => null) : null,
   ])
   const showLegacy = Boolean(legacy && legacy.assets.length > 0)
   const replyTarget = reply ? thread.replies.find((r) => r.id === reply && !r.isDeleted) : undefined
-  const baseMe = composerIdentity(member, unlock.unlocked)
-  const me = group ? { ...baseMe, nicknameAvailable: false } : baseMe
+  const me = composerIdentity(member)
   const pageHref = pageHrefProp ?? `/posts/${thread.root.id}`
 
   const groupBack = group ? (

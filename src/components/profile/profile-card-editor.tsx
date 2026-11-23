@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Camera, Check, ChevronRight, Ghost, Link2, Loader2, Lock, Plus, Users, Bot, Eye, X } from 'lucide-react'
+import { Camera, Check, ChevronRight, Link2, Loader2, Lock, Plus, Users, Bot, Eye, X } from 'lucide-react'
 import { toast } from 'sonner'
 import { UserAvatar } from '@/components/user-avatar'
 import { ServiceIcon } from '@/components/service-chip'
@@ -344,11 +344,6 @@ export function ProfileCardEditor({
             <span className="ios-row-val">{showReal ? <T>공개</T> : <T>비공개</T>}</span>
             <ChevronRight className="w-4 h-4 text-n-bbb" />
           </button>
-          <Link href="/settings/profile/nickname" className="ios-row">
-            <Ghost className="w-4 h-4 text-n-666" />
-            <span className="flex-1 min-w-0"><T>부캐(별명) 프로필</T></span>
-            <ChevronRight className="w-4 h-4 text-n-bbb" />
-          </Link>
           <Link href="/agents" className="ios-row">
             <Bot className="w-4 h-4 text-n-666" />
             <span className="flex-1 min-w-0"><T>내 에이전트</T></span>

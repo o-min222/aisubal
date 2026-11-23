@@ -4,22 +4,13 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, Plus, X, Link2, Loader2, Bot, Terminal, FileCode, MessageSquare, FileText } from 'lucide-react'
-import type { AssetType, Member, LinkPreview, PostAs } from '@/lib/supabase/types'
+import type { AssetType, LinkPreview, PostAs } from '@/lib/supabase/types'
 import { LinkCard } from '@/components/link-card'
-import { UserAvatar } from '@/components/user-avatar'
-import { memberHasNicknameProfile } from '@/lib/profile'
 import { toast } from 'sonner'
 import { T } from '@/i18n/t'
 import { tx, tn } from '@/i18n/client'
 import { postedHref } from '@/lib/posted-rules'
 import { msg } from '@/i18n/translate'
-
-interface NewPostClientProps {
-  member: Member
-  nicknameUnlocked: boolean
-  activeMemberCount: number
-  unlockThreshold: number
-}
 
 interface AssetDraft {
   id: string
@@ -36,15 +27,10 @@ const ASSET_TYPES = [
   { value: 'NOTE' as const, label: msg('노트'), icon: FileText },
 ]
 
-export function NewPostClient({
-  member,
-  nicknameUnlocked,
-  activeMemberCount,
-  unlockThreshold,
-}: NewPostClientProps) {
+export function NewPostClient() {
   const router = useRouter()
-  const hasNick = memberHasNicknameProfile(member)
-  const [postedAs, setPostedAs] = useState<PostAs>('real')
+  // A42: 부캐 retired — posts go out under the real profile
+  const postedAs: PostAs = 'real'
   const [urlInput, setUrlInput] = useState('')
   const [preview, setPreview] = useState<LinkPreview | null>(null)
   const [fetching, setFetching] = useState(false)
@@ -132,46 +118,6 @@ export function NewPostClient({
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
-          {/* Profile switcher */}
-          <div>
-            <label className="block text-sm font-medium text-n-333 mb-2"><T>게시 프로필</T></label>
-            <div className="flex flex-wrap gap-2">
-              <button
-                type="button"
-                onClick={() => setPostedAs('real')}
-                className={`profile-switch ${postedAs === 'real' ? 'active' : ''}`}
-              >
-                <UserAvatar id={member.id} name={member.display_name} avatarUrl={member.avatar_url} size="sm" />
-                <span>{member.display_name}</span>
-                <span className="text-xs text-n-888"><T>기본 프로필</T></span>
-              </button>
-              {nicknameUnlocked && hasNick ? (
-                <button
-                  type="button"
-                  onClick={() => setPostedAs('nickname')}
-                  className={`profile-switch ${postedAs === 'nickname' ? 'active' : ''}`}
-                >
-                  <UserAvatar
-                    id={`nick_${member.id}`}
-                    name={member.nickname!}
-                    avatarUrl={member.nickname_avatar_url}
-                    size="sm"
-                  />
-                  <span>{member.nickname}</span>
-                  <span className="text-xs text-n-888"><T>별명</T></span>
-                </button>
-              ) : (
-                <div className="profile-switch opacity-60 cursor-not-allowed" title={tx('별명 프로필 잠김')}>
-                  <span className="text-sm text-n-888">
-                    {nicknameUnlocked
-                      ? tx('설정에서 별명 프로필을 만드세요')
-                      : tx('별명 잠김 · 멤버 {unlockThreshold}명부터 (현재 {activeMemberCount})', { unlockThreshold, activeMemberCount })}
-                  </span>
-                </div>
-              )}
-            </div>
-          </div>
-
           {/* URL first */}
           <div>
             <label className="block text-sm font-medium text-n-333 mb-2">

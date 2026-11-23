@@ -2613,3 +2613,9 @@ a.notif-pop-all:hover { background: var(--n-fafafa); }
 
 /* ---------- A43: post visibility mark ---------- */
 .vis-mark { display: inline-flex; align-items: center; color: var(--n-999); margin-left: 4px; flex-shrink: 0; }
+
+/* A42 익명게시판 locked state */
+.anon-locked { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 40px 20px; text-align: center; }
+.anon-locked-bar { width: min(240px, 100%); height: 4px; border-radius: 999px; background: var(--n-eee, #eee); overflow: hidden; margin-top: 4px; }
+.anon-locked-bar > span { display: block; height: 100%; background: var(--n-888, #888); border-radius: inherit; }
+.anon-locked-title { font-size: 16px; line-height: 1.4; font-weight: 600; color: var(--n-111); margin: 0; }

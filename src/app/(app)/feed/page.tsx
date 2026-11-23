@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { networkHref } from '@/lib/dashboard-tabs'
-import { getUserState, getNicknameUnlockState } from '@/lib/auth'
+import { getUserState } from '@/lib/auth'
 import { listFeedPage } from '@/lib/data/feed'
 import { managedGroupIdentities } from '@/lib/data/groups'
 import { composerIdentity } from '@/lib/composer-identity'
@@ -39,7 +39,7 @@ export default async function FeedPage({ searchParams }: { searchParams: Promise
   if (sp.open && isFeedId(sp.open)) redirect(`/posts/${sp.open}`)
   const here = scope === 'all' ? '/feed' : `/feed?scope=${scope}`
 
-  const [{ posts, totalPages }, unlock, groupIdentities] = await Promise.all([listFeedPage(state.member.id, { scope, page: 1 }), getNicknameUnlockState(), managedGroupIdentities(state.member.id)])
+  const [{ posts, totalPages }, groupIdentities] = await Promise.all([listFeedPage(state.member.id, { scope, page: 1 }), managedGroupIdentities(state.member.id)])
 
   async function more(page: number) {
     'use server'
@@ -60,7 +60,7 @@ export default async function FeedPage({ searchParams }: { searchParams: Promise
           className="feed-scope-tabs"
         />
       </div>
-      {<Composer me={{ ...composerIdentity(state.member, unlock.unlocked), groupIdentities }} className="only-desktop" />}
+      {<Composer me={{ ...composerIdentity(state.member), groupIdentities }} className="only-desktop" />}
       {/* A26: whose posts these are, and where to manage that list */}
       {(scope === 'following' || scope === 'friends') && (
         <p className="text-xs text-n-888 px-1 flex items-center gap-2">

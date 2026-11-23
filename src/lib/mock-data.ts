@@ -1,14 +1,16 @@
 import type { Member, Post, Asset, SiteSettings } from '@/lib/supabase/types'
-import { DEV_NICKNAME_UNLOCK_THRESHOLD, toPublicAuthor } from '@/lib/profile'
+import { DEV_ANON_UNLOCK_THRESHOLD, toPublicAuthor } from '@/lib/profile'
 import type { PostWithDetails } from '@/lib/data/types'
 
 export type { PostWithDetails } from '@/lib/data/types'
 
-export const MOCK_SITE_SETTINGS: SiteSettings = {
-  nickname_unlock_threshold: DEV_NICKNAME_UNLOCK_THRESHOLD, // 3 — both modes reviewable
+// one shared object across dev route/page bundles, so 관리 › 사이트 edits are visible everywhere
+const g = globalThis as { __aisubalMockSiteSettings?: SiteSettings }
+export const MOCK_SITE_SETTINGS: SiteSettings = (g.__aisubalMockSiteSettings ??= {
+  anon_unlock_threshold: DEV_ANON_UNLOCK_THRESHOLD, // 3 — both modes reviewable
   site_name: 'AI쓰발',
   invites_per_member: 5,
-}
+})
 
 export const MOCK_MEMBERS: Member[] = [
   {

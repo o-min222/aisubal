@@ -109,7 +109,6 @@ export default async function MemberProfilePage({ params, searchParams }: { para
             {member.show_real_name && member.public_real_name && <span><T s="· 실명 {public_real_name}" vars={{ public_real_name: member.public_real_name }} /></span>}
             {isMe && !member.show_real_name && <span className="text-n-aaa"><T>· 실명 비공개</T></span>}
           </div>
-          {isMe && member.nickname && <div className="text-sm text-n-888"><T s="부캐 {nickname} (나만 보여요)" vars={{ nickname: member.nickname }} /></div>}
           {member.bio && <p className="text-sm text-n-555 mt-2 whitespace-pre-wrap">{member.bio}</p>}
           {links.length > 0 && (
             <ul className="profile-links flex flex-wrap gap-1.5 mt-3" aria-label={st('SNS 링크')}>

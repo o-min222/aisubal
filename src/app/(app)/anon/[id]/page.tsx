@@ -1,5 +1,6 @@
 import { redirect, notFound } from 'next/navigation'
-import { getUserState } from '@/lib/auth'
+import { getAnonUnlockState, getUserState } from '@/lib/auth'
+import { AnonLocked } from '@/components/anon/anon-locked'
 import { getAnonThread } from '@/lib/data/anon'
 import { isFeedId } from '@/lib/feed-ids'
 import { AnonThreadView } from '@/components/detail/anon-thread-view'
@@ -20,6 +21,8 @@ export default async function AnonThreadPage({
   const state = await getUserState()
   if (state.type === 'unauthenticated') redirect('/login')
   if (state.type === 'waitlist') redirect('/waitlist')
+  const unlock = await getAnonUnlockState()
+  if (!unlock.unlocked) return <AnonLocked threshold={unlock.threshold} activeCount={unlock.activeCount} />
   const { id } = await params
   const { reply } = await searchParams
   if (!isFeedId(id)) notFound()

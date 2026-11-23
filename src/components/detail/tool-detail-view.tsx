@@ -1,5 +1,4 @@
 import { Bot, ShieldCheck } from 'lucide-react'
-import { getNicknameUnlockState } from '@/lib/auth'
 import { composerIdentity } from '@/lib/composer-identity'
 import { toolHref } from '@/lib/tool-rules'
 import { getToolboxEntry } from '@/lib/data/toolbox'
@@ -29,7 +28,7 @@ export async function loadToolEntry(id: string): Promise<ToolboxEntryDetails | n
 /** Tool detail. Used by /gallery/[id] and the 툴 reading pane. */
 export async function ToolDetailView({ entry, member, variant = 'page' }: { entry: ToolboxEntryDetails; member: Member; variant?: 'page' | 'pane' }) {
   const st = await getT()
-  const [mentionPostsRaw, aiRating, usage, launch, unlock, prov] = await Promise.all([
+  const [mentionPostsRaw, aiRating, usage, launch, prov] = await Promise.all([
     Promise.all(
       entry.mentions.map(async (m) => {
         const post = await getPost(m.post_id)
@@ -40,7 +39,6 @@ export async function ToolDetailView({ entry, member, variant = 'page' }: { entr
     getToolboxAiRating(entry.id, member.id).catch(() => ({ avg: 0, count: 0, latest: [] })),
     getToolUsers(entry.id, member.id).catch(() => ({ count: entry.user_count ?? 0, users: [], usedByMe: false })),
     entry.product_id ? getProductDetails(entry.product_id, member.id).catch(() => null) : Promise.resolve(null),
-    getNicknameUnlockState(),
     getToolProvenance(entry.id).catch(() => null),
   ])
   // each person's AI stack as compact chips (visibility enforced by profile_stack)
@@ -81,7 +79,7 @@ export async function ToolDetailView({ entry, member, variant = 'page' }: { entr
           usage={usage}
           stacks={stacks}
           tool={{ name: entry.name, url: toolUrl }}
-          me={{ ...composerIdentity(member, unlock.unlocked), nicknameAvailable: false }}
+          me={composerIdentity(member)}
         />
       }
       launchSlot={launch ? <LaunchSection product={launch} /> : null}
