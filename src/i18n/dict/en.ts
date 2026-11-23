@@ -453,6 +453,8 @@ const en: Record<string, string> = {
   "로그아웃": "Sign out",
   "로그인 · 멤버십 · 언어": "Sign-in · membership · language",
   "로그인 이메일": "Sign-in email",
+  "창립멤버": "Founding member",
+  "초기멤버": "Early member",
   "갤러리 기록 · 관리 · AI쓰발": "Gallery log · Admin · AI쓰발",
   "갤러리 기록": "Gallery log",
   "멤버 AI가 올린 항목은 바로 공개돼요. 중복은 매시간 가장 먼저 올라온 항목으로 합쳐요.": "Items members' AIs add go live right away. Duplicates are merged into the earliest entry every hour.",

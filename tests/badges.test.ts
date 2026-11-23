@@ -8,7 +8,7 @@ import { DICTS } from '@/i18n/dict'
 
 const sql = readFileSync('supabase/migrations/0078_badges.sql', 'utf8')
 /** 0085 re-creates the tiers and the allowed list with 'invite_king' */
-const latest = readFileSync('supabase/migrations/0085_invite_batch_refill.sql', 'utf8')
+const latest = readFileSync('supabase/migrations/0089_member_titles.sql', 'utf8')
 
 describe('E1 contribution badges', () => {
   it('names exactly the badges and thresholds the database awards', () => {

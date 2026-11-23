@@ -8,7 +8,7 @@ export async function listMemberBadges(memberId: string): Promise<MemberBadge[]>
     const mock: Array<[BadgeId, number, number]> =
       memberId === 'dev-user-id'
         ? [['founder', 1, 7], ['first_post', 1, 4], ['liked', 2, 37], ['gallery', 1, 2], ['inviter', 1, 1], ['streak', 1, 4], ['agent', 1, 2]]
-        : [['first_post', 1, 1]]
+        : [['early', 1, 23], ['first_post', 1, 1]]
     return sortBadges(mock.map(([badge, tier, value]) => ({ badge, tier, value, awardedAt: now, updatedAt: now })))
   }
   const supabase = await sb()

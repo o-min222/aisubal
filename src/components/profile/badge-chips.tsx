@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Award, Bot, Flame, Heart, Milestone, PenLine, Ticket, Wrench, Star, Crown } from 'lucide-react'
+import { Award, Bot, Flame, Heart, Milestone, PenLine, Ticket, Wrench, Star, Crown, Sprout } from 'lucide-react'
 import { AdaptiveSheet } from '@/components/adaptive-sheet'
 import { BADGES, badgeDef, badgeTierLabel, type BadgeId, type MemberBadge } from '@/lib/badges'
 import { T } from '@/i18n/t'
@@ -9,6 +9,7 @@ import { tx } from '@/i18n/client'
 
 const ICON: Record<BadgeId, typeof Award> = {
   founder: Milestone,
+  early: Sprout,
   first_post: PenLine,
   liked: Heart,
   gallery: Wrench,
@@ -50,7 +51,7 @@ export function BadgeChips({ badges, isMe, initialOpen = null }: { badges: Membe
             <button key={b.badge} type="button" className="badge-chip" onClick={() => { setFocus(b.badge); setOpen(true) }}>
               <span className="badge-ico"><Icon className="w-3 h-3" /></span>
               <T>{badgeTierLabel(b.badge, b.tier) ?? ''}</T>
-              {b.badge === 'founder' && <span className="text-n-888 font-normal tabular-nums">#{b.value}</span>}
+              {(b.badge === 'founder' || b.badge === 'early') && <span className="text-n-888 font-normal tabular-nums">#{b.value}</span>}
               <TierDots id={b.badge} tier={b.tier} />
             </button>
           )

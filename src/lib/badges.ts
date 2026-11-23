@@ -2,10 +2,12 @@ import { msg } from '@/i18n/translate'
 
 /**
  * E1 contribution badges. Awarded by the database (0078 badges__award); this file only
- * names them. Thresholds must equal the latest badges__tiers() (0078, 0085 · tests/badges.test.ts).
+ * names them. Thresholds must equal the latest badges__tiers() (0078, 0085, 0089 · tests/badges.test.ts).
  */
 export const BADGES = [
-  { id: 'founder', tiers: [1], labels: [msg('창립 멤버')], how: msg('입단 기록 {v}번째로 서약했어요') },
+  // A37 (0089): pledge numbers 1..10 → 창립멤버, 11..100 → 초기멤버
+  { id: 'founder', tiers: [1], labels: [msg('창립멤버')], how: msg('입단 기록 {v}번째로 서약했어요') },
+  { id: 'early', tiers: [1], labels: [msg('초기멤버')], how: msg('입단 기록 {v}번째로 서약했어요') },
   { id: 'first_post', tiers: [1], labels: [msg('첫 글')], how: msg('실명 프로필로 첫 글을 올렸어요') },
   { id: 'liked', tiers: [5, 20, 50], labels: [msg('좋아요 5개 받은 글'), msg('좋아요 20개 받은 글'), msg('좋아요 50개 받은 글')], how: msg('글 하나가 좋아요 {v}개를 받았어요') },
   { id: 'gallery', tiers: [1, 3, 10], labels: [msg('첫 갤러리 등록'), msg('갤러리 기여자'), msg('갤러리 큐레이터')], how: msg('갤러리에 {v}개를 올렸어요') },
