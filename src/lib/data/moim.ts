@@ -1,4 +1,4 @@
-import { DEV_ID, mockHandle, mockPerson } from '@/lib/mock-social'
+import { DEV_ID, MOCK_PEOPLE, mockHandle, mockPerson } from '@/lib/mock-social'
 import {
   applyBlock,
   canSeePrivate,
@@ -17,7 +17,12 @@ import {
   type RsvpStatus,
 } from '@/lib/moim-rules'
 import { mockGroups } from './groups'
+import { mockAppendFeedPost, mockFeedPost } from './feed'
 import { sb, isMock } from './client'
+import { moimThreadContent, normalizeInvites } from '@/lib/moim-thread-rules'
+
+/** Seats when the host doesn't say (A29: the minimal form doesn't ask; matches moim__validate). */
+export const DEFAULT_CAPACITY = 30
 
 /**
  * 모임 (formerly 밋업). Production reads and writes go through the 0007
@@ -34,6 +39,10 @@ export type Moim = {
   mode: MoimMode
   venueName: string | null
   startsAt: string
+  /** date only — the time is still open (A29) */
+  timeTbd: boolean
+  /** the post whose comments are where details get discussed (A29; null for older 모임) */
+  threadPostId: string | null
   endsAt: string | null
   capacity: number
   applyDeadline: string | null
@@ -72,19 +81,21 @@ export type MoimDetail = Moim & {
   applicants: MoimApplicant[] | null
 }
 export type MoimTab = 'upcoming' | 'mine' | 'hosting' | 'past'
+/** Absent optional fields are not sent: create uses the DB defaults, edit keeps what's stored. */
 export type MoimInput = {
   title: string
-  description: string
+  description?: string
   mode: MoimMode
   venueName?: string | null
   venueAddress?: string | null
   mapUrl?: string | null
   meetingUrl?: string | null
   startsAt: string
+  timeTbd?: boolean
   endsAt?: string | null
   applyDeadline?: string | null
-  capacity: number
-  requiresApproval: boolean
+  capacity?: number
+  requiresApproval?: boolean
   feeNote?: string | null
   groupId?: string | null
   membersOnly?: boolean
@@ -103,6 +114,8 @@ function fromRow(r: any): Moim {
     mode: r.mode,
     venueName: r.venue_name ?? null,
     startsAt: r.starts_at,
+    timeTbd: Boolean(r.time_tbd),
+    threadPostId: r.thread_post_id ?? null,
     endsAt: r.ends_at ?? null,
     capacity: Number(r.capacity),
     applyDeadline: r.apply_deadline ?? null,
@@ -157,25 +170,31 @@ function detailFromRow(r: any): MoimDetail {
 }
 /* eslint-enable @typescript-eslint/no-explicit-any */
 
-function toPayload(i: MoimInput) {
-  return {
+/** Only the keys the caller set (undefined = not sent), so moim_update keeps the rest. */
+export function toPayload(i: MoimInput) {
+  const p: Record<string, unknown> = {
     title: i.title,
-    description: i.description,
     mode: i.mode,
     venue_name: i.venueName || '',
-    venue_address: i.venueAddress || '',
-    map_url: i.mapUrl || '',
-    meeting_url: i.meetingUrl || '',
     starts_at: i.startsAt,
-    ends_at: i.endsAt || '',
-    apply_deadline: i.applyDeadline || '',
-    capacity: i.capacity,
-    requires_approval: i.requiresApproval,
-    fee_note: i.feeNote || '',
     group_id: i.groupId || '',
     members_only: Boolean(i.membersOnly),
-    questions: i.questions || [],
   }
+  const opt = (k: string, v: unknown, empty: unknown = '') => {
+    if (v !== undefined) p[k] = v ?? empty
+  }
+  opt('time_tbd', i.timeTbd, false)
+  opt('description', i.description)
+  opt('venue_address', i.venueAddress)
+  opt('map_url', i.mapUrl)
+  opt('meeting_url', i.meetingUrl)
+  opt('ends_at', i.endsAt)
+  opt('apply_deadline', i.applyDeadline)
+  opt('capacity', i.capacity, undefined)
+  opt('requires_approval', i.requiresApproval, undefined)
+  opt('fee_note', i.feeNote)
+  opt('questions', i.questions, [])
+  return p
 }
 
 // ------------------------------------------------------------------ mock
@@ -189,6 +208,8 @@ type MockMoim = {
   mapUrl: string | null
   meetingUrl: string | null
   startsAt: string
+  timeTbd?: boolean
+  threadPostId?: string | null
   endsAt: string | null
   capacity: number
   applyDeadline: string | null
@@ -384,6 +405,8 @@ function mockToMoim(m: MockMoim, viewerId: string): Moim {
     mode: m.mode,
     venueName: m.venueName,
     startsAt: m.startsAt,
+    timeTbd: Boolean(m.timeTbd),
+    threadPostId: m.threadPostId ?? null,
     endsAt: m.endsAt,
     capacity: m.capacity,
     applyDeadline: m.applyDeadline,
@@ -428,6 +451,41 @@ function mockFind(id: string, viewerId: string) {
   const m = mockMoims().find((x) => x.id === id)
   if (!m || !mockVisible(m, me(viewerId))) throw new Error('moim_not_found')
   return m
+}
+
+/** DEV: the 모임's thread post, like moim_create does in 0083. */
+function mockThreadPost(hostId: string, groupId: string | null, m: Parameters<typeof moimThreadContent>[0]): string {
+  const id = `post-moim-${Date.now()}`
+  mockAppendFeedPost({
+    id,
+    parentId: null,
+    rootId: null,
+    author: { kind: 'member', id: hostId, name: mockPerson(hostId).name, avatarUrl: null },
+    title: null,
+    body: moimThreadContent(m),
+    linkUrl: null,
+    imageUrl: null,
+    linkPreview: null,
+    tool: null,
+    rating: null,
+    likeCount: 0,
+    likedByMe: false,
+    replyCount: 0,
+    createdAt: new Date().toISOString(),
+    agentsAllowed: false,
+    isNickname: false,
+    groupId,
+  })
+  return id
+}
+function mockSetThreadBody(postId: string, body: string) {
+  const p = mockFeedPost(postId)
+  if (p) p.body = body
+}
+/** DEV: invites land in the mock bell. */
+const gi = globalThis as unknown as { __aisubalMoimInvites?: Array<{ moimId: string; memberId: string; by: string }> }
+export function mockMoimInvites() {
+  return (gi.__aisubalMoimInvites ??= [])
 }
 
 // ------------------------------------------------------------------ reads
@@ -497,13 +555,20 @@ export async function createMoim(viewerId: string, input: MoimInput): Promise<st
       if (role !== 'owner' && role !== 'mod') throw new Error('moim_group_forbidden')
     }
     if (!input.title || input.title.trim().length < 2) throw new Error('moim_invalid_title')
-    if (!input.capacity || input.capacity < 1 || input.capacity > 500) throw new Error('moim_invalid_capacity')
+    const capacity = input.capacity ?? DEFAULT_CAPACITY
+    if (capacity < 1 || capacity > 500) throw new Error('moim_invalid_capacity')
     if (!input.startsAt || Date.parse(input.startsAt) < Date.now()) throw new Error('moim_invalid_time')
     const id = `moim-${Date.now()}`
+    const description = (input.description ?? '').trim()
+    const threadPostId = mockThreadPost(viewer, input.groupId || null, {
+      title: input.title.trim(), startsAt: input.startsAt, timeTbd: Boolean(input.timeTbd), mode: input.mode, venueName: input.venueName || null, description,
+    })
     mockMoims().unshift({
       id,
+      threadPostId,
+      timeTbd: Boolean(input.timeTbd),
       title: input.title.trim(),
-      description: input.description.trim(),
+      description,
       mode: input.mode,
       venueName: input.venueName || null,
       venueAddress: input.venueAddress || null,
@@ -511,9 +576,9 @@ export async function createMoim(viewerId: string, input: MoimInput): Promise<st
       meetingUrl: input.meetingUrl || null,
       startsAt: input.startsAt,
       endsAt: input.endsAt || null,
-      capacity: input.capacity,
+      capacity,
       applyDeadline: input.applyDeadline || null,
-      requiresApproval: input.requiresApproval,
+      requiresApproval: Boolean(input.requiresApproval),
       status: 'open',
       feeNote: input.feeNote || null,
       membersOnly: Boolean(input.groupId && input.membersOnly),
@@ -536,30 +601,69 @@ export async function updateMoim(viewerId: string, id: string, input: MoimInput)
   if (isMock()) {
     const m = mockFind(id, viewerId)
     if (!mockCanManage(m, me(viewerId))) throw new Error('moim_forbidden')
-    if (input.capacity < countStatus(m.rsvps, 'confirmed')) throw new Error('moim_capacity_below_confirmed')
+    const keep = <T,>(v: T | undefined, cur: T) => (v === undefined ? cur : v)
+    const capacity = keep(input.capacity, m.capacity)
+    if (capacity < countStatus(m.rsvps, 'confirmed')) throw new Error('moim_capacity_below_confirmed')
     Object.assign(m, {
       title: input.title,
-      description: input.description,
+      description: keep(input.description, m.description),
       mode: input.mode,
       venueName: input.venueName || null,
-      venueAddress: input.venueAddress || null,
-      mapUrl: input.mapUrl || null,
-      meetingUrl: input.meetingUrl || null,
+      venueAddress: keep(input.venueAddress, m.venueAddress) || null,
+      mapUrl: keep(input.mapUrl, m.mapUrl) || null,
+      meetingUrl: keep(input.meetingUrl, m.meetingUrl) || null,
       startsAt: input.startsAt,
-      endsAt: input.endsAt || null,
-      applyDeadline: input.applyDeadline || null,
-      capacity: input.capacity,
-      requiresApproval: input.requiresApproval,
-      feeNote: input.feeNote || null,
-      membersOnly: Boolean(m.groupId && input.membersOnly),
+      timeTbd: input.timeTbd ?? m.timeTbd ?? false,
+      endsAt: keep(input.endsAt, m.endsAt) || null,
+      applyDeadline: keep(input.applyDeadline, m.applyDeadline) || null,
+      capacity,
+      requiresApproval: keep(input.requiresApproval, m.requiresApproval),
+      feeNote: keep(input.feeNote, m.feeNote) || null,
+      membersOnly: Boolean(m.groupId && keep(input.membersOnly, m.membersOnly)),
       questions: input.questions ? normalizeQuestions(input.questions) : m.questions,
     })
     m.rsvps = promoteWaitlist(m.capacity, m.rsvps).rsvps
+    if (m.threadPostId) mockSetThreadBody(m.threadPostId, moimThreadContent({ ...m, timeTbd: Boolean(m.timeTbd) }))
     return
   }
   const supabase = await sb()
   const { error } = await supabase.rpc('moim_update', { p_id: id, p: toPayload(input) })
   if (error) throw new Error(error.message)
+}
+
+/**
+ * A29: the host @-invites people when opening a 모임. Each gets a 'moim_invite' notification (+ push),
+ * subject to their own settings; a group 모임 only reaches that group's members. Returns how many.
+ */
+export async function inviteMoim(viewerId: string, id: string, handles: string[]): Promise<number> {
+  const list = normalizeInvites(handles)
+  if (!list.length) return 0
+  if (isMock()) {
+    const viewer = me(viewerId)
+    const m = mockFind(id, viewerId)
+    if (!mockCanManage(m, viewer)) throw new Error('moim_forbidden')
+    const people = MOCK_PEOPLE.filter((p) => p.id !== viewer && list.includes(mockHandle(p.id).toLowerCase()))
+      .filter((p) => !m.groupId || mockRoleIn(m.groupId, p.id))
+    const store = mockMoimInvites()
+    for (const p of people) if (!store.some((x) => x.moimId === id && x.memberId === p.id)) store.push({ moimId: id, memberId: p.id, by: viewer })
+    return people.length
+  }
+  const supabase = await sb()
+  const { data, error } = await supabase.rpc('moim_invite', { p_id: id, p_handles: list })
+  if (error) throw new Error(error.message)
+  return Number(data ?? 0)
+}
+
+/** The 모임 a thread post belongs to (for "모임 보기" on /posts/[id]); null when it isn't one or isn't visible. */
+export async function moimForThread(postId: string): Promise<{ id: string; title: string } | null> {
+  if (isMock()) {
+    const m = mockMoims().find((x) => x.threadPostId === postId)
+    return m ? { id: m.id, title: m.title } : null
+  }
+  if (!/^[0-9a-f-]{36}$/i.test(postId)) return null
+  const supabase = await sb()
+  const { data } = await supabase.from('meetups').select('id, title').eq('thread_post_id', postId).maybeSingle()
+  return (data as { id: string; title: string } | null) ?? null
 }
 
 export async function setMoimStatus(viewerId: string, id: string, status: 'open' | 'closed' | 'cancelled'): Promise<void> {

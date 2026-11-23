@@ -6,7 +6,7 @@ export const NOTIFY_CATEGORIES = [
   { id: 'replies', label: msg('댓글'), title: msg('내 글에 댓글·답글'), hint: msg('피드 · 그룹 · 익명 라운지') },
   { id: 'likes', label: msg('좋아요'), title: msg('좋아요'), hint: msg('같은 글의 좋아요는 한 줄로 모아요') },
   { id: 'following', label: msg('팔로잉 새 글'), title: msg('팔로우한 사람의 새 글'), hint: msg('한 사람이 연달아 올리면 한 줄로 모아요') },
-  { id: 'social', label: msg('팔로우·친구'), title: msg('팔로우 · 친구 신청'), hint: msg('새 팔로워 · 친구 신청 · 수락') },
+  { id: 'social', label: msg('팔로우·친구'), title: msg('팔로우 · 친구 신청'), hint: msg('새 팔로워 · 친구 신청 · 수락 · 모임 초대') },
   { id: 'gallery', label: msg('갤러리'), title: msg('갤러리 등록 결과'), hint: msg('AI 추천 · 승인 · 반려 (반려 사유 포함)') },
   { id: 'invites', label: msg('초대'), title: msg('초대한 멤버 가입'), hint: msg('내 초대 코드가 쓰였을 때') },
   { id: 'agents', label: msg('내 AI'), title: msg('내 AI의 아고라 글'), hint: msg('내 에이전트 글에 달린 답글 · 좋아요') },
@@ -22,7 +22,7 @@ export function parseNotifyCategory(v: string | string[] | null | undefined): No
 }
 
 export type NotifyKind = 'comment' | 'reply' | 'like' | 'follow' | 'friend_request' | 'friend_accept' | 'invite_joined' | 'agent_reply' | 'agent_like' | 'agent_mention' | 'mention'
-  | 'gallery_recommended' | 'gallery_approved' | 'gallery_confirmed' | 'gallery_rejected' | 'follow_post' | 'badge'
+  | 'gallery_recommended' | 'gallery_approved' | 'gallery_confirmed' | 'gallery_rejected' | 'follow_post' | 'badge' | 'moim_invite'
 export type NotifyActor = { kind: 'member' | 'agent' | 'anon' | 'someone'; id: string | null; name: string | null; avatarUrl: string | null }
 export type NotificationItem = {
   id: string
@@ -30,7 +30,7 @@ export type NotificationItem = {
   category: NotifyCategory
   link: string
   excerpt: string | null
-  targetKind: 'post' | 'agora' | 'anon' | 'member' | 'submission' | null
+  targetKind: 'post' | 'agora' | 'anon' | 'member' | 'submission' | 'moim' | null
   /** likes on one post collapse into one row; follow_post = posts folded into it */
   count: number
   createdAt: string
@@ -67,6 +67,8 @@ export function notificationSentence(n: NotificationItem): { s: string; name: st
       return { s: msg('{name}님이 친구 신청을 보냈어요'), name, n: 0 }
     case 'friend_accept':
       return { s: msg('{name}님이 친구 신청을 수락했어요'), name, n: 0 }
+    case 'moim_invite':
+      return { s: msg('{name}님이 나를 모임에 초대했어요'), name, n: 0 }
     case 'invite_joined':
       return { s: msg('{name}님이 내 초대로 가입했어요'), name, n: 0 }
     case 'follow_post':

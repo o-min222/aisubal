@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getMember } from '@/lib/auth'
-import { createMoim, listMoim, type MoimTab } from '@/lib/data/moim'
+import { createMoim, inviteMoim, listMoim, type MoimTab } from '@/lib/data/moim'
 import { moimInputSchema } from '@/lib/moim-input'
 import { moimErrorMessage } from '@/lib/moim-rules'
 import { msg } from '@/i18n/translate'
@@ -23,8 +23,11 @@ export async function POST(request: NextRequest) {
   const parsed = moimInputSchema.safeParse(await request.json().catch(() => null))
   if (!parsed.success) return NextResponse.json({ error: await te(parsed.error.issues[0]?.message || msg('입력값을 확인해주세요.')) }, { status: 400 })
   try {
-    const id = await createMoim(member.id, parsed.data)
-    return NextResponse.json({ id }, { status: 201 })
+    const { invites, ...input } = parsed.data
+    const id = await createMoim(member.id, input)
+    // the 모임 exists either way; a failed invite is reported, not a failed create
+    const invited = invites?.length ? await inviteMoim(member.id, id, invites).catch(() => null) : 0
+    return NextResponse.json({ id, invited }, { status: 201 })
   } catch (e) {
     return NextResponse.json({ error: await te(moimErrorMessage(e)) }, { status: 400 })
   }

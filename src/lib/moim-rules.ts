@@ -151,7 +151,7 @@ export const MOIM_ERRORS: Record<string, string> = {
   moim_not_found: '모임을 찾을 수 없어요.',
   moim_daily_limit: '하루에 만들 수 있는 모임 수를 넘었어요.',
   moim_invalid_title: '제목은 2~80자로 입력해주세요.',
-  moim_invalid_description: '소개를 입력해주세요 (4000자 이내).',
+  moim_invalid_description: '소개는 4000자 이내로 적어주세요.',
   moim_invalid_time: '날짜·시간을 확인해주세요 (시작은 지금 이후, 종료는 시작 이후).',
   moim_invalid_deadline: '신청 마감은 시작 시간보다 앞이어야 해요.',
   moim_invalid_capacity: '정원은 1~500명이에요.',
@@ -159,6 +159,7 @@ export const MOIM_ERRORS: Record<string, string> = {
   moim_capacity_below_confirmed: '확정된 인원보다 정원을 줄일 수 없어요.',
   moim_rsvp_not_found: '신청 내역이 없어요.',
   moim_invalid_mode: '온라인/오프라인을 선택해주세요.',
+  moim_too_many_invites: '초대는 한 번에 30명까지예요.',
 }
 
 export function moimErrorMessage(e: unknown): string {

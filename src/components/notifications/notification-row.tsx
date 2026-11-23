@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { AtSign, Award, Bell, Bot, Check, Heart, MessageCircle, PenLine, Sparkles, Ticket, UserPlus, Users, VenetianMask, Wrench, X } from 'lucide-react'
+import { AtSign, Award, Bell, Bot, CalendarDays, Check, Heart, MessageCircle, PenLine, Sparkles, Ticket, UserPlus, Users, VenetianMask, Wrench, X } from 'lucide-react'
 import { UserAvatar } from '@/components/user-avatar'
 import { relativeLabel } from '@/lib/relative-label'
 import { getLocale } from '@/i18n/server'
@@ -19,6 +19,7 @@ const KIND_ICON = {
   friend_request: Users,
   friend_accept: Users,
   invite_joined: Ticket,
+  moim_invite: CalendarDays,
   follow_post: PenLine,
   gallery_recommended: Sparkles,
   gallery_approved: Check,

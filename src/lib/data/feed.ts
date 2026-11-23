@@ -535,6 +535,11 @@ export function mockAppendFeedPost(post: TimelinePost) {
   if (post.parentId) mockRecount()
 }
 
+/** Mock-only: a stored post by id (mutable). */
+export function mockFeedPost(postId: string): TimelinePost | undefined {
+  return mockState().posts.find((x) => x.id === postId)
+}
+
 /** Mock-only: group of a post (replies inherit it, like the DB trigger). */
 export function mockFeedGroupOf(postId: string): string | null {
   const st = mockState()
