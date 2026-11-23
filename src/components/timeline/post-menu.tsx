@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Check, Eye, EyeOff, Flag, MoreHorizontal, Pencil, Trash2 } from 'lucide-react'
+import { Check, Copy, Eye, EyeOff, Flag, Link2, MoreHorizontal, Pencil, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { AdaptiveSheet } from '@/components/adaptive-sheet'
 import { FEED_REPORT_REASONS } from '@/lib/feed-rules'
@@ -11,10 +11,11 @@ import { publishReplyDelta } from '@/lib/count-store'
 import type { TimelinePost } from './types'
 import { setRecHidden } from './rec-hidden'
 import { postRecDismiss } from '@/lib/rec-dismiss'
+import { canOfferTeaser, teaserPath } from '@/lib/teaser-rules'
 import { T } from '@/i18n/t'
 import { tx, tn } from '@/i18n/client'
 
-type Step = 'menu' | 'edit' | 'delete' | 'report'
+type Step = 'menu' | 'edit' | 'delete' | 'report' | 'teaser'
 
 /**
  * ⋯ on feed / group / 아고라 / 익명 cards. Own rows: 수정 (human-written only) + 삭제;
@@ -32,11 +33,14 @@ export function PostMenu({ post, kind, afterDeleteHref, adminHide = false }: { p
   const [detail, setDetail] = useState('')
   const [busy, setBusy] = useState(false)
   const [reported, setReported] = useState(Boolean(post.reportedByMe))
+  /** A56: undefined = not loaded yet, null = off */
+  const [teaser, setTeaser] = useState<string | null | undefined>(undefined)
 
   if (post.isDeleted) return null
   const mine = Boolean(post.isMine)
   const canEdit = mine && (kind === 'anon' || (kind === 'feed' && (post.author.kind === 'member' || post.author.kind === 'group')))
   const base = `/api/${kind}/${post.id}`
+  const offerTeaser = kind === 'feed' && canOfferTeaser(post)
   const reasons = kind === 'anon' ? ANON_REPORT_REASONS : FEED_REPORT_REASONS
 
   /** 추천 feed only: hide this post now and keep it out of future 추천 (0068). */
@@ -142,7 +146,45 @@ export function PostMenu({ post, kind, afterDeleteHref, adminHide = false }: { p
     }
   }
 
-  const title = step === 'edit' ? tx('글 수정') : step === 'delete' ? tx('글 삭제') : step === 'report' ? tx('신고하기') : tx('글 메뉴')
+  /** A56: outsider preview link, opt-in by the author */
+  async function openTeaser() {
+    setStep('teaser')
+    if (teaser !== undefined) return
+    try {
+      const d = await call(`/api/posts/${post.id}/teaser`, { method: 'GET' }, tn('처리에 실패했어요.'))
+      setTeaser(d.slug ?? null)
+    } catch {
+      setTeaser(null)
+    }
+  }
+
+  async function setTeaserOn(on: boolean) {
+    if (busy) return
+    if (!on && !window.confirm(tx('미리보기 링크를 끌까요? 이미 보낸 링크는 더 이상 열리지 않아요.'))) return
+    setBusy(true)
+    try {
+      const d = await call(`/api/posts/${post.id}/teaser`, { method: on ? 'POST' : 'DELETE' }, tn('처리에 실패했어요.'))
+      setTeaser(on ? d.slug : null)
+      if (on) await copyTeaser(d.slug)
+      else toast.success(tn('미리보기 링크를 껐어요. 이전 링크는 더 이상 열리지 않아요.'))
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : tn('처리에 실패했어요.'))
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  async function copyTeaser(slug: string) {
+    const url = `${window.location.origin}${teaserPath(slug)}`
+    try {
+      await navigator.clipboard.writeText(url)
+      toast.success(tn('미리보기 링크를 복사했어요'))
+    } catch {
+      /* clipboard blocked: the link is on screen */
+    }
+  }
+
+  const title = step === 'edit' ? tx('글 수정') : step === 'delete' ? tx('글 삭제') : step === 'report' ? tx('신고하기') : step === 'teaser' ? tx('미리보기 링크') : tx('글 메뉴')
 
   return (
     <>
@@ -155,6 +197,11 @@ export function PostMenu({ post, kind, afterDeleteHref, adminHide = false }: { p
             {canEdit && (
               <button type="button" onClick={() => setStep('edit')} className="sheet-row">
                 <Pencil className="w-5 h-5" /> <T>수정하기</T>
+              </button>
+            )}
+            {offerTeaser && (
+              <button type="button" onClick={openTeaser} className="sheet-row">
+                <Link2 className="w-5 h-5" /> <T>미리보기 링크</T>
               </button>
             )}
             {mine && (
@@ -207,6 +254,32 @@ export function PostMenu({ post, kind, afterDeleteHref, adminHide = false }: { p
             <button type="button" onClick={remove} disabled={busy} className="btn w-full min-h-[44px] rounded-full bg-red-600 text-white hover:bg-red-700">
               {busy ? <T>삭제 중…</T> : <T>삭제</T>}
             </button>
+          </div>
+        )}
+        {step === 'teaser' && (
+          <div className="teaser-share">
+            <p className="teaser-share-note">
+              <T>초대받지 않은 사람도 제목과 첫 몇 줄, 반응 수를 볼 수 있어요. 나머지는 흐리게 가려지고, 링크를 끄면 바로 막혀요.</T>
+            </p>
+            {teaser === undefined ? (
+              <p className="teaser-share-note"><T>불러오는 중…</T></p>
+            ) : teaser ? (
+              <>
+                <div className="teaser-share-link">
+                  <code>{`${typeof window === 'undefined' ? '' : window.location.host}${teaserPath(teaser)}`}</code>
+                  <button type="button" className="icon-btn" onClick={() => copyTeaser(teaser)} aria-label={tx('링크 복사')} title={tx('링크 복사')}>
+                    <Copy className="w-4 h-4" />
+                  </button>
+                </div>
+                <button type="button" onClick={() => setTeaserOn(false)} disabled={busy} className="text-link teaser-share-off">
+                  <T>미리보기 링크 끄기</T>
+                </button>
+              </>
+            ) : (
+              <button type="button" onClick={() => setTeaserOn(true)} disabled={busy} className="btn btn-primary w-full min-h-[44px] rounded-full">
+                {busy ? <T>만드는 중…</T> : <T>미리보기 링크 만들고 복사</T>}
+              </button>
+            )}
           </div>
         )}
         {step === 'report' && (

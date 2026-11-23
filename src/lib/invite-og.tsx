@@ -9,7 +9,7 @@ export const INVITE_OG_SIZE = { width: 1200, height: 630 }
 
 /** Fetch only the glyphs we draw from Google Fonts (tiny subset). No browser UA on
  * purpose: Google then serves TrueType, which the OG renderer reads (not WOFF2). */
-async function loadFont(text: string): Promise<ArrayBuffer | null> {
+export async function loadFont(text: string): Promise<ArrayBuffer | null> {
   try {
     const css = await (
       await fetch(`https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@800&text=${encodeURIComponent(text)}`)
