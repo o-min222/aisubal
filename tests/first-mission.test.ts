@@ -31,7 +31,32 @@ describe('A54 first-question mission', () => {
     expect(short.status).toBe(400)
     const ok = await fetch(`${BASE_URL}/api/onboarding/mission`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ answer: '요즘은 Claude Code로 리팩터링을 맡겨요.' }) })
     expect(ok.status).toBe(201)
-    expect((await ok.json()).postId).toBeTruthy()
+    const body = await ok.json()
+    // idempotent: a dev server that already did the mission answers first:false and writes nothing
+    if (body.first) expect(body.postId).toBeTruthy()
+    else expect(body.first).toBe(false)
+  })
+})
+
+describe('A54 atomic submit (0105)', () => {
+  const atomic = readFileSync('supabase/migrations/0105_mission_atomic.sql', 'utf8')
+  it('post + done in one definer RPC, row-locked and idempotent; the two-step path is dropped', () => {
+    expect(atomic).toMatch(/onboarding_mission_submit\(p_answer text, p_locale text default 'ko'\)[\s\S]*security definer/)
+    expect(atomic).toMatch(/where id = v_me for update/)
+    expect(atomic).toMatch(/if m\.first_mission_at is not null then\s+return jsonb_build_object\('ok', true, 'first', false, 'post', m\.first_mission_post/)
+    expect(atomic).toContain('drop function if exists public.onboarding_mission_complete(uuid)')
+    expect(atomic).toContain('revoke all on function public.onboarding__alert_first_post(uuid, uuid, uuid, text) from public, anon, authenticated')
+    const data = readFileSync('src/lib/data/onboarding.ts', 'utf8')
+    expect(data).toContain("rpc('onboarding_mission_submit'")
+    expect(data).not.toContain('onboarding_mission_complete')
+  })
+
+  it('real path (dev): a second answer is a no-op that returns the first post', async () => {
+    const post = (answer: string) => fetch(`${BASE_URL}/api/onboarding/mission`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ answer }) })
+    const a = await (await post('첫 번째로 보내는 충분히 긴 답변이에요.')).json()
+    const b = await (await post('두 번째로 보내는 충분히 긴 답변이에요.')).json()
+    expect(b.first).toBe(false)
+    if (a.first) expect(b.postId).toBe(a.postId)
   })
 })
 

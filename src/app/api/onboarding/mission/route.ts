@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { getMember } from '@/lib/auth'
-import { completeMission } from '@/lib/data/onboarding'
+import { completeMission, MissionError } from '@/lib/data/onboarding'
 import { missionAnswerError } from '@/lib/onboarding-rules'
 import { getLocale, te } from '@/i18n/server'
 
@@ -19,6 +19,9 @@ export async function POST(req: NextRequest) {
     const r = await completeMission(member, parsed.data.answer, (await getLocale()) === 'en' ? 'en' : 'ko')
     return NextResponse.json(r, { status: 201 })
   } catch (e) {
+    if (e instanceof MissionError && e.message.includes('mission_bad_answer')) {
+      return NextResponse.json({ error: await te('조금만 더 적어 주세요 (10자 이상).') }, { status: 400 })
+    }
     console.error('[onboarding] mission failed', e)
     return NextResponse.json({ error: await te('게시하지 못했어요.') }, { status: 500 })
   }

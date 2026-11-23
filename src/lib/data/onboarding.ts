@@ -1,5 +1,6 @@
 import { sb, isMock } from './client'
-import { createPost } from './posts'
+import { createPost, getPost } from './posts'
+import { aggregateMentionsFromPosts } from './toolbox'
 import type { Member } from '@/lib/supabase/types'
 import { missionPostBody } from '@/lib/onboarding-rules'
 
@@ -7,7 +8,7 @@ import { missionPostBody } from '@/lib/onboarding-rules'
 export type MissionPrompt = { id: string; ko: string; en: string | null; done: boolean }
 export type AdminPrompt = { id: string; ko: string; en: string | null; active: boolean; sort: number }
 
-type MockState = { prompts: AdminPrompt[]; done: Set<string> }
+type MockState = { prompts: AdminPrompt[]; done: Set<string>; post: Map<string, string> }
 function mock(): MockState {
   const g = globalThis as unknown as { __aisubalPrompts?: MockState }
   g.__aisubalPrompts ??= {
@@ -18,7 +19,9 @@ function mock(): MockState {
       { id: 'p4', ko: 'AI로 해보고 싶은데 아직 못 푼 문제가 있나요?', en: "Is there a problem you want to solve with AI but haven't cracked yet?", active: true, sort: 40 },
     ],
     done: new Set(),
+    post: new Map(),
   }
+  g.__aisubalPrompts.post ??= new Map()
   return g.__aisubalPrompts
 }
 
@@ -37,20 +40,36 @@ export async function getMyPrompt(memberId: string): Promise<MissionPrompt | nul
 
 export class MissionError extends Error {}
 
-/** post the answer (전체 회원, real name) and mark the mission done; A55 alerts fire inside the RPC */
-export async function completeMission(member: Member, answer: string, locale: 'ko' | 'en'): Promise<{ postId: string; first: boolean }> {
-  const prompt = await getMyPrompt(member.id)
-  const question = prompt ? (locale === 'en' && prompt.en) || prompt.ko : null
-  const { details } = await createPost(member, { content: missionPostBody(question, answer), visibility: 'members', postedAs: 'real' })
+/**
+ * Post the answer (전체 회원, real name) and mark the mission done in one transaction (0105
+ * onboarding_mission_submit), so a failure can never leave a stray post. Idempotent: a member
+ * who is already done gets their existing mission post back. A55 alerts fire inside the RPC.
+ */
+export async function completeMission(member: Member, answer: string, locale: 'ko' | 'en'): Promise<{ postId: string | null; first: boolean }> {
   if (isMock()) {
-    const first = !mock().done.has(member.id)
-    mock().done.add(member.id)
-    return { postId: details.id, first }
+    const st = mock()
+    if (st.done.has(member.id)) return { postId: st.post.get(member.id) ?? null, first: false }
+    const prompt = await getMyPrompt(member.id)
+    const question = prompt ? (locale === 'en' && prompt.en) || prompt.ko : null
+    const { details } = await createPost(member, { content: missionPostBody(question, answer), visibility: 'members', postedAs: 'real' })
+    st.done.add(member.id)
+    st.post.set(member.id, details.id)
+    return { postId: details.id, first: true }
   }
   const supabase = await sb()
-  const { data, error } = await supabase.rpc('onboarding_mission_complete', { p_post: details.id })
+  const { data, error } = await supabase.rpc('onboarding_mission_submit', { p_answer: answer, p_locale: locale })
   if (error) throw new MissionError(error.message)
-  return { postId: details.id, first: Boolean((data as { first?: boolean } | null)?.first) }
+  const r = (data ?? {}) as { post?: string | null; first?: boolean }
+  if (r.first && r.post) {
+    // tool-mention stats, as createPost does for root posts; best effort, the post is already in
+    try {
+      const details = await getPost(r.post)
+      if (details) await aggregateMentionsFromPosts([details])
+    } catch (e) {
+      console.error('[onboarding] mention stats failed', e)
+    }
+  }
+  return { postId: r.post ?? null, first: Boolean(r.first) }
 }
 
 export async function adminListPrompts(): Promise<AdminPrompt[]> {
