@@ -113,7 +113,7 @@ type Handoff = { id: string; url: string; svg: string; expiresAt: number; oneTap
 
 function PhoneHandoff({ onDone }: { onDone: () => void }) {
   const [h, setH] = useState<Handoff | null>(null)
-  const [state, setState] = useState<'loading' | 'pending' | 'completed' | 'expired' | 'error'>('loading')
+  const [state, setState] = useState<'loading' | 'pending' | 'completed' | 'expired' | 'limited' | 'error'>('loading')
   const [left, setLeft] = useState(0)
   const done = useRef(onDone)
   useEffect(() => {
@@ -124,7 +124,7 @@ function PhoneHandoff({ onDone }: { onDone: () => void }) {
     setState('loading')
     const r = await fetch('/api/handoff', { method: 'POST' }).catch(() => null)
     const d = r?.ok ? ((await r.json()) as { id: string; token: string; expiresAt: string; oneTap?: boolean }) : null
-    if (!d) return setState('error')
+    if (!d) return setState(r?.status === 429 ? 'limited' : 'error')
     const url = handoffUrl(window.location.origin, d.token)
     const svg = await QRCode.toString(url, { type: 'svg', margin: 1, errorCorrectionLevel: 'M', color: { dark: '#111111', light: '#ffffff' } })
     setH({ id: d.id, url, svg, expiresAt: Date.parse(d.expiresAt), oneTap: d.oneTap === true })
@@ -176,7 +176,7 @@ function PhoneHandoff({ onDone }: { onDone: () => void }) {
         </div>
         <div className="min-w-0 flex-1 space-y-2">
           <p className="text-[13px] text-n-555" aria-live="polite">
-            {state === 'pending' ? <T s="폰에서 열기를 기다리는 중 · {m}:{s} 남음" vars={{ m: Math.floor(left / 60), s: String(left % 60).padStart(2, '0') }} /> : state === 'expired' ? <T>시간이 지나 만료됐어요.</T> : state === 'error' ? <T>QR을 만들지 못했어요.</T> : <T>QR을 만드는 중…</T>}
+            {state === 'pending' ? <T s="폰에서 열기를 기다리는 중 · {m}:{s} 남음" vars={{ m: Math.floor(left / 60), s: String(left % 60).padStart(2, '0') }} /> : state === 'expired' ? <T>시간이 지나 만료됐어요.</T> : state === 'limited' ? <T>QR을 짧은 시간에 여러 번 만들었어요. 몇 분 뒤에 새 QR을 만들어 주세요.</T> : state === 'error' ? <T>QR을 만들지 못했어요.</T> : <T>QR을 만드는 중…</T>}
           </p>
           {state === 'pending' && (
             <button type="button" className="filter-chip" onClick={copy}><Copy className="w-3.5 h-3.5" /> <T>링크 복사</T></button>
