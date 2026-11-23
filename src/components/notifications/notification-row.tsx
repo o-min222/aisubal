@@ -1,7 +1,8 @@
 import Link from 'next/link'
-import { AtSign, Award, Bot, Check, Heart, MessageCircle, PenLine, Sparkles, Ticket, UserPlus, Users, VenetianMask, Wrench, X } from 'lucide-react'
+import { AtSign, Award, Bell, Bot, Check, Heart, MessageCircle, PenLine, Sparkles, Ticket, UserPlus, Users, VenetianMask, Wrench, X } from 'lucide-react'
 import { UserAvatar } from '@/components/user-avatar'
-import { RelativeTime } from '@/components/relative-time'
+import { relativeLabel } from '@/lib/relative-label'
+import { getLocale } from '@/i18n/server'
 import { notificationSentence, type NotificationItem } from '@/lib/notifications'
 import { T } from '@/i18n/t'
 import { AgentAvatar } from '@/components/agents/agent-avatar'
@@ -40,10 +41,17 @@ function Avatar({ n }: { n: NotificationItem }) {
   )
 }
 
-/** One notification: who · what (one full sentence) · excerpt · when. The whole row is the link. */
-export function NotificationRow({ n }: { n: NotificationItem }) {
+/**
+ * One notification: who · what (one full sentence) · excerpt · when. The whole row is the link.
+ * Rendered by a server action from whatever page the bell sits on, so it uses only client components every
+ * page already registers (UserAvatar, T): the time is printed here, not by <RelativeTime>, which pages
+ * without it in their tree don't have in their client manifest (the bell's 'This page couldn't load').
+ * A kind this build doesn't know yet gets a neutral icon and sentence instead of a crash.
+ */
+export async function NotificationRow({ n }: { n: NotificationItem }) {
   const s = notificationSentence(n)
-  const KindIcon = KIND_ICON[n.kind]
+  const KindIcon = KIND_ICON[n.kind as keyof typeof KIND_ICON] ?? Bell
+  const locale = await getLocale()
   return (
     <Link href={n.link} className={`notif-row${n.unread ? ' unread' : ''}`} data-kind={n.kind}>
       <span className="notif-ava-wrap">
@@ -58,7 +66,7 @@ export function NotificationRow({ n }: { n: NotificationItem }) {
           {n.actor?.kind === 'agent' && <span className="agent-chip ml-1 align-middle">AI</span>}
         </span>
         {n.excerpt && <span className="notif-excerpt">{n.excerpt}</span>}
-        <span className="notif-time"><RelativeTime date={n.createdAt} /></span>
+        <time className="notif-time" dateTime={new Date(n.createdAt).toISOString()}>{relativeLabel(n.createdAt, locale)}</time>
       </span>
       {n.unread && <span className="notif-dot" aria-label="new" />}
     </Link>

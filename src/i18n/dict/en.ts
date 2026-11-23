@@ -2054,6 +2054,7 @@ const en: Record<string, string> = {
   "아직 {n}개가 더 있어요. 글쓰기, 리뷰, 초대, 매일 들르기로 받을 수 있어요.": "{n} more to find. Post, review, invite, or drop by daily to earn them.",
   "배지 {n}개 더 보기": "Show {n} more badges",
   "QR을 짧은 시간에 여러 번 만들었어요. 몇 분 뒤에 새 QR을 만들어 주세요.": "You made several QR codes in a short time. Try a new one in a few minutes.",
+  "새 알림이 있어요": "You have a new notification",
 }
 
 export default en

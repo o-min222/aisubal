@@ -83,6 +83,9 @@ export function notificationSentence(n: NotificationItem): { s: string; name: st
       const b = parseBadgeKey(n.actor?.name)
       return { s: msg('‘{name}’ 배지를 받았어요'), name: (b && badgeTierLabel(b.id, b.tier)) || msg('새 배지'), n: 0, nameIsLabel: true }
     }
+    default:
+      // a kind added on the server before this build knows it
+      return { s: msg('새 알림이 있어요'), name, n: 0 }
   }
 }
 

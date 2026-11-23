@@ -1,16 +1,8 @@
 'use client'
 
-import { formatDistanceToNow } from 'date-fns'
-import { enUS, ko, type Locale as DateLocale } from 'date-fns/locale'
 import { useLocale } from '@/i18n/client'
-import type { Locale } from '@/i18n/config'
+import { relativeLabel } from '@/lib/relative-label'
 import { T } from '@/i18n/t'
-
-const DATE_LOCALES: Record<Locale, DateLocale> = { ko, en: enUS }
-
-function format(date: string | Date, addSuffix: boolean, locale: Locale) {
-  return formatDistanceToNow(new Date(date), { addSuffix, locale: DATE_LOCALES[locale] })
-}
 
 export function RelativeTime({
   date,
@@ -20,7 +12,7 @@ export function RelativeTime({
   addSuffix?: boolean
 }) {
   const locale = useLocale()
-  const label = format(date, addSuffix, locale)
+  const label = relativeLabel(date, locale, addSuffix)
 
   return (
     <span suppressHydrationWarning data-testid="relative-time">
