@@ -26,6 +26,8 @@ const STATIC = [
   '/settings', '/settings/account', '/settings/notifications', '/settings/profile', '/settings/profile/nickname', '/settings/tokens', '/agents',
   '/agents/connect', '/connect', '/posts/new', '/posts/new/asset', '/products', '/u/dev', '/admin', '/admin/anon', '/admin/installs', '/admin/invites',
   '/admin/overview', '/admin/reports', '/admin/site', '/admin/tool-reviews', '/admin/users', '/this-page-does-not-exist',
+  // D1 / G1 / E1
+  '/settings/app', '/onboarding/app', '/gallery?view=mine', '/gallery?sort=users', '/members/me?badges=liked',
 ]
 // dynamic routes: first matching link found on the listed page
 const DYNAMIC = [
@@ -44,7 +46,7 @@ const browser = await chromium.launch()
 async function newCtx({ w, theme, loc }) {
   const mobile = w < 768
   const ctx = await browser.newContext({ viewport: { width: w, height: mobile ? 844 : 900 }, isMobile: mobile, hasTouch: mobile, colorScheme: theme, locale: loc === 'en' ? 'en-US' : 'ko-KR' })
-  await ctx.addCookies([{ name: 'dev_pledge', value: '1', url: BASE }, { name: 'theme', value: theme, url: BASE }, { name: 'locale', value: loc, url: BASE }])
+  await ctx.addCookies([{ name: 'dev_pledge', value: '1', url: BASE }, { name: 'theme', value: theme, url: BASE }, { name: 'aisubal_locale', value: loc, url: BASE }])
   return ctx
 }
 
@@ -75,7 +77,9 @@ async function run({ r, m }) {
   const errors = []
   page.on('pageerror', (e) => errors.push('pageerror: ' + String(e.message).slice(0, 160)))
   page.on('console', (c) => { if (c.type() === 'error' && !/favicon|Failed to load resource|Download the React DevTools/.test(c.text())) errors.push('console: ' + c.text().slice(0, 160)) })
-  const res = await page.goto(BASE + r, { waitUntil: 'networkidle', timeout: 120000 }).catch((e) => ({ status: () => 'ERR ' + String(e).slice(0, 60), url: () => '' }))
+  // 'load', then up to 15s for the network to settle: pages that poll (the QR handoff) never go idle.
+  const res = await page.goto(BASE + r, { waitUntil: 'load', timeout: 120000 }).catch((e) => ({ status: () => 'ERR ' + String(e).slice(0, 60), url: () => '' }))
+  await page.waitForLoadState('networkidle', { timeout: 15000 }).catch(() => {})
   await page.waitForTimeout(300)
   const status = res.status()
   const finalUrl = page.url().replace(BASE, '')
@@ -139,5 +143,5 @@ let i = 0
 await Promise.all(Array.from({ length: CONC }, async () => { while (i < jobs.length) { const j = jobs[i++]; await run(j).catch((e) => results.push({ route: j.r, ...j.m, fatal: String(e).slice(0, 200) })) } }))
 await browser.close()
 writeFileSync(`${OUT}/report.json`, JSON.stringify(results, null, 1))
-const bad = results.filter((x) => x.fatal || x.overflow || x.overlay || x.errors?.length || x.clipped?.length || x.lightInDark?.length || x.brokenImg?.length || (typeof x.status === 'number' && x.status >= 500))
+const bad = results.filter((x) => x.fatal || x.overflow || x.overlay || x.errors?.length || x.clipped?.length || x.lightInDark?.length || x.brokenImg?.length || (typeof x.status === 'number' ? x.status >= 500 : true))
 console.log(`${results.length} loads over ${routes.length} routes; ${bad.length} with issues. Report: ${OUT}/report.json`)

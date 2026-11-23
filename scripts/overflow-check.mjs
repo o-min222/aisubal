@@ -44,7 +44,7 @@ for (const theme of STABILITY_ONLY ? [] : THEMES) {
       const ctx = await browser.newContext({ viewport: { width, height: mobile ? 844 : 900 }, isMobile: mobile, hasTouch: mobile, colorScheme: theme === 'dark' ? 'dark' : 'light' })
       await ctx.addCookies([
         { name: 'dev_pledge', value: '1', url: BASE },
-        { name: 'locale', value: 'ko', url: BASE },
+        { name: 'aisubal_locale', value: 'ko', url: BASE },
         { name: 'theme', value: theme, url: BASE },
       ])
       const page = await ctx.newPage()
@@ -95,7 +95,7 @@ if (!process.argv.includes('--no-stability')) {
   console.log('\nLayout stability (center column x / width while clicking through the sidebar):')
   for (const width of [1024, 1280, 1440]) {
     const ctx = await browser.newContext({ viewport: { width, height: 900 } })
-    await ctx.addCookies([{ name: 'dev_pledge', value: '1', url: BASE }, { name: 'locale', value: 'ko', url: BASE }])
+    await ctx.addCookies([{ name: 'dev_pledge', value: '1', url: BASE }, { name: 'aisubal_locale', value: 'ko', url: BASE }])
     const page = await ctx.newPage()
     await page.goto(BASE + '/feed', { waitUntil: 'networkidle' })
     // the column that holds the page's main content: the list on list+pane pages, else the center
