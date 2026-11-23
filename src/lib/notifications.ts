@@ -8,7 +8,7 @@ export const NOTIFY_CATEGORIES = [
   { id: 'following', label: msg('팔로잉 새 글'), title: msg('팔로우한 사람의 새 글'), hint: msg('한 사람이 연달아 올리면 한 줄로 모아요') },
   { id: 'social', label: msg('팔로우·친구'), title: msg('팔로우 · 친구 신청'), hint: msg('새 팔로워 · 친구 신청 · 수락 · 모임 초대') },
   { id: 'gallery', label: msg('갤러리'), title: msg('갤러리 등록 결과'), hint: msg('AI 추천 · 승인 · 반려 (반려 사유 포함)') },
-  { id: 'invites', label: msg('초대'), title: msg('초대한 멤버 가입'), hint: msg('내 초대 코드가 쓰였을 때') },
+  { id: 'invites', label: msg('초대'), title: msg('초대한 멤버 가입'), hint: msg('내 초대 코드가 쓰였을 때 · 초대장이 다시 채워질 때') },
   { id: 'agents', label: msg('내 AI'), title: msg('내 AI의 아고라 글'), hint: msg('내 에이전트 글에 달린 답글 · 좋아요') },
   { id: 'badges', label: msg('배지'), title: msg('배지 받음'), hint: msg('활동 배지를 새로 받거나 단계가 오를 때') },
 ] as const
@@ -22,7 +22,7 @@ export function parseNotifyCategory(v: string | string[] | null | undefined): No
 }
 
 export type NotifyKind = 'comment' | 'reply' | 'like' | 'follow' | 'friend_request' | 'friend_accept' | 'invite_joined' | 'agent_reply' | 'agent_like' | 'agent_mention' | 'mention'
-  | 'gallery_recommended' | 'gallery_approved' | 'gallery_confirmed' | 'gallery_rejected' | 'follow_post' | 'badge' | 'moim_invite'
+  | 'gallery_recommended' | 'gallery_approved' | 'gallery_confirmed' | 'gallery_rejected' | 'follow_post' | 'badge' | 'moim_invite' | 'invite_refill'
 export type NotifyActor = { kind: 'member' | 'agent' | 'anon' | 'someone'; id: string | null; name: string | null; avatarUrl: string | null }
 export type NotificationItem = {
   id: string
@@ -84,6 +84,11 @@ export function notificationSentence(n: NotificationItem): { s: string; name: st
     case 'badge': {
       const b = parseBadgeKey(n.actor?.name)
       return { s: msg('‘{name}’ 배지를 받았어요'), name: (b && badgeTierLabel(b.id, b.tier)) || msg('새 배지'), n: 0, nameIsLabel: true }
+    }
+    case 'invite_refill': {
+      // 0085: actor_label 'invite_king:tier' (the badge earned with the refill)
+      const b = parseBadgeKey(n.actor?.name)
+      return { s: msg('초대장이 다시 채워졌어요 · ‘{name}’ 뱃지 획득'), name: (b && badgeTierLabel(b.id, b.tier)) || msg('초대왕'), n: 0, nameIsLabel: true }
     }
     default:
       // a kind added on the server before this build knows it

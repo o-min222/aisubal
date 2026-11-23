@@ -2,7 +2,7 @@ import { createAnonClient } from '@/lib/supabase/anon'
 import { normalizeInviteCode, type InvitePreview, type InviteStatus } from '@/lib/invite-share'
 import { sb, isMock } from './client'
 import { msg } from '@/i18n/translate'
-import { hasDueRenewal, renewsAt } from '@/lib/invite-renewal'
+import { batchProgress, needsRefill, sortByBatch, type BatchProgress } from '@/lib/invite-batch'
 import { getSiteSettings } from './members'
 
 export type InviteCodeRow = {
@@ -11,67 +11,45 @@ export type InviteCodeRow = {
   isActive: boolean
   usedBy: { displayName: string } | null
   usedAt: string | null
-  /** set once the fresh replacement code exists */
-  renewedAt: string | null
-  /** used, not yet renewed: when the fresh code arrives */
-  renewsAt: string | null
-  /** this code is itself a renewal of a used one */
-  isRenewal: boolean
+  /** 0085 batch: the next N codes arrive once every code of the current batch has joined */
+  batch: number
 }
 
-export async function listMyInviteCodes(memberId: string, signupCompleted: boolean) {
+export type MyInvites = { codes: InviteCodeRow[]; codesActive: boolean; allowance: number; progress: BatchProgress }
+
+function mockCodes(active: boolean, allowance: number): InviteCodeRow[] {
+  // batch 1 fully joined (already refilled), batch 2 with two joined
+  const ago = (d: number) => new Date(Date.now() - d * 24 * 60 * 60 * 1000).toISOString()
+  const names = ['새벽CTO', '프롬프트장인', '코드요정', '데이터곰', '모델러', '야간빌더', '에이전트러']
+  const g = globalThis as unknown as { __mockInvites?: Record<number, InviteCodeRow[]> }
+  g.__mockInvites ??= {}
+  g.__mockInvites[allowance] ??= [
+    ...Array.from({ length: allowance }, (_, i) => ({ code: `AX${i}K8M2P`.slice(0, 8), isUsed: i < 2, isActive: true, usedBy: i < 2 ? { displayName: names[i] } : null, usedAt: i < 2 ? ago(i + 1) : null, batch: 2 })),
+    ...Array.from({ length: allowance }, (_, i) => ({ code: `F${i}MXA2VT`.slice(0, 8), isUsed: true, isActive: true, usedBy: { displayName: names[(i + 2) % names.length] }, usedAt: ago(10 + i), batch: 1 })),
+  ]
+  return g.__mockInvites[allowance].map((c) => ({ ...c, isActive: active }))
+}
+
+export async function listMyInviteCodes(memberId: string, signupCompleted: boolean): Promise<MyInvites> {
+  const allowance = (await getSiteSettings()).invites_per_member
   if (isMock()) {
-    return {
-      codes: [
-        {
-          code: 'AXK8M2PQ',
-          isUsed: false,
-          isActive: signupCompleted,
-          usedBy: null,
-          usedAt: null,
-          renewedAt: null,
-          renewsAt: null,
-          isRenewal: false,
-        },
-        {
-          code: 'C3HQ9VXE',
-          isUsed: false,
-          isActive: signupCompleted,
-          usedBy: null,
-          usedAt: null,
-          renewedAt: null,
-          renewsAt: null,
-          isRenewal: false,
-        },
-        {
-          code: 'B7NJ4TRW',
-          isUsed: true,
-          isActive: signupCompleted,
-          usedBy: { displayName: '새벽CTO' },
-          usedAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
-          renewedAt: null,
-          renewsAt: renewsAt({ usedAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(), renewedAt: null }),
-          isRenewal: false,
-        },
-      ] satisfies InviteCodeRow[],
-      codesActive: signupCompleted,
-    }
+    const codes = mockCodes(signupCompleted, allowance)
+    return { codes: sortByBatch(codes), codesActive: signupCompleted, allowance, progress: batchProgress(codes, allowance) }
   }
 
   const supabase = await sb()
   const load = () =>
     supabase
       .from('invite_codes')
-      .select('code, used_by_id, used_at, renewed_at, renewed_from_id, used_by:members!invite_codes_used_by_id_fkey(display_name)')
+      .select('code, used_by_id, used_at, batch, used_by:members!invite_codes_used_by_id_fkey(display_name)')
       .eq('created_by_id', memberId)
       .order('created_at', { ascending: true })
   let { data, error } = await load()
   if (error) throw error
 
-  // lazy top-up + auto-renewal (0073): only when a slot is missing or a used code is past its 7 days
-  const rows = data || []
-  const slotsShort = rows.filter((r) => !r.renewed_from_id).length < (await getSiteSettings()).invites_per_member
-  if (signupCompleted && (slotsShort || hasDueRenewal(rows.map((r) => ({ usedAt: r.used_at, renewedAt: r.renewed_at }))))) {
+  // the database refills in the redeem path (0085); this only tops up a short batch or heals a missed refill
+  const toBatch = (rows: NonNullable<typeof data>) => rows.map((r) => ({ batch: Number(r.batch) || 1, isUsed: !!r.used_by_id }))
+  if (signupCompleted && needsRefill(toBatch(data || []), allowance)) {
     const { data: n, error: renewError } = await supabase.rpc('invites__renew_mine')
     if (renewError) console.error('invites__renew_mine', renewError)
     else if (Number(n) > 0) ({ data, error } = await load())
@@ -86,13 +64,11 @@ export async function listMyInviteCodes(memberId: string, signupCompleted: boole
       isActive: signupCompleted,
       usedBy: usedBy?.display_name ? { displayName: usedBy.display_name } : null,
       usedAt: row.used_at,
-      renewedAt: row.renewed_at ?? null,
-      renewsAt: row.used_by_id ? renewsAt({ usedAt: row.used_at, renewedAt: row.renewed_at ?? null }) : null,
-      isRenewal: !!row.renewed_from_id,
+      batch: Number(row.batch) || 1,
     }
   })
 
-  return { codes, codesActive: signupCompleted }
+  return { codes: sortByBatch(codes), codesActive: signupCompleted, allowance, progress: batchProgress(codes, allowance) }
 }
 
 export async function validateInviteCode(code: string): Promise<{

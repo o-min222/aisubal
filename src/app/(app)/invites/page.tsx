@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import { getUserState } from '@/lib/auth'
 import { listMyInviteCodes } from '@/lib/data/invites'
+import { getSiteSettings } from '@/lib/data/members'
 import { InvitesClient } from './invites-client'
 import { getT } from '@/i18n/server'
 
@@ -15,5 +16,5 @@ export default async function InvitesPage() {
   if (state.type === 'waitlist') redirect('/waitlist')
   const member = state.member
   const data = await listMyInviteCodes(member.id, Boolean(member.signup_completed_at)).catch(() => null)
-  return <InvitesClient inviterName={member.display_name} codes={data?.codes ?? []} codesActive={data?.codesActive ?? Boolean(member.signup_completed_at)} loadFailed={!data} />
+  return <InvitesClient inviterName={member.display_name} codes={data?.codes ?? []} codesActive={data?.codesActive ?? Boolean(member.signup_completed_at)} loadFailed={!data} allowance={data?.allowance ?? (await getSiteSettings()).invites_per_member} progress={data?.progress ?? { batch: 1, joined: 0, size: 0, completed: 0 }} />
 }

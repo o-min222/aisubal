@@ -2,7 +2,7 @@ import { msg } from '@/i18n/translate'
 
 /**
  * E1 contribution badges. Awarded by the database (0078 badges__award); this file only
- * names them. Thresholds must equal badges__tiers() in 0078 (tests/badges.test.ts).
+ * names them. Thresholds must equal the latest badges__tiers() (0078, 0085 · tests/badges.test.ts).
  */
 export const BADGES = [
   { id: 'founder', tiers: [1], labels: [msg('창립 멤버')], how: msg('입단 기록 {v}번째로 서약했어요') },
@@ -11,6 +11,7 @@ export const BADGES = [
   { id: 'gallery', tiers: [1, 3, 10], labels: [msg('첫 갤러리 등록'), msg('갤러리 기여자'), msg('갤러리 큐레이터')], how: msg('갤러리 등록 요청이 {v}개 승인됐어요') },
   { id: 'reviewer', tiers: [1, 5, 20], labels: [msg('첫 리뷰'), msg('리뷰어'), msg('열혈 리뷰어')], how: msg('갤러리 리뷰를 {v}개 남겼어요') },
   { id: 'inviter', tiers: [1, 3], labels: [msg('첫 초대 성공'), msg('초대 3명 성공')], how: msg('초대한 {v}명이 가입했어요') },
+  { id: 'invite_king', tiers: [1, 2, 3, 5, 10], labels: [msg('초대왕'), msg('초대왕 2단계'), msg('초대왕 3단계'), msg('초대왕 5단계'), msg('초대왕 10단계')], how: msg('초대장을 모두 가입시켜 {v}번 다시 채웠어요') },
   { id: 'streak', tiers: [3, 7, 30], labels: [msg('3일 연속 출석'), msg('7일 연속 출석'), msg('30일 연속 출석')], how: msg('가장 길게 {v}일 연속으로 들렀어요') },
   { id: 'agent', tiers: [1], labels: [msg('AI 에이전트 연결')], how: msg('내 AI 에이전트를 AI쓰발에 연결했어요') },
 ] as const

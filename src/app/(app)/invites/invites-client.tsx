@@ -1,18 +1,18 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Users, Copy, Check, AlertCircle, User, Share2, ChevronDown, Link2, Send, UserPlus, RefreshCw } from 'lucide-react'
+import { Users, Copy, Check, AlertCircle, User, Share2, ChevronDown, Link2, Send, UserPlus, Crown } from 'lucide-react'
 import { toast } from 'sonner'
 import type { InviteCodeRow } from '@/lib/data/invites'
+import type { BatchProgress } from '@/lib/invite-batch'
 import { RelativeTime } from '@/components/relative-time'
-import { kstShortDate } from '@/lib/kst'
 import { inviteShareText, inviteUrl } from '@/lib/invite-share'
 import { T } from '@/i18n/t'
 import { msg as m } from '@/i18n/translate'
 import { tx, tn, useLocale } from '@/i18n/client'
 
 /** Real invite codes (no mock data): copy the invite message (send it anywhere) or the Web Share sheet. */
-export function InvitesClient({ inviterName, codes, codesActive, loadFailed }: { inviterName: string; codes: InviteCodeRow[]; codesActive: boolean; loadFailed: boolean }) {
+export function InvitesClient({ inviterName, codes, codesActive, loadFailed, allowance, progress }: { inviterName: string; codes: InviteCodeRow[]; codesActive: boolean; loadFailed: boolean; allowance: number; progress: BatchProgress }) {
   const locale = useLocale()
   const [copied, setCopied] = useState<string | null>(null)
   const [canShare, setCanShare] = useState(false)
@@ -78,19 +78,40 @@ export function InvitesClient({ inviterName, codes, codesActive, loadFailed }: {
 
       <div className="card overflow-hidden">
         <div className="p-4 border-b border-n-e5e5e5">
-          <h2 className="font-semibold" style={{ color: 'var(--n-111)' }}>
-            <T>내 초대 코드</T>
-          </h2>
-          <p className="text-xs text-n-888 mt-0.5"><T>각 코드는 1회만 쓸 수 있어요 · 쓰인 코드는 7일 뒤 새 코드로 다시 생겨요</T></p>
+          <div className="flex items-baseline justify-between gap-3">
+            <h2 className="font-semibold" style={{ color: 'var(--n-111)' }}>
+              <T>내 초대 코드</T>
+            </h2>
+            {codesActive && !loadFailed && (
+              <span className="text-sm text-n-555 tabular-nums whitespace-nowrap" data-testid="invite-progress">
+                <T s="{n}/{total}명 가입" vars={{ n: <b className="text-n-111">{progress.joined}</b>, total: progress.size }} />
+              </span>
+            )}
+          </div>
+          {codesActive && !loadFailed && (
+            <div className="invite-progress mt-2" role="progressbar" aria-valuemin={0} aria-valuemax={progress.size} aria-valuenow={progress.joined} aria-label={tx('초대 진행')}>
+              <span style={{ width: `${progress.size ? Math.round((progress.joined / progress.size) * 100) : 0}%` }} />
+            </div>
+          )}
+          <p className="text-xs text-n-888 mt-2">
+            <T s="모두 가입하면 바로 {n}장이 다시 채워져요" vars={{ n: allowance }} /> · <T>쓰지 않은 코드는 계속 쓸 수 있어요</T>
+            {progress.completed > 0 && (
+              <span className="inline-flex items-center gap-1 ml-1 whitespace-nowrap">
+                · <Crown className="w-3.5 h-3.5" aria-hidden /> <T s="초대장 {n}번 다시 채움" vars={{ n: progress.completed }} />
+              </span>
+            )}
+          </p>
         </div>
         {loadFailed && <p className="p-6 text-center text-sm text-n-888"><T>초대 코드를 불러오지 못했어요. 잠시 후 다시 시도해 주세요.</T></p>}
         {!loadFailed && codes.length === 0 && <p className="p-6 text-center text-sm text-n-888"><T>아직 받은 초대 코드가 없어요.</T></p>}
         <ul className="divide-y divide-n-eee">
-          {codes.map((c) => {
+          {codes.map((c, i) => {
+            const earlier = c.batch < progress.batch && (i === 0 || codes[i - 1].batch !== c.batch)
             const usable = !c.isUsed && codesActive
             const msg = inviteShareText(inviterName, c.code, origin, tx, locale)
             return (
-              <li key={c.code} className="p-4">
+              <li key={c.code} className={earlier ? 'p-4 invite-earlier' : 'p-4'}>
+                {earlier && <p className="text-xs text-n-888 mb-2"><T>지난 초대장</T></p>}
                 <div className="flex items-center justify-between gap-3 flex-wrap">
                   <div className="flex items-center gap-3 min-w-0">
                     <span className={`font-mono text-lg tracking-wider ${usable ? 'text-n-111' : 'text-n-aaa'}`}>{c.code}</span>
@@ -149,12 +170,6 @@ export function InvitesClient({ inviterName, codes, codesActive, loadFailed }: {
                     )}
                   </div>
                 )}
-                {c.isUsed && (c.renewsAt || c.renewedAt) && (
-                  <p className="mt-1 text-xs text-n-888 flex items-center gap-1">
-                    <RefreshCw className="w-3.5 h-3.5" aria-hidden />
-                    {c.renewedAt ? <T>새 코드로 갱신됐어요</T> : <T s="{date}에 새 코드가 다시 생겨요" vars={{ date: kstShortDate(c.renewsAt!, locale === 'en' ? 'en-US' : 'ko-KR') }} />}
-                  </p>
-                )}
               </li>
             )
           })}
@@ -169,7 +184,7 @@ export function InvitesClient({ inviterName, codes, codesActive, loadFailed }: {
         <p><T>2. 받은 분이 링크를 열면 누가 초대했는지와 코드 상태를 보고 Google로 로그인해요.</T></p>
         <p><T>3. 로그인 후 가입 화면에 코드가 자동으로 들어가 있어요. 버튼 한 번이면 가입 완료.</T></p>
         <p><T>4. 이미 쓰인 코드면 받은 분은 웨이트리스트로 가요. 각 코드는 1회용이에요.</T></p>
-        <p><T>5. 멤버마다 초대 자리가 3개 있어요. 초대가 쓰이면 7일 뒤 그 자리에 새 코드가 자동으로 생겨요. 쓰지 않은 코드는 늘어나지 않아요.</T></p>
+        <p><T s="5. 멤버마다 초대장이 {n}장 있어요. {n}명이 모두 가입하면 바로 새 초대장 {n}장이 채워지고 ‘초대왕’ 뱃지를 받아요. 쓰지 않은 코드는 그대로 남아요." vars={{ n: allowance }} /></p>
       </div>
     </div>
   )

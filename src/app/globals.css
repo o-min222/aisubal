@@ -2559,3 +2559,8 @@ a.notif-pop-all:hover { background: var(--n-fafafa); }
 .mfc-join:disabled { opacity: .6; }
 .mfc-open { display: inline-flex; align-items: center; gap: 2px; height: 34px; padding: 0 4px 0 10px; border-radius: 999px; font-size: 13.5px; font-weight: 600; color: var(--n-333); flex: 0 0 auto; }
 .mfc-open:hover { background: var(--n-f1f1ef); color: var(--n-111); text-decoration: none; }
+
+/* A31 invites: progress of the current batch toward the next refill */
+.invite-progress { height: 4px; border-radius: 999px; background: var(--n-eee); overflow: hidden; }
+.invite-progress > span { display: block; height: 100%; border-radius: inherit; background: var(--n-111); transition: width .3s ease; }
+.invite-earlier { background: color-mix(in srgb, var(--n-eee) 30%, transparent); }

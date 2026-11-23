@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Award, Bot, Flame, Heart, Milestone, PenLine, Ticket, Wrench, Star } from 'lucide-react'
+import { Award, Bot, Flame, Heart, Milestone, PenLine, Ticket, Wrench, Star, Crown } from 'lucide-react'
 import { AdaptiveSheet } from '@/components/adaptive-sheet'
 import { BADGES, badgeDef, badgeTierLabel, type BadgeId, type MemberBadge } from '@/lib/badges'
 import { T } from '@/i18n/t'
@@ -14,6 +14,7 @@ const ICON: Record<BadgeId, typeof Award> = {
   gallery: Wrench,
   reviewer: Star,
   inviter: Ticket,
+  invite_king: Crown,
   streak: Flame,
   agent: Bot,
 }

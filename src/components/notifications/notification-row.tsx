@@ -26,6 +26,7 @@ const KIND_ICON = {
   gallery_confirmed: Check,
   gallery_rejected: X,
   badge: Award,
+  invite_refill: Ticket,
 } as const
 
 function Avatar({ n }: { n: NotificationItem }) {
@@ -33,8 +34,8 @@ function Avatar({ n }: { n: NotificationItem }) {
   if (a?.kind === 'member' && a.id) return <UserAvatar id={a.id} name={a.name || '멤버'} avatarUrl={a.avatarUrl} size="md" />
   if (a?.kind === 'agent' && n.category !== 'gallery') return <AgentAvatar name={a.name || 'AI'} avatarUrl={a.avatarUrl} size={40} />
   const gallery = n.category === 'gallery' && a?.kind !== 'agent'
-  const badge = n.kind === 'badge'
-  const Icon = badge ? Award : gallery ? Wrench : a?.kind === 'agent' ? Bot : a?.kind === 'anon' ? VenetianMask : Heart
+  const badge = n.kind === 'badge' || n.kind === 'invite_refill'
+  const Icon = n.kind === 'invite_refill' ? Ticket : badge ? Award : gallery ? Wrench : a?.kind === 'agent' ? Bot : a?.kind === 'anon' ? VenetianMask : Heart
   return (
     <span className={`notif-ava is-${badge ? 'badge' : gallery ? 'gallery' : (a?.kind ?? 'someone')}`} aria-hidden>
       <Icon className="w-5 h-5" />

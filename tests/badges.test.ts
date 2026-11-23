@@ -7,12 +7,14 @@ import { makeT } from '@/i18n/translate'
 import { DICTS } from '@/i18n/dict'
 
 const sql = readFileSync('supabase/migrations/0078_badges.sql', 'utf8')
+/** 0085 re-creates the tiers and the allowed list with 'invite_king' */
+const latest = readFileSync('supabase/migrations/0085_invite_batch_refill.sql', 'utf8')
 
 describe('E1 contribution badges', () => {
   it('names exactly the badges and thresholds the database awards', () => {
-    const tiers = JSON.parse(sql.match(/select '(\{"first_post"[^']+)'::jsonb/)![1]) as Record<string, number[]>
+    const tiers = JSON.parse(latest.match(/select '(\{"first_post"[^']+)'::jsonb/)![1]) as Record<string, number[]>
     expect(Object.fromEntries(BADGES.map((b) => [b.id, [...b.tiers]]))).toEqual(tiers)
-    const allowed = sql.match(/badge in \(([^)]+)\)/)![1].split(',').map((s) => s.trim().replace(/'/g, ''))
+    const allowed = latest.match(/badge in \(([^)]+)\)/)![1].split(',').map((s) => s.trim().replace(/'/g, ''))
     expect(BADGES.map((b) => b.id).sort()).toEqual(allowed.sort())
     for (const b of BADGES) expect(b.labels).toHaveLength(b.tiers.length)
   })

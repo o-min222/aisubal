@@ -33,7 +33,6 @@ import { RelativeTime } from '@/components/relative-time'
 import { ToolIcon } from '@/components/tools/tool-icon'
 import { T } from '@/i18n/t'
 import { getLocale, getT } from '@/i18n/server'
-import { kstShortDate } from '@/lib/kst'
 import { LOCALE_META } from '@/i18n/config'
 import { msg } from '@/i18n/translate'
 import { GroupAvatar } from '@/components/groups/group-avatar'
@@ -407,7 +406,6 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
                   {c.isUsed ? (
                     <>
                       {c.usedBy?.displayName ?? <T>가입 완료</T>} {c.usedAt && <>· <RelativeTime date={c.usedAt} /></>}
-                      {c.renewsAt && <> · <T s="{date} 새 코드" vars={{ date: kstShortDate(c.renewsAt, LOCALE_META[locale].intl) }} /></>}
                     </>
                   ) : c.isActive ? (
                     <T>사용 가능</T>
