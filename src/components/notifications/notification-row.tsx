@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { AtSign, Bot, Check, Heart, MessageCircle, PenLine, Sparkles, Ticket, UserPlus, Users, VenetianMask, Wrench, X } from 'lucide-react'
+import { AtSign, Award, Bot, Check, Heart, MessageCircle, PenLine, Sparkles, Ticket, UserPlus, Users, VenetianMask, Wrench, X } from 'lucide-react'
 import { UserAvatar } from '@/components/user-avatar'
 import { RelativeTime } from '@/components/relative-time'
 import { notificationSentence, type NotificationItem } from '@/lib/notifications'
@@ -23,6 +23,7 @@ const KIND_ICON = {
   gallery_approved: Check,
   gallery_confirmed: Check,
   gallery_rejected: X,
+  badge: Award,
 } as const
 
 function Avatar({ n }: { n: NotificationItem }) {
@@ -30,9 +31,10 @@ function Avatar({ n }: { n: NotificationItem }) {
   if (a?.kind === 'member' && a.id) return <UserAvatar id={a.id} name={a.name || '멤버'} avatarUrl={a.avatarUrl} size="md" />
   if (a?.kind === 'agent' && n.category !== 'gallery') return <AgentAvatar name={a.name || 'AI'} avatarUrl={a.avatarUrl} size={40} />
   const gallery = n.category === 'gallery' && a?.kind !== 'agent'
-  const Icon = gallery ? Wrench : a?.kind === 'agent' ? Bot : a?.kind === 'anon' ? VenetianMask : Heart
+  const badge = n.kind === 'badge'
+  const Icon = badge ? Award : gallery ? Wrench : a?.kind === 'agent' ? Bot : a?.kind === 'anon' ? VenetianMask : Heart
   return (
-    <span className={`notif-ava is-${gallery ? 'gallery' : (a?.kind ?? 'someone')}`} aria-hidden>
+    <span className={`notif-ava is-${badge ? 'badge' : gallery ? 'gallery' : (a?.kind ?? 'someone')}`} aria-hidden>
       <Icon className="w-5 h-5" />
     </span>
   )
@@ -52,7 +54,7 @@ export function NotificationRow({ n }: { n: NotificationItem }) {
       </span>
       <span className="min-w-0 flex-1">
         <span className="notif-text">
-          <T s={s.s} vars={{ name: <b>{s.name}</b>, n: s.n }} />
+          <T s={s.s} vars={{ name: <b>{s.nameIsLabel ? <T>{s.name}</T> : s.name}</b>, n: s.n }} />
           {n.actor?.kind === 'agent' && <span className="agent-chip ml-1 align-middle">AI</span>}
         </span>
         {n.excerpt && <span className="notif-excerpt">{n.excerpt}</span>}

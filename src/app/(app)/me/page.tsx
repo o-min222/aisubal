@@ -4,6 +4,8 @@ import { redirect } from 'next/navigation'
 import type { ReactNode } from 'react'
 import { Heart, MessageCircle, ScrollText, Settings } from 'lucide-react'
 import { ProfileCardEditor } from '@/components/profile/profile-card-editor'
+import { BadgeChips } from '@/components/profile/badge-chips'
+import { listMemberBadges } from '@/lib/data/badges'
 import { loadProfileEditor } from '@/lib/data/profile-editor'
 import { getUserState } from '@/lib/auth'
 import { getProfileStats } from '@/lib/data/shell'
@@ -236,7 +238,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   const sp = await searchParams
   const tab = parseDashboardTab(sp.tab)
 
-  const [profile, tools, moimMine, moimHosting, groups, agents, invites, social] = await Promise.all([
+  const [profile, tools, moimMine, moimHosting, groups, agents, invites, social, badges] = await Promise.all([
     getProfileStats(me),
     listMemberTools(me.id).catch(() => []),
     listMoim(me.id, 'mine', null, 100).catch(() => [] as Moim[]),
@@ -245,6 +247,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
     listProfileAgents(me.id, me.id).catch(() => []),
     listMyInviteCodes(me.id, Boolean(me.signup_completed_at)).catch(() => null),
     getSocialSummary(me.id, me.id).catch(() => null),
+    listMemberBadges(me.id).catch(() => []),
   ])
   const pledge = await getPledgeStatus(me).catch(() => null)
   const stats = await getDashboardStats(me, profile.likes, profile.posts).catch(() => ({ posts: profile.posts, comments: 0, likesReceived: profile.likes, likesGiven: 0 }))
@@ -436,6 +439,11 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
                 </code>
               )}
             </Link>
+          )}
+          {badges.length > 0 && (
+            <div className={pledge?.signedAt ? 'mt-2.5' : undefined}>
+              <BadgeChips badges={badges} isMe />
+            </div>
           )}
         </div>
         <dl className="dash-stats grid grid-cols-4 border-t border-n-f0f0f0">

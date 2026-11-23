@@ -17,6 +17,8 @@ import { PostCard } from '@/components/timeline/post-card'
 import { ToolIcon } from '@/components/tools/tool-icon'
 import { getUsageVisibility, listMemberTools } from '@/lib/data/tools'
 import { UsageVisibility } from '@/components/tools/usage-visibility'
+import { BadgeChips } from '@/components/profile/badge-chips'
+import { listMemberBadges } from '@/lib/data/badges'
 import { TOOL_TYPE_CHIP, toolHref } from '@/lib/tool-rules'
 import { getProfileLinks } from '@/lib/data/profile'
 import { LINK_KINDS, LINK_VISIBILITY } from '@/lib/profile-rules'
@@ -33,7 +35,7 @@ export async function generateMetadata() {
   return { title: t('프로필 · AI쓰발') }
 }
 
-export default async function MemberProfilePage({ params }: { params: Promise<{ id: string }> }) {
+export default async function MemberProfilePage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ badges?: string }> }) {
   const st = await getT()
   const state = await getUserState()
   if (state.type === 'unauthenticated') redirect('/login')
@@ -48,14 +50,16 @@ export default async function MemberProfilePage({ params }: { params: Promise<{ 
   if (!member || !member.signup_completed_at) notFound()
 
   // Other members' pages only list real-name posts: nickname posts stay unlinkable.
-  const [{ posts, totalPages }, stats, tools, social, agents, stack] = await Promise.all([
+  const [{ posts, totalPages }, stats, tools, social, agents, stack, badges] = await Promise.all([
     listFeedPage(viewer.id, { authorId: member.id, includeNickname: isMe, page: 1 }),
     isMe ? getProfileStats(viewer) : Promise.resolve(null),
     listMemberTools(member.id).catch(() => []),
     getSocialSummary(viewer.id, member.id).catch(() => null),
     listProfileAgents(viewer.id, member.id).catch(() => []),
     getProfileStack(viewer.id, member.id).catch(() => null),
+    listMemberBadges(member.id).catch(() => []),
   ])
+  const openBadge = (await searchParams).badges?.slice(0, 20) ?? null
   const usageVis = isMe ? await getUsageVisibility().catch(() => 'members' as const) : 'members'
   const authorId = member.id
   async function more(page: number) {
@@ -122,6 +126,11 @@ export default async function MemberProfilePage({ params }: { params: Promise<{ 
                 )
               })}
             </ul>
+          )}
+          {badges.length > 0 && (
+            <div className="mt-3">
+              <BadgeChips badges={badges} isMe={isMe} initialOpen={openBadge} />
+            </div>
           )}
           {social && (
             <div className="profile-social flex flex-wrap gap-x-5 gap-y-1 mt-3 text-sm">

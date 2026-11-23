@@ -2245,6 +2245,8 @@ button.rp-link { width: 100%; text-align: left; font: inherit; cursor: pointer; 
 .notif-ava { width: 40px; height: 40px; border-radius: 999px; display: inline-flex; align-items: center; justify-content: center; background: var(--n-f2f2f0); color: var(--n-555); }
 .notif-ava.is-agent { background: var(--n-111); color: var(--n-fff); }
 .notif-ava.is-anon { background: var(--n-2b2b2b); color: var(--n-fff); }
+.notif-ava.is-badge { background: #fdf0dc; color: #b45309; }
+.dark .notif-ava.is-badge { background: #3a2a12; color: #f5b041; }
 .notif-kind {
   position: absolute; right: -3px; bottom: -3px; width: 18px; height: 18px; border-radius: 999px; display: inline-flex; align-items: center; justify-content: center;
   background: var(--n-111); color: var(--n-fff); box-shadow: 0 0 0 2px var(--n-fff);
@@ -2254,6 +2256,7 @@ button.rp-link { width: 100%; text-align: left; font: inherit; cursor: pointer; 
 .notif-kind.k-invite_joined, .notif-kind.k-gallery_approved, .notif-kind.k-gallery_confirmed { background: #2f9e66; }
 .notif-kind.k-gallery_rejected { background: #e5484d; }
 .notif-kind.k-gallery_recommended { background: #8b5cf6; }
+.notif-kind.k-badge { background: #d97706; }
 .notif-kind.k-follow_post { background: #3b82f6; }
 .notif-text { display: block; font-size: 14.5px; line-height: 1.45; color: var(--n-333); word-break: keep-all; overflow-wrap: anywhere; }
 .notif-text b { font-weight: 700; color: var(--n-111); }
@@ -2494,3 +2497,19 @@ a.notif-pop-all:hover { background: var(--n-fafafa); }
 .usage-vis { display: inline-flex; align-items: center; gap: 4px; min-height: 32px; padding: 0 4px 0 8px; border: 1px solid var(--n-e5e5e5); border-radius: 999px; color: var(--n-555); font-size: 12px; background: var(--n-fff); }
 .usage-vis select { appearance: none; -webkit-appearance: none; background: transparent; border: 0; color: inherit; font: inherit; padding: 0 14px 0 0; min-height: 30px; cursor: pointer; background-image: linear-gradient(45deg, transparent 50%, currentColor 50%), linear-gradient(135deg, currentColor 50%, transparent 50%); background-position: right 5px center, right 1px center; background-size: 4px 4px; background-repeat: no-repeat; }
 .usage-vis select:focus-visible { outline: 2px solid var(--c-06c); outline-offset: 2px; border-radius: 6px; }
+
+/* E1 badges: compact chips on the profile, details in a sheet */
+.badge-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.badge-chip { display: inline-flex; align-items: center; gap: 5px; min-height: 28px; padding: 0 10px 0 7px; min-width: 28px; justify-content: center; border-radius: 999px; font-size: 12px; font-weight: 600; color: var(--n-333); background: var(--n-f4f4f2); border: 1px solid var(--n-ececea); cursor: pointer; }
+.badge-chip:hover { background: var(--n-ececea); }
+.badge-chip:focus-visible { outline: 2px solid var(--c-06c); outline-offset: 2px; }
+.badge-ico { width: 18px; height: 18px; border-radius: 999px; display: inline-grid; place-items: center; background: #fdf0dc; color: #b45309; flex-shrink: 0; }
+.dark .badge-ico { background: #3a2a12; color: #f5b041; }
+.badge-tier { display: inline-flex; gap: 2px; margin-left: 1px; }
+.badge-tier i { width: 4px; height: 4px; border-radius: 999px; background: var(--n-ccc); }
+.badge-tier i.on { background: #d97706; }
+.dark .badge-tier i.on { background: #f5b041; }
+.badge-list { display: grid; gap: 2px; }
+.badge-item { display: flex; align-items: flex-start; gap: 12px; padding: 10px 2px; border-radius: 12px; }
+.badge-item.is-focus { background: var(--n-f4f4f2); padding-left: 8px; padding-right: 8px; }
+.badge-item .badge-ico { width: 32px; height: 32px; }

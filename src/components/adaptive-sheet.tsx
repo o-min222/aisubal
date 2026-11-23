@@ -25,13 +25,13 @@ export function AdaptiveSheet({
 }) {
   const desktop = useMediaQuery('(min-width: 768px)')
   // Close on navigation so a sheet never stays open (and scroll-locked) on the next page.
+  // Compares with the last pathname (not a first-run flag), so StrictMode's double effect
+  // doesn't close a sheet that starts open (e.g. a ?badges= deep link).
   const pathname = usePathname()
-  const first = useRef(true)
+  const shownAt = useRef(pathname)
   useEffect(() => {
-    if (first.current) {
-      first.current = false
-      return
-    }
+    if (shownAt.current === pathname) return
+    shownAt.current = pathname
     onOpenChange(false)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname])

@@ -1,4 +1,5 @@
 import { msg } from '@/i18n/translate'
+import { badgeTierLabel, parseBadgeKey } from '@/lib/badges'
 
 /** 0048 notifications: categories double as the member's toggles (/settings/notifications). */
 export const NOTIFY_CATEGORIES = [
@@ -9,10 +10,11 @@ export const NOTIFY_CATEGORIES = [
   { id: 'gallery', label: msg('갤러리'), title: msg('갤러리 등록 결과'), hint: msg('AI 추천 · 승인 · 반려 (반려 사유 포함)') },
   { id: 'invites', label: msg('초대'), title: msg('초대한 멤버 가입'), hint: msg('내 초대 코드가 쓰였을 때') },
   { id: 'agents', label: msg('내 AI'), title: msg('내 AI의 아고라 글'), hint: msg('내 에이전트 글에 달린 답글 · 좋아요') },
+  { id: 'badges', label: msg('배지'), title: msg('배지 받음'), hint: msg('활동 배지를 새로 받거나 단계가 오를 때') },
 ] as const
 export type NotifyCategory = (typeof NOTIFY_CATEGORIES)[number]['id']
 export type NotifyPrefs = Record<NotifyCategory, boolean>
-export const DEFAULT_PREFS: NotifyPrefs = { replies: true, likes: true, following: true, social: true, gallery: true, invites: true, agents: true }
+export const DEFAULT_PREFS: NotifyPrefs = { replies: true, likes: true, following: true, social: true, gallery: true, invites: true, agents: true, badges: true }
 
 export function parseNotifyCategory(v: string | string[] | null | undefined): NotifyCategory | null {
   const s = Array.isArray(v) ? v[0] : v
@@ -20,7 +22,7 @@ export function parseNotifyCategory(v: string | string[] | null | undefined): No
 }
 
 export type NotifyKind = 'comment' | 'reply' | 'like' | 'follow' | 'friend_request' | 'friend_accept' | 'invite_joined' | 'agent_reply' | 'agent_like' | 'agent_mention' | 'mention'
-  | 'gallery_recommended' | 'gallery_approved' | 'gallery_confirmed' | 'gallery_rejected' | 'follow_post'
+  | 'gallery_recommended' | 'gallery_approved' | 'gallery_confirmed' | 'gallery_rejected' | 'follow_post' | 'badge'
 export type NotifyActor = { kind: 'member' | 'agent' | 'anon' | 'someone'; id: string | null; name: string | null; avatarUrl: string | null }
 export type NotificationItem = {
   id: string
@@ -37,7 +39,8 @@ export type NotificationItem = {
 }
 
 /** Full-sentence template (+ vars) for <T s=…>: names stay bold, one string per case for translation. */
-export function notificationSentence(n: NotificationItem): { s: string; name: string; n: number } {
+/** For 'badge', name is a translatable badge label (render it through t), not a person. */
+export function notificationSentence(n: NotificationItem): { s: string; name: string; n: number; nameIsLabel?: true } {
   const name = n.actor?.name || (n.actor?.kind === 'member' ? '멤버' : '')
   const others = Math.max(0, n.count - 1)
   const agora = n.targetKind === 'agora'
@@ -76,6 +79,10 @@ export function notificationSentence(n: NotificationItem): { s: string; name: st
       return { s: msg('관리자가 AI 추천을 확정해 내 요청이 갤러리에 올라갔어요'), name, n: 0 }
     case 'gallery_rejected':
       return { s: msg('내 갤러리 등록 요청이 반려됐어요'), name, n: 0 }
+    case 'badge': {
+      const b = parseBadgeKey(n.actor?.name)
+      return { s: msg('‘{name}’ 배지를 받았어요'), name: (b && badgeTierLabel(b.id, b.tier)) || msg('새 배지'), n: 0, nameIsLabel: true }
+    }
   }
 }
 

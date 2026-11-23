@@ -54,8 +54,8 @@ export const PUSH_TEST_TEXT = msg('테스트 알림이에요. 이 기기에서 �
 export function pushPayload(job: PushJob, t: Tr): PushPayload {
   if (!job.item) return { title: 'AI쓰발', body: t(PUSH_TEST_TEXT), url: '/settings/notifications', tag: 'test', badge: job.unread }
   const n = job.item
-  const { s, name, n: count } = notificationSentence(n)
-  const sentence = t(s, { name, n: count })
+  const { s, name, n: count, nameIsLabel } = notificationSentence(n)
+  const sentence = t(s, { name: nameIsLabel ? t(name) : name, n: count })
   const body = n.excerpt ? `${sentence}\n${n.excerpt}` : sentence
   return { title: 'AI쓰발', body: body.slice(0, 240), url: safePath(n.link), tag: `${n.kind}:${n.targetId ?? n.id}`, badge: job.unread }
 }
