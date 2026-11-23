@@ -5,6 +5,7 @@ import type { Member, WaitlistEntry, UserState } from '@/lib/supabase/types'
 import { isMock } from '@/lib/data/client'
 import { getNicknameUnlockFromConfig } from '@/lib/data/members'
 import { mockProfileOf } from '@/lib/data/profile'
+import { mockAgentInteractionDefault } from '@/lib/data/agent-interaction-default'
 
 const DEV_MEMBER: Member = {
   id: 'dev-user-id',
@@ -40,11 +41,12 @@ const DEV_MEMBER: Member = {
 export const getUserState = cache(async function getUserState(): Promise<UserState> {
   if (isMock()) {
     const saved = mockProfileOf(DEV_MEMBER.id)
+    const dev = { ...DEV_MEMBER, agent_interaction_default: mockAgentInteractionDefault() }
     return {
       type: 'member',
       member: saved
-        ? { ...DEV_MEMBER, handle: saved.handle, display_name: saved.displayName, bio: saved.bio, avatar_url: saved.avatarUrl, show_real_name: saved.showRealName, public_real_name: saved.showRealName ? DEV_MEMBER.private_real_name : null }
-        : DEV_MEMBER,
+        ? { ...dev, handle: saved.handle, display_name: saved.displayName, bio: saved.bio, avatar_url: saved.avatarUrl, show_real_name: saved.showRealName, public_real_name: saved.showRealName ? DEV_MEMBER.private_real_name : null }
+        : dev,
     }
   }
 

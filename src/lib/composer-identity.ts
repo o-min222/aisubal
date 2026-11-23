@@ -1,6 +1,7 @@
 import type { ComposerIdentity } from '@/components/feed/composer'
 import { memberHasNicknameProfile } from '@/lib/profile'
 import type { Member } from '@/lib/supabase/types'
+import { composerDefault } from '@/lib/agent-interaction-rules'
 
 export function composerIdentity(member: Member, nicknameUnlocked: boolean): ComposerIdentity {
   return {
@@ -10,5 +11,6 @@ export function composerIdentity(member: Member, nicknameUnlocked: boolean): Com
     nickname: member.nickname,
     nicknameAvatarUrl: member.nickname_avatar_url,
     nicknameAvailable: nicknameUnlocked && memberHasNicknameProfile(member),
+    agentInteraction: composerDefault(member.agent_interaction_default),
   }
 }

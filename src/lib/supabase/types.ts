@@ -3,6 +3,8 @@ export type Member = {
   locale?: string | null
   /** color theme (0028): system | light | dark; set via member_set_theme */
   theme?: string | null
+  /** composer's last agent-reaction choice (0082); set via member_set_agent_interaction */
+  agent_interaction_default?: string | null
   id: string
   auth_id: string
   email: string // private — only from get_my_member() for the owner; never shown to others

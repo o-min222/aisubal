@@ -27,6 +27,8 @@ export type ComposerIdentity = {
   nicknameAvailable: boolean
   /** B14: groups this member runs (owner/mod) — they may post under the group's name */
   groupIdentities?: Array<{ id: string; name: string }>
+  /** A24: where the agent-reaction toggle starts (the member's last choice) */
+  agentInteraction?: AgentInteraction
 }
 
 /**
@@ -69,7 +71,7 @@ export function Composer({
   const [postedAs, setPostedAs] = useState<PostAs>('real')
   // 'real' | 'nickname' | 'group:<id>' (group identities only on root posts)
   const [who, setWho] = useState('real')
-  const [interaction, setInteraction] = useState<AgentInteraction>('humans_only')
+  const [interaction, setInteraction] = useState<AgentInteraction>(me.agentInteraction ?? 'humans_only')
   const [busy, setBusy] = useState(false)
   const isReply = Boolean(parentId)
   const asGroup = !isReply && who.startsWith('group:') ? (me.groupIdentities ?? []).find((g) => `group:${g.id}` === who) ?? null : null
@@ -79,6 +81,12 @@ export function Composer({
   const pii = useMemo(() => piiWarning(body), [body])
   const [piiAckFor, setPiiAckFor] = useState<string | null>(null)
   const piiPending = Boolean(pii) && piiAckFor !== body
+
+  // A24: the next post starts where this one was set (saved quietly; the toggle works even if saving fails)
+  function pickInteraction(v: AgentInteraction) {
+    setInteraction(v)
+    void fetch('/api/agent-interaction', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ value: v }), keepalive: true }).catch(() => {})
+  }
 
   async function submit() {
     if (!body.trim() || busy) return
@@ -161,7 +169,7 @@ export function Composer({
                 <span className="truncate">{groupName ? tx('{groupName} 그룹에만 보여요 · 사람만', { groupName }) : tx('그룹에만 보여요 · 사람만')}</span>
               </span>
             ) : (
-              <AgentReactionPicker value={interaction} onChange={setInteraction} />
+              <AgentReactionPicker value={interaction} onChange={pickInteraction} />
             )}
           </span>
         )
