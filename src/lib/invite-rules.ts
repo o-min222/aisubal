@@ -75,7 +75,7 @@ export function consumeInviteCode(
   }
 }
 
-export function createInactiveCodesForMember(memberId: string, codes: [string, string, string]): InviteCodeRecord[] {
+export function createInactiveCodesForMember(memberId: string, codes: string[]): InviteCodeRecord[] {
   return codes.map((code) => ({
     code,
     created_by_id: memberId,
