@@ -1,4 +1,4 @@
-import { Lock, MapPin, Users } from 'lucide-react'
+import { Lock, Users } from 'lucide-react'
 import type { Moim } from '@/lib/data/moim'
 import { KstDate } from '@/components/kst-date'
 import { ModeBadge, RsvpBadge } from '@/components/moim/moim-badges'
@@ -25,7 +25,7 @@ export function MoimRow({ moim: m, href, active }: { moim: Moim; href: string; a
       badge={m.myRsvp ? <RsvpBadge status={m.myRsvp.status} position={m.myRsvp.position} /> : m.status === 'cancelled' ? <span className="crow-chip"><T>취소됨</T></span> : null}
       preview={
         <>
-          <KstDate iso={m.startsAt} />
+          {m.timeTbd ? <><KstDate iso={m.startsAt} part="date" /> <T>· 시간 미정</T></> : <KstDate iso={m.startsAt} />}
           {m.mode === 'offline' && m.venueName ? ` · ${m.venueName}` : ''}
         </>
       }
@@ -48,11 +48,6 @@ export function MoimRow({ moim: m, href, active }: { moim: Moim; href: string; a
             </span>
           ) : (
             <span>{m.host.name}</span>
-          )}
-          {m.mode === 'offline' && !m.venueName && (
-            <span>
-              <MapPin className="w-3 h-3" /> <T>장소는 확정 후 공개</T>
-            </span>
           )}
         </>
       }

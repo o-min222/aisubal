@@ -2525,3 +2525,22 @@ a.notif-pop-all:hover { background: var(--n-fafafa); }
 .auth-inapp-hint { color: rgba(255, 255, 255, .62); font-size: 13px; line-height: 1.6; margin: 6px 0 16px; word-break: keep-all; }
 /* the hero's language pill stays light-on-dark in the dark theme too (beats .dark .locale-seg button.on) */
 .auth-hero .locale-on-dark .locale-seg button.on { background: #ffffff; color: #111111; box-shadow: none; }
+
+/* A29: minimal 모임 form — date + optional time side by side, 온/오프 chip with 지역, @invite chips */
+.moim-form .moim-when { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: 8px; }
+.moim-form .moim-where { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.moim-form .moim-where .seg { flex: 0 0 auto; }
+.moim-form .moim-where input { flex: 1 1 180px; min-width: 0; width: auto; }
+.invite-box { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; min-height: 46px; padding: 6px 8px; border-radius: 12px; border: 1px solid var(--n-ddd); background: var(--n-fff); cursor: text; }
+.invite-box:focus-within { border-color: var(--n-111); }
+.invite-box input { flex: 1 1 120px; min-width: 0; border: 0; outline: 0; background: transparent; font-size: 15px; padding: 4px 2px; color: var(--n-111); }
+.invite-chip { display: inline-flex; align-items: center; gap: 2px; max-width: 100%; height: 30px; padding: 0 2px 0 10px; border-radius: 999px; background: var(--n-f1f1ef); color: var(--n-222); font-size: 13.5px; font-weight: 500; min-width: 0; }
+.invite-chip-x { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 999px; color: var(--n-777); flex: 0 0 auto; }
+.invite-chip-x:hover { background: var(--n-e5e5e5); color: var(--n-111); }
+.invite-pop { position: absolute; z-index: 30; left: 0; right: 0; top: calc(100% + 4px); max-height: 264px; overflow-y: auto; padding: 4px; border-radius: 12px; background: var(--n-fff); border: 1px solid var(--n-e5e5e5); box-shadow: 0 8px 24px rgba(0,0,0,.12); }
+/* A29: the 모임 meta line (date · 온/오프 · 지역) on cards, the detail and the thread link */
+.moim-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; font-size: 13.5px; color: var(--n-333); }
+.moim-meta > span { display: inline-flex; align-items: center; gap: 5px; min-width: 0; }
+.moim-meta svg { color: var(--n-777); flex: 0 0 auto; }
+.moim-thread-link { display: flex; align-items: center; gap: 8px; min-height: 48px; padding: 0 14px; font-size: 14px; font-weight: 600; color: var(--n-111); min-width: 0; }
+.moim-thread-link:hover { background: var(--n-fafafa); }

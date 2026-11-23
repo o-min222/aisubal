@@ -17,7 +17,7 @@ function setNativeValue(el: HTMLTextAreaElement, value: string) {
 // A27: the viewer's circle, shared by every composer on the page; refreshed after a minute
 let circle: { at: number; items: MentionSuggestion[] } | null = null
 let circleLoading: Promise<MentionSuggestion[]> | null = null
-function loadCircle(): Promise<MentionSuggestion[]> {
+export function loadCircle(): Promise<MentionSuggestion[]> {
   if (circle && Date.now() - circle.at < 60_000) return Promise.resolve(circle.items)
   circleLoading ??= fetch('/api/mentions/suggest?circle=1')
     .then((r) => (r.ok ? r.json() : { items: [] }))

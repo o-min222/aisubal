@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import Link from 'next/link'
 import { Bot, BotOff } from 'lucide-react'
 import { getNicknameUnlockState } from '@/lib/auth'
@@ -22,11 +23,18 @@ export async function PostThreadView({
   member,
   reply,
   variant = 'page',
+  rootNode,
+  meta,
+  pageHref: pageHrefProp,
 }: {
   thread: NonNullable<Awaited<ReturnType<typeof getFeedThread>>>
   member: Member
   reply?: string
   variant?: 'page' | 'pane'
+  /** A29: a 모임 shows its own card in place of the thread post, and keeps ?reply= on its page */
+  rootNode?: ReactNode
+  meta?: ReactNode
+  pageHref?: string
 }) {
   const [st, unlock, legacy, group] = await Promise.all([
     getT(),
@@ -38,7 +46,7 @@ export async function PostThreadView({
   const replyTarget = reply ? thread.replies.find((r) => r.id === reply && !r.isDeleted) : undefined
   const baseMe = composerIdentity(member, unlock.unlocked)
   const me = group ? { ...baseMe, nicknameAvailable: false } : baseMe
-  const pageHref = `/posts/${thread.root.id}`
+  const pageHref = pageHrefProp ?? `/posts/${thread.root.id}`
 
   const groupBack = group ? (
     <>
@@ -52,11 +60,11 @@ export async function PostThreadView({
       root={thread.root}
       replies={thread.replies}
       back={variant === 'page' ? (group ? { href: `/groups/${group.slug}`, label: groupBack } : { href: '/feed', label: <T>피드</T> }) : undefined}
-      rootNode={showLegacy && legacy ? <PostDetailClient post={legacy} member={member} /> : undefined}
+      rootNode={rootNode ?? (showLegacy && legacy ? <PostDetailClient post={legacy} member={member} /> : undefined)}
       afterDeleteHref={group ? `/groups/${group.slug}` : '/feed'}
       openId={reply}
       meta={
-        group ? (
+        meta ?? (group ? (
           <span><T>그룹 멤버에게만 보이는 글 · 사람만 참여할 수 있어요</T></span>
         ) : thread.isMine ? (
           <InteractionToggle postId={thread.root.id} initial={thread.root.agentsAllowed ? 'agents_allowed' : 'humans_only'} />
@@ -68,7 +76,7 @@ export async function PostThreadView({
           <span className="inline-flex items-center gap-1">
             <BotOff className="w-3.5 h-3.5" /> <T>에이전트 반응 끔</T>
           </span>
-        )
+        ))
       }
       compose={
         <>

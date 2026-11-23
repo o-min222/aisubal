@@ -1,19 +1,23 @@
 import Link from 'next/link'
 import { ArchiveButton } from '@/components/archive/archive-button'
-import { CalendarDays, ChevronLeft, ExternalLink, Globe, Lock, MapPin, Megaphone, Pencil, Users } from 'lucide-react'
+import { ChevronLeft, ExternalLink, Lock, Megaphone, Pencil, Users } from 'lucide-react'
 import type { MoimDetail } from '@/lib/data/moim'
 import { KstDate } from '@/components/kst-date'
 import { UserAvatar } from '@/components/user-avatar'
 import { CapacityBar, GroupBadge, MembersOnlyBadge, ModeBadge } from '@/components/moim/moim-badges'
 import { MoimApplyPanel } from '@/components/moim/moim-apply-panel'
 import { MoimHostPanel } from '@/components/moim/moim-host-panel'
+import { MoimMeta } from '@/components/moim/moim-meta'
+import { MoimThread } from '@/components/moim/moim-thread'
 import { T } from '@/i18n/t'
 import { getT } from '@/i18n/server'
 
 /** 모임 detail. Used by /moim/[id] and the 모임 reading pane. */
-export async function MoimDetailView({ m, variant = 'page' }: { m: MoimDetail; variant?: 'page' | 'pane' }) {
+export async function MoimDetailView({ m, variant = 'page', reply }: { m: MoimDetail; variant?: 'page' | 'pane'; reply?: string }) {
   const st = await getT()
   const sameDay = m.endsAt && new Date(m.endsAt).toDateString() === new Date(m.startsAt).toDateString()
+  const p = m.private
+  const hasPrivate = Boolean(p && (m.mode === 'offline' ? p.venueAddress || p.mapUrl : p.meetingUrl))
 
   return (
     <div className="space-y-3 pb-6">
@@ -49,19 +53,15 @@ export async function MoimDetailView({ m, variant = 'page' }: { m: MoimDetail; v
           </h1>
           <ArchiveButton kind="moim" refId={m.id} variant="pill" className="flex-shrink-0" hint={{ title: m.title, url: `/moim/${m.id}` }} />
         </div>
+        <MoimMeta m={m} className="!text-[14.5px]" />
+        {(m.endsAt || m.applyDeadline) && (
+          <p className="text-[12.5px] text-n-777 -mt-1.5">
+            {m.endsAt && <><T>종료</T> {sameDay ? <KstDate iso={m.endsAt} part="time" /> : <KstDate iso={m.endsAt} />}</>}
+            {m.endsAt && m.applyDeadline && ' · '}
+            {m.applyDeadline && <><T>신청 마감</T> <KstDate iso={m.applyDeadline} /></>}
+          </p>
+        )}
         <ul className="space-y-1.5 text-[14px]" style={{ color: 'var(--n-333)' }}>
-          <li className="flex items-start gap-2">
-            <CalendarDays className="w-4 h-4 mt-0.5 flex-shrink-0 text-n-777" />
-            <span>
-              <KstDate iso={m.startsAt} />
-              {m.endsAt && <> – {sameDay ? <KstDate iso={m.endsAt} part="time" /> : <KstDate iso={m.endsAt} />}</>} <span className="text-n-999"><T>(한국 시간)</T></span>
-              {m.applyDeadline && <span className="block text-[12.5px] text-n-777">신청 마감 <KstDate iso={m.applyDeadline} /></span>}
-            </span>
-          </li>
-          <li className="flex items-start gap-2">
-            {m.mode === 'online' ? <Globe className="w-4 h-4 mt-0.5 flex-shrink-0 text-n-777" /> : <MapPin className="w-4 h-4 mt-0.5 flex-shrink-0 text-n-777" />}
-            <span>{m.mode === 'online' ? <T>온라인</T> : m.venueName || <T>지역 미정</T>}</span>
-          </li>
           <li className="flex items-center gap-2">
             <Users className="w-4 h-4 flex-shrink-0 text-n-777" />
             <CapacityBar confirmed={m.confirmed} capacity={m.capacity} />
@@ -70,7 +70,7 @@ export async function MoimDetailView({ m, variant = 'page' }: { m: MoimDetail; v
         </ul>
 
         {/* Exact place / links: only managers and confirmed attendees get these from the server. */}
-        {m.private ? (
+        {hasPrivate && m.private ? (
           <div className="rounded-xl p-3 space-y-1.5" style={{ background: 'var(--c-e8f5ee)' }}>
             <p className="text-[12px] font-semibold" style={{ color: 'var(--c-1f7a4d)' }}>
               <T>참석 확정자에게만 보이는 정보</T>
@@ -94,16 +94,18 @@ export async function MoimDetailView({ m, variant = 'page' }: { m: MoimDetail; v
               <p className="text-[14px]"><T>호스트가 곧 링크를 공유할 예정이에요.</T></p>
             )}
           </div>
-        ) : (
+        ) : m.threadPostId ? null : (
           <p className="flex items-center gap-1.5 rounded-xl px-3 py-2 text-[12.5px]" style={{ background: 'var(--n-f6f6f4)', color: 'var(--n-666)' }}>
             <Lock className="w-3.5 h-3.5 flex-shrink-0" />
             {m.mode === 'online' ? <T>온라인 링크</T> : <T>정확한 장소와 지도</T>}는 참석이 확정되면 여기에 보여요.
           </p>
         )}
 
-        <div className="text-[14.5px] leading-relaxed whitespace-pre-wrap" style={{ color: 'var(--n-222)' }}>
-          {m.description}
-        </div>
+        {m.description && (
+          <div className="text-[14.5px] leading-relaxed whitespace-pre-wrap" style={{ color: 'var(--n-222)' }}>
+            {m.description}
+          </div>
+        )}
         {m.feeNote && <p className="text-[13px] text-n-555"><T s="참가비·준비물: {feeNote}" vars={{ feeNote: m.feeNote }} /></p>}
 
         <div className="flex items-center gap-2 pt-1">
@@ -119,6 +121,9 @@ export async function MoimDetailView({ m, variant = 'page' }: { m: MoimDetail; v
       </article>
 
       <MoimApplyPanel moim={m} />
+
+      {/* A29: the discussion comes right after "apply" — it's where the details get decided */}
+      {m.threadPostId && <MoimThread moimId={m.id} postId={m.threadPostId} reply={reply} />}
 
       {m.canManage && m.applicants && <MoimHostPanel moim={m} />}
 
@@ -161,6 +166,7 @@ export async function MoimDetailView({ m, variant = 'page' }: { m: MoimDetail; v
           </ul>
         )}
       </section>
+
     </div>
   )
 }

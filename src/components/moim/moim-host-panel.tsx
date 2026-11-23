@@ -87,6 +87,7 @@ export function MoimHostPanel({ moim: m }: { moim: MoimDetail }) {
         mapUrl: m.private?.mapUrl ?? null,
         meetingUrl: m.private?.meetingUrl ?? null,
         startsAt: m.startsAt,
+        timeTbd: m.timeTbd,
         endsAt: m.endsAt,
         applyDeadline: m.applyDeadline,
         capacity: Number(capacity),

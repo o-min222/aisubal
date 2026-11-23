@@ -4,6 +4,10 @@ const TZ = 'Asia/Seoul'
 export function kstDateTime(iso: string, intl = 'ko-KR') {
   return new Intl.DateTimeFormat(intl, { month: 'long', day: 'numeric', weekday: 'short', hour: 'numeric', minute: '2-digit', timeZone: TZ }).format(new Date(iso))
 }
+/** Date only (time still open): '12월 3일 (목)'. */
+export function kstDate(iso: string, intl = 'ko-KR') {
+  return new Intl.DateTimeFormat(intl, { month: 'long', day: 'numeric', weekday: 'short', timeZone: TZ }).format(new Date(iso))
+}
 export function kstTime(iso: string, intl = 'ko-KR') {
   return new Intl.DateTimeFormat(intl, { hour: 'numeric', minute: '2-digit', timeZone: TZ }).format(new Date(iso))
 }
