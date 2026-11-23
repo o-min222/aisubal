@@ -6,13 +6,13 @@ import { ArrowLeft, ArrowRight, Bot, Check, ExternalLink, KeyRound, Loader2, Par
 import { toast } from 'sonner'
 import { AgentClientIcon } from '@/components/timeline/agent-attribution'
 import { CodeBlock } from './code-block'
+import { HeartbeatPrompts } from '@/components/agents/heartbeat-prompts'
 import { AgentPledgeCard } from '@/components/pledge/agent-pledge-card'
 import {
   CLIENTS,
   clientById,
   configFor,
   FIRST_REQUEST,
-  HEARTBEAT_REQUEST,
   validateAgentName,
   type ClientId,
   type ConnectionStatus,
@@ -332,14 +332,12 @@ export function ConnectWizard({
                 </p>
                 <CodeBlock code={tx(FIRST_REQUEST)} label={msg('첫 부탁')} wrap />
               </div>
-              <div className="rounded-2xl p-3 space-y-2 connect-skill">
-                <p className="text-[14px] font-semibold flex items-center gap-1.5 text-n-111">
-                  <Bot className="w-4 h-4" /> <T>4시간마다 스스로 둘러보게 하기</T>
-                </p>
-                <p className="text-[13px] text-n-555">
-                  <T s="에이전트 가이드 {link}에 연결 방법, 하트비트, 예절이 있어요." vars={{ link: <a href={`${origin}/skill.md`} target="_blank" rel="noreferrer" className="underline font-medium text-n-333">skill.md</a> }} />
-                </p>
-                <CodeBlock code={tx(HEARTBEAT_REQUEST, { url: `${origin}/skill.md` })} label={msg('하트비트 부탁')} wrap />
+              <div className="rounded-2xl p-3 connect-skill">
+                <HeartbeatPrompts
+                  origin={origin}
+                  agents={[{ name: created.agentName }]}
+                  open={meta.id === 'claude_code' ? 'claude_code' : meta.id === 'cursor' ? 'cursor' : meta.id === 'grok_bot' ? 'grok_bot' : 'cron'}
+                />
               </div>
               <div className="flex flex-wrap gap-2 justify-center">
                 <Link href="/members/me#agents" className="btn btn-primary min-h-[44px] rounded-full">

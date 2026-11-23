@@ -1,8 +1,10 @@
 import Link from 'next/link'
+import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { Bot, Plus } from 'lucide-react'
 import { getUserState } from '@/lib/auth'
 import { AgentList } from '@/components/agents/agent-list'
+import { HeartbeatPrompts } from '@/components/agents/heartbeat-prompts'
 import { T } from '@/i18n/t'
 import { getT } from '@/i18n/server'
 
@@ -15,6 +17,9 @@ export async function generateMetadata() {
 export default async function AgentsPage() {
   const state = await getUserState()
   if (state.type !== 'member') redirect('/login')
+  const h = await headers()
+  const host = h.get('x-forwarded-host') || h.get('host') || 'aisubal.vercel.app'
+  const proto = h.get('x-forwarded-proto') || (host.startsWith('localhost') || host.startsWith('127.') ? 'http' : 'https')
   return (
     <div className="max-w-2xl mx-auto space-y-4 min-w-0">
       <div className="flex items-start gap-3">
@@ -31,6 +36,9 @@ export default async function AgentsPage() {
         </Link>
       </div>
       <AgentList ownerName={state.member.display_name} />
+      <div className="card p-4">
+        <HeartbeatPrompts origin={`${proto}://${host}`} />
+      </div>
     </div>
   )
 }

@@ -2819,3 +2819,25 @@ a.notif-pop-all:hover { background: var(--n-fafafa); }
 .cal-action { background: none; border: 0; padding: 0; cursor: pointer; font-size: 13px; }
 .cal-action:disabled { opacity: .5; cursor: default; }
 .cal-danger { color: var(--c-e5484d); }
+
+/* A51: heartbeat setup rows (내 에이전트 + connect wizard) */
+.hb { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.hb-head { display: flex; flex-direction: column; gap: 2px; }
+.hb-title { font-size: 14px; font-weight: 700; color: var(--n-111); }
+.hb-sub { font-size: 12.5px; line-height: 1.5; color: var(--n-777); }
+.hb-agents { display: flex; flex-wrap: wrap; gap: 4px; }
+.hb-chip { font-size: 12px; padding: 3px 10px; border-radius: 999px; color: var(--n-666); background: var(--n-f5f5f5); border: 1px solid transparent; cursor: pointer; }
+.hb-chip.is-on { color: var(--n-111); border-color: var(--n-ccc, #ccc); background: transparent; }
+.hb-rows { display: flex; flex-direction: column; border-top: 1px solid var(--n-f0f0f0); }
+.hb-row { border-bottom: 1px solid var(--n-f0f0f0); min-width: 0; }
+.hb-sum { display: flex; align-items: center; gap: 8px; min-height: 44px; cursor: pointer; list-style: none; min-width: 0; }
+.hb-sum::-webkit-details-marker { display: none; }
+.hb-chev { flex-shrink: 0; color: var(--n-999, #999); transition: transform .15s; }
+.hb-row[open] .hb-chev { transform: rotate(90deg); }
+.hb-label { font-size: 13.5px; font-weight: 600; color: var(--n-222); flex-shrink: 0; }
+.hb-hint { font-size: 12px; color: var(--n-888); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hb-body { display: flex; flex-direction: column; gap: 10px; padding: 0 0 12px 24px; min-width: 0; }
+.hb-block { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.hb-btitle { font-size: 11.5px; font-weight: 600; color: var(--n-888); }
+.hb-note { font-size: 12px; line-height: 1.5; color: var(--n-777); }
+@media (max-width: 480px) { .hb-body { padding-left: 0; } .hb-hint { display: none; } }

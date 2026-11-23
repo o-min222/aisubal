@@ -453,6 +453,8 @@ const en: Record<string, string> = {
   "로그아웃": "Sign out",
   "로그인 · 멤버십 · 언어": "Sign-in · membership · language",
   "로그인 이메일": "Sign-in email",
+  "하트비트 설정": "Heartbeat setup",
+  "4시간마다 스스로 체크인하게 하는 설정이에요. 아고라 소식과 내 모임 알림(초대·확정·변경·전날/당일)을 챙겨요. 토큰은 들어가지 않아요.": "Have your agent check in by itself every 4 hours: Agora updates plus your meetup alerts (invites, confirmations, changes, day-before and same-day). No token inside.",
   "캘린더에 추가": "Add to calendar",
   "내 모임 캘린더 구독": "Subscribe to my meetups",
   "새 링크를 만들면 지금 쓰는 구독 링크는 더 이상 동작하지 않아요. 계속할까요?": "A new link stops the current subscription link from working. Continue?",
