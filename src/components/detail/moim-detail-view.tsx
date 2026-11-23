@@ -1,12 +1,11 @@
 import Link from 'next/link'
 import { ArchiveButton } from '@/components/archive/archive-button'
-import { ChevronLeft, ExternalLink, Lock, Megaphone, Pencil, Users } from 'lucide-react'
+import { ChevronLeft, ExternalLink, Lock, Megaphone, Pencil } from 'lucide-react'
 import type { MoimDetail } from '@/lib/data/moim'
 import { KstDate } from '@/components/kst-date'
-import { UserAvatar } from '@/components/user-avatar'
-import { CapacityBar, GroupBadge, MembersOnlyBadge, ModeBadge } from '@/components/moim/moim-badges'
+import { GroupBadge, MembersOnlyBadge, ModeBadge } from '@/components/moim/moim-badges'
 import { MoimApplyPanel } from '@/components/moim/moim-apply-panel'
-import { MoimHostPanel } from '@/components/moim/moim-host-panel'
+import { MoimPeople } from '@/components/moim/moim-people'
 import { MoimMeta } from '@/components/moim/moim-meta'
 import { MoimThread } from '@/components/moim/moim-thread'
 import { T } from '@/i18n/t'
@@ -61,13 +60,7 @@ export async function MoimDetailView({ m, variant = 'page', reply }: { m: MoimDe
             {m.applyDeadline && <><T>신청 마감</T> <KstDate iso={m.applyDeadline} /></>}
           </p>
         )}
-        <ul className="space-y-1.5 text-[14px]" style={{ color: 'var(--n-333)' }}>
-          <li className="flex items-center gap-2">
-            <Users className="w-4 h-4 flex-shrink-0 text-n-777" />
-            <CapacityBar confirmed={m.confirmed} capacity={m.capacity} />
-            {m.waitlisted > 0 && <span className="text-[12.5px] text-c-3446a8"><T s="대기 {n}명" vars={{ n: m.waitlisted }} /></span>}
-          </li>
-        </ul>
+        <MoimPeople m={m} />
 
         {/* Exact place / links: only managers and confirmed attendees get these from the server. */}
         {hasPrivate && m.private ? (
@@ -108,24 +101,12 @@ export async function MoimDetailView({ m, variant = 'page', reply }: { m: MoimDe
         )}
         {m.feeNote && <p className="text-[13px] text-n-555"><T s="참가비·준비물: {feeNote}" vars={{ feeNote: m.feeNote }} /></p>}
 
-        <div className="flex items-center gap-2 pt-1">
-          <UserAvatar id={m.host.id} name={m.host.name} avatarUrl={m.host.avatarUrl} size="sm" />
-          <span className="text-[13px] text-n-555"><T s="호스트 {v} {v2}" vars={{ v: m.host.kind === 'real' ? (
-              <Link href={`/members/${m.host.id}`} className="font-semibold" style={{ color: 'var(--n-111)' }}>
-                {m.host.name}
-              </Link>
-            ) : (
-              <b style={{ color: 'var(--n-111)' }}>{m.host.name}</b>
-            ), v2: m.group && st(' · {name} 그룹 모임', { name: m.group.name }) }} /></span>
-        </div>
       </article>
 
       <MoimApplyPanel moim={m} />
 
       {/* A29: the discussion comes right after "apply" — it's where the details get decided */}
       {m.threadPostId && <MoimThread moimId={m.id} postId={m.threadPostId} reply={reply} />}
-
-      {m.canManage && m.applicants && <MoimHostPanel moim={m} />}
 
       {m.announcements.length > 0 && (
         <section className="card p-4 space-y-2" aria-label={st('공지')}>
@@ -143,29 +124,6 @@ export async function MoimDetailView({ m, variant = 'page', reply }: { m: MoimDe
         </section>
       )}
 
-      <section className="card p-4" aria-label={st('참석자')}>
-        <h2 className="text-[15px] font-bold mb-2" style={{ color: 'var(--n-111)' }}>
-          <T>참석 확정</T> <span className="tabular-nums text-n-999 font-normal">{m.confirmed}</span>
-        </h2>
-        {m.attendees === null ? (
-          <p className="text-[13px] text-n-888"><T>참석 확정자와 호스트만 명단을 볼 수 있어요.</T></p>
-        ) : m.attendees.length === 0 ? (
-          <p className="text-[13px] text-n-888"><T>아직 확정된 참석자가 없어요.</T></p>
-        ) : (
-          <ul className="flex flex-wrap gap-2">
-            {m.attendees.map((a) => (
-              <li key={a.memberId}>
-                <Link href={a.kind === 'real' ? `/members/${a.id}` : '#'} className="inline-flex items-center gap-1.5 rounded-full pl-1 pr-3 py-1" style={{ background: 'var(--n-f6f6f4)' }}>
-                  <UserAvatar id={a.id} name={a.name} avatarUrl={a.avatarUrl} size="sm" />
-                  <span className="text-[13px]" style={{ color: 'var(--n-111)' }}>
-                    {a.name}
-                  </span>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
 
     </div>
   )

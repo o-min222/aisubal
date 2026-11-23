@@ -2079,6 +2079,13 @@ button.rp-link { width: 100%; text-align: left; font: inherit; cursor: pointer; 
 .pe-vis:hover { color: var(--n-111); background: var(--n-ebebe8); }
 .pe-chip { cursor: pointer; }
 .pe-chip:hover { border-color: var(--n-bbb); }
+/* A38: meetup top card — confirmed participants beside the host */
+.moim-people { display: inline-flex; align-items: center; gap: 6px; min-height: 36px; padding: 2px 10px 2px 4px; border-radius: 999px; border: 1px solid var(--n-eee); background: var(--n-fff); cursor: pointer; }
+.moim-people:hover { border-color: var(--n-bbb); }
+.moim-avs { display: inline-flex; align-items: center; }
+.moim-avs > * { width: 24px !important; height: 24px !important; min-width: 24px; font-size: 10px; box-shadow: 0 0 0 2px var(--n-fff); border-radius: 999px; }
+.moim-avs > * + * { margin-left: -7px; }
+.moim-pending { display: inline-flex; align-items: center; justify-content: center; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 999px; background: var(--n-111); color: var(--n-fff); font-size: 11px; font-weight: 700; }
 /* A41: tap a chip → inline × next to its label */
 .pe-chip { gap: 0; padding: 0; }
 .pe-chip.on { border-color: var(--n-999); }

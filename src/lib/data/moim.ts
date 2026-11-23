@@ -368,6 +368,11 @@ export function mockMoims(): MockMoim[] {
       rsvps: [seedRsvp('r15', 'member-2', 'confirmed', 400)],
     },
   ]
+  // A38 (0091): the host holds a confirmed seat
+  for (const m of gm.__aisubalMoim) {
+    if (!m.rsvps.some((r) => r.memberId === m.hostId)) m.rsvps.unshift({ ...seedRsvp(`host-${m.id}`, m.hostId, 'confirmed', 0), createdAt: m.createdAt, decidedAt: m.createdAt })
+    m.capacity = Math.max(m.capacity, m.rsvps.filter((r) => r.status === 'confirmed').length)
+  }
   // A30: seeded 모임 have their thread posts too (public upcoming, past, and members-only group ones)
   const seeded: Record<string, number> = { 'moim-3': 5, 'moim-5': 30, 'moim-6': 400, 'moim-2': 8 }
   for (const m of gm.__aisubalMoim) {
@@ -595,7 +600,7 @@ export async function createMoim(viewerId: string, input: MoimInput): Promise<st
       hostId: viewer,
       groupId: input.groupId || null,
       createdAt: new Date().toISOString(),
-      rsvps: [],
+      rsvps: [seedRsvp(`host-${Date.now()}`, viewer, 'confirmed', 0)],
       announcements: [],
     })
     return id
@@ -808,6 +813,7 @@ export async function cancelMoimRsvp(viewerId: string, id: string): Promise<{ pr
   if (isMock()) {
     const viewer = me(viewerId)
     const m = mockFind(id, viewerId)
+    if (m.hostId === viewer) throw new Error('moim_host_seat')
     const mine = m.rsvps.find((r) => r.memberId === viewer && ['pending', 'confirmed', 'waitlisted'].includes(r.status))
     if (!mine) throw new Error('moim_rsvp_not_found')
     const was = mine.status
@@ -826,6 +832,7 @@ export async function decideMoimRsvp(viewerId: string, moimId: string, rsvpId: s
   if (isMock()) {
     const m = mockFind(moimId, viewerId)
     if (!mockCanManage(m, me(viewerId))) throw new Error('moim_forbidden')
+    if (m.rsvps.find((x) => x.id === rsvpId)?.memberId === m.hostId) throw new Error('moim_host_seat')
     const r = decideRsvp(m.capacity, m.rsvps, rsvpId, action)
     if (!r.ok) throw new Error(r.error)
     m.rsvps = r.rsvps

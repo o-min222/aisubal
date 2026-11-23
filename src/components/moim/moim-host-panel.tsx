@@ -36,7 +36,7 @@ const ACTIONS: Record<RsvpStatus, Array<{ a: DecideAction; label: string; primar
 }
 
 /** Host / group managers: applicants with answers, decisions, capacity, close/cancel, announcements. */
-export function MoimHostPanel({ moim: m }: { moim: MoimDetail }) {
+export function MoimHostPanel({ moim: m, bare = false }: { moim: MoimDetail; bare?: boolean }) {
   const router = useRouter()
   const [busy, setBusy] = useState<string | null>(null)
   const [notice, setNotice] = useState('')
@@ -109,11 +109,13 @@ export function MoimHostPanel({ moim: m }: { moim: MoimDetail }) {
   const hiddenCount = applicants.filter((a) => a.status === 'rejected' || a.status === 'cancelled').length
 
   return (
-    <section className="moim-host card p-4 space-y-4" aria-label={tx('참석자 관리')}>
+    <section className={bare ? 'moim-host space-y-4' : 'moim-host card p-4 space-y-4'} aria-label={tx('참석자 관리')}>
       <div className="flex items-center justify-between gap-2">
-        <h2 className="text-[15px] font-bold" style={{ color: 'var(--n-111)' }}>
-          <T>참석자 관리</T>
-        </h2>
+        {!bare && (
+          <h2 className="text-[15px] font-bold" style={{ color: 'var(--n-111)' }}>
+            <T>참석자 관리</T>
+          </h2>
+        )}
         <span className="text-[12px] text-n-777"><T s="{v} 전용" vars={{ v: m.isHost ? <T>호스트</T> : <T>그룹 운영진</T> }} /></span>
       </div>
 
@@ -135,7 +137,7 @@ export function MoimHostPanel({ moim: m }: { moim: MoimDetail }) {
                     <p className="text-[14px] font-semibold truncate" style={{ color: 'var(--n-111)' }}>
                       {a.author.name}
                     </p>
-                    <p className="text-[11.5px] text-n-999"><KstDate iso={a.createdAt} /> 신청</p>
+                    <p className="text-[11.5px] text-n-999">{a.author.id === m.host.id ? <T>호스트</T> : <T s="{date} 신청" vars={{ date: <KstDate iso={a.createdAt} /> }} />}</p>
                   </div>
                   <RsvpBadge status={a.status} position={pos.get(a.id) ?? null} />
                 </div>
@@ -157,7 +159,7 @@ export function MoimHostPanel({ moim: m }: { moim: MoimDetail }) {
                     )}
                   </dl>
                 )}
-                {ACTIONS[a.status].length > 0 && (
+                {ACTIONS[a.status].length > 0 && a.author.id !== m.host.id && (
                   <div className="flex flex-wrap gap-1.5">
                     {ACTIONS[a.status].map(({ a: act, label: l, primary }) => (
                       <button
@@ -185,7 +187,7 @@ export function MoimHostPanel({ moim: m }: { moim: MoimDetail }) {
       <div className="grid gap-3 pt-3" style={{ borderTop: '1px solid var(--n-eee)', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 240px), 1fr))' }}>
         <div>
           <label htmlFor="cap" className="block text-[13px] font-semibold mb-1" style={{ color: 'var(--n-111)' }}>
-            <T>정원</T> <span className="font-normal text-n-888"><T>(늘리면 대기자 자동 확정)</T></span>
+            <T>정원</T> <span className="font-normal text-n-888"><T>(호스트 포함 · 늘리면 대기자 자동 확정)</T></span>
           </label>
           <div className="flex gap-2">
             <input id="cap" type="number" min={Math.max(1, m.confirmed)} max={500} value={capacity} onChange={(e) => setCapacity(Number(e.target.value))} className="w-24 rounded-xl border border-n-ddd px-3 py-2 text-[15px]" />

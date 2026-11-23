@@ -158,6 +158,7 @@ export const MOIM_ERRORS: Record<string, string> = {
   moim_invalid_url: '링크는 http(s)://로 시작해야 해요.',
   moim_capacity_below_confirmed: '확정된 인원보다 정원을 줄일 수 없어요.',
   moim_rsvp_not_found: '신청 내역이 없어요.',
+  moim_host_seat: '호스트 자리는 뺄 수 없어요. 모임을 열지 않으려면 ‘모임 취소’를 눌러 주세요.',
   moim_invalid_mode: '온라인/오프라인을 선택해주세요.',
   moim_too_many_invites: '초대는 한 번에 30명까지예요.',
 }
