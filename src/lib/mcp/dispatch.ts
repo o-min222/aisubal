@@ -15,7 +15,9 @@ import { kickWebhookWorker } from '@/lib/agent-webhooks'
 import { parseAgentCaps, type AgentCaps } from '@/lib/agent-conduct'
 import { getAgentCaps } from '@/lib/data/agent-caps'
 import { handleDevTool } from './dev-tools'
-import { LIST_OPTIONS, implName, resolveTool, unknownToolMessage, type PageSpec, type ToolSpec } from './registry'
+import { LIST_OPTIONS, implName, isAdminTool, resolveTool, unknownToolMessage, type PageSpec, type ToolSpec } from './registry'
+
+export type ToolFilter = { scopes: readonly string[]; isAdmin: boolean }
 
 export type McpText = { type: 'text'; text: string }
 export type ToolResult = { content: McpText[]; isError?: boolean; _meta?: Record<string, unknown> }
@@ -27,6 +29,7 @@ export class McpContext {
   private selfMemo: Promise<ReturnType<typeof parseAgentProfile>> | null = null
   private archiveMemo: Promise<ArchiveBackend | null> | null = null
   private capsMemo: Promise<AgentCaps> | null = null
+  private filterMemo: Promise<ToolFilter | undefined> | null = null
   constructor(readonly bearer: string | null, readonly origin: string) {}
 
   readonly rpc: Rpc = async (fn, args) => {
@@ -47,6 +50,27 @@ export class McpContext {
   /** A80: live agent reaction caps (site settings, 0124 agent_caps) for prompts; defaults on error */
   caps() {
     return (this.capsMemo ??= this.dev ? getAgentCaps() : this.rpc('agent_caps', {}).then(({ data, error }) => parseAgentCaps(error ? null : data)).catch(() => parseAgentCaps(null)))
+  }
+
+  /**
+   * Which tools this token may see and call (tools/list, resources, admin-tool calls). undefined = everything
+   * (dev server). A81: admin tools are visible only to admin owners whose token has tools:review.
+   */
+  filter() {
+    return (this.filterMemo ??= this.dev
+      ? Promise.resolve(undefined)
+      : Promise.resolve(createAnonClient().rpc('mcp_token_scopes', { p_token: this.bearer }))
+          .then(({ data: info }) => ({
+            scopes: Array.isArray((info as { scopes?: unknown } | null)?.scopes) ? (info as { scopes: string[] }).scopes : [],
+            isAdmin: (info as { admin?: unknown } | null)?.admin === true,
+          }))
+          .catch(() => ({ scopes: [] as string[], isAdmin: false })))
+  }
+
+  /** A81: may this token see an admin tool? (member tools: always "visible"; their RPC checks the scope) */
+  async seesAdminTools() {
+    const f = await this.filter()
+    return !f || (f.isAdmin && f.scopes.includes('tools:review'))
   }
 
   archive() {
@@ -167,8 +191,11 @@ function finishList(spec: ToolSpec, result: Record<string, unknown>, p: Paging |
 export async function callTool(ctx: McpContext, rawName: string, rawArgs: Record<string, unknown> = {}): Promise<CallOutcome> {
   const r = resolveTool(rawName, rawArgs)
   if (r.kind === 'refused') return { tool: rawName, status: 'refused', result: { content: [json({ error: r.message, refused: true, humanOnly: true })], isError: true } }
-  if (r.kind === 'unknown') return { tool: rawName, status: 'unknown', result: { content: [json({ error: unknownToolMessage(rawName) })], isError: true } }
+  const unknown = (hideAdmin: boolean): CallOutcome => ({ tool: rawName, status: 'unknown', result: { content: [json({ error: unknownToolMessage(rawName, { hideAdmin }) })], isError: true } })
+  if (r.kind === 'unknown') return unknown(!(await ctx.seesAdminTools()))
   const { spec } = r
+  // A81: to a member, an admin tool does not exist (same answer as any unknown name)
+  if (isAdminTool(spec) && !(await ctx.seesAdminTools())) return unknown(true)
   const fail = (error: string): CallOutcome => ({ tool: spec.name, status: 'error', result: { content: [json({ error })], isError: true } })
 
   const invalid = !(spec.page ? spec.input.extend(LIST_OPTIONS) : spec.input).safeParse(r.args).success

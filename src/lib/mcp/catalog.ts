@@ -1,5 +1,6 @@
 import { msg } from '@/i18n/translate'
-import { ALWAYS, LIST_OPTIONS, TOOL_SPECS, inputJsonSchema, toolAllowed, type ToolDomain, type ToolSpec } from './registry'
+import { connectScopes } from '@/lib/agent-connect'
+import { ADMIN_REVIEW, ALWAYS, LIST_OPTIONS, TOOL_SPECS, inputJsonSchema, isAdminTool, memberToolSpecs, toolAllowed, type ToolDomain, type ToolSpec } from './registry'
 import { PROMPTS } from './prompts'
 import { ARCHIVE_TEMPLATE, CHARTER_RESOURCE, RESOURCE_TEMPLATES, RESOURCE_VIEWS } from './resources'
 
@@ -46,22 +47,41 @@ export function catalogTools(f?: { scopes: readonly string[]; isAdmin: boolean }
   return TOOL_SPECS.filter((t) => !f || toolAllowed(t.name, f.scopes, f.isAdmin))
 }
 
-/** A80: the write tools one scope opens (consent screen: what each checkbox really allows) */
-export function toolsForScope(scope: string): string[] {
-  return TOOL_SPECS.filter((t) => t.write && t.scopes.includes(scope)).map((t) => t.name)
+/**
+ * A81: member tools that need a permission the connect flow never grants (toolbox_write / products_write,
+ * only on hand-made API tokens). Not admin tools: listed for members, labelled "추가 권한 필요".
+ */
+const DEFAULT_SCOPES: readonly string[] = connectScopes(false, false)
+export const needsExtraPermission = (t: ToolSpec) => !isAdminTool(t) && !t.scopes.includes(ALWAYS) && !t.scopes.some((s) => DEFAULT_SCOPES.includes(s))
+
+/**
+ * A81: what the "MCP 툴" sheet shows. Members: their default tools plus the extra-permission ones, never an
+ * admin tool. Admins: everything (review tools included).
+ */
+export function sheetTools(isAdmin: boolean): { usable: ToolSpec[]; extra: ToolSpec[]; admin: ToolSpec[] } {
+  const usable = catalogTools({ scopes: connectScopes(isAdmin, isAdmin), isAdmin })
+  const extra = memberToolSpecs().filter((t) => needsExtraPermission(t) && !usable.includes(t))
+  return { usable, extra, admin: usable.filter(isAdminTool) }
+}
+
+/** A80: the write tools one scope opens (consent screen: what each checkbox really allows; A81: admin tools only for admins) */
+export function toolsForScope(scope: string, isAdmin = false): string[] {
+  const need = scope === 'tools:review' ? ADMIN_REVIEW : scope
+  return TOOL_SPECS.filter((t) => t.write && t.scopes.includes(need) && (isAdmin || !isAdminTool(t))).map((t) => t.name)
 }
 
 export const catalogPrompts = () => PROMPTS.map((p) => ({ name: p.name, title: p.title, description: p.description }))
 
-const scopeOf = (t: ToolSpec) => (t.scopes.includes(ALWAYS) ? 'any token' : t.scopes.join(' | '))
+const scopeOf = (t: ToolSpec) =>
+  t.scopes.includes(ALWAYS) ? 'any token' : `${t.scopes.join(' | ')}${needsExtraPermission(t) ? ' — extra permission, not granted when you connect' : ''}`
 
-/** Markdown for agents (English): every tool by domain, then prompts and resources. */
+/** Markdown for agents (English): every member-facing tool by domain (A81: no admin tools), then prompts and resources. */
 export function catalogMarkdown(heading = '##'): string {
-  const tools = catalogTools()
+  const tools = memberToolSpecs()
   const out: string[] = [
     `${heading} Tools (${tools.length})`,
     '',
-    'Generated from the server\'s tool registry, the same list `tools/list` returns (filtered by your token\'s scopes; review tools are admin-only).',
+    'Generated from the server\'s tool registry, the same list `tools/list` returns (filtered by your token\'s scopes).',
     'List tools also take `cursor`, `fields` and `compact`.',
   ]
   for (const d of TOOL_DOMAINS) {

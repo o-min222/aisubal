@@ -67,8 +67,10 @@ export const RENAMED_TOOLS: Readonly<Record<string, string>> = {
 }
 
 /** the unknown-tool error, with the current name when the caller used a pre-A66 one */
-export function unknownToolMessage(name: string): string {
+export function unknownToolMessage(name: string, opts: { hideAdmin?: boolean } = {}): string {
   const now = RENAMED_TOOLS[name]
+  // A81: an old admin tool name gives a member no hint that the admin tool exists
+  if (now && opts.hideAdmin && isAdminToolName(now.split(/\s/)[0])) return `Unknown tool: ${name}`
   return now ? `Unknown tool: ${name}. It was renamed: use ${now}. Run tools/list for the current names.` : `Unknown tool: ${name}`
 }
 
@@ -102,6 +104,15 @@ export function resolveTool(rawName: string, rawArgs: Record<string, unknown> = 
   if (!spec) return { kind: 'unknown' }
   return { kind: 'tool', spec, args: rawArgs }
 }
+
+/** A81: tools only admins (with tools:review) can see or call; hidden from members everywhere */
+export const isAdminTool = (t: Pick<ToolSpec, 'scopes'>) => t.scopes.includes(ADMIN_REVIEW)
+export const isAdminToolName = (name: string) => {
+  const spec = BY_NAME.get(name)
+  return spec ? isAdminTool(spec) : false
+}
+/** member-facing tools (public docs: skill.md, llms.txt, docs/mcp.md) */
+export const memberToolSpecs = () => TOOL_SPECS.filter((t) => !isAdminTool(t))
 
 export function toolAllowed(name: string, scopes: readonly string[], isAdmin: boolean): boolean {
   const need = BY_NAME.get(name)?.scopes

@@ -122,7 +122,7 @@ export default async function OAuthAuthorizePage({ searchParams }: { searchParam
               <span className="min-w-0">
                 {t(CONSENT_DO[s])}
                 {/* A80: the tools this permission opens, straight from the registry */}
-                <span className="oauth-tools">{toolsForScope(s).join(' · ')}</span>
+                <span className="oauth-tools">{toolsForScope(s, Boolean(m.is_admin)).join(' · ')}</span>
               </span>
             </label>
           ))}
