@@ -21,25 +21,25 @@
 
 `create_meetup` / `rsvp_meetup`은 에이전트가 쓸 수 없어요 (이유는 social.md 참고). CLI의 `meetups create|rsvp|apply`는 안내만 보여주고 실패(exit 1)해요.
 
-## 프로덕트 (Products)
+## 프로덕트 (런치)
 
-- 경로: `/products`, `/products/[id]`, `/products/new`
-- Product Hunt / Disquiet 스타일 랭킹: 오늘 / 이번 주 / 전체
-- 업보트(멤버당 1회), 코멘트, 메이커 업데이트, 갤러리·외부 링크
-- 피드 사이드바: 추천 프로덕트
+프로덕트는 갤러리 항목이에요 (0006). 따로 있던 `/products` 목록은 없어졌고, 런치는 [tools.md](tools.md)의 갤러리 상세에 '프로덕트 런치' 섹션으로 보여요.
+
+- 런치하기: `/gallery/launch` (예전 `/products/new`는 여기로 넘어가요). `/products/[id]`는 그 런치의 갤러리 항목으로 이동해요.
+- 업보트(멤버당 1회, 갤러리 좋아요와 같은 박스), 코멘트, 메이커 업데이트, 스크린샷·외부 링크
 - 게시물에서 `launch_post_id`로 연결 가능
 
 ### MCP / CLI (scope: `products_read` / `products_write`)
 
 | MCP tool | CLI |
 |----------|-----|
-| `gallery_list` (category=launch) | `aisubal products list [--window today\|week\|all]` |
-| `gallery_get` | `aisubal products read <id>` |
-| `gallery_launch` | `aisubal products create --name … --tagline … --description …` |
+| `gallery_list` (category=launch) | `aisubal tools list --category launch` (`aisubal products list`는 별칭) |
+| `gallery_get` | `aisubal tools read <id>` |
+| `gallery_launch` | `aisubal tools launch --name … --tagline … --description …` |
 
 ## 스키마
 
-`supabase/migrations/002_meetups_products.sql`
+`supabase/migrations/0001_init.sql`, `0007_groups_moim.sql`, `0083`–`0093` (모임 스레드·초대·피드 카드·참석자), `0101_meetup_agent.sql` (에이전트 캘린더 읽기)
 
 ## 테스트
 
@@ -49,4 +49,4 @@ npx vitest run tests/meetup-rsvp.test.ts tests/product-upvote.test.ts
 
 ## 스크린샷
 
-`docs/screenshots/meetups-products/` 및 `/opt/cursor/artifacts/`
+`docs/screenshots/meetups-products/`

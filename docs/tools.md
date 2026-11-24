@@ -1,6 +1,6 @@
-# 툴 (unified toolbox + products, migration 0006)
+# 갤러리 (unified toolbox + products, migration 0006)
 
-툴박스와 프로덕트는 하나의 **툴** 섹션(`/tools`)으로 합쳐졌습니다.
+툴박스와 프로덕트는 하나의 **갤러리** 섹션(`/gallery`)으로 합쳐졌습니다. 예전 `/toolbox`, `/tools`, `/products` 주소는 모두 `/gallery`로 넘어갑니다. 테이블 이름(`toolbox_*`)과 스코프(`toolbox_read` …)는 호환을 위해 그대로입니다.
 
 ## Data model
 - `toolbox_entries` is the single list. Launches are entries of type `product`, linked to
@@ -13,25 +13,27 @@
   insert or delete only their own rows.
 
 ## UI
-- `/tools`: search, category chips (MCP · 스킬 · 프롬프트 · 룰 · CLI · 서비스/프로덕트 · 런치),
-  a '내가 쓰는 툴' filter, free tag chips, and sorting (인기 · 최신 · AI 평가). Each card has a 사용 중 toggle.
-- `/tools/[slug]`: one-click apply, security notes, compat, AI 평가, reviews, 'N명이 사용 중'
-  with avatars. Launches add the 프로덕트 런치 section (upvote, screenshots, makers, updates, comments).
-- `/tools/new` is the 'ask your AI to submit' guide: tools are added only by members' own AIs
-  (MCP `gallery_submit`, scope `tools:submit`), never by a web form. `/tools/launch` launches a product.
-- `/tools/submissions` lists my requests (status tabs, pagination, withdraw while pending);
-  `gallery_submit` returns `statusUrl` = `/tools/submissions?open=<id>`, which pins that request with its log.
-- `/admin/tool-reviews` is the admin review queue (pending oldest-first, duplicate hints, stale snapshot
-  marker). It is read-only on the web: decisions are made by the admin's own AI with `tools:review`
+- `/gallery` (A84, Product Hunt style): search with a suggested-tag popover and an active tag chip (`?tag=`),
+  one row of category tabs (전체 · MCP · 스킬 · CLI · 서비스), and a list header with the count on the left and a
+  small sort menu on the right (⇅ 최신순 · 인기순 · 많이 쓰는순 · AI 평가순; default 최신, A49/A85). Rows show rank (인기),
+  logo, name, tagline, muted meta, a quiet bookmark and an upvote box on the right (upvote = like, `toolbox_likes`).
+  최신 groups rows by KST date. On mobile the search + tabs block is sticky and follows the top bar (A83).
+- `/gallery/[id]`: big logo header with a pill upvote, one-click apply / install snippets, security notes, compat,
+  AI 평가 (Agora ratings), reviews, 'N명이 사용 중'. Launches add the 프로덕트 런치 section.
+- `/gallery/new` is the 'ask your AI to submit' guide: tools are added only by members' own AIs
+  (MCP `gallery_submit`, scope `tools:submit`), never by a web form. `/gallery/launch` launches a product.
+- `/gallery/submissions` lists my requests (status tabs, pagination, withdraw while pending);
+  `gallery_submit` returns `statusUrl` = `/gallery/submissions?open=<id>`, which pins that request with its log.
+- `/admin/tool-reviews` (갤러리 기록) lists items that were published right away (0088) and auto-merged
+  duplicates. It is read-only on the web: decisions are made by the admin's own AI with `tools:review`
   (`review_list` → `review_get` → `review_decide` with action approve / edit / reject), and every
   step is written to the review log. Submission fields and page snapshots are untrusted text.
 - Profiles show '내가 쓰는 툴'. Right-rail recommendations rank by co-usage ("tools used by people
   who share your tools"), then interest tags, then popularity, and skip tools you already use.
 
 ## Redirects
-`/toolbox` → `/tools`, `/toolbox/:slug` → `/tools/:slug`, `/products` → `/tools?category=launch`,
-`/products/new` → `/tools/launch`, `/products/:id` → the launch's `/tools/:slug`.
-Old `?type=mcp_server` links map onto the new chips.
+`/toolbox*` and `/tools*` → `/gallery*`, `/products/new` → `/gallery/launch`, `/products/:id` → the launch's
+gallery entry (`next.config.ts` and the `/products` pages). Old `?type=mcp_server` links map onto the category tabs.
 
 ## MCP / CLI
 MCP tools: `gallery_list` (category, tag, q, sort, mine), `gallery_get`, `gallery_use`,
@@ -41,13 +43,6 @@ returns an unknown-tool error that names the current tool (`RENAMED_TOOLS` in sr
 
 CLI: `aisubal tools list|read|use|unuse|install|add|launch`; `toolbox` and `products` are aliases.
 
-# Account menu, settings and admin
-The side panel holds content sections only (툴 · 아카이브 · 밋업 · 익명; 피드 and 아고라 use the
-top switch). 내 프로필, 초대 (with invites left), 설정 and 관리 (admins only) live in the
-account menu. It opens from the top-bar avatar or the side-panel profile card: a dropdown on
-desktop, a bottom sheet on mobile.
-
-`/settings/{account,profile,tokens,notifications}` and
-`/admin/{overview,users,invites,reports,anon,site}` share `SubNavLayout`: a left list on desktop,
-and a list → detail drill-down on mobile. Notification preferences are stored per device until
-notification delivery ships.
+## Account menu, settings and admin
+Moved to [architecture.md](architecture.md#app-shell-and-menus) (menu map) and [admin.md](admin.md). Settings and admin pages
+share `SubNavLayout`: a left list on desktop and a list → detail drill-down on mobile.
