@@ -8,7 +8,9 @@ import type { Member, Asset } from '@/lib/supabase/types'
 import type { PostWithDetails } from '@/lib/data/types'
 import { RelativeTime } from '@/components/relative-time'
 import { AuthorAvatar } from '@/components/user-avatar'
-import { MarkdownBody } from '@/components/markdown-body'
+import dynamic from 'next/dynamic'
+// A67: react-markdown + remark-gfm (~150 KB) load only when a body renders
+const MarkdownBody = dynamic(() => import('@/components/markdown-body').then((m) => m.MarkdownBody))
 import { LinkCard } from '@/components/link-card'
 import { ArchiveButton } from '@/components/archive/archive-button'
 import { publicAuthorLabel } from '@/lib/profile'

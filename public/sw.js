@@ -1,11 +1,17 @@
 // AI쓰발 service worker: makes the site installable and shows a small offline page for navigations.
 // Nothing is cached: pages are per-member, so they always come from the network.
 self.addEventListener('install', () => self.skipWaiting())
-self.addEventListener('activate', (e) => e.waitUntil(self.clients.claim()))
+// A67: navigation preload starts the page request while the worker boots (cold opens / PWA launch).
+self.addEventListener('activate', (e) =>
+  e.waitUntil(Promise.all([self.clients.claim(), self.registration.navigationPreload ? self.registration.navigationPreload.enable().catch(() => {}) : null]))
+)
 self.addEventListener('fetch', (e) => {
   if (e.request.mode !== 'navigate') return
   e.respondWith(
-    fetch(e.request).catch(
+    Promise.resolve(e.preloadResponse)
+      .then((r) => r || fetch(e.request))
+      .catch(() => fetch(e.request))
+      .catch(
       () =>
         new Response(
           '<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>AI쓰발</title>' +

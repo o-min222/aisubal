@@ -1,6 +1,10 @@
-import { getT } from '@/i18n/server'
-export async function TimelineSkeleton({ count = 4 }: { count?: number }) {
-  const st = await getT()
+'use client'
+
+// A67: client components: a prefetched loading state no longer costs a server locale lookup (DB) per link
+import { useT } from '@/i18n/client'
+
+export function TimelineSkeleton({ count = 4 }: { count?: number }) {
+  const st = useT()
   return (
     <div className="timeline-list" aria-busy="true" aria-label={st('불러오는 중')}>
       {Array.from({ length: count }).map((_, i) => (
@@ -19,8 +23,8 @@ export async function TimelineSkeleton({ count = 4 }: { count?: number }) {
   )
 }
 
-export async function PageSkeleton() {
-  const st = await getT()
+export function PageSkeleton() {
+  const st = useT()
   return (
     <div className="space-y-3" aria-busy="true" aria-label={st('불러오는 중')}>
       <span className="skeleton block h-7 w-40 rounded" />

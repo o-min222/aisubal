@@ -9,7 +9,9 @@ import type { Member, ToolboxEnvironment } from '@/lib/supabase/types'
 import type { ToolboxEntryDetails } from '@/lib/data/types'
 import type { ToolUsers } from '@/lib/data/tools'
 import { TOOLBOX_ENV_LABEL, TOOLBOX_TYPE_LABEL } from '@/lib/toolbox-rules'
-import { MarkdownBody } from '@/components/markdown-body'
+import dynamic from 'next/dynamic'
+// A67: react-markdown + remark-gfm (~150 KB) load only when a body renders
+const MarkdownBody = dynamic(() => import('@/components/markdown-body').then((m) => m.MarkdownBody))
 import { RelativeTime } from '@/components/relative-time'
 import { ArchiveButton } from '@/components/archive/archive-button'
 import { AdaptiveSheet } from '@/components/adaptive-sheet'

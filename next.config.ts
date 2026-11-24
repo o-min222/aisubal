@@ -5,6 +5,11 @@ const nextConfig: NextConfig = {
   // Allow Playwright / cloud-agent browsers hitting 127.0.0.1 (not localhost)
   allowedDevOrigins: ["127.0.0.1", "localhost"],
   poweredByHeader: false,
+  // A67: back/forward and tab hops within 30 s reuse the client router cache (per browser, so per user)
+  // instead of re-rendering on the server. Mutations call router.refresh()/revalidatePath, which clear it.
+  experimental: {
+    staleTimes: { dynamic: 30 },
+  },
   async headers() {
     return [{ source: "/:path*", headers: SECURITY_HEADERS }];
   },
