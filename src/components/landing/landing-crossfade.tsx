@@ -3,15 +3,16 @@
 import { useEffect } from 'react'
 
 /**
- * A65d: on mobile the login takes the peek's place on the same screen. A sticky stage pins once the
- * peek's bottom reaches the screen's bottom; the next TRAVEL of scroll scrubs --p 0→1: the peek dims
- * under a blur veil while the login fades and rises into the same spot. Scrolling back reverses it.
+ * A65d/A65e: on mobile the login takes the peek's place on the same screen. The peek scrolls natively
+ * (so it tracks the finger 1:1); once its bottom reaches the screen's bottom, the next TRAVEL of scroll
+ * scrubs --p 0→1: the peek keeps moving up and dims under a fixed blur veil while the fixed login fades and
+ * rises into the centre. Scrolling back reverses it.
  *
  * The server HTML is the plain stacked layout (peek, then the login below), which is also what
  * no-JS, reduced motion and PC get. Only this script switches to the stage (.xfade), so the hidden
  * state never ships in the HTML.
  */
-const TRAVEL = 0.9 // × viewport height of scroll for the whole crossfade
+const TRAVEL = 0.55 // × viewport height: the scroll (and so the peek's travel) for the whole crossfade
 const LIVE_AT = 0.6 // the login takes taps from here; the peek stops taking them
 
 export function LandingCrossfade() {
@@ -44,7 +45,6 @@ export function LandingCrossfade() {
       start = root.getBoundingClientRect().top + window.scrollY + (stageH - vh)
       root.style.setProperty('--xf-vh', `${vh}px`)
       root.style.setProperty('--xf-stage-h', `${stageH}px`)
-      root.style.setProperty('--xf-top', `${Math.min(0, vh - stageH)}px`)
       root.style.setProperty('--xf-travel', `${travel}px`)
       root.style.setProperty('--xf-start', `${stageH - vh}px`)
       root.dataset.xfStart = String(Math.round(start))
@@ -99,7 +99,7 @@ export function LandingCrossfade() {
       root.classList.remove('xfade', 'xf-live')
       peek.inert = false
       live = false
-      for (const k of ['--p', '--xf-vh', '--xf-stage-h', '--xf-top', '--xf-travel', '--xf-start']) root.style.removeProperty(k)
+      for (const k of ['--p', '--xf-vh', '--xf-stage-h', '--xf-travel', '--xf-start']) root.style.removeProperty(k)
       probe.remove()
     }
     const sync = () => {

@@ -3049,8 +3049,9 @@ html:has(.landing) { scroll-snap-type: y proximity; background: #111111; }
 .auth-invite-status.warn { color: #f5c27a; }
 .auth-invite-how { margin-top: 6px; font-size: 12.5px; line-height: 1.6; color: rgba(255,255,255,.55); }
 
-/* A65d: mobile — the login takes the peek's place on the same screen, scrubbed by scroll (--p 0→1, set by
-   LandingCrossfade, which also adds .xfade; without it the stacked layout above stays).
+/* A65d/A65e: mobile — the login takes the peek's place on the same screen, scrubbed by scroll (--p 0→1, set by
+   LandingCrossfade, which also adds .xfade; without it the stacked layout above stays). A65e: the peek is NOT pinned —
+   it scrolls natively with the finger (1:1, ~55% of the screen over p 0→1) while the login + veil are fixed on screen.
    Peek: opacity 1 → .4 under a veil (fixed 12px backdrop blur + 55% #111) fading in by p = .7 — about .18 effective
    at p = 1; only opacity animates (no per-frame blur radius).
    Login: each part fades 0 → 1 and rises 24px over .42 of p, starting logo .22 / tagline .30 / invite .36 /
@@ -3060,11 +3061,11 @@ html:has(.landing) { scroll-snap-type: y proximity; background: #111111; }
 @media (max-width: 1023px) {
   html:has(.landing.xfade) { scroll-snap-type: y proximity; }
   .landing.xfade { position: relative; height: calc(var(--xf-stage-h) + var(--xf-travel)); --p: 0; }
-  .landing.xfade .landing-stage { display: block; position: sticky; top: var(--xf-top); height: var(--xf-stage-h); overflow: hidden; }
+  .landing.xfade .landing-stage { display: block; }
   .landing.xfade .landing-peek { scroll-snap-align: none; opacity: calc(1 - var(--p) * .6); }
-  .landing.xfade .landing-veil { display: block; position: absolute; left: 0; right: 0; bottom: 0; height: var(--xf-vh); z-index: 1; pointer-events: none;
+  .landing.xfade .landing-veil { display: block; position: fixed; inset: 0; z-index: 1; pointer-events: none;
     background: rgba(17, 17, 17, .55); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); opacity: clamp(0, var(--p) * 1.4, 1); will-change: opacity; }
-  .landing.xfade .landing-login { position: absolute; left: 0; right: 0; bottom: 0; height: var(--xf-vh); min-height: 0; z-index: 2; background: transparent; scroll-snap-align: none; pointer-events: none; }
+  .landing.xfade .landing-login { position: fixed; left: 0; right: 0; top: 0; height: var(--xf-vh); min-height: 0; z-index: 2; background: transparent; scroll-snap-align: none; pointer-events: none; }
   .landing.xfade.xf-live .landing-login { pointer-events: auto; }
   .landing.xfade.xf-live .landing-peek { pointer-events: none; }
   .landing.xfade .landing-login :is(.auth-hero-logo, .auth-invite, .auth-hero-actions, .auth-hero-locale),
