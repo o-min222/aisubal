@@ -15,7 +15,7 @@ describe('share card', () => {
   it('every page that sets its own openGraph also lists an image (a page openGraph replaces the layout one)', () => {
     for (const p of ['src/app/layout.tsx', 'src/app/page.tsx', 'src/app/join/page.tsx', 'src/app/t/[slug]/page.tsx', 'src/app/i/[code]/page.tsx']) {
       const src = readFileSync(join(root, p), 'utf8')
-      for (const m of src.matchAll(/openGraph: \{([^}]*)\}/g)) expect(m[1], p).toMatch(/images:/)
+      for (const m of src.matchAll(/openGraph: \{.*$/gm)) expect(m[0], p).toMatch(/images: \[/)
     }
   })
 })
