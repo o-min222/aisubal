@@ -11,6 +11,9 @@ import { AFTER_LOGIN_COOKIE, safeNextPath } from '@/lib/handoff-rules'
 import { IN_APP_LABEL, detectInApp, externalOpenUrl } from '@/lib/in-app-browser'
 import { toast } from 'sonner'
 
+/** an /i/{code} visit: who invited them and whether the code works (texts translated on the server) */
+export type LoginInvite = { code: string | null; usable: boolean; title: string; avatarUrl: string | null; initial: string; status: string; how: string }
+
 const noSubscribe = () => () => {}
 /** the webview we're in (client only; the server renders the normal screen) */
 function useInApp() {
@@ -19,7 +22,7 @@ function useInApp() {
 let inAppMemo: ReturnType<typeof detectInApp> | undefined
 const detectInAppOnce = () => (inAppMemo === undefined ? (inAppMemo = detectInApp(navigator.userAgent)) : inAppMemo)
 
-function LoginContent() {
+function LoginContent({ invite }: { invite?: LoginInvite }) {
   const searchParams = useSearchParams()
   const error = searchParams.get('error')
   const t = useT()
@@ -43,6 +46,8 @@ function LoginContent() {
     // A25: a shared link that sent them here opens after sign-in (/auth/callback reads this)
     const next = safeNextPath(searchParams.get('next'))
     if (next) document.cookie = `${AFTER_LOGIN_COOKIE}=${encodeURIComponent(next)}; path=/; max-age=600; samesite=lax; secure`
+    // the middleware already saved an /i/{code} code; saving it again covers a cookie that expired while reading
+    if (invite?.code && invite.usable) await fetch('/api/invites/claim', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ code: invite.code }) }).catch(() => {})
     await startGoogleSignIn()
   }
 
@@ -60,6 +65,24 @@ function LoginContent() {
         />
         <Slogan />
       </div>
+
+      {invite && (
+        <div className="auth-invite" role="status">
+          <p className="auth-invite-title">
+            {invite.avatarUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={invite.avatarUrl} alt="" className="auth-invite-avatar" />
+            ) : invite.initial ? (
+              <span className="auth-invite-avatar" aria-hidden>{invite.initial}</span>
+            ) : null}
+            {invite.title}
+          </p>
+          <p className={`auth-invite-status ${invite.usable ? 'ok' : 'warn'}`}>
+            {invite.code && <b>{invite.code}</b>} {invite.status}
+          </p>
+          <p className="auth-invite-how">{invite.how}</p>
+        </div>
+      )}
 
       <div className="auth-hero-actions">
         {error && (
@@ -87,7 +110,7 @@ function LoginContent() {
         ) : (
           <button type="button" onClick={handleGoogleLogin} className="auth-hero-btn">
             <GoogleIcon />
-            {t('Google로 로그인')}
+            {invite ? (invite.usable ? t('Google로 가입하기') : t('Google로 로그인 (웨이트리스트)')) : t('Google로 로그인')}
           </button>
         )}
       </div>
@@ -109,10 +132,10 @@ function GoogleIcon() {
   )
 }
 
-export function LoginScreen() {
+export function LoginScreen({ invite }: { invite?: LoginInvite }) {
   return (
     <Suspense fallback={<div className="animate-spin rounded-full h-8 w-8 border-b-2" style={{ borderColor: '#fff' }}></div>}>
-      <LoginContent />
+      <LoginContent invite={invite} />
     </Suspense>
   )
 }

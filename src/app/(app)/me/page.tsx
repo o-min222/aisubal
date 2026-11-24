@@ -230,7 +230,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   const t = await getT()
   const locale = await getLocale()
   const state = await getUserState()
-  if (state.type === 'unauthenticated') redirect('/login')
+  if (state.type === 'unauthenticated') redirect('/')
   if (state.type === 'waitlist') redirect('/waitlist')
   const me = state.member
   const editor = await loadProfileEditor(me)

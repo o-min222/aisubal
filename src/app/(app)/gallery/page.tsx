@@ -48,7 +48,7 @@ function hrefWith(base: Params, patch: Partial<Record<keyof Params, string | nul
 export default async function ToolsPage({ searchParams }: { searchParams: Promise<Params> }) {
   const st = await getT()
   const state = await getUserState()
-  if (state.type === 'unauthenticated') redirect('/login')
+  if (state.type === 'unauthenticated') redirect('/')
   if (state.type === 'waitlist') redirect('/waitlist')
 
   const sp = await searchParams

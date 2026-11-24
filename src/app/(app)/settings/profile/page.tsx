@@ -13,7 +13,7 @@ export async function generateMetadata() {
 
 export default async function ProfileSettingsPage() {
   const state = await getUserState()
-  if (state.type !== 'member') redirect('/login')
+  if (state.type !== 'member') redirect('/')
   const props = await loadProfileEditor(state.member)
   return (
     <>

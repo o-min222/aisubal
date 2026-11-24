@@ -26,7 +26,7 @@ const SECTION: Record<Exclude<SearchTab, 'all'>, string> = {
 /** Full results for the top-bar search. Same sources and visibility rules as the quick dialog. */
 export default async function SearchPage({ searchParams }: { searchParams: Promise<{ q?: string; tab?: string }> }) {
   const state = await getUserState()
-  if (state.type === 'unauthenticated') redirect('/login')
+  if (state.type === 'unauthenticated') redirect('/')
   if (state.type === 'waitlist') redirect('/waitlist')
   const st = await getT()
   const sp = await searchParams

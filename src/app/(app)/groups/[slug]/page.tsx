@@ -41,7 +41,7 @@ type Tab = 'feed' | 'members' | 'moim' | 'requests' | 'settings'
 export default async function GroupPage({ params, searchParams }: { params: Promise<{ slug: string }>; searchParams: Promise<{ tab?: string }> }) {
   const st = await getT()
   const state = await getUserState()
-  if (state.type === 'unauthenticated') redirect('/login')
+  if (state.type === 'unauthenticated') redirect('/')
   if (state.type === 'waitlist') redirect('/waitlist')
   const me = state.member.id
   const { slug } = await params

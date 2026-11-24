@@ -20,7 +20,7 @@ export async function GET(request: Request) {
   const next = safeNextPath(searchParams.get('next')) ?? safeNextPath(jar.get(AFTER_LOGIN_COOKIE)?.value) ?? '/feed'
 
   if (!code) {
-    return NextResponse.redirect(`${origin}/login?error=auth_failed`)
+    return NextResponse.redirect(`${origin}/?error=auth_failed`)
   }
 
   const supabase = await createClient()
@@ -28,7 +28,7 @@ export async function GET(request: Request) {
 
   if (error || !data.user) {
     console.error('[auth/callback] exchangeCodeForSession failed', error?.message)
-    return NextResponse.redirect(`${origin}/login?error=auth_failed`)
+    return NextResponse.redirect(`${origin}/?error=auth_failed`)
   }
 
   const { data: member, error: memberError } = await supabase

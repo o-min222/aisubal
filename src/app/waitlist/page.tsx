@@ -76,7 +76,7 @@ export default function WaitlistPage() {
 
   async function handleLogout() {
     await fetch('/api/auth/signout', { method: 'POST' }).catch(() => null)
-    router.push('/login')
+    router.push('/')
     router.refresh()
   }
 

@@ -11,7 +11,7 @@ export async function generateMetadata() {
 /** Old launch URLs → the launch's page in the unified 툴 section. */
 export default async function ProductRedirect({ params }: { params: Promise<{ id: string }> }) {
   const state = await getUserState()
-  if (state.type === 'unauthenticated') redirect('/login')
+  if (state.type === 'unauthenticated') redirect('/')
   if (state.type === 'waitlist') redirect('/waitlist')
   const { id } = await params
   if (id === 'new') redirect('/gallery/launch')

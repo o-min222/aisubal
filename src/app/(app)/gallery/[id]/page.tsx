@@ -18,7 +18,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 export default async function ToolDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const state = await getUserState()
-  if (state.type === 'unauthenticated') redirect('/login')
+  if (state.type === 'unauthenticated') redirect('/')
   if (state.type === 'waitlist') redirect('/waitlist')
   const key = decodeURIComponent(id)
   const entry = await loadToolEntry(key)

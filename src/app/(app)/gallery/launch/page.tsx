@@ -12,7 +12,7 @@ export default async function NewProductPage() {
   const state = await getUserState()
 
   if (state.type === 'unauthenticated') {
-    redirect('/login')
+    redirect('/')
   }
 
   if (state.type === 'waitlist') {

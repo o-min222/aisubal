@@ -38,7 +38,7 @@ export async function generateMetadata() {
 export default async function MemberProfilePage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ badges?: string }> }) {
   const st = await getT()
   const state = await getUserState()
-  if (state.type === 'unauthenticated') redirect('/login')
+  if (state.type === 'unauthenticated') redirect('/')
   if (state.type === 'waitlist') redirect('/waitlist')
   const viewer = state.member
   const { id: rawId } = await params

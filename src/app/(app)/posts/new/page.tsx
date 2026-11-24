@@ -15,7 +15,7 @@ export async function generateMetadata() {
 
 export default async function NewPostPage() {
   const state = await getUserState()
-  if (state.type === 'unauthenticated') redirect('/login')
+  if (state.type === 'unauthenticated') redirect('/')
   if (state.type === 'waitlist') redirect('/waitlist')
   const groupIdentities = await managedGroupIdentities(state.member.id)
 

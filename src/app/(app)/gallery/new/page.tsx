@@ -20,7 +20,7 @@ export async function generateMetadata() {
  */
 export default async function NewToolGuidePage({ searchParams }: { searchParams: Promise<{ tool?: string }> }) {
   const state = await getUserState()
-  if (state.type === 'unauthenticated') redirect('/login')
+  if (state.type === 'unauthenticated') redirect('/')
   if (state.type === 'waitlist') redirect('/waitlist')
   const me = state.member
   const tool = ((await searchParams).tool || '').slice(0, 200).trim()

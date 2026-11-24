@@ -14,7 +14,7 @@ type From = 'signup' | 'settings' | 'agora' | 'other'
 
 export default async function ConnectPage({ searchParams }: { searchParams: Promise<{ from?: string; preset?: string }> }) {
   const state = await getUserState()
-  if (state.type !== 'member') redirect('/login')
+  if (state.type !== 'member') redirect('/')
   const sp = await searchParams
   const raw = sp.from
   const from: From = raw === 'signup' || raw === 'settings' || raw === 'agora' ? raw : 'other'

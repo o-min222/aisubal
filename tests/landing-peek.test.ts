@@ -56,8 +56,8 @@ describe('A65 landing layout (dev)', () => {
   const get = async (path: string) => (await fetch(`${BASE_URL}${path}`, { headers: { cookie: 'aisubal_locale=ko' } })).text()
   const page = () => get('/?preview=1')
   const admin = (landingPeek: boolean) => fetch(`${BASE_URL}/api/admin/settings`, { method: 'PATCH', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ landingPeek }) })
-  // A65b: /login (PWA start_url → /feed → /login, protected pages, shared links) is the same screen
-  for (const path of ['/?preview=1', '/login', '/login?next=%2Fposts%2Fabc']) {
+  // A65c: / is the one signed-out screen; /i/{code} renders the same screen in place
+  for (const path of ['/?preview=1', '/?preview=1&next=%2Fposts%2Fabc', '/i/AXK8M2PQ?preview=1']) {
     it(`${path}: peek first, then the login section with the Google button; the cue jumps to it`, async () => {
       const html = await get(path)
       const peekAt = html.indexOf('class="landing-peek"')
@@ -65,12 +65,26 @@ describe('A65 landing layout (dev)', () => {
       expect(peekAt).toBeGreaterThan(-1)
       expect(loginAt).toBeGreaterThan(peekAt)
       expect(html).toContain('href="#login"')
-      expect(html.slice(loginAt)).toContain('Google로 로그인')
-      expect(html).toContain('/join?from=landing')
+      expect(html.slice(loginAt)).toMatch(/Google로 (로그인|가입하기)/)
+      // an invite visitor isn't pitched the waitlist
+      if (path.startsWith('/i/')) expect(html).not.toContain('/join?from=landing')
+      else expect(html).toContain('/join?from=landing')
     })
   }
-  it('/login?error=… → the plain screen, so the error is on the first screen', async () => {
-    const html = await get('/login?error=auth')
+  it('/login → / with the query kept (old links, bookmarks)', async () => {
+    const res = await fetch(`${BASE_URL}/login?next=%2Fposts%2Fabc&error=x`, { redirect: 'manual' })
+    expect(res.status).toBe(307)
+    const loc = new URL(res.headers.get('location') ?? '', BASE_URL)
+    expect(loc.pathname).toBe('/')
+    expect(loc.searchParams.get('next')).toBe('/posts/abc')
+    expect(loc.searchParams.get('error')).toBe('x')
+  })
+  it('/i/{code} saves the code for after sign-in (httpOnly cookie)', async () => {
+    const res = await fetch(`${BASE_URL}/i/axk8m2pq`, { redirect: 'manual' })
+    expect(res.headers.get('set-cookie') ?? '').toMatch(/aisubal_invite=AXK8M2PQ;.*HttpOnly/i)
+  })
+  it('?error=… → the plain screen, so the error is on the first screen', async () => {
+    const html = await get('/?preview=1&error=auth')
     expect(html).not.toContain('class="landing')
     expect(html).toContain('로그인에 실패했습니다')
   })
@@ -82,9 +96,10 @@ describe('A65 landing layout (dev)', () => {
       expect(html).not.toContain('class="landing')
       expect(html).toContain('auth-hero')
       expect(html).toContain('Google로 로그인')
-      expect(await get('/login')).not.toContain('class="landing')
+      expect(await get('/i/AXK8M2PQ?preview=1')).not.toContain('class="landing')
     } finally {
       await admin(true)
+      await page() // take the one stale view so later runs see the peek again
     }
   })
 })

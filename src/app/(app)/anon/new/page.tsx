@@ -15,7 +15,7 @@ export async function generateMetadata() {
 
 export default async function AnonNewPage({ searchParams }: { searchParams: Promise<{ category?: string }> }) {
   const state = await getUserState()
-  if (state.type === 'unauthenticated') redirect('/login')
+  if (state.type === 'unauthenticated') redirect('/')
   if (state.type === 'waitlist') redirect('/waitlist')
   const unlock = await getAnonUnlockState()
   if (!unlock.unlocked) return <AnonLocked threshold={unlock.threshold} activeCount={unlock.activeCount} />

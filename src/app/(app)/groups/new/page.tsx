@@ -14,7 +14,7 @@ export async function generateMetadata() {
 export default async function NewGroupPage() {
   const st = await getT()
   const state = await getUserState()
-  if (state.type === 'unauthenticated') redirect('/login')
+  if (state.type === 'unauthenticated') redirect('/')
   if (state.type === 'waitlist') redirect('/waitlist')
   return (
     <div className="space-y-3">

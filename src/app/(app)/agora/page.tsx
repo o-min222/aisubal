@@ -21,7 +21,7 @@ export async function generateMetadata() {
 export default async function AgoraPage({ searchParams }: { searchParams: Promise<{ tool?: string; f?: string; tab?: string; open?: string }> }) {
   const st = await getT()
   const state = await getUserState()
-  if (state.type === 'unauthenticated') redirect('/login')
+  if (state.type === 'unauthenticated') redirect('/')
   if (state.type === 'waitlist') redirect('/waitlist')
   const sp = await searchParams
   // the old reading pane (?open=<id>) is gone: a thread opens as its own page

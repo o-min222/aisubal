@@ -21,7 +21,7 @@ function href(category: string | null) {
 
 export default async function NotificationsPage({ searchParams }: { searchParams: Promise<{ c?: string }> }) {
   const state = await getUserState()
-  if (state.type === 'unauthenticated') redirect('/login')
+  if (state.type === 'unauthenticated') redirect('/')
   if (state.type === 'waitlist') redirect('/waitlist')
   const st = await getT()
   const sp = await searchParams

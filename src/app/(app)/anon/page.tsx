@@ -37,7 +37,7 @@ async function anonChunk(viewerId: string, category: AnonCategory | null, sort: 
 export default async function AnonBoardPage({ searchParams }: { searchParams: Promise<{ category?: string; sort?: string; open?: string }> }) {
   const st = await getT()
   const state = await getUserState()
-  if (state.type === 'unauthenticated') redirect('/login')
+  if (state.type === 'unauthenticated') redirect('/')
   if (state.type === 'waitlist') redirect('/waitlist')
   const unlock = await getAnonUnlockState()
   if (!unlock.unlocked) return <AnonLocked threshold={unlock.threshold} activeCount={unlock.activeCount} />

@@ -39,7 +39,7 @@ const EMPTY: Record<MoimTab, string> = {
 export default async function MoimPage({ searchParams }: { searchParams: Promise<{ tab?: string; open?: string }> }) {
   const st = await getT()
   const state = await getUserState()
-  if (state.type === 'unauthenticated') redirect('/login')
+  if (state.type === 'unauthenticated') redirect('/')
   if (state.type === 'waitlist') redirect('/waitlist')
   const sp = await searchParams
   const raw = sp.tab as MoimTab

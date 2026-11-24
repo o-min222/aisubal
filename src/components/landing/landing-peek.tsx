@@ -7,7 +7,7 @@ import { PEEK_FILLER, PEEK_LOCK, type PeekItem } from '@/lib/landing-peek-rules'
  * A64: a blurred peek of a few popular 전체 회원 posts for signed-out visitors.
  * Only the server-truncated first line and counts ever reach the page; the rest is fixed filler under a blur.
  */
-export async function LandingPeek({ items }: { items: PeekItem[] }) {
+export async function LandingPeek({ items, invited }: { items: PeekItem[]; invited?: boolean }) {
   if (!items.length) return null
   const t = await getT()
   return (
@@ -27,7 +27,8 @@ export async function LandingPeek({ items }: { items: PeekItem[] }) {
         ))}
       </ul>
       <p className="peek-lock"><Lock className="w-3.5 h-3.5" aria-hidden /> {t(PEEK_LOCK)}</p>
-      <Link href="/join?from=landing" className="peek-cta">{t('대기 명단에 이름 올리기')}</Link>
+      {/* an /i/{code} visitor already has an invite: no waitlist pitch */}
+      {!invited && <Link href="/join?from=landing" className="peek-cta">{t('대기 명단에 이름 올리기')}</Link>}
     </div>
   )
 }

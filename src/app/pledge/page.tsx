@@ -22,7 +22,7 @@ const fmt = (iso: string, intl: string) => new Intl.DateTimeFormat(intl, { dateS
  */
 export default async function PledgePage({ searchParams }: { searchParams: Promise<{ from?: string }> }) {
   const state = await getUserState()
-  if (state.type === 'unauthenticated') redirect('/login')
+  if (state.type === 'unauthenticated') redirect('/')
   if (state.type === 'waitlist') redirect('/waitlist')
   const m = state.member
   if (!m.profile_completed_at) redirect('/onboarding')

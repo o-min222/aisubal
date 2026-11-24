@@ -36,7 +36,7 @@ export default async function JoinPage({ searchParams }: Props) {
         <h1 className="join-title">{t('초대장을 기다리는 중이에요')}</h1>
         <p className="join-sub">{t(SITE_INTRO)} {t('자리가 나면 운영진이 초대 코드를 보내 드려요.')}</p>
         <JoinForm initialWaiting={waiting} source={joinSource(from)} />
-        <Link href="/login" className="text-link join-login">{t('초대장이 있거나 이미 회원이에요')}</Link>
+        <Link href="/#login" className="text-link join-login">{t('초대장이 있거나 이미 회원이에요')}</Link>
       </main>
     </div>
   )

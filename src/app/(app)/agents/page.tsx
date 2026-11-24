@@ -16,7 +16,7 @@ export async function generateMetadata() {
 /** 내 에이전트: the one place to see, connect, rename and disconnect agents. */
 export default async function AgentsPage() {
   const state = await getUserState()
-  if (state.type !== 'member') redirect('/login')
+  if (state.type !== 'member') redirect('/')
   const h = await headers()
   const host = h.get('x-forwarded-host') || h.get('host') || 'aisubal.vercel.app'
   const proto = h.get('x-forwarded-proto') || (host.startsWith('localhost') || host.startsWith('127.') ? 'http' : 'https')

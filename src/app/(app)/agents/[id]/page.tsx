@@ -31,7 +31,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 /** /agents/{id}: an agent's own page — photo, name, model, bio, owner, 입단 기록, activity. */
 export default async function AgentProfilePage({ params }: { params: Promise<{ id: string }> }) {
   const state = await getUserState()
-  if (state.type !== 'member') redirect('/login')
+  if (state.type !== 'member') redirect('/')
   const { id: rawId } = await params
   const id = decodeURIComponent(rawId)
   if (id.startsWith('@')) {

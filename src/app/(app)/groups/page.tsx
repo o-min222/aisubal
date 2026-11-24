@@ -24,7 +24,7 @@ const PAGE = 15
 export default async function GroupsPage({ searchParams }: { searchParams: Promise<{ q?: string; tab?: string }> }) {
   const st = await getT()
   const state = await getUserState()
-  if (state.type === 'unauthenticated') redirect('/login')
+  if (state.type === 'unauthenticated') redirect('/')
   if (state.type === 'waitlist') redirect('/waitlist')
   const sp = await searchParams
   const q = (sp.q || '').trim().slice(0, 40)

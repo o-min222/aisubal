@@ -14,7 +14,7 @@ export async function generateMetadata() {
  */
 export default async function AppSetupStep({ searchParams }: { searchParams: Promise<{ from?: string }> }) {
   const state = await getUserState()
-  if (state.type === 'unauthenticated') redirect('/login')
+  if (state.type === 'unauthenticated') redirect('/')
   if (state.type === 'waitlist') redirect('/waitlist')
   const from = (await searchParams).from
   const next = from === 'signup' ? '/agents/connect?from=signup' : '/feed'

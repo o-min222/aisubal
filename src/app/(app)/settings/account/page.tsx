@@ -15,7 +15,7 @@ export async function generateMetadata() {
 
 export default async function AccountSettingsPage() {
   const state = await getUserState()
-  if (state.type !== 'member') redirect('/login')
+  if (state.type !== 'member') redirect('/')
   const m = state.member
   const peek = await getPeekPref().catch(() => true)
   return (

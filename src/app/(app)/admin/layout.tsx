@@ -10,7 +10,7 @@ export async function generateMetadata() {
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const state = await getUserState()
-  if (state.type === 'unauthenticated') redirect('/login')
+  if (state.type === 'unauthenticated') redirect('/')
   if (state.type === 'waitlist') redirect('/waitlist')
   if (!state.member.is_admin) redirect('/feed')
   return (

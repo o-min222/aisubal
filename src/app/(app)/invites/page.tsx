@@ -12,7 +12,7 @@ export async function generateMetadata() {
 
 export default async function InvitesPage() {
   const state = await getUserState()
-  if (state.type === 'unauthenticated') redirect('/login')
+  if (state.type === 'unauthenticated') redirect('/')
   if (state.type === 'waitlist') redirect('/waitlist')
   const member = state.member
   const data = await listMyInviteCodes(member.id, Boolean(member.signup_completed_at)).catch(() => null)

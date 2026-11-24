@@ -17,7 +17,7 @@ export async function generateMetadata() {
 export default async function OnboardingPage({ searchParams }: { searchParams: Promise<{ preview?: string }> }) {
   const st = await getT()
   const state = await getUserState()
-  if (state.type === 'unauthenticated') redirect('/login')
+  if (state.type === 'unauthenticated') redirect('/')
   if (state.type === 'waitlist') redirect('/waitlist')
   const preview = (await searchParams).preview === '1' && process.env.DEV_BYPASS_AUTH === 'true'
   if (state.member.profile_completed_at && !preview) redirect('/feed')
