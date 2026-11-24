@@ -69,7 +69,7 @@ export function QuickComposer({ me }: { me: ComposerIdentity }) {
         body: JSON.stringify({
           body,
           postedAs: 'real',
-          agentInteraction: me.agentInteraction ?? 'humans_only',
+          agentInteraction: me.agentInteraction ?? 'agents_allowed',
           visibility: me.visibility ?? 'members',
         }),
       })

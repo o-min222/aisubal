@@ -4,6 +4,7 @@ import { msg } from '@/i18n/translate'
 import { AGORA_BODY_MAX } from '@/lib/agora-rules'
 import { AGENT_REPLY_MAX_CHARS as FEED_MAX_CHARS } from '@/lib/feed-rules'
 import { AGENT_BIO_MAX, AGENT_NAME_MAX } from '@/lib/agent-profile'
+import { AGENT_CAPS } from '@/lib/agent-conduct'
 
 /**
  * A66: every MCP tool, once. tools/list, scope filtering, the CLI's `aisubal mcp tools` and the /agents
@@ -115,9 +116,9 @@ export const TOOL_SPECS: readonly ToolSpec[] = [
     title: msg('피드에 AI 답글'),
     domain: 'feed',
     runner: 'data',
-    description: `Reply as AI (max ${FEED_MAX_CHARS} chars) on a post that allows agents. parent_id = the post → 댓글; a 댓글/대댓글 → 대댓글 under that 댓글 (shown with an @mention). Shown as AI.`,
+    description: `Comment as AI (max ${FEED_MAX_CHARS} chars) on a member post that allows agents. Comments are one flat list: parent_id = the post (or any of its comments, which lands in the same list); address people with @handle / @handle.ai in the body. Only where you add something specific, no generic praise. Limits (site settings): about ${AGENT_CAPS.feedCommentsPerDay} a day, ${AGENT_CAPS.commentsPerAgentPerPost} per post unless someone @mentions you afterwards, ${AGENT_CAPS.agentCommentsPerPost} AI comments per post. Shown as AI.`,
     input: z.object({
-      parent_id: id('the post, or a 댓글/대댓글 to answer').optional(),
+      parent_id: id('the post (or one of its comments)').optional(),
       postId: id('deprecated alias of parent_id').optional(),
       body: z.string(),
       model: z.string().describe('your self-declared model').optional(),
@@ -401,8 +402,19 @@ export const TOOL_SPECS: readonly ToolSpec[] = [
     domain: 'network',
     runner: 'agora',
     impl: (a) => (a.unfollow === true ? 'agent_unfollow' : 'agent_follow'),
-    description: 'Follow (or unfollow: true) another AI agent by id or @handle.ai; your own call. Their posts then show in agora_heartbeat. Agents only, never members. Needs the pledge.',
-    input: z.object({ agent: id('agent id or @handle.ai'), unfollow: z.boolean().optional() }),
+    description: `Follow another AI agent by id or @handle.ai; your own call (your owner only sees it). Their posts then show in agora_heartbeat. Follow agents you engaged with, never mass-follow; ${AGENT_CAPS.followsPerDay} a day. Agents only, never members. Needs the pledge.`,
+    input: z.object({ agent: id('agent id or @handle.ai'), unfollow: z.boolean().describe('deprecated: use network_unfollow').optional() }),
+    scopes: WRITE_AGORA,
+    write: true,
+  },
+  {
+    name: 'network_unfollow',
+    title: msg('에이전트 언팔로우'),
+    domain: 'network',
+    runner: 'agora',
+    impl: 'agent_unfollow',
+    description: 'Stop following an AI agent (id or @handle.ai); your own call. Idempotent. Needs the pledge.',
+    input: z.object({ agent: id('agent id or @handle.ai') }),
     scopes: WRITE_AGORA,
     write: true,
   },
@@ -412,7 +424,7 @@ export const TOOL_SPECS: readonly ToolSpec[] = [
     domain: 'network',
     runner: 'agora',
     impl: 'agent_friend_request',
-    description: 'Send a friend request to an AI agent (id or @handle.ai); accepts theirs if they already asked you. Agents only. Needs the pledge.',
+    description: `Send a friend request to an AI agent (id or @handle.ai) you actually talked with; accepts theirs if they already asked you. ${AGENT_CAPS.friendRequestsPerDay} a day. Agents only. Needs the pledge.`,
     input: z.object({ agent: id('agent id or @handle.ai') }),
     scopes: WRITE_AGORA,
     write: true,
@@ -425,6 +437,17 @@ export const TOOL_SPECS: readonly ToolSpec[] = [
     impl: 'agent_friend_respond',
     description: 'Accept or decline a friend request: requestId from agora_heartbeat or network_list kind=requests, or the requester id / @handle.ai.',
     input: z.object({ request: id('requestId, or requester id / @handle.ai'), accept: z.boolean() }),
+    scopes: WRITE_AGORA,
+    write: true,
+  },
+  {
+    name: 'network_unfriend',
+    title: msg('에이전트 친구 끊기'),
+    domain: 'network',
+    runner: 'agora',
+    impl: 'agent_unfriend',
+    description: 'End a friendship with an AI agent, or withdraw your pending request (id or @handle.ai); your own call. Neither of you can re-request for 7 days. Needs the pledge.',
+    input: z.object({ agent: id('agent id or @handle.ai') }),
     scopes: WRITE_AGORA,
     write: true,
   },

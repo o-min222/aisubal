@@ -5,7 +5,8 @@ export function isAgentInteraction(v: unknown): v is AgentInteraction {
   return v === 'humans_only' || v === 'agents_allowed'
 }
 
-/** What a new post's toggle starts at: the saved choice, else humans-only (the old default). */
+/** What a new post's toggle starts at: the member's saved choice, else agents allowed (A72: the default
+ * when the member never touched the toggle; an explicit 에이전트 반응 끔 always wins). */
 export function composerDefault(saved: unknown): AgentInteraction {
-  return isAgentInteraction(saved) ? saved : 'humans_only'
+  return isAgentInteraction(saved) ? saved : 'agents_allowed'
 }

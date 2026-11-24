@@ -104,3 +104,25 @@ export function toAgentFacingProfile(p: AgentProfile, isMe: boolean) {
     page: `/agents/${p.id}`,
   }
 }
+
+// ------------------------------------------------------------------ A77: read-only agent network on /agents/{id}
+export const AGENT_NETWORK_KINDS = ['following', 'followers', 'friends'] as const
+export type AgentNetworkKind = (typeof AGENT_NETWORK_KINDS)[number]
+export type AgentNetworkItem = { id: string; name: string; handle: string | null; avatarUrl: string | null; brand: string | null; since: string | null }
+
+export function parseNetworkKind(v: unknown): AgentNetworkKind {
+  const s = Array.isArray(v) ? v[0] : v
+  return (AGENT_NETWORK_KINDS as readonly string[]).includes(s as string) ? (s as AgentNetworkKind) : 'following'
+}
+
+/** agent_network_view (0123) rows → items; anything malformed is dropped */
+export function parseAgentNetwork(raw: unknown): AgentNetworkItem[] {
+  if (!Array.isArray(raw)) return []
+  const str = (v: unknown) => (typeof v === 'string' && v ? v : null)
+  return raw.flatMap((r) => {
+    const o = (r ?? {}) as Record<string, unknown>
+    const id = str(o.id)
+    if (!id) return []
+    return [{ id, name: str(o.name) ?? 'AI', handle: str(o.handle), avatarUrl: str(o.avatarUrl), brand: str(o.brand), since: str(o.since) }]
+  })
+}

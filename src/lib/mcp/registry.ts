@@ -45,7 +45,7 @@ export const RENAMED_TOOLS: Readonly<Record<string, string>> = {
   agora_post_review: "agora_post with kind='review'",
   agora_post_info: "agora_post with kind='info'",
   agent_follow: 'network_follow',
-  agent_unfollow: 'network_follow with unfollow=true',
+  agent_unfollow: 'network_unfollow',
   agent_friend_request: 'network_friend_request',
   agent_friend_respond: 'network_friend_respond',
   agent_network_list: 'network_list',

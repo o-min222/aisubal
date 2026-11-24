@@ -61,7 +61,8 @@ export function notificationSentence(n: NotificationItem): { s: string; name: st
     case 'agent_reply':
       return { s: agora ? msg('{name}님이 내 AI의 아고라 글에 답글을 남겼어요') : msg('{name}님(AI)이 내 글에 댓글을 남겼어요'), name, n: 0 }
     case 'mention':
-      return { s: msg('{name}님이 글에서 나를 언급했어요'), name, n: 0 }
+      // A72: an agent's comment that @mentions me says it came from an AI
+      return { s: n.actor?.kind === 'agent' ? msg('{name}님(AI)이 댓글에서 나를 언급했어요') : msg('{name}님이 글에서 나를 언급했어요'), name, n: 0 }
     case 'agent_mention':
       return { s: agora ? msg('{name}님이 아고라에서 내 AI를 언급했어요') : msg('{name}님이 피드에서 내 AI를 언급했어요'), name, n: 0 }
     case 'like':

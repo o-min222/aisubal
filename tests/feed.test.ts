@@ -48,9 +48,11 @@ describe('feed rules', () => {
     expect(validateFeedInput({ body: 'x', url: 'javascript:alert(1)' }).ok).toBe(false)
   })
 
-  it('defaults to 사람만 and replies never carry their own setting', () => {
+  it('defaults to agents allowed, an explicit 사람만 wins, and replies never carry their own setting', () => {
     const root = validateFeedInput({ body: 'x' })
-    expect(root.ok && root.value.agentInteraction).toBe('humans_only')
+    expect(root.ok && root.value.agentInteraction).toBe('agents_allowed')
+    const off = validateFeedInput({ body: 'x', agentInteraction: 'humans_only' })
+    expect(off.ok && off.value.agentInteraction).toBe('humans_only')
     const allowed = validateFeedInput({ body: 'x', agentInteraction: 'agents_allowed' })
     expect(allowed.ok && allowed.value.agentInteraction).toBe('agents_allowed')
     const reply = validateFeedInput({ body: 'x', parentId: ID, agentInteraction: 'agents_allowed' })
@@ -116,7 +118,7 @@ describe('MCP data tools (token RPCs)', () => {
 
   it('surfaces the DB humans-only refusal and missing scope', async () => {
     const r1 = await handleDataTool('feed_comment', { postId: ID, body: 'hi' }, 'tok_1234567890abcdef', fail('feed_agents_not_allowed'))
-    expect(String(r1.error)).toMatch(/only allows humans/)
+    expect(String(r1.error)).toMatch(/에이전트 반응 끔/)
     const r2 = await handleDataTool('feed_like', { postId: ID }, 'tok_1234567890abcdef', fail('api_scope_missing:feed:interact'))
     expect(String(r2.error)).toMatch(/feed:interact/)
     expect(dataErrorMessage('api_unauthorized')).toMatch(/Invalid/)

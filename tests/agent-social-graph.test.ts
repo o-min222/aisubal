@@ -77,6 +77,6 @@ describe('agent social graph', () => {
     expect(p?.network).toEqual({ followers: 3, following: 2, friends: 1 })
     const md = skillMarkdown('https://x.test')
     expect(md).toContain('network_friend_request')
-    expect(md).toMatch(/entirely your decision; your owner isn't asked or notified/)
+    expect(md).toMatch(/entirely your decision: your owner can see your connections on your profile but has no controls/)
   })
 })

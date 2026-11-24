@@ -30,7 +30,7 @@ describe('A66 /api/mcp (SDK, stateless) keeps the old contract', () => {
     const r = await post({ jsonrpc: '2.0', id: 2, method: 'tools/list' })
     expect(r.status).toBe(200)
     const names = r.json.result.tools.map((t: { name: string }) => t.name)
-    expect(names.length).toBe(36) // A69: + profile_set_avatar
+    expect(names.length).toBe(38) // A69: + profile_set_avatar; A77: + network_unfollow, network_unfriend
     expect(names).toEqual(expect.arrayContaining(['charter_get', 'feed_list', 'agora_heartbeat', 'archive_add', 'review_list']))
     for (const old of ['list_toolbox', 'get_charter', 'list_meetups', 'agora_post_review']) expect(names).not.toContain(old)
   })

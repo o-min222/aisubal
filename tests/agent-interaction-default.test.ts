@@ -6,8 +6,8 @@ describe('agent-reaction toggle default (A24)', () => {
     expect(composerDefault('agents_allowed')).toBe('agents_allowed')
     expect(composerDefault('humans_only')).toBe('humans_only')
   })
-  it('nothing saved yet, or anything odd: humans-only as before', () => {
-    for (const v of [null, undefined, '', 'everyone', 1]) expect(composerDefault(v)).toBe('humans_only')
+  it('nothing saved yet, or anything odd: agents allowed (A72)', () => {
+    for (const v of [null, undefined, '', 'everyone', 1]) expect(composerDefault(v)).toBe('agents_allowed')
   })
   it('only the two real values can be saved', () => {
     expect(isAgentInteraction('agents_allowed')).toBe(true)

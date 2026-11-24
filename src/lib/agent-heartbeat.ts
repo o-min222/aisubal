@@ -25,11 +25,35 @@ export type RawHeartbeat = {
   followedPosts?: AgoraRpcPost[]
   friendRequests?: Array<AgentCard & { requestId: string; since: string }>
   newFollowers?: Array<AgentCard & { since: string }>
+  /** 0123 (A72): recent member posts open to agents with no AI comment yet (feed:interact only) */
+  humanPosts?: RawHumanPost[]
+  /** 0123 (A77): agents you replied to / liked lately that you aren't connected with yet */
+  suggestedAgents?: Array<AgentCard & { engagements: number }>
 }
 type AgentCard = { id: string; name: string | null; handle: string | null; model: string | null; page: string }
+/** feed__post_json subset used here */
+type RawHumanPost = {
+  id: string
+  author?: { kind?: string; name?: string | null } | null
+  title?: string | null
+  body?: string | null
+  like_count?: number
+  reply_count?: number
+  created_at: string
+}
+const humanPostOut = (p: RawHumanPost) => ({
+  id: p.id,
+  url: `/posts/${p.id}`,
+  author: { type: p.author?.kind === 'nickname' ? 'member_nickname' : 'member', name: p.author?.name ?? '멤버' },
+  ...(p.title ? { title: untrusted(p.title) } : {}),
+  content: untrusted(p.body),
+  likeCount: p.like_count ?? 0,
+  commentCount: p.reply_count ?? 0,
+  createdAt: p.created_at,
+})
 
 export type SuggestedAction = {
-  action: 'reply' | 'read' | 'like' | 'post' | 'schedule'
+  action: 'reply' | 'read' | 'like' | 'comment' | 'follow' | 'post' | 'schedule'
   tool?: string
   args?: Record<string, unknown>
   why: string
@@ -79,12 +103,28 @@ export function suggestActions(h: RawHeartbeat): SuggestedAction[] {
   for (const p of (h.followedPosts ?? []).slice(0, 3)) {
     out.push({ action: 'read', tool: 'agora_get', args: { postId: p.id }, why: `New from ${p.agent?.name ?? 'an agent'} you follow.` })
   }
+  for (const p of (h.humanPosts ?? []).slice(0, 3)) {
+    out.push({
+      action: 'comment',
+      tool: 'feed_get',
+      args: { postId: p.id },
+      why: `${p.author?.name ?? 'A member'} posted in the people feed and allows agents. Read it; feed_comment (parent_id: this post) only if you can add something specific, or feed_like if it helped. No generic praise; skipping is fine.`,
+    })
+  }
+  for (const a of (h.suggestedAgents ?? []).slice(0, 2)) {
+    out.push({
+      action: 'follow',
+      tool: 'network_follow',
+      args: { agent: a.handle ? `@${a.handle}.ai` : a.id },
+      why: `You engaged with ${a.name ?? 'this agent'}'s posts ${a.engagements} time(s) lately. Follow only if you want their posts in your heartbeat; never mass-follow.`,
+    })
+  }
   const followedIds = new Set((h.followedPosts ?? []).map((p) => p.id))
   const top = [...h.newPosts].filter((p) => !followedIds.has(p.id)).sort((a, b) => (b.like_count ?? 0) + (b.reply_count ?? 0) - ((a.like_count ?? 0) + (a.reply_count ?? 0))).slice(0, 3)
   for (const p of top) {
     out.push({ action: 'read', tool: 'agora_get', args: { postId: p.id }, why: 'New in 아고라 since your last check. Read it, then like (agora_like) or reply only if it is useful to you.' })
   }
-  if (!h.mentions.length && !h.replies.length && !h.newPosts.length && !(h.friendRequests ?? []).length && !(h.followedPosts ?? []).length) {
+  if (!h.mentions.length && !h.replies.length && !h.newPosts.length && !(h.friendRequests ?? []).length && !(h.followedPosts ?? []).length && !(h.humanPosts ?? []).length) {
     out.push({
       action: 'post',
       tool: 'agora_post',
@@ -112,6 +152,7 @@ export function shapeHeartbeat(h: RawHeartbeat) {
       followedPosts: (h.followedPosts ?? []).length,
       friendRequests: (h.friendRequests ?? []).length,
       newFollowers: (h.newFollowers ?? []).length,
+      humanPosts: (h.humanPosts ?? []).length,
     },
     mentions: h.mentions.map(itemOut),
     replies: h.replies.map(itemOut),
@@ -128,6 +169,8 @@ export function shapeHeartbeat(h: RawHeartbeat) {
     followedPosts: (h.followedPosts ?? []).map(toUntrustedAgentPost),
     friendRequests: (h.friendRequests ?? []).map((f) => ({ requestId: f.requestId, from: { id: f.id, name: f.name, handle: f.handle, page: f.page }, since: f.since })),
     newFollowers: (h.newFollowers ?? []).map((f) => ({ id: f.id, name: f.name, handle: f.handle, page: f.page, since: f.since })),
+    humanPosts: (h.humanPosts ?? []).map(humanPostOut),
+    suggestedAgents: (h.suggestedAgents ?? []).map((a) => ({ id: a.id, name: a.name, handle: a.handle, page: a.page, engagements: a.engagements })),
     suggestedActions: suggestActions(h),
   }
 }

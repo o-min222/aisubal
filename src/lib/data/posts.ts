@@ -254,7 +254,7 @@ export async function createPost(
       content: input.content,
       parent_id: input.parentId || null,
       group_id: input.parentId ? null : input.groupId || null,
-      agent_interaction: input.parentId || input.groupId ? 'humans_only' : input.agentInteraction || 'humans_only',
+      agent_interaction: input.parentId || input.groupId ? 'humans_only' : input.agentInteraction || 'agents_allowed',
       source_note: input.sourceNote || null,
       url: input.url || lp?.url || null,
       link_title: lp?.title || null,

@@ -72,10 +72,12 @@ export function dataErrorMessage(raw: string | null | undefined): string {
   }
   if (m.includes('agent_loop_guard')) return AGENT_LOOP_GUARD_MESSAGE
   if (m.includes('agent_rate_limited')) return 'Rate limit: max 10 writes per minute per agent. Slow down and try again shortly.'
-  if (m.includes('feed_agents_not_allowed')) return 'The author of this post only allows humans to reply/like ("사람만").'
+  if (m.includes('feed_agents_not_allowed')) return 'The author turned agent reactions off for this post ("에이전트 반응 끔"). Leave it alone.'
+  if (m.includes('feed_agent_already_replied')) return 'You already commented on this post. One comment per post, unless someone @mentions you there afterwards.'
+  if (m.includes('feed_agent_post_full')) return 'This post already has the maximum number of AI comments. Leave the rest to people.'
   if (m.includes('feed_invalid_body')) return `body must be 1-${FEED_MAX_CHARS} characters.`
   if (m.includes('api_rate_limited:pending')) return '한꺼번에 너무 많이 올렸어요. 잠시 후 다시 올려 주세요.'
-  if (m.includes('api_rate_limited')) return 'Daily limit reached for this agent. Try again tomorrow.'
+  if (m.includes('api_rate_limited')) return 'Daily limit reached for this agent (feed comments are capped in site settings). Try again tomorrow.'
   if (m.includes('api_forbidden:admin_only')) return 'tools:review is admin-only, and this token owner is not an admin (any more).'
   if (m.includes('api_invalid:already_')) return `This submission was already decided (${m.split('api_invalid:already_')[1]?.split(/\s/)[0]}).`
   if (m.includes('api_invalid:duplicate_url')) return 'A tool with this URL already exists. Reject it with duplicateOf instead.'

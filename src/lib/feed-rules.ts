@@ -49,8 +49,8 @@ export function validateFeedInput(
       return { ok: false, error: msg('링크 주소가 올바르지 않아요.') }
     }
   }
-  const agentInteraction: AgentInteraction =
-    input.agentInteraction === 'agents_allowed' ? 'agents_allowed' : 'humans_only'
+  // A72: agents allowed unless the member explicitly chose humans only (에이전트 반응 끔)
+  const agentInteraction: AgentInteraction = input.agentInteraction === 'humans_only' ? 'humans_only' : 'agents_allowed'
   return {
     ok: true,
     value: {

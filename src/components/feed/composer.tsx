@@ -78,7 +78,7 @@ export function Composer({
   const [postedAs, setPostedAs] = useState<PostAs>('real')
   // 'real' | 'nickname' | 'group:<id>' (group identities only on root posts)
   const [who, setWho] = useState('real')
-  const [interaction, setInteraction] = useState<AgentInteraction>(me.agentInteraction ?? 'humans_only')
+  const [interaction, setInteraction] = useState<AgentInteraction>(me.agentInteraction ?? 'agents_allowed')
   const [visibility, setVisibility] = useState<PostVisibility>(me.visibility ?? 'members')
   const [busy, setBusy] = useState(false)
   const [image, setImage] = useState<PickedImage | null>(initialImage)

@@ -1,7 +1,7 @@
 import { agentHandleBase } from '@/lib/agent-handle'
 import { sb, isMock } from './client'
 import { listProfileAgents } from './tokens'
-import { parseAgentProfile, type AgentProfile } from '@/lib/agent-profile'
+import { parseAgentNetwork, parseAgentProfile, type AgentNetworkItem, type AgentNetworkKind, type AgentProfile } from '@/lib/agent-profile'
 import type { TimelineLiker, TimelinePost } from '@/components/timeline/types'
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
@@ -54,6 +54,26 @@ export async function getAgentProfile(viewerId: string, id: string): Promise<Age
   if (error) throw error
   return parseAgentProfile(data)
 }
+
+/** A77: who an agent follows / is followed by / is friends with. Read-only: agents decide these themselves. */
+export async function getAgentNetwork(id: string, kind: AgentNetworkKind, limit = 50): Promise<AgentNetworkItem[]> {
+  if (isMock()) {
+    const mine = MOCK_ALIAS[id] ?? id
+    if (mine !== 'token-1') return kind === 'friends' ? [] : MOCK_NETWORK.slice(0, 1)
+    return kind === 'friends' ? MOCK_NETWORK.slice(0, 2) : kind === 'followers' ? MOCK_NETWORK.slice(1) : MOCK_NETWORK
+  }
+  if (!UUID_RE.test(id)) return []
+  const supabase = await sb()
+  const { data, error } = await supabase.rpc('agent_network_view', { p_agent: id, p_kind: kind, p_limit: limit })
+  if (error) throw error
+  return parseAgentNetwork(data)
+}
+
+const MOCK_NETWORK: AgentNetworkItem[] = [
+  { id: 'token-m1', name: '다른멤버의 리서처', handle: '다른멤버의_리서처', avatarUrl: null, brand: 'chatgpt', since: new Date(Date.now() - 2 * 86400_000).toISOString() },
+  { id: 'token-2', name: 'CLI 봇', handle: 'cli_봇', avatarUrl: null, brand: 'cursor', since: new Date(Date.now() - 5 * 86400_000).toISOString() },
+  { id: 'token-x3', name: 'Nightly Release Notes Summarizer Agent', handle: 'nightly_release_notes', avatarUrl: null, brand: 'claude', since: new Date(Date.now() - 9 * 86400_000).toISOString() },
+]
 
 /** '@쓰발이' / '쓰발이' → that agent's id (0066 agent_by_handle; hidden agents resolve for their owner only). */
 export async function resolveAgentHandle(viewerId: string, raw: string): Promise<string | null> {

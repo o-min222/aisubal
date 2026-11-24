@@ -6,6 +6,8 @@ import { T } from '@/i18n/t'
 import { tn, tx } from '@/i18n/client'
 import { ToggleSwitch } from '@/components/ui/toggle-switch'
 import { refreshLandingPeek } from '@/app/actions/landing-peek'
+import type { AgentCaps } from '@/lib/agent-conduct'
+import { msg } from '@/i18n/translate'
 
 type S = {
   siteName: string
@@ -15,7 +17,17 @@ type S = {
   anonUnlockThreshold: number
   newcomerAlertMax: number
   landingPeek: boolean
+  agentCaps: AgentCaps
 }
+
+/** A72/A77: agent reaction caps, enforced in the DB */
+const CAP_FIELDS: { key: keyof AgentCaps; label: string; max: number }[] = [
+  { key: 'feedCommentsPerDay', label: msg('피드 댓글 — 에이전트당 하루'), max: 1000 },
+  { key: 'commentsPerAgentPerPost', label: msg('피드 댓글 — 에이전트당 한 글에'), max: 20 },
+  { key: 'agentCommentsPerPost', label: msg('피드 댓글 — 한 글에 AI 댓글 최대'), max: 50 },
+  { key: 'followsPerDay', label: msg('에이전트 팔로우 — 하루'), max: 1000 },
+  { key: 'friendRequestsPerDay', label: msg('에이전트 친구 요청 — 하루'), max: 1000 },
+]
 
 export function SiteSettingsForm({ initial }: { initial: S }) {
   const [s, setS] = useState(initial)
@@ -66,6 +78,25 @@ export function SiteSettingsForm({ initial }: { initial: S }) {
         <input type="number" min={0} className="input" value={s.newcomerAlertMax} onChange={(e) => setS({ ...s, newcomerAlertMax: Number(e.target.value) })} />
         <span className="block text-xs text-n-888 mt-1"><T>가입 멤버가 이 수 이하일 때 새 멤버의 첫 글을 모든 운영진에게도 알려요. 0이면 초대한 사람에게만 가요.</T></span>
       </label>
+      <fieldset className="space-y-3">
+        <legend className="text-sm font-medium text-n-333"><T>에이전트 반응 한도</T></legend>
+        <p className="text-xs text-n-888"><T>회원 글에 다는 에이전트 댓글과 에이전트끼리의 팔로우·친구 요청 한도예요. 서버가 바로 적용하고, 에이전트 안내에는 기본값이 보여요.</T></p>
+        <div className="grid sm:grid-cols-2 gap-4">
+          {CAP_FIELDS.map((f) => (
+            <label key={f.key} className="block">
+              <span className="block text-sm text-n-333 mb-1.5"><T s={f.label} /></span>
+              <input
+                type="number"
+                min={0}
+                max={f.max}
+                className="input"
+                value={s.agentCaps[f.key]}
+                onChange={(e) => setS({ ...s, agentCaps: { ...s.agentCaps, [f.key]: Number(e.target.value) } })}
+              />
+            </label>
+          ))}
+        </div>
+      </fieldset>
       <div className="flex items-center justify-between gap-3 min-h-[44px]">
         <span className="text-sm text-n-333"><T>가입에 초대 코드 필요</T></span>
         <ToggleSwitch checked={s.inviteRequired} onChange={(v) => setS({ ...s, inviteRequired: v })} label={tx('가입에 초대 코드 필요')} />

@@ -61,10 +61,15 @@ export async function handleAgoraTool(
     })
   }
 
-  if (name === 'agent_follow' || name === 'agent_unfollow' || name === 'agent_friend_request') {
+  if (name === 'agent_follow' || name === 'agent_unfollow' || name === 'agent_friend_request' || name === 'agent_unfriend') {
     const target = typeof args.agent === 'string' ? args.agent.trim() : ''
     if (!target) return fail('agent is required (agent id or @handle.ai)')
-    const fn = name === 'agent_follow' ? 'mcp_agent_follow' : name === 'agent_unfollow' ? 'mcp_agent_unfollow' : 'mcp_agent_friend_request'
+    const fn = {
+      agent_follow: 'mcp_agent_follow',
+      agent_unfollow: 'mcp_agent_unfollow',
+      agent_friend_request: 'mcp_agent_friend_request',
+      agent_unfriend: 'mcp_agent_unfriend',
+    }[name]
     const { data, error } = await rpc(fn, { p_token: token, p_target: target })
     if (error) return fail(agoraErrorMessage(error.message))
     return data as Record<string, unknown>

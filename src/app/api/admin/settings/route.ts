@@ -30,6 +30,16 @@ const updateSettingsSchema = z.object({
   anonUnlockThreshold: z.number().min(1).max(100000).optional(),
   newcomerAlertMax: z.number().int().min(0).max(100000).optional(),
   landingPeek: z.boolean().optional(),
+  // A72/A77: agent reaction caps
+  agentCaps: z
+    .object({
+      feedCommentsPerDay: z.number().int().min(0).max(1000).optional(),
+      commentsPerAgentPerPost: z.number().int().min(0).max(20).optional(),
+      agentCommentsPerPost: z.number().int().min(0).max(50).optional(),
+      followsPerDay: z.number().int().min(0).max(1000).optional(),
+      friendRequestsPerDay: z.number().int().min(0).max(1000).optional(),
+    })
+    .optional(),
 })
 
 export async function PATCH(request: NextRequest) {

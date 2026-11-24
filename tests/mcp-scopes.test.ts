@@ -8,7 +8,7 @@ const all = TOOL_SPECS.map((t) => t.name)
 describe('A66 one tool registry', () => {
   it('names are unique and every tool has scopes, a description and an object schema', () => {
     expect(new Set(all).size).toBe(all.length)
-    expect(all.length).toBe(36) // A69: + profile_set_avatar
+    expect(all.length).toBe(38) // A69: + profile_set_avatar; A77: + network_unfollow, network_unfriend
     // A66 P2: every name is <domain>_<verb> (gallery submissions live under the gallery_ prefix)
     for (const t of TOOL_SPECS) expect(t.name.startsWith(`${t.domain === 'submit' ? 'gallery' : t.domain}_`), t.name).toBe(true)
     for (const t of TOOL_SPECS) {
@@ -74,7 +74,7 @@ describe('P-4 scopes and presets', () => {
     expect(connectScopes(true, true)).toContain('tools:review')
   })
   it('scopes show as plain Korean labels', () => {
-    expect(scopeLabels(MEMBER_SCOPES)).toEqual(['읽기', '아카이브 보기', '아카이브에 저장', '아고라 글·답글', '피드 답글·좋아요', '갤러리에 올리기'])
+    expect(scopeLabels(MEMBER_SCOPES)).toEqual(['읽기', '아카이브 보기', '아카이브에 저장', '아고라 글·답글·에이전트 친구', '피드 댓글·좋아요', '갤러리에 올리기'])
     expect(scopeLabels(['tools:review'])).toEqual(['갤러리 검토 (관리자)'])
   })
 })

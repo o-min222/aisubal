@@ -2,6 +2,7 @@ import { MOCK_MEMBERS, MOCK_POSTS, MOCK_SITE_SETTINGS } from '@/lib/mock-data'
 import { mockPeekSite } from './landing-peek'
 import type { Member } from '@/lib/supabase/types'
 import { sb, isMock } from './client'
+import { AGENT_CAPS, AGENT_CAP_KEYS, type AgentCaps } from '@/lib/agent-conduct'
 import { getSiteSettings } from './members'
 
 export type AdminUserRow = {
@@ -149,6 +150,22 @@ export async function adminResolveReport(
   }
 }
 
+/** A72/A77: agent reaction caps (site_config, read by agora__config_int in the DB) */
+function capsFrom(map: Record<string, string | undefined>): AgentCaps {
+  const out = { ...AGENT_CAPS } as AgentCaps
+  for (const k of Object.keys(AGENT_CAP_KEYS) as (keyof AgentCaps)[]) {
+    const v = Number(map[AGENT_CAP_KEYS[k]])
+    if (map[AGENT_CAP_KEYS[k]] != null && map[AGENT_CAP_KEYS[k]] !== '' && Number.isFinite(v) && v >= 0) out[k] = Math.floor(v)
+  }
+  return out
+}
+
+function mockAgentCaps(set?: Partial<AgentCaps>): AgentCaps {
+  const g = globalThis as unknown as { __aisubalAgentCaps?: AgentCaps }
+  g.__aisubalAgentCaps = { ...(g.__aisubalAgentCaps ?? AGENT_CAPS), ...(set ?? {}) }
+  return g.__aisubalAgentCaps
+}
+
 export async function adminGetSettings() {
   if (isMock()) {
     return {
@@ -159,6 +176,7 @@ export async function adminGetSettings() {
       anonUnlockThreshold: MOCK_SITE_SETTINGS.anon_unlock_threshold,
       newcomerAlertMax: mockNewcomerMax(),
       landingPeek: mockPeekSite(),
+      agentCaps: mockAgentCaps(),
     }
   }
 
@@ -177,6 +195,7 @@ export async function adminGetSettings() {
     newcomerAlertMax: map.newcomer_alert_max != null && map.newcomer_alert_max !== '' ? Number(map.newcomer_alert_max) : 100,
     // A64: blurred peek of popular posts on the signed-out landing page (kill switch)
     landingPeek: map.landing_peek !== 'false',
+    agentCaps: capsFrom(map),
   }
 }
 
@@ -194,11 +213,13 @@ export async function adminUpdateSettings(input: {
   anonUnlockThreshold?: number
   newcomerAlertMax?: number
   landingPeek?: boolean
+  agentCaps?: Partial<AgentCaps>
 }) {
   if (isMock()) {
     if (input.anonUnlockThreshold !== undefined) MOCK_SITE_SETTINGS.anon_unlock_threshold = input.anonUnlockThreshold
     if (input.newcomerAlertMax !== undefined) mockNewcomerMax(input.newcomerAlertMax)
     if (input.landingPeek !== undefined) mockPeekSite(input.landingPeek)
+    if (input.agentCaps) mockAgentCaps(input.agentCaps)
     return {
       siteName: input.siteName ?? 'AI쓰발',
       siteDescription: input.siteDescription ?? '',
@@ -207,6 +228,7 @@ export async function adminUpdateSettings(input: {
       anonUnlockThreshold: MOCK_SITE_SETTINGS.anon_unlock_threshold,
       newcomerAlertMax: mockNewcomerMax(),
       landingPeek: mockPeekSite(),
+      agentCaps: mockAgentCaps(),
     }
   }
 
@@ -228,6 +250,9 @@ export async function adminUpdateSettings(input: {
   if (input.newcomerAlertMax !== undefined) upserts.push({ key: 'newcomer_alert_max', value: String(Math.max(0, Math.floor(input.newcomerAlertMax))) })
 
   if (input.landingPeek !== undefined) upserts.push({ key: 'landing_peek', value: String(input.landingPeek) })
+  for (const [k, v] of Object.entries(input.agentCaps ?? {}) as [keyof AgentCaps, number | undefined][]) {
+    if (v !== undefined && AGENT_CAP_KEYS[k]) upserts.push({ key: AGENT_CAP_KEYS[k], value: String(Math.max(0, Math.floor(v))) })
+  }
 
   if (upserts.length) {
     const { error } = await supabase.from('site_config').upsert(upserts, { onConflict: 'key' })

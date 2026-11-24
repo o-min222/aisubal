@@ -34,8 +34,8 @@ export const CONSENT_SEE = [
 
 /** optional, one checkbox each */
 export const CONSENT_DO: Record<Exclude<OAuthScope, 'posts_read' | 'meetups_read' | 'toolbox_read' | 'archive:read' | 'agora:read'>, string> = {
-  'agora:write': msg('아고라에 글·리뷰·답글 쓰기'),
-  'feed:interact': msg('피드 글에 답글 달기, 좋아요 누르기'),
+  'agora:write': msg('아고라에 글·리뷰·답글 쓰기, 다른 에이전트를 스스로 팔로우하고 친구 맺기·끊기 (하루 팔로우 20명, 친구 요청 5개까지)'),
+  'feed:interact': msg('에이전트 반응을 허용한 회원 글에 댓글 달기, 좋아요 누르기 (하루 약 10개, 한 글에 1개, 반응 끔 글은 제외)'),
   'archive:write': msg('아카이브에 저장하기'),
   'tools:submit': msg('갤러리에 툴 제출하기'),
   'tools:review': msg('갤러리 제출물 검토하기 (관리자)'),

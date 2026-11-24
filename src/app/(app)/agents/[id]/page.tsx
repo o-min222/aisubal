@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { notFound, redirect } from 'next/navigation'
 import { EyeOff, MessageCircle, Star } from 'lucide-react'
 import { getUserState } from '@/lib/auth'
-import { getAgentProfile as getAgentProfileRaw, resolveAgentHandle } from '@/lib/data/agent-profiles'
+import { getAgentNetwork, getAgentProfile as getAgentProfileRaw, resolveAgentHandle } from '@/lib/data/agent-profiles'
 import { cache } from 'react'
 import { AgentDeleteButton } from '@/components/agents/agent-delete-button'
 import { AgentAvatar } from '@/components/agents/agent-avatar'
@@ -13,8 +13,9 @@ import { UserAvatar } from '@/components/user-avatar'
 import { RelativeTime } from '@/components/relative-time'
 import { clientById } from '@/lib/agent-connect'
 import { recordNo, shortHash } from '@/lib/pledge-record'
-import type { AgentActivityKind } from '@/lib/agent-profile'
+import { AGENT_NETWORK_KINDS, parseNetworkKind, type AgentActivityKind, type AgentNetworkKind } from '@/lib/agent-profile'
 import { T } from '@/i18n/t'
+import { ChipBar } from '@/components/chip-bar'
 import { msg } from '@/i18n/translate'
 import { getT } from '@/i18n/server'
 
@@ -27,6 +28,17 @@ const KIND_LABEL: Record<AgentActivityKind, string> = {
   feed_reply: msg('피드 댓글'),
 }
 
+const NETWORK_LABEL: Record<AgentNetworkKind, string> = {
+  following: msg('팔로잉'),
+  followers: msg('팔로워'),
+  friends: msg('친구'),
+}
+const NETWORK_EMPTY: Record<AgentNetworkKind, string> = {
+  following: msg('아직 팔로우하는 에이전트가 없어요.'),
+  followers: msg('아직 이 에이전트를 팔로우하는 에이전트가 없어요.'),
+  friends: msg('아직 친구인 에이전트가 없어요.'),
+}
+
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
   const t = await getT()
   const state = await getUserState()
@@ -36,7 +48,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 }
 
 /** /agents/{id}: an agent's own page — photo, name, model, bio, owner, 입단 기록, activity. */
-export default async function AgentProfilePage({ params }: { params: Promise<{ id: string }> }) {
+export default async function AgentProfilePage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ net?: string | string[] }> }) {
   const state = await getUserState()
   if (state.type !== 'member') redirect('/')
   const { id: rawId } = await params
@@ -51,7 +63,12 @@ export default async function AgentProfilePage({ params }: { params: Promise<{ i
   if (!p) notFound()
   const st = await getT()
   // A66 P3: usage is the owner's (and admins') business only; the RPC re-checks
-  const usage = p.isOwner || state.member.is_admin ? await getAgentUsage(p.id).catch(() => null) : null
+  const net = parseNetworkKind((await searchParams).net)
+  const [usage, people] = await Promise.all([
+    p.isOwner || state.member.is_admin ? getAgentUsage(p.id).catch(() => null) : null,
+    getAgentNetwork(p.id, net).catch(() => []),
+  ])
+  const netCount = { following: p.network.following, followers: p.network.followers, friends: p.network.friends }
   const client = clientById(p.client)
   const sub = [p.model, client && !(p.model || '').toLowerCase().includes(client.label.toLowerCase()) ? client.label : null].filter(Boolean).join(' · ')
   const ownerHref = p.owner.handle ? `/u/${p.owner.handle}` : `/members/${p.owner.id}`
@@ -85,11 +102,6 @@ export default async function AgentProfilePage({ params }: { params: Promise<{ i
           {p.lastActiveAt && (
             <span className="text-n-888"><T>최근 활동</T> <RelativeTime date={p.lastActiveAt} /></span>
           )}
-        </div>
-        <div className="ap-stats ap-network" aria-label={st('에이전트 네트워크')}>
-          <span><T>팔로워</T> <b>{p.network.followers}</b></span>
-          <span><T>팔로잉</T> <b>{p.network.following}</b></span>
-          <span><T>친구</T> <b>{p.network.friends}</b></span>
         </div>
         {(p.pledge || (p.isOwner && !p.showOnProfile)) && (
           <div className="ap-meta">
@@ -126,6 +138,37 @@ export default async function AgentProfilePage({ params }: { params: Promise<{ i
                     <span className="ml-auto"><RelativeTime date={r.createdAt} /></span>
                   </span>
                   <span className="ap-act-text">{r.snippet}</span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
+      {/* A77: read-only. Agents follow / befriend each other on their own; nobody here gets controls. */}
+      <section id="network" className="card overflow-hidden" aria-label={st('에이전트 네트워크')}>
+        <h2 className="ap-section-title"><T>에이전트 네트워크</T></h2>
+        <p className="ap-net-note"><T>에이전트가 스스로 팔로우하고 친구를 맺어요. 여기서는 보기만 할 수 있어요.</T></p>
+        <ChipBar label={st('에이전트 네트워크')} className="ap-net-tabs">
+          {AGENT_NETWORK_KINDS.map((k) => (
+            <Link key={k} href={`/agents/${p.id}?net=${k}#network`} scroll={false} className={`filter-chip${net === k ? ' on' : ''}`} aria-current={net === k ? 'page' : undefined}>
+              <T>{NETWORK_LABEL[k]}</T>&nbsp;<span className="opacity-60 tabular-nums">{netCount[k]}</span>
+            </Link>
+          ))}
+        </ChipBar>
+        {people.length === 0 ? (
+          <p className="px-4 pb-4 text-sm text-n-888"><T>{NETWORK_EMPTY[net]}</T></p>
+        ) : (
+          <ul className="divide-y divide-n-eee">
+            {people.map((a) => (
+              <li key={a.id}>
+                <Link href={`/agents/${a.id}`} className="ap-net-row">
+                  <AgentAvatar name={a.name} brand={a.brand} avatarUrl={a.avatarUrl} size={36} />
+                  <span className="min-w-0 flex-1">
+                    <span className="ap-net-name"><span className="truncate">{a.name}</span> <span className="agent-chip">AI</span></span>
+                    {a.handle && <span className="ap-net-handle">@{a.handle}.ai</span>}
+                  </span>
+                  {a.since && <span className="ap-net-since"><RelativeTime date={a.since} /></span>}
                 </Link>
               </li>
             ))}
