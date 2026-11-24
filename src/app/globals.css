@@ -3179,7 +3179,7 @@ html:has(.landing) { scroll-snap-type: y proximity; background: #111111; }
 .invite-network .sm-hint { padding-bottom: 8px; }
 .invite-graph-loading { height: max(440px, calc(100dvh - 210px)); background: var(--n-fbfbfa); }
 
-/* ---------- A84 · gallery controls: search (tags as suggestions) + one tab row with the sort menu ---------- */
+/* ---------- A84/A85 · gallery controls: search (tags as suggestions) + category tab row; sort lives in the list header ---------- */
 .gallery-controls { display: flex; flex-direction: column; gap: 4px; }
 .tool-search { position: relative; }
 .tool-search-box {
@@ -3205,12 +3205,15 @@ html:has(.landing) { scroll-snap-type: y proximity; background: #111111; }
 .tool-search-pop-tags { display: flex; flex-wrap: wrap; gap: 6px; }
 .gallery-bar { display: flex; align-items: stretch; gap: 4px; border-bottom: 1px solid var(--n-ececec); }
 .gallery-bar .tabs-scroll { flex: 1 1 auto; }
+/* A85: the sort is a small muted control in the list header, not a tab */
+.gallery-listhead { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 36px; margin: 2px 0 6px; }
+.gallery-meta { margin: 0 2px; font-size: 12px; color: var(--n-888); min-width: 0; }
 .gallery-sort {
-  flex: none; display: inline-flex; align-items: center; gap: 2px; min-height: 44px; padding: 0 2px 0 8px;
-  background: none; border: 0; font-size: 13px; font-weight: 600; color: var(--n-666); white-space: nowrap; cursor: pointer;
+  flex: none; display: inline-flex; align-items: center; gap: 4px; height: 30px; padding: 0 8px 0 10px; margin-right: -2px;
+  border: 1px solid var(--n-e3e3e3); border-radius: 8px; background: var(--n-fff);
+  font-size: 12.5px; font-weight: 500; color: var(--n-666); white-space: nowrap; cursor: pointer;
 }
-.gallery-sort:hover { color: var(--n-111); }
-.gallery-meta { margin: 0 2px; font-size: 12px; color: var(--n-888); }
+.gallery-sort:hover, .gallery-sort[data-popup-open] { color: var(--n-111); border-color: var(--n-bbb); }
 @media (max-width: 767px) {
   /* the sticky block's own bottom border is the tab row's rule; tabs run to the screen edge and clip there */
   .sticky-sub.gallery-controls { padding-bottom: 0; }

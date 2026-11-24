@@ -138,7 +138,7 @@ export default async function ToolsPage({ searchParams }: { searchParams: Promis
         </div>
       </header>
 
-      {/* A83/A84: one sticky block on phones — search (tags live in its suggestions) + one tab row with the sort menu at its end */}
+      {/* A83–A85: one sticky block on phones — search (tags live in its suggestions) + the category tab row (categories only) */}
       <div className="sticky-sub gallery-controls">
         <ToolSearch key={`${q}|${tag ?? ''}`} initial={q} tags={tags} activeTag={tag} />
         <div className="gallery-bar">
@@ -154,12 +154,19 @@ export default async function ToolsPage({ searchParams }: { searchParams: Promis
               ...TOOL_CATEGORIES.map((c) => ({ id: c.id, label: st(c.label), href: hrefWith(base, { category: c.id, view: null, tag: null }) })),
             ]}
           />
-          {!rec && <GallerySort active={sort} items={TOOL_SORTS.map((s) => ({ id: s.id, label: s.label, href: hrefWith(base, { sort: s.id }) }))} />}
         </div>
       </div>
-      <p className="gallery-meta">
-        {rec ? <T>내가 쓰는 것과 함께 많이 쓰는 것부터 보여줘요. 이미 쓰는 건 빼요.</T> : <span className="tabular-nums"><T s="{length}개" vars={{ length: all.length }} /></span>}
-      </p>
+      {/* A85: list header — count on the left, the sort control on the right (scrolls with the list) */}
+      <div className="gallery-listhead">
+        {rec ? (
+          <p className="gallery-meta"><T>내가 쓰는 것과 함께 많이 쓰는 것부터 보여줘요. 이미 쓰는 건 빼요.</T></p>
+        ) : (
+          <>
+            <p className="gallery-meta tabular-nums"><T s="{length}개" vars={{ length: all.length }} /></p>
+            <GallerySort active={sort} items={TOOL_SORTS.map((s) => ({ id: s.id, label: s.label, href: hrefWith(base, { sort: s.id }) }))} />
+          </>
+        )}
+      </div>
 
       {tools.length === 0 ? (
         <EmptyList
