@@ -1,4 +1,5 @@
 import { MOCK_MEMBERS, MOCK_POSTS, MOCK_SITE_SETTINGS } from '@/lib/mock-data'
+import { mockPeekSite } from './landing-peek'
 import type { Member } from '@/lib/supabase/types'
 import { sb, isMock } from './client'
 import { getSiteSettings } from './members'
@@ -157,6 +158,7 @@ export async function adminGetSettings() {
       invitesPerMember: MOCK_SITE_SETTINGS.invites_per_member,
       anonUnlockThreshold: MOCK_SITE_SETTINGS.anon_unlock_threshold,
       newcomerAlertMax: mockNewcomerMax(),
+      landingPeek: mockPeekSite(),
     }
   }
 
@@ -173,6 +175,8 @@ export async function adminGetSettings() {
     anonUnlockThreshold: settings.anon_unlock_threshold,
     // A55: first-post alerts go to every admin while completed members <= this (0 = off)
     newcomerAlertMax: map.newcomer_alert_max != null && map.newcomer_alert_max !== '' ? Number(map.newcomer_alert_max) : 100,
+    // A64: blurred peek of popular posts on the signed-out landing page (kill switch)
+    landingPeek: map.landing_peek !== 'false',
   }
 }
 
@@ -189,10 +193,12 @@ export async function adminUpdateSettings(input: {
   invitesPerMember?: number
   anonUnlockThreshold?: number
   newcomerAlertMax?: number
+  landingPeek?: boolean
 }) {
   if (isMock()) {
     if (input.anonUnlockThreshold !== undefined) MOCK_SITE_SETTINGS.anon_unlock_threshold = input.anonUnlockThreshold
     if (input.newcomerAlertMax !== undefined) mockNewcomerMax(input.newcomerAlertMax)
+    if (input.landingPeek !== undefined) mockPeekSite(input.landingPeek)
     return {
       siteName: input.siteName ?? 'AI쓰발',
       siteDescription: input.siteDescription ?? '',
@@ -200,6 +206,7 @@ export async function adminUpdateSettings(input: {
       invitesPerMember: input.invitesPerMember ?? 2,
       anonUnlockThreshold: MOCK_SITE_SETTINGS.anon_unlock_threshold,
       newcomerAlertMax: mockNewcomerMax(),
+      landingPeek: mockPeekSite(),
     }
   }
 
@@ -219,6 +226,8 @@ export async function adminUpdateSettings(input: {
     })
 
   if (input.newcomerAlertMax !== undefined) upserts.push({ key: 'newcomer_alert_max', value: String(Math.max(0, Math.floor(input.newcomerAlertMax))) })
+
+  if (input.landingPeek !== undefined) upserts.push({ key: 'landing_peek', value: String(input.landingPeek) })
 
   if (upserts.length) {
     const { error } = await supabase.from('site_config').upsert(upserts, { onConflict: 'key' })

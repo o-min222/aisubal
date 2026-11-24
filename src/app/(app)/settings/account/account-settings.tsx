@@ -8,7 +8,7 @@ import { ThemeSwitch } from '@/components/theme/theme-switch'
 import { useLocale, useT } from '@/i18n/client'
 import { LOCALE_META } from '@/i18n/config'
 
-export function AccountSettings({ email, joinedAt, isAdmin }: { email: string; joinedAt: string | null; isAdmin: boolean }) {
+export function AccountSettings({ email, joinedAt, isAdmin, privacy }: { email: string; joinedAt: string | null; isAdmin: boolean; privacy?: React.ReactNode }) {
   const t = useT()
   const locale = useLocale()
   return (
@@ -37,6 +37,8 @@ export function AccountSettings({ email, joinedAt, isAdmin }: { email: string; j
           <ChevronRight className="w-4 h-4 ml-auto text-n-bbb" />
         </Link>
       </section>
+
+      {privacy}
 
       <section className="card p-4" id="language">
         <div className="flex items-start gap-3">

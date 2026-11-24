@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { revalidateTag } from 'next/cache'
+import { PEEK_TAG } from '@/lib/landing-peek-rules'
 import { requireAdmin } from '@/lib/auth'
 import { adminGetSettings, adminUpdateSettings } from '@/lib/data/admin'
 import { z } from 'zod'
@@ -27,6 +29,7 @@ const updateSettingsSchema = z.object({
   invitesPerMember: z.number().min(0).max(10).optional(),
   anonUnlockThreshold: z.number().min(1).max(100000).optional(),
   newcomerAlertMax: z.number().int().min(0).max(100000).optional(),
+  landingPeek: z.boolean().optional(),
 })
 
 export async function PATCH(request: NextRequest) {
@@ -40,6 +43,7 @@ export async function PATCH(request: NextRequest) {
     const body = await request.json()
     const data = updateSettingsSchema.parse(body)
     const settings = await adminUpdateSettings(data)
+    if (data.landingPeek !== undefined) revalidateTag(PEEK_TAG, { expire: 0 })
     return NextResponse.json({ settings })
   } catch (error) {
     if (error instanceof z.ZodError) {

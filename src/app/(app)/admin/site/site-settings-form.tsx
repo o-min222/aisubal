@@ -13,6 +13,7 @@ type S = {
   invitesPerMember: number
   anonUnlockThreshold: number
   newcomerAlertMax: number
+  landingPeek: boolean
 }
 
 export function SiteSettingsForm({ initial }: { initial: S }) {
@@ -66,6 +67,13 @@ export function SiteSettingsForm({ initial }: { initial: S }) {
       <div className="flex items-center justify-between gap-3 min-h-[44px]">
         <span className="text-sm text-n-333"><T>가입에 초대 코드 필요</T></span>
         <ToggleSwitch checked={s.inviteRequired} onChange={(v) => setS({ ...s, inviteRequired: v })} label={tx('가입에 초대 코드 필요')} />
+      </div>
+      <div className="flex items-center justify-between gap-3 min-h-[44px]">
+        <span className="min-w-0">
+          <span className="block text-sm text-n-333"><T>첫 화면 인기 글 미리보기 (비회원)</T></span>
+          <span className="block text-xs text-n-888"><T>로그인 전 첫 화면에 전체 회원 공개 인기 글의 첫 줄만 흐리게 보여요. 끄면 바로 사라져요.</T></span>
+        </span>
+        <ToggleSwitch checked={s.landingPeek} onChange={(v) => setS({ ...s, landingPeek: v })} label={tx('첫 화면 인기 글 미리보기 (비회원)')} />
       </div>
       <div className="flex justify-end">
         <button type="submit" disabled={busy} className="btn btn-primary min-h-[44px]">

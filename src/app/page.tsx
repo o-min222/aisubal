@@ -5,12 +5,16 @@ import { Slogan } from '@/components/slogan'
 import Link from 'next/link'
 import { getT } from '@/i18n/server'
 import { LocaleSwitch } from '@/components/i18n/locale-switch'
+import { LandingPeek } from '@/components/landing/landing-peek'
+import { getLandingPeek } from '@/lib/data/landing-peek'
 
-export default async function HomePage() {
+export default async function HomePage({ searchParams }: { searchParams: Promise<{ preview?: string }> }) {
   const st = await getT()
   const state = await getUserState()
+  // dev only: DEV_BYPASS_AUTH signs everyone in, so ?preview=1 shows the signed-out landing
+  const devPreview = process.env.NODE_ENV !== 'production' && (await searchParams).preview === '1'
   
-  if (state.type === 'member') {
+  if (state.type === 'member' && !devPreview) {
     redirect('/feed')
   }
   
@@ -19,6 +23,7 @@ export default async function HomePage() {
   }
 
   const t = await getT()
+  const peek = await getLandingPeek().catch(() => [])
   // Landing page for unauthenticated users
   return (
     <div className="auth-hero">
@@ -43,6 +48,8 @@ export default async function HomePage() {
         <GoogleIcon />
         {t('Google로 시작하기')}
       </Link>
+      {/* A64: a blurred peek of what's inside */}
+      <LandingPeek items={peek} />
       <div className="auth-hero-locale locale-on-dark">
         <LocaleSwitch />
       </div>
