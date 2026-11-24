@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { archiveFromRow, askAiPhrase, bundleMarkdown, cleanTags, parseArchiveRef, toAgentArchiveItem, type ArchiveItem } from '@/lib/archive-rules'
-import { ARCHIVE_ALIASES, handleArchiveTool, type ArchiveBackend } from '@/lib/archive-mcp'
+import { resolveTool } from '@/lib/mcp/registry'
+import { handleArchiveTool, type ArchiveBackend } from '@/lib/archive-mcp'
 
 const item = (p: Partial<ArchiveItem> = {}): ArchiveItem => ({
   id: 'a1', refNo: 12, kind: 'post', ref: 'p1', title: '제목', excerpt: '본문입니다', sourceUrl: '/posts/p1', authorLabel: '@kim', authorKind: 'member',
@@ -96,7 +97,7 @@ describe('archive MCP tools', () => {
     expect(await handleArchiveTool('archive_add', { kind: 'link', ref: 'https://e.com' }, backend, 'https://o')).toMatchObject({ ok: true, id: 'new' })
   })
   it('legacy names map to new tools', () => {
-    expect(ARCHIVE_ALIASES.save_to_archive({ postId: 'p9', tags: ['a'] })).toEqual({ name: 'archive_add', args: { kind: 'post', ref: 'p9', memo: undefined, tags: ['a'] } })
-    expect(ARCHIVE_ALIASES.get_archive_item({ itemId: 'z' }).args).toEqual({ ref: 'z' })
+    expect(resolveTool('save_to_archive', { postId: 'p9', tags: ['a'] })).toMatchObject({ kind: 'tool', spec: { name: 'archive_add' }, args: { kind: 'post', ref: 'p9', memo: undefined, tags: ['a'] } })
+    expect(resolveTool('get_archive_item', { itemId: 'z' })).toMatchObject({ args: { ref: 'z' } })
   })
 })

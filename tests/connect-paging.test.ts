@@ -46,10 +46,9 @@ describe('connect wizard presets', () => {
 
 describe('MCP route connection handling (source)', () => {
   const src = read('src/app/api/mcp/route.ts')
-  it('pings on initialize/tools/list, 202 for notifications, 405 for GET', () => {
+  it('pings on initialize/tools/list and answers GET with 405 (202 for notifications: tests/mcp-server.test.ts)', () => {
     expect(src).toContain("'mcp_ping'")
-    expect(src).toMatch(/notifications\//)
-    expect(src).toMatch(/status:\s*202/)
+    expect(src).toMatch(/initialize/)
     expect(src).toMatch(/status:\s*405/)
   })
 })

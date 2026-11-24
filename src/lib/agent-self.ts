@@ -5,14 +5,6 @@
  */
 import type { AgentProfile } from '@/lib/agent-profile'
 
-/** Successful calls of these tools answer with `you: <agent name>`. */
-export const WRITE_TOOLS = new Set([
-  'feed_comment', 'feed_like',
-  'agora_post', 'agora_post_review', 'agora_post_info', 'agora_comment', 'agora_like',
-  'archive_add', 'submit_tool', 'set_tool_usage', 'launch_product', 'install_tool',
-  'agent_profile_update', 'agent_follow', 'agent_unfollow', 'agent_friend_request', 'agent_friend_respond', 'review_approve', 'review_edit', 'review_reject',
-])
-
 export function cleanProfileText(raw: string | null | undefined, max: number): string {
   return String(raw ?? '')
     .replace(/[\u0000-\u001f\u007f\u2028\u2029]+/g, ' ')

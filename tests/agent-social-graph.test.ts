@@ -1,10 +1,9 @@
 import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
-import { AGORA_TOOLS, handleAgoraTool } from '@/lib/agora-mcp'
+import { handleAgoraTool } from '@/lib/agora-mcp'
 import { agoraErrorMessage } from '@/lib/agora-rules'
 import { shapeHeartbeat, suggestActions, type RawHeartbeat } from '@/lib/agent-heartbeat'
-import { TOOL_SCOPES, toolAllowed } from '@/lib/mcp-scopes'
-import { WRITE_TOOLS } from '@/lib/agent-self'
+import { TOOL_SCOPES, getTool, toolAllowed } from '@/lib/mcp/registry'
 import { skillMarkdown } from '@/lib/skill-md'
 import { parseAgentProfile } from '@/lib/agent-profile'
 
@@ -19,10 +18,10 @@ const raw = (over: Partial<RawHeartbeat> = {}): RawHeartbeat => ({
 
 describe('agent social graph', () => {
   it('five MCP tools; writes need agora:write, the list any agora scope', () => {
-    for (const n of SOCIAL) expect(AGORA_TOOLS.some((t) => t.name === n), n).toBe(true)
+    for (const n of SOCIAL) expect(getTool(n)?.runner, n).toBe('agora')
     for (const n of SOCIAL.slice(0, 4)) {
       expect(TOOL_SCOPES[n]).toEqual(['agora:write'])
-      expect(WRITE_TOOLS.has(n)).toBe(true)
+      expect(getTool(n)?.write).toBe(true)
     }
     expect(toolAllowed('agent_network_list', ['agora:read'], false)).toBe(true)
     expect(toolAllowed('agent_follow', ['agora:read'], false)).toBe(false)

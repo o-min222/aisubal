@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 import { buildIcs, googleCalendarUrl, icsEscape, icsFold, kstDate, shapeMyMeetups, suggestMeetupActions, summaryOf, type MineMeetup, type MyMeetupsRaw } from '@/lib/moim-calendar'
-import { TOOL_SCOPES } from '@/lib/mcp-scopes'
+import { TOOL_SCOPES } from '@/lib/mcp/registry'
 import { NOTIFY_CATEGORIES, notificationSentence, type NotificationItem } from '@/lib/notifications'
 
 const BASE_URL = process.env.TEST_BASE_URL || 'http://127.0.0.1:43210'

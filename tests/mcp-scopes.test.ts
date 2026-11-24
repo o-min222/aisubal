@@ -1,27 +1,49 @@
-import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
-import { TOOL_SCOPES, filterToolsForToken, toolAllowed, withImpliedReads } from '@/lib/mcp-scopes'
-import { CHARTER_TOOL } from '@/lib/pledge'
-import { ARCHIVE_TOOLS } from '@/lib/archive-mcp'
-import { AGORA_TOOLS } from '@/lib/agora-mcp'
-import { FEED_TOOLS, MEETUP_READ_TOOLS } from '@/lib/mcp-data'
-import { REVIEW_TOOLS, SUBMIT_TOOLS } from '@/lib/tool-review'
+import { withImpliedReads } from '@/lib/mcp-scopes'
+import { REFUSED_TOOLS, TOOL_ALIASES, TOOL_SCOPES, TOOL_SPECS, getTool, inputJsonSchema, listTools, resolveTool, toolAllowed } from '@/lib/mcp/registry'
 import { connectScopes, MEMBER_SCOPES, scopeLabels } from '@/lib/agent-connect'
 
-// route.ts keeps its own TOOLS array (route files can't export it): read names from source
-const routeSrc = readFileSync('src/app/api/mcp/route.ts', 'utf8')
-const routeBlock = routeSrc.slice(routeSrc.indexOf('const TOOLS = ['), routeSrc.indexOf('\n]\n', routeSrc.indexOf('const TOOLS = [')))
-const routeNames = [...routeBlock.matchAll(/name:\s*'([a-z_]+)'/g)].map((m) => m[1])
-const all = [CHARTER_TOOL, ...ARCHIVE_TOOLS, ...AGORA_TOOLS, ...FEED_TOOLS, ...MEETUP_READ_TOOLS, ...SUBMIT_TOOLS, ...REVIEW_TOOLS].map((t) => t.name).concat(routeNames)
+const all = TOOL_SPECS.map((t) => t.name)
+
+describe('A66 one tool registry', () => {
+  it('names are unique and every tool has scopes, a description and an object schema', () => {
+    expect(new Set(all).size).toBe(all.length)
+    expect(all.length).toBeGreaterThanOrEqual(43)
+    for (const t of TOOL_SPECS) {
+      expect(t.scopes.length, t.name).toBeGreaterThan(0)
+      expect(t.description.trim().length, t.name).toBeGreaterThan(3)
+      expect(inputJsonSchema(t)).toMatchObject({ type: 'object' })
+    }
+  })
+  it('aliases point at real tools and are never advertised; refused names are not tools', () => {
+    for (const [old, a] of Object.entries(TOOL_ALIASES)) {
+      expect(getTool(a.to), old).toBeDefined()
+      expect(all).not.toContain(old)
+    }
+    for (const n of Object.keys(REFUSED_TOOLS)) {
+      expect(all).not.toContain(n)
+      expect(resolveTool(n)).toMatchObject({ kind: 'refused' })
+    }
+    expect(resolveTool('nope')).toEqual({ kind: 'unknown' })
+  })
+  it('tools/list keeps the wire shape', () => {
+    const t = listTools().find((x) => x.name === 'feed_get')!
+    expect(Object.keys(t).sort()).toEqual(['_meta', 'annotations', 'description', 'inputSchema', 'name'])
+    expect(t.annotations.readOnlyHint).toBe(true)
+    expect(listTools().find((x) => x.name === 'agora_post')!.annotations.readOnlyHint).toBe(false)
+    expect(t._meta).toEqual({ 'aisubal/domain': 'feed', 'aisubal/scopes': ['posts_read', 'feed:interact'] })
+    expect(t.inputSchema).toMatchObject({ type: 'object', properties: { postId: { type: 'string' } }, required: ['postId'] })
+    expect(t.inputSchema).not.toHaveProperty('$schema')
+  })
+})
 
 describe('P-1 tools/list is filtered by token scopes', () => {
   it('every advertised tool has a scope rule', () => {
-    expect(routeNames.length).toBeGreaterThan(4)
     expect(all.filter((n) => !TOOL_SCOPES[n])).toEqual([])
   })
   it('read-only token sees no write or review tools', () => {
     const scopes = ['posts_read', 'meetups_read', 'toolbox_read', 'archive:read', 'agora:read'] as const
-    const names = filterToolsForToken(all.map((name) => ({ name })), scopes, false).map((t) => t.name)
+    const names = listTools({ scopes, isAdmin: false }).map((t) => t.name)
     expect(names).toContain('feed_list')
     expect(names).toContain('get_charter')
     for (const w of ['feed_comment', 'agora_post', 'archive_add', 'submit_tool', 'review_approve']) expect(names).not.toContain(w)

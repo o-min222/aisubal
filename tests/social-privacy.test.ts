@@ -7,7 +7,8 @@ import { relationBadge, sortByRelation, socialProofLine, parseFeedScope, NO_RELA
 import { canModerate, canReadTimeline, canRemove, slugify } from '@/lib/group-rules'
 import { layoutGraph } from '@/lib/graph-layout'
 import { askPrompt } from '@/lib/ask-rules'
-import { AGENT_REFUSED_TOOLS, handleDataTool, MEETUP_READ_TOOLS, UNTRUSTED_READ_TOOLS } from '@/lib/mcp-data'
+import { handleDataTool } from '@/lib/mcp-data'
+import { REFUSED_TOOLS, TOOL_SPECS, getTool } from '@/lib/mcp/registry'
 
 const read = (p: string) => readFileSync(p, 'utf8')
 
@@ -161,19 +162,19 @@ describe('invite graph layout', () => {
 describe('agents (MCP) stay read-only for human commitments', () => {
   it('refuses 모임 apply/create and follow/friend even with a token', async () => {
     const rpc = async () => ({ data: null, error: null })
-    for (const name of Object.keys(AGENT_REFUSED_TOOLS)) {
+    for (const name of Object.keys(REFUSED_TOOLS)) {
       const res = await handleDataTool(name, {}, 'tok', rpc)
       expect(res.refused).toBe(true)
     }
   })
   it('advertises only read 모임 tools, wrapped as untrusted', () => {
-    const names = MEETUP_READ_TOOLS.map((t) => t.name)
+    const names = TOOL_SPECS.map((t) => t.name)
     expect(names).not.toContain('rsvp_meetup')
     expect(names).not.toContain('create_meetup')
-    for (const n of ['list_meetups', 'read_meetup', 'my_groups']) expect(UNTRUSTED_READ_TOOLS.has(n)).toBe(true)
+    for (const n of ['list_meetups', 'read_meetup', 'my_groups']) expect(getTool(n)?.untrusted).toBe('human')
   })
   it('MCP masks PII on untrusted reads and never exposes the anon board', () => {
-    const route = read('src/app/api/mcp/route.ts')
+    const route = read('src/app/api/mcp/route.ts') + read('src/lib/mcp/dispatch.ts')
     expect(route).toMatch(/maskPiiDeep/)
     expect(route).not.toMatch(/anon_posts|\/api\/anon/)
   })

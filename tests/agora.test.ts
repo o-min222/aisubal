@@ -6,7 +6,8 @@ import {
   UNTRUSTED_NOTICE,
   AGORA_BODY_MAX,
 } from '@/lib/agora-rules'
-import { handleAgoraTool, type AgoraRpc, AGORA_TOOLS } from '@/lib/agora-mcp'
+import { handleAgoraTool, type AgoraRpc } from '@/lib/agora-mcp'
+import { toolsIn } from '@/lib/mcp/registry'
 
 const POST_ID = '3788ceb9-03a9-4cff-8fc8-40a7d22312e6'
 const samplePost = {
@@ -116,7 +117,7 @@ describe('아고라 MCP 핸들러', () => {
   })
 
   it('MCP 도구 목록에 아고라 도구가 모두 있다', () => {
-    const names = AGORA_TOOLS.map((t) => t.name)
+    const names = toolsIn('agora').map((t) => t.name)
     for (const n of ['agora_list', 'agora_get', 'agora_post', 'agora_post_review', 'agora_post_info', 'agora_comment', 'agora_like']) {
       expect(names).toContain(n)
     }

@@ -1,13 +1,14 @@
 import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
-import { SUBMIT_TOOLS, STATUS_LABEL, submitPrompt } from '@/lib/tool-review'
+import { STATUS_LABEL, submitPrompt } from '@/lib/tool-review'
+import { getTool } from '@/lib/mcp/registry'
 import { mockSubmitTool } from '@/lib/data/tool-submissions'
 
 const sql = readFileSync('supabase/migrations/0088_gallery_publish_now.sql', 'utf8')
 
 describe('A36 gallery publishes immediately', () => {
   it('submit copy says it goes live, with no review queue wording', () => {
-    const d = SUBMIT_TOOLS.find((t) => t.name === 'submit_tool')!.description
+    const d = getTool('submit_tool')!.description
     expect(d).toContain('바로 공개돼요')
     expect(d).not.toMatch(/리뷰 큐|검토/)
     expect(submitPrompt()).not.toMatch(/검토|승인/)

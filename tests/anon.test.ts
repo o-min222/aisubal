@@ -73,7 +73,7 @@ describe('익명 rules', () => {
   })
 
   it('is not reachable from MCP / CLI (agents can never touch it)', () => {
-    for (const f of ['src/app/api/mcp/route.ts', 'src/lib/mcp-data.ts', 'cli/aisubal.ts']) {
+    for (const f of ['src/app/api/mcp/route.ts', 'src/lib/mcp-data.ts', 'src/lib/mcp/tools.ts', 'src/lib/mcp/dispatch.ts', 'src/lib/mcp/server.ts', 'src/lib/mcp/dev-tools.ts', 'cli/aisubal.ts']) {
       const src = readFileSync(path.resolve(__dirname, '..', f), 'utf8')
       expect(src).not.toMatch(/anon_|\/api\/anon|data\/anon/)
     }

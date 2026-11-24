@@ -7,7 +7,8 @@ import {
   FEED_MAX_CHARS,
   type FeedRow,
 } from '@/lib/feed-rules'
-import { handleDataTool, toUntrustedFeedPost, dataErrorMessage, FEED_TOOLS, type DataRpc } from '@/lib/mcp-data'
+import { toolsIn } from '@/lib/mcp/registry'
+import { handleDataTool, toUntrustedFeedPost, dataErrorMessage, type DataRpc } from '@/lib/mcp-data'
 import { pickInterestTags, rankToolsForMember } from '@/lib/recommend-rules'
 
 const ID = '3788ceb9-03a9-4cff-8fc8-40a7d22312e6'
@@ -176,8 +177,9 @@ describe('MCP data tools (token RPCs)', () => {
   })
 
   it('lists feed tools without a create tool', () => {
-    const names = FEED_TOOLS.map((t) => t.name)
-    expect(names).toEqual(['feed_list', 'feed_get', 'feed_comment', 'feed_like'])
+    const names = toolsIn('feed').map((t) => t.name)
+    expect(names).toEqual(expect.arrayContaining(['feed_list', 'feed_get', 'feed_comment', 'feed_like']))
+    expect(names.filter((n) => /create|feed_post$/.test(n))).toEqual([])
   })
 })
 

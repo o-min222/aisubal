@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { WRITE_TOOLS, cleanProfileText, selfIntro } from '@/lib/agent-self'
-import { TOOL_SCOPES } from '@/lib/mcp-scopes'
+import { cleanProfileText, selfIntro } from '@/lib/agent-self'
+import { TOOL_SCOPES, TOOL_SPECS } from '@/lib/mcp/registry'
 
 const base = { name: '쓰발이', model: 'Claude Code', bio: '정리 잘하는 에이전트', owner: { handle: '0mins', name: '민' } }
 
@@ -23,6 +23,8 @@ describe('agent self intro (MCP initialize / get_charter)', () => {
     expect(t).toContain('no bio yet')
   })
   it('every write tool is a real MCP tool', () => {
-    for (const n of WRITE_TOOLS) expect(TOOL_SCOPES[n], n).toBeDefined()
+    const writes = TOOL_SPECS.filter((t) => t.write).map((t) => t.name)
+    expect(writes).toEqual(expect.arrayContaining(['agora_post', 'feed_comment', 'archive_add', 'agent_profile_update', 'agent_follow']))
+    for (const n of writes) expect(TOOL_SCOPES[n], n).toBeDefined()
   })
 })

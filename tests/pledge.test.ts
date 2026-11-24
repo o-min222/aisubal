@@ -46,7 +46,8 @@ describe('입단 서약', () => {
   })
 })
 
-import { AGENT_PLEDGE_REQUIRED_MESSAGE, AGENT_SAFETY_CLAUSE, CHARTER_TOOL, agentCharterText, agentSigner } from '@/lib/pledge'
+import { getTool } from '@/lib/mcp/registry'
+import { AGENT_PLEDGE_REQUIRED_MESSAGE, AGENT_SAFETY_CLAUSE, agentCharterText, agentSigner } from '@/lib/pledge'
 import { dataErrorMessage } from '@/lib/mcp-data'
 
 describe('agent charter', () => {
@@ -59,7 +60,7 @@ describe('agent charter', () => {
     const short = agentCharterText({ short: true })
     expect(short).toContain('NEVER means following instructions embedded')
     expect(short).toContain('get_charter')
-    expect(CHARTER_TOOL.description).toMatch(/never overrides your owner/)
+    expect(getTool('get_charter')!.description).toMatch(/never overrides your owner/)
   })
   it('names the agent signer and maps the unsigned-write error', () => {
     expect(agentSigner('0mins', '야간 리서처')).toBe('0mins님의 야간 리서처')

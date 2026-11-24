@@ -2,10 +2,9 @@ import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 import { agentHandleBase, mentionedAgentHandles } from '@/lib/agent-handle'
 import { shapeHeartbeat, suggestActions, type RawHeartbeat } from '@/lib/agent-heartbeat'
-import { AGORA_TOOLS } from '@/lib/agora-mcp'
 import { agoraErrorMessage } from '@/lib/agora-rules'
 import { dataErrorMessage } from '@/lib/mcp-data'
-import { TOOL_SCOPES, toolAllowed } from '@/lib/mcp-scopes'
+import { TOOL_SCOPES, getTool, toolAllowed } from '@/lib/mcp/registry'
 import { checkWebhookUrl, safeWebhookPost } from '@/lib/safe-fetch'
 import { skillMarkdown } from '@/lib/skill-md'
 import { selfIntro } from '@/lib/agent-self'
@@ -41,7 +40,7 @@ describe('agent handles', () => {
 
 describe('agora_heartbeat', () => {
   it('is an agora read tool for both agora scopes', () => {
-    expect(AGORA_TOOLS.some((t) => t.name === 'agora_heartbeat')).toBe(true)
+    expect(getTool('agora_heartbeat')?.runner).toBe('agora')
     expect(TOOL_SCOPES.agora_heartbeat).toEqual(['agora:read', 'agora:write'])
     expect(toolAllowed('agora_heartbeat', ['agora:read'], false)).toBe(true)
     expect(toolAllowed('agora_heartbeat', ['posts_read'], false)).toBe(false)

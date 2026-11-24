@@ -15,7 +15,8 @@ import {
   typesForCategory,
 } from '@/lib/tool-rules'
 import { rankToolsForMember, toolReason } from '@/lib/recommend-rules'
-import { TOOL_ALIASES, handleDataTool, resolveToolAlias, withLegacyKey, type DataRpc } from '@/lib/mcp-data'
+import { handleDataTool, withLegacyKey, type DataRpc } from '@/lib/mcp-data'
+import { TOOL_ALIASES, resolveTool } from '@/lib/mcp/registry'
 import { SIDE_NAV } from '@/components/shell/nav-items'
 import { ADMIN_SECTIONS, SETTINGS_SECTIONS, subNavActive } from '@/components/shell/account-nav'
 
@@ -165,12 +166,13 @@ describe('MCP: unified tool names + legacy aliases', () => {
 
   it('resolves every old tool name to a new one', () => {
     expect(Object.keys(TOOL_ALIASES).sort()).toEqual(
-      ['create_product', 'create_tool', 'create_toolbox_entry', 'list_products', 'list_toolbox', 'read_product', 'read_toolbox'].sort()
+      ['create_product', 'create_tool', 'create_toolbox_entry', 'list_products', 'list_toolbox', 'read_product', 'read_toolbox', 'list_archive', 'search_archive', 'get_archive_item', 'save_to_archive'].sort()
     )
-    expect(resolveToolAlias('list_products', {}).args).toMatchObject({ category: 'launch', sort: 'upvotes' })
-    expect(resolveToolAlias('list_toolbox', { type: 'mcp_server', sort: 'trending' }).args).toMatchObject({ category: 'mcp', sort: 'popular' })
-    expect(resolveToolAlias('read_product', { productId: 'p1' }).args.entryId).toBe('p1')
-    expect(resolveToolAlias('feed_list', { q: 1 })).toMatchObject({ name: 'feed_list', legacyKey: undefined })
+    expect(resolveTool('list_products', {})).toMatchObject({ legacyKey: 'products' })
+    expect((resolveTool('list_products', {}) as { args: object }).args).toMatchObject({ category: 'launch', sort: 'upvotes' })
+    expect((resolveTool('list_toolbox', { type: 'mcp_server', sort: 'trending' }) as { args: object }).args).toMatchObject({ category: 'mcp', sort: 'popular' })
+    expect(resolveTool('read_product', { productId: 'p1' })).toMatchObject({ args: { entryId: 'p1' } })
+    expect(resolveTool('feed_list', { q: 1 })).toMatchObject({ kind: 'tool', spec: { name: 'feed_list' }, legacyKey: undefined })
     expect(withLegacyKey({ tools: [1] }, 'entries')).toEqual({ tools: [1], entries: [1] })
   })
 
@@ -196,7 +198,7 @@ describe('MCP: unified tool names + legacy aliases', () => {
   })
 
   it('the anonymous board stays out of MCP', () => {
-    const src = read('src/app/api/mcp/route.ts') + read('src/lib/mcp-data.ts')
+    const src = ['src/app/api/mcp/route.ts', 'src/lib/mcp-data.ts', 'src/lib/mcp/tools.ts', 'src/lib/mcp/dispatch.ts', 'src/lib/mcp/server.ts'].map(read).join('\n')
     expect(src).not.toMatch(/anon_(list|thread|create)/)
   })
 })

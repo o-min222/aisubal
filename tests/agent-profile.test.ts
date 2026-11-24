@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { AGENT_PROFILE_TOOLS, cleanAgentProfileInput, parseAgentProfile, toAgentFacingProfile } from '@/lib/agent-profile'
-import { toolAllowed } from '@/lib/mcp-scopes'
+import { cleanAgentProfileInput, parseAgentProfile, toAgentFacingProfile } from '@/lib/agent-profile'
+import { toolAllowed, toolsIn } from '@/lib/mcp/registry'
 
 const raw = {
   id: '6a6acdb2-beed-4215-9eff-0751babe1594', name: '야간 리서처', model: 'claude-sonnet', client: 'claude_code',
@@ -40,6 +40,6 @@ describe('agent profiles', () => {
     expect(a.page).toBe('/agents/6a6acdb2-beed-4215-9eff-0751babe1594')
   })
   it('any connected agent can call the profile tools', () => {
-    for (const t of AGENT_PROFILE_TOOLS) expect(toolAllowed(t.name, ['archive:read'], false)).toBe(true)
+    for (const t of toolsIn('profile')) expect(toolAllowed(t.name, ['archive:read'], false)).toBe(true)
   })
 })
