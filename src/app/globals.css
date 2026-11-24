@@ -488,7 +488,7 @@ a:focus-visible, .icon-btn:focus-visible, .text-link:focus-visible, .row-link:fo
 /* URLs and mentions inside post bodies: told apart by weight, underlined only on hover */
 .body-link, .markdown-body .md-a { color: inherit; font-weight: 500; text-decoration: none; text-underline-offset: 2px; }
 .body-link:hover, .markdown-body .md-a:hover { text-decoration: underline; }
-.gsearch-all:hover, .composer-link:hover, .mc-more-row:hover, .mc-empty:hover, .pr-verify-btn:hover, .pe-agents-link:hover, .profile-stat-sub:hover { color: var(--link-hover); }
+.gsearch-all:hover, .composer-link:hover, .mc-more-row:hover, .mc-empty:hover, .pr-verify-btn:hover, .pe-agents-link:hover { color: var(--link-hover); }
 /* round icon buttons and rows/cards without their own hover background: one neutral tint, the icon keeps its colour */
 .icon-btn { transition: background-color .12s, color .12s; }
 .icon-btn:hover, .row-link:hover { background: var(--tint-hover); }
@@ -2189,9 +2189,6 @@ button.rp-link { width: 100%; text-align: left; font: inherit; cursor: pointer; 
 
 /* tab strips scroll sideways; A84: no fade or chevron cue, they clip naturally */
 .tabs-scroll { position: relative; min-width: 0; }
-.profile-stat-sub { display: block; padding: 0 6px 8px; margin-top: -6px; font-size: 11px; color: var(--link); }
-.profile-stats > .profile-stat-cell { padding: 0; }
-.profile-stat-cell > a:first-child { display: block; padding: 10px 6px; color: inherit; }
 
 /* invite graph mini profile: single action row */
 .graph-card-actions { display: flex; align-items: center; gap: 6px; margin-top: 12px; flex-wrap: nowrap; min-width: 0; }
@@ -3397,3 +3394,9 @@ body.is-sorting, body.is-sorting * { user-select: none; -webkit-user-select: non
 .profile-tools li.pe-dragging .profile-tool { opacity: .55; outline: 1.5px dashed var(--n-bbb); }
 .profile-tools.is-sorting-list { grid-template-columns: minmax(0, 1fr) !important; }
 @media (min-width: 768px) { .profile-tools.is-sorting-list { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; } }
+
+/* ---------- A92 · side-panel profile card: numbers-only stats + one quiet 초대 네트워크 row ---------- */
+.profile-stats-foot { display: flex; border-top: 1px solid var(--n-eee); }
+.profile-stats-link { flex: 1 1 0; min-width: 0; display: flex; align-items: center; justify-content: center; gap: 4px; min-height: 36px; padding: 0 10px; font-size: 12px; color: var(--n-666); white-space: nowrap; }
+.profile-stats-link:hover { background: var(--n-fafafa); color: var(--n-111); text-decoration: none; }
+.profile-stats dt { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }

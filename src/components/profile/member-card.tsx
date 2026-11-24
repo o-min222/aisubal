@@ -5,7 +5,7 @@ import { ArchiveButton } from '@/components/archive/archive-button'
 import { AgentAvatar } from '@/components/agents/agent-avatar'
 import Link from 'next/link'
 import { useState } from 'react'
-import { ExternalLink, Lock, Users } from 'lucide-react'
+import { ChevronRight, ExternalLink, Lock, Network, Users } from 'lucide-react'
 import { UserAvatar } from '@/components/user-avatar'
 import { ServiceChip } from '@/components/service-chip'
 import { RelativeTime } from '@/components/relative-time'
@@ -170,15 +170,6 @@ export function MemberCard({ data, variant = 'side' }: { data: MemberCardData; v
               <dd>{st.value ?? '–'}</dd>
             </>
           )
-          if (st.href && st.sub)
-            return (
-              <div key={st.label} className="profile-stat-cell">
-                <Link href={st.href}>{body}</Link>
-                <Link href={st.sub.href} className="profile-stat-sub">
-                  <T>{st.sub.label}</T> ›
-                </Link>
-              </div>
-            )
           return st.href ? (
             <Link key={st.label} href={st.href}>
               {body}
@@ -188,6 +179,18 @@ export function MemberCard({ data, variant = 'side' }: { data: MemberCardData; v
           )
         })}
       </dl>
+      {/* A92: secondary links (초대 네트워크) get one quiet row under the numbers-only stat cells */}
+      {data.stats.some((st) => st.sub) && (
+        <div className="profile-stats-foot">
+          {data.stats.flatMap((st) => (st.sub ? [st.sub] : [])).map((sub) => (
+            <Link key={sub.href} href={sub.href} className="profile-stats-link">
+              <Network className="w-3.5 h-3.5 shrink-0" aria-hidden />
+              <span className="truncate"><T>{sub.label}</T></span>
+              <ChevronRight className="w-3.5 h-3.5 shrink-0" aria-hidden />
+            </Link>
+          ))}
+        </div>
+      )}
     </section>
   )
 }

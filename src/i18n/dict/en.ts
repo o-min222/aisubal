@@ -921,7 +921,7 @@ const en: Record<string, string> = {
   "반영했어요": "Updated",
   "받고 싶은 알림을 골라두세요. 알림 발송은 곧 열려요 — 지금 고른 설정은 이 기기에 저장돼요.": "Pick the notifications you want. Sending opens soon; your choices are saved on this device for now.",
   "받은 요청": "Received",
-  "받은 좋아요": "Likes received",
+  "받은 좋아요": "Likes",
   "받은 초대나 보낸 요청이 없어요.": "No invites or pending requests.",
   "받은 친구 요청이 없어요.": "No friend requests received.",
   "받을 알림 고르기": "Choose notifications",
