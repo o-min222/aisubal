@@ -2,11 +2,12 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { RefreshCw, Copy, Eye, EyeOff, KeyRound, MoreHorizontal, Pencil, Unplug, UserRound } from 'lucide-react'
+import { RefreshCw, Copy, Eye, EyeOff, KeyRound, MoreHorizontal, Pencil, Trash2, UserRound } from 'lucide-react'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { clientById } from '@/lib/agent-connect'
 import { AgentAvatar } from './agent-avatar'
 import { TokenRotateSheet } from './token-rotate-sheet'
+import { AgentDeleteDialog } from './agent-delete-dialog'
 import { TokenManageSheet } from './token-manage-sheet'
 import { AgentProfileSheet } from './agent-profile-editor'
 import { toast } from 'sonner'
@@ -129,14 +130,8 @@ export function AgentList({ ownerName }: { ownerName: string }) {
   }
 
 
-  async function revoke(id: string) {
-    if (!window.confirm(tn('이 에이전트의 연결을 끊을까요? 토큰이 폐기되어 더 이상 접근할 수 없어요.'))) return
-    const res = await fetch(`/api/tokens?id=${encodeURIComponent(id)}`, { method: 'DELETE' })
-    if (res.ok) {
-      toast.success(tn('연결을 끊었어요.'))
-      load()
-    } else toast.error(tn('폐기 실패'))
-  }
+  // AI-6 (t292u): 삭제 (was 연결 끊기 behind window.confirm) — danger confirm, soft delete (0119)
+  const [deleting, setDeleting] = useState<{ id: string; name: string } | null>(null)
 
   const when = (iso: string) => new Date(iso).toLocaleString(LOCALE_META[locale].intl, { timeZone: 'Asia/Seoul', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })
   return (
@@ -256,8 +251,8 @@ export function AgentList({ ownerName }: { ownerName: string }) {
                         <RefreshCw className="w-4 h-4" /> <T>토큰 재발급</T>
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem variant="destructive" onClick={() => revoke(t.id)}>
-                        <Unplug className="w-4 h-4" /> <T>연결 끊기</T>
+                      <DropdownMenuItem variant="destructive" onClick={() => setDeleting({ id: t.id, name: t.agentName || t.name })}>
+                        <Trash2 className="w-4 h-4" /> <T>삭제</T>
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
@@ -308,6 +303,11 @@ export function AgentList({ ownerName }: { ownerName: string }) {
         }}
       />
       <TokenRotateSheet target={rotating} onOpenChange={(o) => !o && setRotating(null)} />
+      <AgentDeleteDialog
+        target={deleting}
+        onOpenChange={(o) => !o && setDeleting(null)}
+        onDeleted={(id) => setTokens((ts) => ts.filter((x) => x.id !== id))}
+      />
       <AgentProfileSheet
         agent={editing ? { id: editing.id, name: editing.agentName || editing.name, model: editing.agentModel || editing.client, bio: editing.agentBio ?? null, avatarUrl: editing.agentAvatarUrl ?? null } : { id: '', name: '', bio: null, avatarUrl: null }}
         open={Boolean(editing)}

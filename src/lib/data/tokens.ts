@@ -78,9 +78,12 @@ function parseScopes(scopes: string): string[] {
     .filter(Boolean)
 }
 
+/** DEV mock: agents deleted in this process (so 삭제 visibly removes them in local review). */
+const mockDeletedAgents = ((globalThis as unknown as { __aisubalDeletedAgents?: Set<string> }).__aisubalDeletedAgents ??= new Set<string>())
+
 export async function listApiTokens(memberId: string): Promise<PublicToken[]> {
   if (isMock()) {
-    return [
+    return ([
       {
         id: 'token-1',
         name: '개인 맥북',
@@ -120,9 +123,9 @@ export async function listApiTokens(memberId: string): Promise<PublicToken[]> {
       ...mockOAuthAgents().map((a) => ({
         id: a.id, name: a.name, agentName: a.name, agentModel: null, scopes: a.scopes, tokenPrefix: 'aisubal_', oauth: true,
         createdAt: new Date().toISOString(), lastUsedAt: null, expiresAt: null, client: null, firstUsedAt: null, clientInfo: null,
-        showOnProfile: false, pledgeSignedAt: mockPledged().get(a.id) ?? null, pledgeNo: null, pledgeHash: null,
+        showOnProfile: true, pledgeSignedAt: mockPledged().get(a.id) ?? null, pledgeNo: null, pledgeHash: null,
       })),
-    ]
+    ] as PublicToken[]).filter((t) => !mockDeletedAgents.has(t.id))
   }
 
   const supabase = await sb()
@@ -167,7 +170,7 @@ export async function issueApiToken(
         client: agent.client ?? null,
         firstUsedAt: null,
         clientInfo: null,
-        showOnProfile: false,
+        showOnProfile: true,
         pledgeSignedAt: null,
         pledgeNo: null,
         pledgeHash: null,
@@ -187,7 +190,7 @@ export async function issueApiToken(
       agent_name: agentName,
       agent_model: agentModel,
       client: agent.client ?? null,
-      show_on_profile: false, // P-3: owner opts in from the profile
+      show_on_profile: true, // AI-6 (t293u): public by default (was P-3 opt-in); the owner can hide it in 내 에이전트
     })
     .select(TOKEN_COLS)
     .single()
@@ -225,21 +228,20 @@ export async function signTokenPledge(memberId: string, tokenId: string, signatu
   return { ok: true, signedAt: String(d.signedAt), no: n(d.no), hash: (d.hash as string) ?? null, prevHash: (d.prevHash as string) ?? null, prevNo: n(d.prevNo), signer: String(d.signer ?? ''), inviter: (d.inviter as string) ?? null }
 }
 
-export async function revokeApiToken(memberId: string, tokenId: string): Promise<boolean> {
-  if (isMock()) return true
-
+/**
+ * AI-6 (t292u) 삭제: soft delete in one RPC (0119 agent_delete) — token revoked, hidden from profiles,
+ * OAuth refresh tokens and pending codes dead, webhook off. Posts keep their author. Owner only.
+ */
+export async function deleteAgent(memberId: string, tokenId: string): Promise<boolean> {
+  if (isMock()) {
+    if (mockDeletedAgents.has(tokenId)) return false
+    mockDeletedAgents.add(tokenId)
+    return true
+  }
   const supabase = await sb()
-  const { data, error } = await supabase
-    .from('api_tokens')
-    .update({ is_revoked: true })
-    .eq('id', tokenId)
-    .eq('member_id', memberId)
-    .eq('is_revoked', false)
-    .select('id')
-    .maybeSingle()
-
+  const { data, error } = await supabase.rpc('agent_delete', { p_token_id: tokenId })
   if (error) throw error
-  return !!data
+  return data === true
 }
 
 /** Wizard step 4: has the client made its first MCP call yet? (own tokens only, via RLS) */

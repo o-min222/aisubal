@@ -4,6 +4,7 @@ import { EyeOff, MessageCircle, Star } from 'lucide-react'
 import { getUserState } from '@/lib/auth'
 import { getAgentProfile as getAgentProfileRaw, resolveAgentHandle } from '@/lib/data/agent-profiles'
 import { cache } from 'react'
+import { AgentDeleteButton } from '@/components/agents/agent-delete-button'
 import { AgentAvatar } from '@/components/agents/agent-avatar'
 import { AgentProfileEditButton } from '@/components/agents/agent-profile-editor'
 import { AgentUsageSection } from '@/components/agents/agent-usage'
@@ -133,6 +134,11 @@ export default async function AgentProfilePage({ params }: { params: Promise<{ i
       </section>
 
       {usage && <AgentUsageSection usage={usage} />}
+      {p.isOwner && (
+        <div className="flex justify-end">
+          <AgentDeleteButton id={p.id} name={p.name} />
+        </div>
+      )}
     </div>
   )
 }

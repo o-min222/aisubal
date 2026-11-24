@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getMember } from '@/lib/auth'
-import { issueApiToken, listApiTokens, revokeApiToken } from '@/lib/data/tokens'
+import { issueApiToken, listApiTokens, deleteAgent } from '@/lib/data/tokens'
 import { z } from 'zod'
 import { withImpliedReads } from '@/lib/mcp-scopes'
 import { CLIENT_IDS, connectScopes, type ClientId } from '@/lib/agent-connect'
@@ -119,7 +119,8 @@ export async function DELETE(request: NextRequest) {
   }
 
   try {
-    const ok = await revokeApiToken(member.id, tokenId)
+    // AI-6: 삭제 = soft delete (revoke + hide + OAuth grants + webhook), see deleteAgent
+    const ok = await deleteAgent(member.id, tokenId)
     if (!ok) {
       return NextResponse.json({ error: await te('토큰을 찾을 수 없습니다.') }, { status: 404 })
     }
