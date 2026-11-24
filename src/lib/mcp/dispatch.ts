@@ -13,7 +13,7 @@ import { omitHiddenDeep } from '@/lib/mcp-omit'
 import { parseAgentProfile } from '@/lib/agent-profile'
 import { kickWebhookWorker } from '@/lib/agent-webhooks'
 import { handleDevTool } from './dev-tools'
-import { implName, resolveTool, type PageSpec, type ToolSpec } from './registry'
+import { LIST_OPTIONS, implName, resolveTool, type PageSpec, type ToolSpec } from './registry'
 
 export type McpText = { type: 'text'; text: string }
 export type ToolResult = { content: McpText[]; isError?: boolean; _meta?: Record<string, unknown> }
@@ -69,7 +69,13 @@ function toContent(spec: ToolSpec, result: Record<string, unknown>): ToolResult 
   return { content: [...(notice ? [{ type: 'text' as const, text: notice }] : []), json(maskPiiDeep(result))] }
 }
 
-export type CallOutcome = { result: ToolResult; tool: string; status: 'ok' | 'error' | 'refused' | 'unknown' | 'unauthorized' }
+export type CallOutcome = {
+  result: ToolResult
+  tool: string
+  status: 'ok' | 'error' | 'refused' | 'unknown' | 'unauthorized'
+  /** args did not match the schema (the call still ran: validation is lenient so older agents keep working) */
+  invalid?: boolean
+}
 
 // ---------------------------------------------------------------------------- list options (A66 P2)
 type Cursor = { t: string; o?: number; b?: string }
@@ -159,6 +165,7 @@ export async function callTool(ctx: McpContext, rawName: string, rawArgs: Record
   const meta = r.alias ? { _meta: { 'aisubal/renamed': spec.name } } : {}
   const fail = (error: string): CallOutcome => ({ tool: spec.name, status: 'error', result: { content: [json({ error })], isError: true, ...meta } })
 
+  const invalid = !(spec.page ? spec.input.extend(LIST_OPTIONS) : spec.input).safeParse(r.args).success
   const prepared = prepareList(spec, r.args)
   if ('error' in prepared) return fail(prepared.error)
   const { args, paging } = prepared
@@ -193,5 +200,5 @@ export async function callTool(ctx: McpContext, rawName: string, rawArgs: Record
   }
   if (spec.kick && !failed) kickWebhookWorker()
   const content = toContent(spec, result)
-  return { tool: spec.name, status: failed ? 'error' : 'ok', result: { ...content, ...meta } }
+  return { tool: spec.name, status: failed ? 'error' : 'ok', invalid, result: { ...content, ...meta } }
 }

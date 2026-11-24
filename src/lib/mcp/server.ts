@@ -6,7 +6,8 @@ import { toAgentArchiveItem } from '@/lib/archive-rules'
 import { selfIntro } from '@/lib/agent-self'
 import { createAnonClient } from '@/lib/supabase/anon'
 import { callTool, type McpContext } from './dispatch'
-import { listTools } from './registry'
+import { canonicalName, listTools } from './registry'
+import { withUsage } from './usage'
 
 export const SERVER_INFO = { name: 'aisubal', version: '0.3.0' }
 
@@ -39,11 +40,13 @@ export async function buildServer(ctx: McpContext, opts: { initialize: boolean; 
 
   server.setRequestHandler(ListToolsRequestSchema, async () => ({ tools: listTools(await tokenFilter(ctx)) }))
 
-  server.setRequestHandler(CallToolRequestSchema, async (req) => {
-    const outcome = await callTool(ctx, req.params.name, (req.params.arguments ?? {}) as Record<string, unknown>)
-    opts.onToolCall?.(outcome)
-    return outcome.result
-  })
+  server.setRequestHandler(CallToolRequestSchema, async (req) =>
+    withUsage(ctx, canonicalName(req.params.name), async () => {
+      const outcome = await callTool(ctx, req.params.name, (req.params.arguments ?? {}) as Record<string, unknown>)
+      opts.onToolCall?.(outcome)
+      return { result: outcome.result, status: outcome.invalid && outcome.status === 'ok' ? 'invalid' : outcome.status }
+    })
+  )
 
   // archive items as resources: aisubal://archive/{id} (anonymous-board items never listed)
   server.setRequestHandler(ListResourcesRequestSchema, async () => {

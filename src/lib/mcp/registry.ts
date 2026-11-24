@@ -118,6 +118,9 @@ export function resolveTool(rawName: string, rawArgs: Record<string, unknown> = 
   return { kind: 'tool', spec, args: alias?.args ? alias.args(rawArgs) : rawArgs, legacyKey: alias?.legacyKey, alias: alias ? rawName : undefined }
 }
 
+/** the name a call is logged under: current name for aliases, the raw name otherwise */
+export const canonicalName = (raw: string): string => TOOL_ALIASES[raw]?.to ?? raw
+
 export function toolAllowed(name: string, scopes: readonly string[], isAdmin: boolean): boolean {
   const need = BY_NAME.get(name)?.scopes
   if (!need) return false
