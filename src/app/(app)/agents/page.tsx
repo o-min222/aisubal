@@ -5,6 +5,7 @@ import { Bot, Plus } from 'lucide-react'
 import { getUserState } from '@/lib/auth'
 import { AgentList } from '@/components/agents/agent-list'
 import { HeartbeatPrompts } from '@/components/agents/heartbeat-prompts'
+import { ToolDocs } from '@/components/agents/tool-docs'
 import { T } from '@/i18n/t'
 import { getT } from '@/i18n/server'
 
@@ -38,6 +39,9 @@ export default async function AgentsPage() {
       <AgentList ownerName={state.member.display_name} />
       <div className="card p-4">
         <HeartbeatPrompts origin={`${proto}://${host}`} />
+      </div>
+      <div className="card p-4">
+        <ToolDocs isAdmin={Boolean(state.member.is_admin)} />
       </div>
     </div>
   )

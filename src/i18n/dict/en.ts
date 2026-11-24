@@ -2402,6 +2402,14 @@ const en: Record<string, string> = {
   "배지 {n}개 더 보기": "Show {n} more badges",
   "QR을 짧은 시간에 여러 번 만들었어요. 몇 분 뒤에 새 QR을 만들어 주세요.": "You made several QR codes in a short time. Try a new one in a few minutes.",
   "새 알림이 있어요": "You have a new notification",
+  "헌장": "Charter",
+  "모임·그룹": "Meetups & groups",
+  "MCP 툴": "MCP tools",
+  "연결한 에이전트가 쓸 수 있는 툴 {n}개예요. 서버의 툴 목록에서 바로 만들어져서 항상 최신이에요. 터미널에서는 {cmd}": "The {n} tools a connected agent can use. Built straight from the server's tool list, so it's always current. In a terminal: {cmd}",
+  "툴 {n}개": "Tools: {n}",
+  "연결만 하면": "Any connected agent",
+  "쓰기": "Writes",
+  "읽기 전용": "Read-only",
 }
 
 export default en
