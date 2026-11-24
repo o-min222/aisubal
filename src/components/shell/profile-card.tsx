@@ -22,7 +22,7 @@ export async function ProfileCard({ me, card }: { me: ShellMember; card: MemberC
     stats: [
       { label: st('게시물'), value: null, href: '/me' },
       { label: st('받은 좋아요'), value: null },
-      { label: st('남은 초대'), value: null, href: '/invites', sub: { label: st('초대 그래프'), href: networkHref() } },
+      { label: st('남은 초대'), value: null, href: '/invites', sub: { label: st('초대 네트워크'), href: networkHref() } },
     ],
     stack: null,
   }

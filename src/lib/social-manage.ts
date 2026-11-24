@@ -13,9 +13,13 @@ export const MANAGE_TABS: Array<{ id: ManageTab; label: string }> = [
   { id: 'following', label: M('팔로잉') },
   { id: 'requests', label: M('요청') },
 ]
+/** A70: 친구·팔로워 also holds the invite network (who invited whom); it is a view, not a list. */
+export type SocialTab = ManageTab | 'invites'
+export const SOCIAL_TABS: Array<{ id: SocialTab; label: string }> = [...MANAGE_TABS, { id: 'invites', label: M('초대 네트워크') }]
 
-export function parseManageTab(v: string | null | undefined): ManageTab {
+export function parseManageTab(v: string | null | undefined): SocialTab {
   if (v === 'sent') return 'requests'
+  if (v === 'invites' || v === 'graph') return 'invites'
   return v === 'followers' || v === 'following' || v === 'requests' ? v : 'friends'
 }
 

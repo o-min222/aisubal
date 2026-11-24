@@ -1,24 +1,35 @@
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { cleanPeopleQuery, filterPeople, networkFeedHref, networkHref } from '@/lib/dashboard-tabs'
+import { DASHBOARD_TABS, networkHref } from '@/lib/dashboard-tabs'
+import { parseManageTab, SOCIAL_TABS } from '@/lib/social-manage'
 
-const people = [{ name: '김 민수' }, { name: 'Cloud' }, { name: '0mins' }]
+const read = (f: string) => readFileSync(join(__dirname, '..', f), 'utf8')
 
-describe('managing following / friends (A26)', () => {
-  it('finds people by name, ignoring case and spaces', () => {
-    expect(filterPeople(people, '김민').map((p) => p.name)).toEqual(['김 민수'])
-    expect(filterPeople(people, 'CLOUD').map((p) => p.name)).toEqual(['Cloud'])
-    expect(filterPeople(people, '  ')).toHaveLength(3)
-    expect(filterPeople(people, 'zzz')).toEqual([])
+// A70 (Colin t296u): the invite network lives in 친구·팔로워; the dashboard has no 네트워크 tab.
+describe('invite network → 친구·팔로워', () => {
+  it('every old network link lands on the matching 친구·팔로워 tab', () => {
+    expect(networkHref()).toBe('/members/me/social?tab=invites')
+    expect(networkHref({ root: 'abc' })).toBe('/members/me/social?tab=invites&root=abc')
+    expect(networkHref({ view: 'graph', root: 'abc' })).toBe('/members/me/social?tab=invites&root=abc')
+    expect(networkHref({ view: 'following', root: 'abc' })).toBe('/members/me/social?tab=following')
+    expect(networkHref({ view: 'sent' })).toBe('/members/me/social?tab=requests')
+    expect(networkHref({ view: 'requests' })).toBe('/members/me/social?tab=requests')
+    expect(networkHref({ view: 'bogus' })).toBe('/members/me/social?tab=invites')
   })
-  it('the list URL carries the search; blank searches are dropped', () => {
-    expect(networkHref({ view: 'following', q: ' 민수 ' })).toBe('/me?tab=network&view=following&q=%EB%AF%BC%EC%88%98')
-    expect(networkHref({ view: 'friends', q: '' })).toBe('/me?tab=network&view=friends')
-    expect(cleanPeopleQuery('x'.repeat(99))).toHaveLength(40)
+  it('친구·팔로워 has the 초대 네트워크 tab, reachable by ?tab=invites (and the old ?view=graph name)', () => {
+    expect(SOCIAL_TABS.map((t) => t.id)).toEqual(['friends', 'followers', 'following', 'requests', 'invites'])
+    expect(parseManageTab('invites')).toBe('invites')
+    expect(parseManageTab('graph')).toBe('invites')
+    expect(parseManageTab('sent')).toBe('requests')
+    expect(parseManageTab(undefined)).toBe('friends')
   })
-  it('following and friends lists jump to that feed tab; others have no posts tab', () => {
-    expect(networkFeedHref('following')).toBe('/feed?f=following')
-    expect(networkFeedHref('friends')).toBe('/feed?f=friends')
-    expect(networkFeedHref('followers')).toBeNull()
-    expect(networkFeedHref('requests')).toBeNull()
+  it('the dashboard tab is gone and /me?tab=network redirects (notification links from 0048 use it)', () => {
+    expect(DASHBOARD_TABS.map((t) => t.id)).not.toContain('network')
+    expect(read('src/app/(app)/me/page.tsx')).toMatch(/sp\.tab === 'network'\) redirect\(networkHref\(\{ view: sp\.view, root: sp\.root \}\)\)/)
+    expect(read('src/app/(app)/me/page.tsx')).not.toMatch(/InviteGraph/)
+  })
+  it('초대 stays in the avatar menu', () => {
+    expect(read('src/components/shell/account-menu.tsx')).toMatch(/href="\/invites"/)
   })
 })

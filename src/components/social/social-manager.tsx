@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useMemo, useState, type ReactNode } from 'react'
 import Link from 'next/link'
 import { Check, Clock, HeartHandshake, MoreHorizontal, Search, UserMinus, UserPlus, UserRound, UserX, X, type LucideIcon } from 'lucide-react'
 import { toast } from 'sonner'
@@ -12,6 +12,7 @@ import {
   MANAGE_ACTION_LABEL,
   MANAGE_CONFIRM,
   MANAGE_TABS,
+  SOCIAL_TABS,
   actionRequest,
   inManageTab,
   manageActions,
@@ -19,6 +20,7 @@ import {
   predictRelation,
   type ManageAction,
   type ManageTab,
+  type SocialTab,
 } from '@/lib/social-manage'
 import { RelationBadge } from './relation-badge'
 import { T } from '@/i18n/t'
@@ -59,9 +61,22 @@ const EMPTY: Record<ManageTab, string> = {
  * shows in is derived from the live relation. People you just acted on stay put (with
  * their new state) until you switch tabs, so a mis-tap is one tap to undo.
  */
-export function SocialManager({ people: initial, order, initialTab, overflow }: { people: SocialPerson[]; order: Partial<Record<ManageTab, string[]>>; initialTab: ManageTab; overflow: Partial<Record<ManageTab, number>> }) {
+export function SocialManager({
+  people: initial,
+  order,
+  initialTab,
+  overflow,
+  invites,
+}: {
+  people: SocialPerson[]
+  order: Partial<Record<ManageTab, string[]>>
+  initialTab: SocialTab
+  overflow: Partial<Record<ManageTab, number>>
+  /** A70: the 초대 네트워크 tab's panel */
+  invites: ReactNode
+}) {
   const t = useT()
-  const [tab, setTab] = useState<ManageTab>(initialTab)
+  const [tab, setTab] = useState<SocialTab>(initialTab)
   const [rel, setRel] = useState<Record<string, Relation>>(() => Object.fromEntries(initial.map((p) => [p.id, p.relation])))
   const [kept, setKept] = useState<Set<string>>(() => new Set())
   const [busy, setBusy] = useState<string | null>(null)
@@ -75,14 +90,15 @@ export function SocialManager({ people: initial, order, initialTab, overflow }: 
   const incoming = initial.filter((p) => rel[p.id].friend === 'pending_in').length
 
   // each tab keeps its own server order (newest edge first); people who just joined a tab go last
-  const rank = new Map((order[tab] ?? []).map((id, i) => [id, i]))
+  const list: ManageTab | null = tab === 'invites' ? null : tab
+  const rank = new Map(((list && order[list]) ?? []).map((id, i) => [id, i]))
   const shown = initial
-    .filter((p) => (inManageTab(tab, rel[p.id]) || kept.has(p.id)) && matchesPerson(p, q))
+    .filter((p) => list !== null && (inManageTab(list, rel[p.id]) || kept.has(p.id)) && matchesPerson(p, q))
     .sort((a, b) => (rank.get(a.id) ?? 1e6) - (rank.get(b.id) ?? 1e6))
   const received = tab === 'requests' ? shown.filter((p) => rel[p.id].friend === 'pending_in' || (kept.has(p.id) && p.relation.friend === 'pending_in')) : []
   const rest = tab === 'requests' ? shown.filter((p) => !received.includes(p)) : shown
 
-  function pick(next: ManageTab) {
+  function pick(next: SocialTab) {
     setTab(next)
     setKept(new Set())
     window.history.replaceState(null, '', `/members/me/social?tab=${next}`)
@@ -180,51 +196,57 @@ export function SocialManager({ people: initial, order, initialTab, overflow }: 
   return (
     <section className="card overflow-hidden sm-card">
       <div className="sm-tabs" role="tablist" aria-label={t('관계 목록')}>
-        {MANAGE_TABS.map((x) => (
+        {SOCIAL_TABS.map((x) => (
           <button key={x.id} type="button" role="tab" aria-selected={x.id === tab} className={`sm-tab ${x.id === tab ? 'on' : ''}`} onClick={() => pick(x.id)}>
             <T>{x.label}</T>
-            <span className="sm-count">{counts[x.id]}</span>
+            {x.id !== 'invites' && <span className="sm-count">{counts[x.id]}</span>}
             {x.id === 'requests' && incoming > 0 && <span className="sm-dot" aria-label={t('새 요청')} />}
           </button>
         ))}
       </div>
-      <div className="sm-search">
-        <Search className="w-4 h-4 text-n-888" aria-hidden />
-        <input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder={t('이름으로 찾기')} aria-label={t('이름으로 찾기')} maxLength={40} enterKeyHint="search" />
-      </div>
-      {tab === 'followers' && (
-        <p className="sm-hint">
-          <T>‘팔로워 공개’ 글은 친구에게도 보여요.</T>
-        </p>
-      )}
-      {tab === 'friends' && (
-        <p className="sm-hint">
-          <T>친구는 서로 수락한 관계예요. 서로 팔로우하는 ‘맞팔’과는 따로예요.</T>
-        </p>
-      )}
-      {shown.length === 0 ? (
-        <p className="sm-empty">{q.trim() ? <T>찾는 사람이 없어요.</T> : <T>{EMPTY[tab]}</T>}</p>
-      ) : tab === 'requests' ? (
+      {list === null ? (
+        invites
+      ) : (
         <>
-          {received.length > 0 && (
-            <>
-              <h2 className="sm-group">
-                <T>받은 요청</T> <span className="sm-count">{received.length}</span>
-              </h2>
-              <ul>{received.map(row)}</ul>
-            </>
+          <div className="sm-search">
+            <Search className="w-4 h-4 text-n-888" aria-hidden />
+            <input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder={t('이름으로 찾기')} aria-label={t('이름으로 찾기')} maxLength={40} enterKeyHint="search" />
+          </div>
+          {tab === 'followers' && (
+            <p className="sm-hint">
+              <T>‘팔로워 공개’ 글은 친구에게도 보여요.</T>
+            </p>
           )}
-          {rest.length > 0 && (
+          {tab === 'friends' && (
+            <p className="sm-hint">
+              <T>친구는 서로 수락한 관계예요. 서로 팔로우하는 ‘맞팔’과는 따로예요.</T>
+            </p>
+          )}
+          {shown.length === 0 ? (
+            <p className="sm-empty">{q.trim() ? <T>찾는 사람이 없어요.</T> : <T>{EMPTY[list]}</T>}</p>
+          ) : tab === 'requests' ? (
             <>
-              <h2 className="sm-group">
-                <T>보낸 요청</T> <span className="sm-count">{rest.length}</span>
-              </h2>
-              <ul>{rest.map(row)}</ul>
+              {received.length > 0 && (
+                <>
+                  <h2 className="sm-group">
+                    <T>받은 요청</T> <span className="sm-count">{received.length}</span>
+                  </h2>
+                  <ul>{received.map(row)}</ul>
+                </>
+              )}
+              {rest.length > 0 && (
+                <>
+                  <h2 className="sm-group">
+                    <T>보낸 요청</T> <span className="sm-count">{rest.length}</span>
+                  </h2>
+                  <ul>{rest.map(row)}</ul>
+                </>
+              )}
             </>
+          ) : (
+            <ul>{rest.map(row)}</ul>
           )}
         </>
-      ) : (
-        <ul>{rest.map(row)}</ul>
       )}
     </section>
   )

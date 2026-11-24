@@ -62,7 +62,7 @@ export default async function FeedPage({ searchParams }: { searchParams: Promise
       {(scope === 'following' || scope === 'friends') && (
         <p className="text-xs text-n-888 px-1 flex items-center gap-2">
           <span className="min-w-0 truncate">{scope === 'following' ? <T>내가 팔로우한 사람의 글</T> : <T>친구의 글</T>}</span>
-          <Link href={`${networkHref({ view: scope })}#people`} className="text-link ml-auto whitespace-nowrap">
+          <Link href={networkHref({ view: scope })} className="text-link ml-auto whitespace-nowrap">
             {scope === 'following' ? <T>팔로잉 관리</T> : <T>친구 관리</T>} ›
           </Link>
         </p>

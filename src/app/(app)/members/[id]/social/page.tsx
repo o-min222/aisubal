@@ -8,6 +8,8 @@ import { isFeedId } from '@/lib/feed-ids'
 import { LinkTabs } from '@/components/link-tabs'
 import { PersonRow } from '@/components/social/person-row'
 import { SocialManager } from '@/components/social/social-manager'
+import { InviteNetworkPanel } from '@/components/network/invite-network-panel'
+import { GRAPH_HOPS } from '@/lib/data/graph'
 import { parseManageTab, type ManageTab } from '@/lib/social-manage'
 import type { SocialPerson } from '@/lib/data/social'
 import { T } from '@/i18n/t'
@@ -16,7 +18,7 @@ import { msg } from '@/i18n/translate'
 
 export async function generateMetadata() {
   const t = await getT()
-  return { title: t('팔로워 · 팔로잉 · 친구 · AI쓰발') }
+  return { title: t('친구·팔로워 · AI쓰발') }
 }
 
 const EMPTY: Record<SocialListKind, string> = {
@@ -32,7 +34,7 @@ export default async function SocialListPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>
-  searchParams: Promise<{ tab?: string }>
+  searchParams: Promise<{ tab?: string; root?: string }>
 }) {
   const st = await getT()
   const state = await getUserState()
@@ -47,6 +49,8 @@ export default async function SocialListPage({
   if (!member) notFound()
 
   if (isMe) {
+    const sp = await searchParams
+    const root = sp.root && isFeedId(sp.root) ? sp.root : null
     // A48: own list = 친구·팔로워 관리 (all tabs in one load; a handful of people at this size)
     const LIM = 100
     const kinds: SocialListKind[] = ['friends', 'followers', 'following', 'requests', 'sent']
@@ -70,7 +74,7 @@ export default async function SocialListPage({
             <T>친구·팔로워 관리</T>
           </h1>
         </div>
-        <SocialManager people={[...byId.values()]} order={order} initialTab={parseManageTab((await searchParams).tab)} overflow={overflow} />
+        <SocialManager people={[...byId.values()]} order={order} initialTab={parseManageTab(sp.tab)} overflow={overflow} invites={<InviteNetworkPanel root={root} hops={GRAPH_HOPS} />} />
       </div>
     )
   }

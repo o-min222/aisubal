@@ -1,8 +1,7 @@
 import Link from 'next/link'
-import { ChipBar } from '@/components/chip-bar'
 import { redirect } from 'next/navigation'
 import type { ReactNode } from 'react'
-import { Heart, MessageCircle, ScrollText, Search, Settings } from 'lucide-react'
+import { Heart, MessageCircle, ScrollText, Settings } from 'lucide-react'
 import { ProfileCardEditor } from '@/components/profile/profile-card-editor'
 import { BadgeChips } from '@/components/profile/badge-chips'
 import { listMemberBadges } from '@/lib/data/badges'
@@ -18,11 +17,7 @@ import { listMoim, type Moim } from '@/lib/data/moim'
 import { listMyGroups } from '@/lib/data/groups'
 import { listProfileAgents } from '@/lib/data/tokens'
 import { listMyInviteCodes } from '@/lib/data/invites'
-import { DASHBOARD_TABS, cleanPeopleQuery, dashboardHref, filterPeople, NETWORK_VIEWS, networkFeedHref, networkHref, pageSlice, parseDashboardTab, parseNetworkView, type DashboardTab } from '@/lib/dashboard-tabs'
-import { getSocialSummary, listSocial, type SocialListKind } from '@/lib/data/social'
-import { getInviteGraph, GRAPH_HOPS } from '@/lib/data/graph'
-import { InviteGraph } from '@/components/network/invite-graph'
-import { PersonRow } from '@/components/social/person-row'
+import { DASHBOARD_TABS, dashboardHref, networkHref, pageSlice, parseDashboardTab, type DashboardTab } from '@/lib/dashboard-tabs'
 import { PAGE_SIZE } from '@/lib/paging'
 import { toolHref, TOOL_TYPE_CHIP } from '@/lib/tool-rules'
 import { RSVP_LABEL } from '@/lib/moim-rules'
@@ -97,9 +92,8 @@ async function myMoims(meId: string): Promise<Moim[]> {
   return [...new Map([...hosting, ...mine].map((m) => [m.id, m])).values()].sort((x, y) => y.startsAt.localeCompare(x.startsAt))
 }
 
-async function dashboardListChunk(meId: string, tab: DashboardTab, view: string, page: number, q = ''): Promise<{ nodes: ReactNode; totalPages: number }> {
+async function dashboardListChunk(meId: string, tab: DashboardTab, page: number): Promise<{ nodes: ReactNode; totalPages: number }> {
   const t = await getT()
-  const st = t
   const locale = await getLocale()
   let body: ReactNode = null
   let totalPages = 1
@@ -203,24 +197,6 @@ async function dashboardListChunk(meId: string, tab: DashboardTab, view: string,
         <T>가입한 그룹이 없어요.</T> <Link href="/groups" className="text-link"><T>그룹 둘러보기</T></Link>
       </Empty>
     )
-  } else if (tab === 'network') {
-    const kind = view as SocialListKind
-    const people = filterPeople(await listSocial(meId, meId, kind).catch(() => []), q)
-    const s = pageSlice(people, page, PAGE_SIZE)
-    totalPages = s.totalPages
-    body = s.items.length ? (
-      <ul className="divide-y divide-n-f0f0f0">
-        {s.items.map((p) => (
-          <li key={p.id}>
-            <PersonRow person={p} showFriend={kind === 'requests' || kind === 'sent' || kind === 'friends'} />
-          </li>
-        ))}
-      </ul>
-    ) : (
-      <Empty>
-        {q ? <T s="'{q}'와(과) 맞는 사람이 없어요." vars={{ q }} /> : { followers: st('아직 팔로워가 없어요.'), following: st('아직 팔로우한 사람이 없어요.'), friends: st('아직 친구가 없어요. 친구는 친구 신청 → 수락으로 생겨요 (맞팔과 별개).'), requests: st('받은 친구 요청이 없어요.'), sent: <T>보낸 친구 요청이 없어요.</T> }[kind]}
-      </Empty>
-    )
   }
   return { nodes: body, totalPages }
 }
@@ -235,9 +211,11 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   const me = state.member
   const editor = await loadProfileEditor(me)
   const sp = await searchParams
+  // A70: the invite network + social lists moved to 친구·팔로워 (old links, incl. notification links)
+  if (sp.tab === 'network') redirect(networkHref({ view: sp.view, root: sp.root }))
   const tab = parseDashboardTab(sp.tab)
 
-  const [profile, tools, moimMine, moimHosting, groups, agents, invites, social, badges] = await Promise.all([
+  const [profile, tools, moimMine, moimHosting, groups, agents, invites, badges] = await Promise.all([
     getProfileStats(me),
     listMemberTools(me.id).catch(() => []),
     listMoim(me.id, 'mine', null, 100).catch(() => [] as Moim[]),
@@ -245,7 +223,6 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
     listMyGroups(me.id, true).catch(() => []),
     listProfileAgents(me.id, me.id).catch(() => []),
     listMyInviteCodes(me.id, Boolean(me.signup_completed_at)).catch(() => null),
-    getSocialSummary(me.id, me.id).catch(() => null),
     listMemberBadges(me.id).catch(() => []),
   ])
   const pledge = await getPledgeStatus(me).catch(() => null)
@@ -263,7 +240,6 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
     groups: groups.length,
     agents: agents.length,
     invites: codes.length,
-    network: social ? social.followers + social.following : 0,
   }
 
   const summary: Array<{ label: string; value: number | string; tab: DashboardTab }> = [
@@ -278,14 +254,12 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   ]
 
   let body: ReactNode = null
-  const listView = parseNetworkView(sp.view)
-  const peopleQ = tab === 'network' && listView !== 'graph' ? cleanPeopleQuery(sp.q) : ''
-  const listKey = tab === 'network' ? networkHref({ view: listView, q: peopleQ }) : dashboardHref(tab)
+  const listKey = dashboardHref(tab)
   async function more(p: number) {
     'use server'
     const s = await getUserState()
     if (s.type !== 'member') return { nodes: null, hasMore: false }
-    const r = await dashboardListChunk(s.member.id, tab, listView, p, peopleQ)
+    const r = await dashboardListChunk(s.member.id, tab, p)
     return { nodes: r.nodes, hasMore: p < r.totalPages }
   }
   const infinite = (c: { nodes: ReactNode; totalPages: number }) => (
@@ -294,7 +268,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
     </InfiniteList>
   )
   if (tab === 'posts' || tab === 'comments' || tab === 'likes' || tab === 'tools' || tab === 'moim' || tab === 'groups') {
-    body = infinite(await dashboardListChunk(me.id, tab, listView, 1))
+    body = infinite(await dashboardListChunk(me.id, tab, 1))
   } else if (tab === 'agents') {
     body = agents.length ? (
       <ul className="divide-y divide-n-f0f0f0">
@@ -326,68 +300,6 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
         <T>연결한 AI가 없어요.</T> <Link href="/agents/connect" className="text-link"><T>에이전트 연결</T></Link>
       </Empty>
     )
-  } else if (tab === 'network') {
-    const view = parseNetworkView(sp.view)
-    const socialCounts: Partial<Record<string, number>> = {
-      followers: social?.followers,
-      following: social?.following,
-      friends: social?.friends,
-      requests: social?.incomingRequests ?? undefined,
-    }
-    let inner: ReactNode
-    if (view === 'graph') {
-      const root = sp.root || null
-      const graph = await getInviteGraph(me.id, root).catch(() => null)
-      const center = graph?.nodes.find((n) => n.id === graph.rootId)
-      inner = (
-        <div className="p-3 space-y-2">
-          <p className="text-[13px] px-1" style={{ color: 'var(--n-666)' }}><T s="{v} {GRAPH_HOPS}단계까지 보여요. 점선 +N을 누르면 더 불러와요. 드래그로 이동, 휠·핀치로 확대." vars={{ v: center && !center.relation.isMe ? st('{name}님 중심', { name: center.name }) : st('나를 중심으로'), GRAPH_HOPS }} /></p>
-          {graph ? <InviteGraph key={graph.rootId} initial={graph} /> : <Empty><T>네트워크를 불러오지 못했어요.</T></Empty>}
-        </div>
-      )
-    } else {
-      const feedHref = networkFeedHref(view)
-      inner = (
-        <>
-          {/* A26: find someone in the list; following / friends jump to their posts */}
-          <div className="network-tools px-3 pt-2 pb-1">
-            <form action="/me" className="network-search">
-              <input type="hidden" name="tab" value="network" />
-              <input type="hidden" name="view" value={view} />
-              <Search className="w-4 h-4 text-n-888" aria-hidden="true" />
-              <input type="search" name="q" defaultValue={peopleQ} placeholder={st('이름으로 찾기')} aria-label={st('이름으로 찾기')} maxLength={40} className="input" enterKeyHint="search" />
-            </form>
-            {feedHref && (
-              <Link href={feedHref} className="text-link text-sm whitespace-nowrap">
-                {view === 'following' ? <T>팔로잉한 사람들의 글</T> : <T>친구들의 글</T>} ›
-              </Link>
-            )}
-          </div>
-          {infinite(await dashboardListChunk(me.id, 'network', view, 1, peopleQ))}
-        </>
-      )
-    }
-    body = (
-      <div id="people">
-        <ChipBar as="div" role="tablist" label={st('네트워크 보기')} className="px-3 pt-3 pb-1">
-          {NETWORK_VIEWS.map((v) => (
-            <Link
-              key={v.id}
-              href={networkHref({ view: v.id })}
-              scroll={false}
-              role="tab"
-              aria-selected={v.id === view}
-              className={`filter-chip whitespace-nowrap ${v.id === view ? 'on' : ''}`}
-            >
-              <T>{v.label}</T>
-              {typeof socialCounts[v.id] === 'number' && <span className="ml-1 tabular-nums opacity-70">{socialCounts[v.id]}</span>}
-              {v.id === 'requests' && (social?.incomingRequests ?? 0) > 0 && <span className="ml-1 inline-block w-1.5 h-1.5 rounded-full bg-c-e5484d" aria-label={st('새 요청')} />}
-            </Link>
-          ))}
-        </ChipBar>
-        {inner}
-      </div>
-    )
   } else if (tab === 'invites') {
     body = (
       <div>
@@ -396,7 +308,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
             <T s="초대한 {used}/{total}명 가입 · 남은 초대 {left}장 · 모두 가입하면 바로 {n}장이 다시 채워져요" vars={{ used: <b className="text-n-111">{invites.progress.joined}</b>, total: invites.progress.size, left: profile.invitesLeft, n: invites.allowance }} />
           ) : null}
           {' · '}
-          <Link href={networkHref()} className="text-link whitespace-nowrap"><T>초대 그래프 보기</T> ›</Link>
+          <Link href={networkHref()} className="text-link whitespace-nowrap"><T>초대 네트워크 보기</T> ›</Link>
         </p>
         {codes.length ? (
           <ul className="divide-y divide-n-f0f0f0 mt-2">

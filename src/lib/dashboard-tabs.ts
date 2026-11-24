@@ -2,8 +2,6 @@ import { msg } from '@/i18n/translate'
 /** '내 대시보드' tabs (?tab=). Pure so it can be unit-tested. */
 export const DASHBOARD_TABS = [
   { id: 'posts', label: msg('내 글') },
-  // second, so the invite graph / social lists are on screen without scrolling the strip
-  { id: 'network', label: msg('네트워크') },
   { id: 'comments', label: msg('댓글') },
   { id: 'likes', label: msg('좋아요한 글') },
   { id: 'tools', label: msg('내가 쓰는 것') },
@@ -13,48 +11,16 @@ export const DASHBOARD_TABS = [
   { id: 'invites', label: msg('초대 현황') },
 ] as const
 
-/** 네트워크 tab sub-views (?view=): invite graph + social lists. */
-export const NETWORK_VIEWS = [
-  { id: 'graph', label: msg('초대 그래프') },
-  { id: 'followers', label: msg('팔로워') },
-  { id: 'following', label: msg('팔로잉') },
-  { id: 'friends', label: msg('친구') },
-  { id: 'requests', label: msg('받은 요청') },
-  { id: 'sent', label: msg('보낸 요청') },
-] as const
-export type NetworkView = (typeof NETWORK_VIEWS)[number]['id']
-
-export function parseNetworkView(v: string | string[] | null | undefined): NetworkView {
-  const s = Array.isArray(v) ? v[0] : v
-  return (NETWORK_VIEWS.find((t) => t.id === s)?.id ?? 'graph') as NetworkView
-}
-
-/** /network?root=X (old URL) and graph links → dashboard 네트워크 tab. */
-export function networkHref(opts: { view?: NetworkView; root?: string | null; q?: string | null } = {}): string {
-  const p = new URLSearchParams({ tab: 'network' })
-  if (opts.view && opts.view !== 'graph') p.set('view', opts.view)
-  if (opts.root) p.set('root', opts.root)
-  const q = cleanPeopleQuery(opts.q)
-  if (q) p.set('q', q)
-  return `/me?${p.toString()}`
-}
-
-/** A26: the 네트워크 lists' name search (trimmed, at most 40 chars). */
-export function cleanPeopleQuery(q: string | string[] | null | undefined): string {
-  const s = Array.isArray(q) ? q[0] : q
-  return (s ?? '').normalize('NFC').trim().slice(0, 40)
-}
-
-/** People whose name contains the query, ignoring case and spaces. */
-export function filterPeople<P extends { name: string }>(people: P[], q: string | null | undefined): P[] {
-  const norm = (s: string) => s.normalize('NFC').toLowerCase().replace(/\s+/g, '')
-  const needle = norm(cleanPeopleQuery(q))
-  return needle ? people.filter((p) => norm(p.name).includes(needle)) : people
-}
-
-/** A26: the feed tab showing the posts of a list's people (followers have none). */
-export function networkFeedHref(view: NetworkView): string | null {
-  return view === 'following' ? '/feed?f=following' : view === 'friends' ? '/feed?f=friends' : null
+/**
+ * A70: 친구·팔로워 (/members/me/social) is the one home of the invite network and the social
+ * lists. Old links (/network?root=, /me?tab=network&view=…, notification links) land here.
+ */
+const NETWORK_TAB: Record<string, string> = { graph: 'invites', followers: 'followers', following: 'following', friends: 'friends', requests: 'requests', sent: 'requests' }
+export function networkHref(opts: { view?: string | null; root?: string | null } = {}): string {
+  const tab = NETWORK_TAB[opts.view || 'graph'] ?? 'invites'
+  const p = new URLSearchParams({ tab })
+  if (tab === 'invites' && opts.root) p.set('root', opts.root)
+  return `/members/me/social?${p.toString()}`
 }
 
 export type DashboardTab = (typeof DASHBOARD_TABS)[number]['id']

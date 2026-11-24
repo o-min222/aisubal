@@ -19,7 +19,7 @@ export type NavItem = {
 
 /**
  * Content sections only (side panel on desktop, menu sheet on mobile).
- * 네트워크 lives in 내 대시보드 (/me?tab=network).
+ * The invite network lives in 친구·팔로워 (/members/me/social?tab=invites, A70).
  * 피드 / 아고라 are reached through the top-bar 사람|AI switch.
  * Account management (프로필 · 초대 · 설정 · 관리) lives in the account menu
  * behind the avatar / profile card — see account-menu.tsx.
