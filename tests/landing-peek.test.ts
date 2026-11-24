@@ -83,6 +83,10 @@ describe('A65 landing layout (dev)', () => {
     const res = await fetch(`${BASE_URL}/i/axk8m2pq`, { redirect: 'manual' })
     expect(res.headers.get('set-cookie') ?? '').toMatch(/aisubal_invite=AXK8M2PQ;.*HttpOnly/i)
   })
+  it('AI-3: the server HTML never ships the login hidden (the rise is added by JS only while off-screen)', async () => {
+    const html = await page()
+    expect(html).not.toMatch(/rise-ready|class="[^"]*\brisen\b/)
+  })
   it('?error=… → the plain screen, so the error is on the first screen', async () => {
     const html = await get('/?preview=1&error=auth')
     expect(html).not.toContain('class="landing')

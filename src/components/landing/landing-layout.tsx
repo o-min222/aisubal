@@ -3,6 +3,7 @@ import Image from 'next/image'
 import { ChevronDown } from 'lucide-react'
 import { getT } from '@/i18n/server'
 import { LandingPeek } from './landing-peek'
+import { LoginRise } from './login-rise'
 import type { PeekItem } from '@/lib/landing-peek-rules'
 
 /**
@@ -29,6 +30,7 @@ export async function LandingLayout({ peek, login, note, invited }: { peek: Peek
       <section id="login" className="landing-login auth-hero" aria-label={t('로그인')}>
         {login}
       </section>
+      <LoginRise />
     </div>
   )
 }

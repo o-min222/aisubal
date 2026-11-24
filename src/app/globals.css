@@ -3048,3 +3048,32 @@ html:has(.landing) { scroll-snap-type: y proximity; background: #111111; }
 .auth-invite-status.ok { color: #7ee2a8; }
 .auth-invite-status.warn { color: #f5c27a; }
 .auth-invite-how { margin-top: 6px; font-size: 12.5px; line-height: 1.6; color: rgba(255,255,255,.55); }
+
+/* AI-3 (A65c): the login floats up instead of just being there.
+   Timings: 900ms — rise cubic-bezier(.22,1,.36,1), fade cubic-bezier(.33,1,.68,1) — 20px rise; stagger logo 0 → text 100ms →
+   invite 180ms → button 240ms → language 320ms. The peek dims to .55 over 600ms while the login is in view.
+   PC: the same entrance once on load (CSS only, ends visible without JS), 700ms, 16px, starting at 120ms. */
+.landing-login { --rise-ease: cubic-bezier(.22, 1, .36, 1); }
+.landing-login .auth-hero-logo { --rise-d: 0ms; }
+.landing-login .auth-hero-brand > :not(.auth-hero-logo) { --rise-d: 100ms; }
+.landing-login .auth-invite { --rise-d: 180ms; }
+.landing-login .auth-hero-actions { --rise-d: 240ms; }
+.landing-login .auth-hero-locale { --rise-d: 320ms; }
+.landing-login .auth-hero-logo, .landing-login .auth-hero-brand > :not(.auth-hero-logo), .landing-login .auth-invite, .landing-login .auth-hero-actions, .landing-login .auth-hero-locale {
+  transition: opacity 900ms cubic-bezier(.33, 1, .68, 1) var(--rise-d, 0ms), transform 900ms var(--rise-ease) var(--rise-d, 0ms);
+}
+.landing.rise-ready:not(.risen) .landing-login :is(.auth-hero-logo, .auth-invite, .auth-hero-actions, .auth-hero-locale),
+.landing.rise-ready:not(.risen) .landing-login .auth-hero-brand > :not(.auth-hero-logo) { opacity: 0; transform: translateY(20px); }
+.landing-peek .peek { transition: opacity 600ms ease-out; }
+.landing.login-in-view .landing-peek .peek { opacity: .55; }
+@keyframes landing-rise-pc { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+@media (min-width: 1024px) {
+  .landing-login :is(.auth-hero-logo, .auth-invite, .auth-hero-actions, .auth-hero-locale),
+  .landing-login .auth-hero-brand > :not(.auth-hero-logo) { animation: landing-rise-pc 700ms var(--rise-ease) calc(120ms + var(--rise-d, 0ms)) both; }
+  .landing.login-in-view .landing-peek .peek { opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .landing-login :is(.auth-hero-logo, .auth-invite, .auth-hero-actions, .auth-hero-locale),
+  .landing-login .auth-hero-brand > :not(.auth-hero-logo) { animation: none !important; transition: none !important; opacity: 1 !important; transform: none !important; }
+  .landing-peek .peek { transition: none; }
+}
