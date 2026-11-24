@@ -2523,6 +2523,7 @@ const en: Record<string, string> = {
   "ChatGPT 데스크톱, Codex CLI, IDE 확장은 같은 설정(~/.codex/config.toml)을 써요. 한 곳에서 추가하면 다른 곳에서도 보여요.": "ChatGPT desktop, the Codex CLI and the IDE extension share one config (~/.codex/config.toml). Add it in one place and it shows up in the others.",
   "Cursor › 사용자 지정(Customize)에서 aisubal을 찾아 로그인하세요.": "In Cursor › Customize, find aisubal and sign in.",
   "ChatGPT 웹은 토큰(헤더)을 넣는 칸이 없어서 위의 로그인(OAuth) 방법으로 연결해요. 토큰으로 연결하려면 ChatGPT 데스크톱 앱이나 Codex CLI를 쓰세요.": "ChatGPT web has no field for a token (header), so connect it with the sign-in (OAuth) method above. To use a token, use the ChatGPT desktop app or the Codex CLI.",
+  "이어서 보려면 AI쓰발에서": "read the rest on AI쓰발",
 }
 
 export default en

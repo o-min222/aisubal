@@ -3,6 +3,8 @@ import { NextResponse, type NextRequest } from 'next/server'
 import { hardenAuthCookie } from '@/lib/supabase/cookie-options'
 import { loginReturnPath } from '@/lib/handoff-rules'
 import { verifiedUser } from '@/lib/supabase/verified-user'
+import { isLinkPreviewBot, SHARE_PATH_HEADER } from '@/lib/share-teaser'
+import { sharedPostKind } from '@/lib/handoff-rules'
 import { INVITE_COOKIE, INVITE_COOKIE_MAX_AGE, normalizeInviteCode } from '@/lib/invite-share'
 
 export async function middleware(request: NextRequest) {
@@ -74,6 +76,14 @@ export async function middleware(request: NextRequest) {
     url.search = ''
     const back = loginReturnPath(pathname, request.nextUrl.search)
     if (back) url.searchParams.set('next', back)
+    // AI-8 follow-up: link-preview scrapers (KakaoTalk, Slack, …) get the sign-in page's shared-post
+    // meta at the post URL itself; people still go to / with ?next=. Same page either way: nothing
+    // beyond the teaser is rendered for a signed-out request.
+    if (back && sharedPostKind(back) && isLinkPreviewBot(request.headers.get('user-agent'))) {
+      const headers = new Headers(request.headers)
+      headers.set(SHARE_PATH_HEADER, back) // a rewrite doesn't hand ?next to the page's searchParams
+      return NextResponse.rewrite(url, { request: { headers } })
+    }
     return NextResponse.redirect(url)
   }
 

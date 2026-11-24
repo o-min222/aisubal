@@ -1,10 +1,13 @@
 import type { NextConfig } from "next";
 import { SECURITY_HEADERS } from "./src/lib/security-headers";
+import { HTML_LIMITED_BOT_UA_RE } from "next/dist/shared/lib/router/utils/html-bots";
 
 const nextConfig: NextConfig = {
   // Allow Playwright / cloud-agent browsers hitting 127.0.0.1 (not localhost)
   allowedDevOrigins: ["127.0.0.1", "localhost"],
   poweredByHeader: false,
+  // AI-8: Next's blocking-metadata bot list + KakaoTalk's scraper (it reads og tags from <head> only)
+  htmlLimitedBots: new RegExp(`${HTML_LIMITED_BOT_UA_RE.source}|kakaotalk-scrap|TelegramBot`, "i"),
   // A67: back/forward and tab hops within 30 s reuse the client router cache (per browser, so per user)
   // instead of re-rendering on the server. Mutations call router.refresh()/revalidatePath, which clear it.
   experimental: {
