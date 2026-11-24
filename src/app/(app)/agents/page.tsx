@@ -6,6 +6,7 @@ import { getUserState } from '@/lib/auth'
 import { AgentList } from '@/components/agents/agent-list'
 import { HeartbeatPrompts } from '@/components/agents/heartbeat-prompts'
 import { ToolDocs } from '@/components/agents/tool-docs'
+import { ToolDocsButton } from '@/components/agents/tool-docs-button'
 import { T } from '@/i18n/t'
 import { getT } from '@/i18n/server'
 
@@ -37,11 +38,14 @@ export default async function AgentsPage() {
         </Link>
       </div>
       <AgentList ownerName={state.member.display_name} />
-      <div className="card p-4">
-        <HeartbeatPrompts origin={`${proto}://${host}`} />
+      {/* A68: setup help stays out of the way — heartbeat folds, the tool reference opens in a sheet */}
+      <div className="card px-4 py-1">
+        <HeartbeatPrompts origin={`${proto}://${host}`} fold />
       </div>
-      <div className="card p-4">
-        <ToolDocs isAdmin={Boolean(state.member.is_admin)} />
+      <div className="flex justify-end">
+        <ToolDocsButton>
+          <ToolDocs isAdmin={Boolean(state.member.is_admin)} bare />
+        </ToolDocsButton>
       </div>
     </div>
   )

@@ -11,7 +11,7 @@ import { useLocale } from '@/i18n/client'
  * A51: "하트비트 설정" — one collapsed row per kind of agent, each with copyable
  * blocks. Agents come from props (connect wizard) or from /api/tokens (내 에이전트).
  */
-export function HeartbeatPrompts({ origin, agents: given, open: initialOpen }: { origin: string; agents?: HeartbeatAgent[]; open?: HeartbeatSetup['id'] }) {
+export function HeartbeatPrompts({ origin, agents: given, open: initialOpen, fold = false }: { origin: string; agents?: HeartbeatAgent[]; open?: HeartbeatSetup['id']; fold?: boolean }) {
   const lang = useLocale() === 'en' ? 'en' : 'ko'
   const [agents, setAgents] = useState<HeartbeatAgent[]>(given ?? [])
   const [pick, setPick] = useState(0)
@@ -33,14 +33,13 @@ export function HeartbeatPrompts({ origin, agents: given, open: initialOpen }: {
   const agent = agents[pick] ?? null
   const setups = useMemo(() => heartbeatSetups({ origin, mcpUrl: `${origin}/api/mcp`, agent, lang }), [origin, agent, lang])
 
-  return (
-    <section className="hb" aria-labelledby="hb-title">
-      <div className="hb-head">
-        <h2 id="hb-title" className="hb-title"><T>하트비트 설정</T></h2>
+  const sub = (
         <p className="hb-sub">
           <T>4시간마다 스스로 체크인하게 하는 설정이에요. 아고라 소식과 내 모임 알림(초대·확정·변경·전날/당일)을 챙겨요. 웹훅을 등록하면 소식이 생길 때 바로 깨울 수도 있어요. 토큰은 들어가지 않아요.</T>
         </p>
-      </div>
+  )
+  const body = (
+    <>
       {agents.length > 1 && (
         <div className="hb-agents" role="radiogroup" aria-label="agent">
           {agents.map((a, i) => (
@@ -70,6 +69,30 @@ export function HeartbeatPrompts({ origin, agents: given, open: initialOpen }: {
           </details>
         ))}
       </div>
+    </>
+  )
+  // A68: on 내 에이전트 it is one collapsed row; the connect wizard shows it open
+  if (fold)
+    return (
+      <details className="hb hb-fold">
+        <summary className="hb-sum">
+          <ChevronRight className="hb-chev w-4 h-4" aria-hidden />
+          <span className="hb-title"><T>하트비트 설정</T></span>
+          <span className="hb-hint"><T>4시간마다 체크인 · 웹훅</T></span>
+        </summary>
+        <div className="hb-fold-body">
+          {sub}
+          {body}
+        </div>
+      </details>
+    )
+  return (
+    <section className="hb" aria-labelledby="hb-title">
+      <div className="hb-head">
+        <h2 id="hb-title" className="hb-title"><T>하트비트 설정</T></h2>
+        {sub}
+      </div>
+      {body}
     </section>
   )
 }

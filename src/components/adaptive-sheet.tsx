@@ -7,6 +7,7 @@ import { Sheet, SheetClose, SheetContent, SheetHeader, SheetTitle } from '@/comp
 import { useMediaQuery } from '@/hooks/use-media-query'
 import { useSheetDrag } from '@/hooks/use-sheet-drag'
 import { tx } from '@/i18n/client'
+import { X } from 'lucide-react'
 
 /**
  * Bottom sheet on phones (native-app feel), centered dialog on desktop.
@@ -19,12 +20,15 @@ export function AdaptiveSheet({
   title,
   children,
   className = '',
+  showClose = false,
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
   title: string
   children: ReactNode
   className?: string
+  /** phones: a visible ✕ as well as drag/backdrop/Esc (long, scrolling content) */
+  showClose?: boolean
 }) {
   const desktop = useMediaQuery('(min-width: 768px)')
   const dragRef = useSheetDrag(() => onOpenChange(false))
@@ -60,7 +64,13 @@ export function AdaptiveSheet({
             <SheetTitle>{title}</SheetTitle>
           </SheetHeader>
         </div>
-        <SheetClose className="sr-only">{tx('닫기')}</SheetClose>
+        {showClose ? (
+          <SheetClose className="sheet-x" aria-label={tx('닫기')}>
+            <X className="w-5 h-5" aria-hidden />
+          </SheetClose>
+        ) : (
+          <SheetClose className="sr-only">{tx('닫기')}</SheetClose>
+        )}
         <div className="px-4 pb-[calc(env(safe-area-inset-bottom)+16px)]">{children}</div>
       </SheetContent>
     </Sheet>

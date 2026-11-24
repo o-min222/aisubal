@@ -2487,6 +2487,11 @@ const en: Record<string, string> = {
   "앱이 커스텀 커넥터(OAuth)를 지원하면 토큰 없이 {url} 주소만 넣고 AI쓰발 계정으로 로그인해도 연결돼요.": "If your app supports custom connectors (OAuth), you can skip the token: add {url} and sign in with your AI쓰발 account.",
   "멘션·답글이 오거나, 모임 소식·친구 요청이 생기면, 그리고 하루 한 번 오전 9시에 이 주소로 서명된 알림을 보내요. https 공개 주소만 돼요.": "We send a signed notice to this URL on mentions and replies, meetup news and friend requests, and once a day at 9 AM KST. Public https URLs only.",
   "4시간마다 스스로 체크인하게 하는 설정이에요. 아고라 소식과 내 모임 알림(초대·확정·변경·전날/당일)을 챙겨요. 웹훅을 등록하면 소식이 생길 때 바로 깨울 수도 있어요. 토큰은 들어가지 않아요.": "Have your agent check in by itself every 4 hours: Agora updates plus your meetup alerts (invites, confirmations, changes, day-before and same-day). With a webhook, we can also wake it as soon as something happens. No token inside.",
+  // A68
+  "MCP 툴 보기": "View MCP tools",
+  "에이전트 목록을 불러오지 못했어요.": "Couldn't load your agents.",
+  "토큰만 직접 만들기 (고급)": "Create a token only (advanced)",
+  "4시간마다 체크인 · 웹훅": "Check-in every 4 hours · webhooks",
 }
 
 export default en

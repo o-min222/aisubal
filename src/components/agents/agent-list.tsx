@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { RefreshCw, Copy, Eye, EyeOff, KeyRound, MoreHorizontal, Pencil, Plus, Unplug, UserRound } from 'lucide-react'
+import { RefreshCw, Copy, Eye, EyeOff, KeyRound, MoreHorizontal, Pencil, Unplug, UserRound } from 'lucide-react'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { clientById } from '@/lib/agent-connect'
 import { AgentAvatar } from './agent-avatar'
@@ -55,21 +55,31 @@ export function AgentList({ ownerName }: { ownerName: string }) {
   const [managing, setManaging] = useState<TokenRow | null>(null)
   const [rotating, setRotating] = useState<{ id: string; name: string; client: string | null } | null>(null)
   const [loaded, setLoaded] = useState(false)
+  // A68: a failed load must not look like "no agents yet"
+  const [failed, setFailed] = useState(false)
 
   async function load() {
-    const res = await fetch('/api/tokens')
-    if (res.ok) setTokens((await res.json()).tokens || [])
+    const res = await fetch('/api/tokens').catch(() => null)
+    if (res?.ok) {
+      setTokens((await res.json()).tokens || [])
+      setFailed(false)
+    } else setFailed(true)
+    setLoaded(true)
   }
   useEffect(() => {
     let cancelled = false
     fetch('/api/tokens')
-      .then((res) => (res.ok ? res.json() : { tokens: [] }))
+      .then((res) => (res.ok ? res.json() : Promise.reject(new Error(String(res.status)))))
       .then((d) => {
         if (cancelled) return
         setTokens(d.tokens || [])
         setLoaded(true)
       })
-      .catch(() => setLoaded(true))
+      .catch(() => {
+        if (cancelled) return
+        setFailed(true)
+        setLoaded(true)
+      })
     return () => {
       cancelled = true
     }
@@ -147,13 +157,18 @@ export function AgentList({ ownerName }: { ownerName: string }) {
       <section className="card overflow-hidden" id="tokens" aria-label={tx('연결된 에이전트')}>
         {!loaded ? (
           <p className="p-4 text-sm text-n-999"><T>불러오는 중…</T></p>
+        ) : failed ? (
+          <div className="p-6 text-center" role="alert">
+            <p className="text-[14px] text-n-555"><T>에이전트 목록을 불러오지 못했어요.</T></p>
+            <button type="button" className="btn btn-secondary btn-sm rounded-full min-h-[40px] mt-3" onClick={() => void load()}>
+              <T>다시 시도</T>
+            </button>
+          </div>
         ) : tokens.length === 0 ? (
+          // A68: the page header holds the one 에이전트 연결 button
           <div className="p-6 text-center">
             <p className="text-[15px] font-semibold text-n-111"><T>아직 연결된 에이전트가 없어요</T></p>
             <p className="text-[13px] text-n-777 mt-1"><T>Claude, ChatGPT, Cursor, Codex… 쓰는 AI를 MCP로 연결하면 여기에 보여요.</T></p>
-            <Link href="/agents/connect" className="btn btn-primary btn-sm rounded-full min-h-[40px] mt-3 inline-flex items-center gap-1.5">
-              <Plus className="w-4 h-4" /> <T>에이전트 연결</T>
-            </Link>
           </div>
         ) : (
           <ul className="divide-y divide-n-eee">
@@ -253,13 +268,12 @@ export function AgentList({ ownerName }: { ownerName: string }) {
         )}
       </section>
 
-      <details className="card agent-advanced" open={open} onToggle={(e) => setOpen((e.currentTarget as HTMLDetailsElement).open)}>
-        <summary className="p-4 flex flex-wrap items-center gap-x-2 gap-y-0.5 cursor-pointer text-[14px] font-semibold text-n-333">
-          <KeyRound className="w-4 h-4" /> <span className="whitespace-nowrap"><T>토큰만 직접 만들기</T></span>
-          {/* phones: the hint drops under the title instead of squeezing beside it */}
-          <span className="basis-full pl-6 sm:basis-auto sm:pl-0 text-[12px] font-normal text-n-999"><T>(고급 · 마법사 없이 토큰만)</T></span>
+      {/* A68: an advanced side path, so a small toggle rather than a card */}
+      <details className="agent-advanced" open={open} onToggle={(e) => setOpen((e.currentTarget as HTMLDetailsElement).open)}>
+        <summary className="inline-flex items-center gap-1.5 min-h-[40px] px-1 cursor-pointer text-[13px] text-n-777 hover:text-n-333">
+          <KeyRound className="w-3.5 h-3.5" /> <T>토큰만 직접 만들기 (고급)</T>
         </summary>
-        <form onSubmit={create} className="px-4 pb-4 space-y-4">
+        <form onSubmit={create} className="card p-4 mt-1 space-y-4">
           <div className="grid sm:grid-cols-2 gap-3">
             <div>
               <label className="block text-sm font-medium text-n-333 mb-1.5"><T>에이전트 이름</T></label>

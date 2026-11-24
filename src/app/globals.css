@@ -2834,6 +2834,16 @@ a.notif-pop-all:hover { background: var(--n-fafafa); }
 .hb-sum::-webkit-details-marker { display: none; }
 .hb-chev { flex-shrink: 0; color: var(--n-999, #999); transition: transform .15s; }
 .hb-row[open] .hb-chev { transform: rotate(90deg); }
+.hb-fold > .hb-sum .hb-title { flex-shrink: 0; }
+.hb-fold[open] > .hb-sum .hb-chev { transform: rotate(90deg); }
+.hb-fold-body { display: flex; flex-direction: column; gap: 10px; padding-bottom: 12px; }
+/* A68: MCP 툴 reference behind a small corner button (sheet / dialog) */
+.tool-docs-btn { display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 0 6px; font-size: 13px; color: var(--n-777); border-radius: 8px; }
+.tool-docs-btn:hover { color: var(--n-333); }
+.tool-docs-btn:focus-visible { outline: 2px solid var(--n-999); outline-offset: 2px; }
+.tool-docs-scroll { max-height: min(70dvh, 640px); overflow-y: auto; overscroll-behavior: contain; margin-right: -4px; padding-right: 4px; }
+.sheet-x { position: absolute; top: 10px; right: 10px; width: 40px; height: 40px; display: grid; place-items: center; border-radius: 999px; color: var(--n-777); }
+.sheet-x:hover { background: var(--n-f4f4f4, rgba(127,127,127,.12)); color: var(--n-111); }
 .hb-label { font-size: 13.5px; font-weight: 600; color: var(--n-222); flex-shrink: 0; }
 .hb-hint { font-size: 12px; color: var(--n-888); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .hb-body { display: flex; flex-direction: column; gap: 10px; padding: 0 0 12px 24px; min-width: 0; }

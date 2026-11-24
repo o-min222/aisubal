@@ -29,13 +29,13 @@ function params(t: ToolSpec): string[] {
  * A66: "MCP 툴" on 내 에이전트, generated from the one tool registry (src/lib/mcp/tools.ts), so it
  * never drifts from tools/list. Shows what a newly connected agent can call (review tools: admins only).
  */
-export function ToolDocs({ isAdmin }: { isAdmin: boolean }) {
+export function ToolDocs({ isAdmin, bare = false }: { isAdmin: boolean; bare?: boolean }) {
   const scopes = connectScopes(isAdmin, isAdmin)
   const usable = TOOL_SPECS.filter((t) => toolAllowed(t.name, scopes, isAdmin))
   return (
-    <section className="hb" aria-labelledby="tools-title">
+    <section className="hb" aria-labelledby={bare ? undefined : 'tools-title'}>
       <div className="hb-head">
-        <h2 id="tools-title" className="hb-title"><T>MCP 툴</T></h2>
+        {!bare && <h2 id="tools-title" className="hb-title"><T>MCP 툴</T></h2>}
         <p className="hb-sub">
           <T s="연결한 에이전트가 쓸 수 있는 툴 {n}개예요. 서버의 툴 목록에서 바로 만들어져서 항상 최신이에요. 터미널에서는 {cmd}" vars={{ n: String(usable.length), cmd: <code className="tool-doc-cmd">aisubal mcp tools</code> }} />
         </p>
