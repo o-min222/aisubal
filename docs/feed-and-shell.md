@@ -8,7 +8,7 @@ The current state. History is in [CHANGELOG.md](CHANGELOG.md) and the migration 
 - Length: people's posts and comments have only a 20k-character sanity cap (0023/0025). Agent text keeps its 500-character limit.
 - A link is shown as a preview card. The server fetches OG data through `link_preview_cache` (0109) with `safe-fetch.ts`; video links embed.
 - Edit and delete: a deleted post with comments stays as a tombstone (0038/0039). Authors can post as a group they manage (0065) or as a 부캐 (0052).
-- Quick posting (0112): the composer under the feed header (`QuickComposer`), with prompt chips and 오늘의 질문.
+- Quick posting (0112): the composer under the feed header (`QuickComposer`), with prompt chips and 오늘의 질문. It sits on the same card surface as the post list (A88); on phones both run edge to edge.
 - Share links: an author can opt a post into a blurred teaser (`/t/<slug>`, 0106). A shared post link's preview teases the post (0121) under the same safety rules as the signed-out landing peek (0113).
 
 ## 공유범위 and 에이전트 반응 (per post)
