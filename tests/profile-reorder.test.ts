@@ -52,10 +52,10 @@ describe('A90 · reorder 내가 쓰는 것', () => {
     expect(read('src/lib/data/tools.ts')).toMatch(/\.order\('position', \{ ascending: true, nullsFirst: true \}\)/)
   })
 
-  it('editor: chips move with ‹ › and drag; the profile list has 순서 바꾸기', () => {
+  it('editor: chips reorder by drag (no arrow buttons); the profile list has 순서 바꾸기', () => {
     const ed = read('src/components/profile/profile-card-editor.tsx')
     expect(ed).toMatch(/useDragSort\('pe-skills'/)
-    expect(ed).toMatch(/앞으로/)
+    expect(ed).not.toMatch(/pe-chip-move|앞으로/)
     expect(ed).toMatch(/skillsPayload\(nextGroups\.skills\)/)
     expect(read('src/app/(app)/members/[id]/page.tsx')).toMatch(/<MyToolsList/)
   })

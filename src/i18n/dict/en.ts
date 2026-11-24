@@ -2619,14 +2619,11 @@ const en: Record<string, string> = {
   "Chrome 오른쪽 위 메뉴(⋮)를 눌러요.": "Tap Chrome's menu (⋮) at the top right.",
   "‘앱 설치’ 또는 ‘홈 화면에 추가’를 골라요.": "Choose ‘Install app’ or ‘Add to Home screen’.",
   // A90
-  "{label} 편집 버튼 보기": "Show edit buttons for {label}",
-  "{label} 앞으로": "Move {label} earlier",
-  "{label} 뒤로": "Move {label} later",
   "추가됨": "Added",
   "‘{term}’ 직접 추가": "Add ‘{term}’",
   "순서를 저장하지 못했어요.": "Couldn't save the order.",
   "순서를 저장했어요": "Order saved",
-  "끌어서 옮기거나 ↑ ↓ 를 눌러요.": "Drag to move, or tap ↑ ↓.",
+  "끌어서 옮겨요 · 터치는 길게 누른 뒤 끌어요": "Drag to move · on touch, press and hold first",
   "순서 바꾸기": "Reorder",
   // A93
   "{name}님이 질문했어요": "{name} asked a question",

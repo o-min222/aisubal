@@ -3,19 +3,20 @@
 import Link from 'next/link'
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { ArrowDown, ArrowUp, GripVertical } from 'lucide-react'
+import { GripVertical } from 'lucide-react'
 import { toast } from 'sonner'
 import { ToolIcon } from '@/components/tools/tool-icon'
 import { useDragSort } from '@/hooks/use-drag-sort'
 import { moveItem } from '@/lib/profile-stack'
 import { T } from '@/i18n/t'
-import { tx, tn } from '@/i18n/client'
+import { tn } from '@/i18n/client'
 
 export type MyTool = { id: string; name: string; iconUrl: string | null; href: string; typeLabel: string; users: number }
 
 /**
- * '내가 쓰는 것' on a profile. The owner gets 순서 바꾸기 (A90): drag a card (mouse, or the grip on
- * touch) or use ↑ ↓; 완료 saves the order (tool_users.position, 0126), which every list follows.
+ * '내가 쓰는 것' on a profile. The owner gets 순서 바꾸기 (A90): drag a card with the mouse, or
+ * long-press then drag on touch (A94), or arrow keys on a focused card; 완료 saves the order
+ * (tool_users.position, 0126), which every list follows.
  */
 export function MyToolsList({ tools: initial, editable }: { tools: MyTool[]; editable: boolean }) {
   const router = useRouter()
@@ -60,7 +61,7 @@ export function MyToolsList({ tools: initial, editable }: { tools: MyTool[]; edi
         <div className="my-tools-bar">
           {sorting ? (
             <>
-              <span className="text-[12px] text-n-888"><T>끌어서 옮기거나 ↑ ↓ 를 눌러요.</T></span>
+              <span className="text-[12px] text-n-888"><T>끌어서 옮겨요 · 터치는 길게 누른 뒤 끌어요</T></span>
               <button type="button" className="btn btn-primary btn-sm rounded-full min-h-[32px]" onClick={() => void done()} disabled={busy}>
                 {busy ? <T>저장 중…</T> : <T>완료</T>}
               </button>
@@ -74,14 +75,10 @@ export function MyToolsList({ tools: initial, editable }: { tools: MyTool[]; edi
         {tools.map((t, i) => (
           <li key={t.id} className={`min-w-0${sorting && sort.dragIdx === i ? ' pe-dragging' : ''}`} {...(sorting ? sort.item(i) : {})}>
             {sorting ? (
-              <div className="profile-tool my-tool-sort min-w-0">
-                <span className="my-tool-grip" data-sort-handle aria-hidden><GripVertical className="w-4 h-4" /></span>
+              <div className="profile-tool my-tool-sort min-w-0" tabIndex={0} data-sort-focus aria-keyshortcuts="ArrowUp ArrowDown">
+                <span className="my-tool-grip" aria-hidden><GripVertical className="w-4 h-4" /></span>
                 <ToolIcon name={t.name} iconUrl={t.iconUrl} dim="w-9 h-9" />
                 {meta(t)}
-                <span className="my-tool-steps">
-                  <button type="button" disabled={i === 0} aria-label={tx('{label} 앞으로', { label: t.name })} onClick={() => setTools(moveItem(tools, i, i - 1))}><ArrowUp className="w-3.5 h-3.5" /></button>
-                  <button type="button" disabled={i === tools.length - 1} aria-label={tx('{label} 뒤로', { label: t.name })} onClick={() => setTools(moveItem(tools, i, i + 1))}><ArrowDown className="w-3.5 h-3.5" /></button>
-                </span>
               </div>
             ) : (
               <Link href={t.href} className="profile-tool min-w-0">

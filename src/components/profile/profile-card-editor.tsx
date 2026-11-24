@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { AgentAvatar } from '@/components/agents/agent-avatar'
-import { Camera, Check, ChevronLeft, ChevronRight, GripVertical, Link2, Loader2, Lock, Plus, Users, Bot, Eye, X } from 'lucide-react'
+import { Camera, Check, ChevronRight, GripVertical, Link2, Loader2, Lock, Plus, Users, Bot, Eye, X } from 'lucide-react'
 import { toast } from 'sonner'
 import { UserAvatar } from '@/components/user-avatar'
 import { ServiceIcon } from '@/components/service-chip'
@@ -175,7 +175,7 @@ export function ProfileCardEditor({
     if (list.some((x) => (i.entryId && x.entryId === i.entryId) || norm(x.label) === norm(i.label))) return
     setGroup(g, [...list, { ...i, visibility: null }])
   }
-  // A90: reorder — live while dragging, saved once on drop; ‹ › save right away
+  // A90/A94: reorder — live while dragging (mouse drag, touch long-press, arrow keys), saved once on drop
   const latest = useRef(groups)
   useEffect(() => { latest.current = groups }, [groups])
   const moveLocal = (g: StackGroup) => (from: number, to: number) => setGroups((cur) => ({ ...cur, [g]: moveItem(cur[g], from, to) }))
@@ -184,14 +184,6 @@ export function ProfileCardEditor({
     ai: useDragSort('pe-ai', moveLocal('ai'), commit),
     subs: useDragSort('pe-subs', moveLocal('subs'), commit),
     skills: useDragSort('pe-skills', moveLocal('skills'), commit),
-  }
-  function step(g: StackGroup, idx: number, d: -1 | 1) {
-    const list = groups[g]
-    const next = moveItem(list, idx, idx + d)
-    if (next === list) return
-    const it = list[idx]
-    setArmed(`${g}-${it.label}`)
-    setGroup(g, next)
   }
   async function toggleUsage(item: Item, using: boolean) {
     if (!item.entryId) return
@@ -208,7 +200,29 @@ export function ProfileCardEditor({
     await putStack(next)
   }
 
-  const [linksOpen, setLinksOpen] = useState(false)
+  const [linksOpen, setLinksOpenState] = useState(false)
+  // A94: SNS links reorder in the row too; the draft shows until the server order catches up
+  const [linkDraft, setLinkDraft] = useState<ProfileLink[] | null>(null)
+  const sameLinks = (a: ProfileLink[], b: ProfileLink[]) => a.length === b.length && a.every((l, i) => l.url === b[i].url && l.kind === b[i].kind)
+  const linkList = linkDraft && !sameLinks(linkDraft, links) ? linkDraft : links
+  const latestLinks = useRef(linkList)
+  useEffect(() => { latestLinks.current = linkList }, [linkList])
+  const setLinksOpen = (on: boolean) => {
+    if (on) setLinkDraft(null)
+    setLinksOpenState(on)
+  }
+  const linkSort = useDragSort('pe-links', (from, to) => setLinkDraft((cur) => moveItem(cur && !sameLinks(cur, links) ? cur : links, from, to)), () => {
+    const next = latestLinks.current
+    if (sameLinks(next, links)) return
+    mark('saving')
+    void fetch('/api/profile/links', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ links: next }) })
+      .then(async (res) => {
+        if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || tn('순서를 저장하지 못했어요.'))
+        mark('saved')
+        router.refresh()
+      })
+      .catch((e) => { mark('error'); setLinkDraft(null); toast.error(e instanceof Error ? e.message : tn('순서를 저장하지 못했어요.')) })
+  })
   const [realOpen, setRealOpen] = useState(false)
   const bioPii = piiWarning(bio)
 
@@ -246,24 +260,15 @@ export function ProfileCardEditor({
               <li key={key} {...sort.item(idx)} className={sort.dragIdx === idx ? 'pe-dragging' : undefined}>
                 <span className={`mc-chip pe-chip${on ? ' on' : ''}`} data-pe-chip={on ? '' : undefined}>
                   {list.length > 1 && <GripVertical className="pe-grip" aria-hidden />}
-                  <button type="button" className="pe-chip-btn" aria-expanded={on} onClick={() => !sort.wasDrag() && setArmed(on ? null : key)} aria-label={tx('{label} 편집 버튼 보기', { label: it.label })}>
+                  <button type="button" className="pe-chip-btn" data-sort-focus aria-expanded={on} aria-keyshortcuts={list.length > 1 ? 'ArrowLeft ArrowRight' : undefined} onClick={() => !sort.wasDrag() && setArmed(on ? null : key)} aria-label={tx('{label} 삭제 버튼 보기', { label: it.label })}>
                     <ServiceIcon label={it.label} iconUrl={it.iconUrl} />
                     <span className="svc-label">{it.label}</span>
                   </button>
-                  {on && list.length > 1 && (
-                    <>
-                      <button type="button" className="pe-chip-move" disabled={idx === 0} aria-label={tx('{label} 앞으로', { label: it.label })} onClick={() => step(g, idx, -1)}>
-                        <ChevronLeft className="w-3.5 h-3.5" strokeWidth={2.25} />
-                      </button>
-                      <button type="button" className="pe-chip-move" disabled={idx === list.length - 1} aria-label={tx('{label} 뒤로', { label: it.label })} onClick={() => step(g, idx, 1)}>
-                        <ChevronRight className="w-3.5 h-3.5" strokeWidth={2.25} />
-                      </button>
-                    </>
-                  )}
                   {on && (
                     <button
                       type="button"
                       className="pe-chip-x"
+                      data-sort-ignore
                       autoFocus
                       aria-label={tx('{label} 삭제', { label: it.label })}
                       onClick={() => {
@@ -334,9 +339,10 @@ export function ProfileCardEditor({
             <div className="mc-group">
               <div className="mc-group-label"><T>SNS 링크</T></div>
               <ul className="mc-chips">
-                {links.map((l, i) => (
-                  <li key={`${l.kind}-${i}`}>
-                    <button type="button" className="mc-chip pe-chip" onClick={() => setLinksOpen(true)}>
+                {linkList.map((l, i) => (
+                  <li key={`${l.kind}-${l.url}`} {...linkSort.item(i)} className={linkSort.dragIdx === i ? 'pe-dragging' : undefined}>
+                    <button type="button" className="mc-chip pe-chip pe-link-chip" data-sort-focus aria-keyshortcuts={linkList.length > 1 ? 'ArrowLeft ArrowRight' : undefined} onClick={() => !linkSort.wasDrag() && setLinksOpen(true)}>
+                      {linkList.length > 1 && <GripVertical className="pe-grip" aria-hidden />}
                       <LinkIcon kind={l.kind} size={16} />
                       <span className="truncate"><T>{LINK_KINDS.find((k) => k.kind === l.kind)?.label ?? l.kind}</T></span>
                       {l.visibility !== 'members' && <Lock className="w-3 h-3 text-n-999" />}

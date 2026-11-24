@@ -3371,11 +3371,7 @@ html:has(.landing) { scroll-snap-type: y proximity; background: #111111; }
   .mc-chips li[data-sort-list] .pe-chip:hover .pe-grip { display: block; }
   .mc-chips li[data-sort-list] { cursor: grab; }
 }
-.mc-chips li.pe-dragging .pe-chip { opacity: .55; outline: 1.5px dashed var(--n-bbb); outline-offset: 1px; }
 body.is-sorting, body.is-sorting * { user-select: none; -webkit-user-select: none; cursor: grabbing !important; }
-.pe-chip-move { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 999px; color: var(--n-555); }
-.pe-chip-move:hover:not(:disabled) { background: var(--n-eee); color: var(--n-111); }
-.pe-chip-move:disabled { opacity: .3; }
 /* the picker inside the 추가 sheet: one surface, search pinned, the list scrolls */
 .stack-pick.is-inline { display: flex; flex-direction: column; gap: 6px; }
 .stack-pick.is-inline .stack-pick-search { position: sticky; top: 0; z-index: 1; }
@@ -3386,12 +3382,7 @@ body.is-sorting, body.is-sorting * { user-select: none; -webkit-user-select: non
 /* '내가 쓰는 것' 순서 바꾸기 (owner) */
 .my-tools-bar { display: flex; align-items: center; justify-content: flex-end; gap: 10px; margin: -6px 0 8px; min-height: 32px; }
 .my-tool-sort { cursor: grab; background: var(--n-fff); }
-.my-tool-grip { flex: none; display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 36px; margin-left: -4px; color: var(--n-999); touch-action: none; }
-.my-tool-steps { margin-left: auto; display: inline-flex; flex-direction: column; gap: 2px; flex: none; }
-.my-tool-steps button { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 22px; border-radius: 6px; color: var(--n-555); }
-.my-tool-steps button:hover:not(:disabled) { background: var(--n-eee); color: var(--n-111); }
-.my-tool-steps button:disabled { opacity: .3; }
-.profile-tools li.pe-dragging .profile-tool { opacity: .55; outline: 1.5px dashed var(--n-bbb); }
+.my-tool-grip { flex: none; display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 36px; margin-left: -4px; color: var(--n-999); }
 .profile-tools.is-sorting-list { grid-template-columns: minmax(0, 1fr) !important; }
 @media (min-width: 768px) { .profile-tools.is-sorting-list { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; } }
 
@@ -3468,3 +3459,16 @@ body.is-sorting, body.is-sorting * { user-select: none; -webkit-user-select: non
   .pf-more { margin: 8px -14px -14px; }
   .pf-section .timeline-list.timeline-stream { margin: 0 -14px; }
 }
+
+/* ---------- A94 · touch drag and drop (long-press lifts; no arrow buttons) ---------- */
+[data-sort-list] { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
+[data-sort-list][data-lifted] { position: relative; z-index: 30; pointer-events: none; will-change: transform; }
+[data-sort-list][data-lifted] > .mc-chip, [data-sort-list][data-lifted] > .pe-chip, [data-sort-list][data-lifted] .profile-tool {
+  box-shadow: 0 8px 22px rgba(0,0,0,.18), 0 1px 3px rgba(0,0,0,.12); scale: 1.06; border-color: var(--n-bbb); background: var(--n-fff);
+}
+.dark [data-sort-list][data-lifted] > .mc-chip, .dark [data-sort-list][data-lifted] > .pe-chip, .dark [data-sort-list][data-lifted] .profile-tool { box-shadow: 0 8px 22px rgba(0,0,0,.55), 0 1px 3px rgba(0,0,0,.4); }
+.mc-chips li.pe-dragging .pe-grip { display: block; }
+/* tapping a chip shows only ×, and the name is never cut for it */
+.pe-chip.on { max-width: 100%; }
+.pe-chip.on .svc-label { overflow: visible; text-overflow: clip; white-space: nowrap; }
+.my-tool-sort:focus-visible, .pe-chip-btn:focus-visible { outline: 2px solid var(--n-555); outline-offset: 2px; }
