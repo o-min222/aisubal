@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { AgentAvatar } from '@/components/agents/agent-avatar'
-import { Camera, Check, ChevronRight, GripVertical, Link2, Loader2, Lock, Plus, Users, Bot, Eye, X } from 'lucide-react'
+import { Camera, Check, ChevronRight, Link2, Loader2, Lock, Plus, Users, Bot, Eye, X } from 'lucide-react'
 import { toast } from 'sonner'
 import { UserAvatar } from '@/components/user-avatar'
 import { ServiceIcon } from '@/components/service-chip'
@@ -259,7 +259,6 @@ export function ProfileCardEditor({
             return (
               <li key={key} {...sort.item(idx)} className={sort.dragIdx === idx ? 'pe-dragging' : undefined}>
                 <span className={`mc-chip pe-chip${on ? ' on' : ''}`} data-pe-chip={on ? '' : undefined}>
-                  {list.length > 1 && <GripVertical className="pe-grip" aria-hidden />}
                   <button type="button" className="pe-chip-btn" data-sort-focus aria-expanded={on} aria-keyshortcuts={list.length > 1 ? 'ArrowLeft ArrowRight' : undefined} onClick={() => !sort.wasDrag() && setArmed(on ? null : key)} aria-label={tx('{label} 삭제 버튼 보기', { label: it.label })}>
                     <ServiceIcon label={it.label} iconUrl={it.iconUrl} />
                     <span className="svc-label">{it.label}</span>
@@ -286,7 +285,7 @@ export function ProfileCardEditor({
           })}
           <li>
             <button type="button" className="mc-chip pe-add" onClick={() => setAdding(g)} aria-label={tx('{label} 추가', { label: tx(STACK_GROUP_LABEL[g]) })}>
-              <Plus className="w-3.5 h-3.5" /> <T>추가</T>
+              <Plus className="w-3.5 h-3.5" aria-hidden />
             </button>
           </li>
         </ul>
@@ -342,7 +341,6 @@ export function ProfileCardEditor({
                 {linkList.map((l, i) => (
                   <li key={`${l.kind}-${l.url}`} {...linkSort.item(i)} className={linkSort.dragIdx === i ? 'pe-dragging' : undefined}>
                     <button type="button" className="mc-chip pe-chip pe-link-chip" data-sort-focus aria-keyshortcuts={linkList.length > 1 ? 'ArrowLeft ArrowRight' : undefined} onClick={() => !linkSort.wasDrag() && setLinksOpen(true)}>
-                      {linkList.length > 1 && <GripVertical className="pe-grip" aria-hidden />}
                       <LinkIcon kind={l.kind} size={16} />
                       <span className="truncate"><T>{LINK_KINDS.find((k) => k.kind === l.kind)?.label ?? l.kind}</T></span>
                       {l.visibility !== 'members' && <Lock className="w-3 h-3 text-n-999" />}
@@ -350,8 +348,8 @@ export function ProfileCardEditor({
                   </li>
                 ))}
                 <li>
-                  <button type="button" className="mc-chip pe-add" onClick={() => setLinksOpen(true)}>
-                    <Plus className="w-3.5 h-3.5" /> <T>추가</T>
+                  <button type="button" className="mc-chip pe-add" onClick={() => setLinksOpen(true)} aria-label={tx('추가')}>
+                    <Plus className="w-3.5 h-3.5" aria-hidden />
                   </button>
                 </li>
               </ul>

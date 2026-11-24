@@ -2135,6 +2135,8 @@ button.rp-link { width: 100%; text-align: left; font: inherit; cursor: pointer; 
 .pe-chip-x:hover, .pe-chip-x:focus-visible { color: var(--n-111); outline: none; }
 .pe-add { color: var(--n-666); border-style: dashed !important; gap: 3px; }
 .pe-add:hover { color: var(--n-111); border-color: var(--n-999) !important; }
+/* A96: the add chip is just a dashed '+', as tall as its neighbours (no handle on the other chips either: the whole chip drags) */
+.mc-chips .pe-add { width: 24px; min-width: 24px; padding: 0; justify-content: center; cursor: pointer; }
 .pe-agents-link { display: inline-flex; align-items: center; gap: 2px; margin-top: 4px; font-size: 12px; color: var(--link); }
 .ios-rows { background: var(--n-fff); border: 1px solid var(--n-e5e5e5); border-radius: 14px; overflow: hidden; }
 .ios-row {
@@ -3377,9 +3379,7 @@ html:has(.landing) { scroll-snap-type: y proximity; background: #111111; }
 .account-install:hover { background: var(--n-f5f5f5); color: var(--n-111); }
 
 /* ---------- A90 · profile chips reorder + the 추가 picker sheet ---------- */
-.pe-grip { display: none; width: 12px; height: 12px; margin: 0 -2px 0 2px; color: var(--n-aaa); flex: none; cursor: grab; }
 @media (hover: hover) and (pointer: fine) {
-  .mc-chips li[data-sort-list] .pe-chip:hover .pe-grip { display: block; }
   .mc-chips li[data-sort-list] { cursor: grab; }
 }
 body.is-sorting, body.is-sorting * { user-select: none; -webkit-user-select: none; cursor: grabbing !important; }
@@ -3478,7 +3478,6 @@ body.is-sorting, body.is-sorting * { user-select: none; -webkit-user-select: non
   box-shadow: 0 8px 22px rgba(0,0,0,.18), 0 1px 3px rgba(0,0,0,.12); scale: 1.06; border-color: var(--n-bbb); background: var(--n-fff);
 }
 .dark [data-sort-list][data-lifted] > .mc-chip, .dark [data-sort-list][data-lifted] > .pe-chip, .dark [data-sort-list][data-lifted] .profile-tool { box-shadow: 0 8px 22px rgba(0,0,0,.55), 0 1px 3px rgba(0,0,0,.4); }
-.mc-chips li.pe-dragging .pe-grip { display: block; }
 /* tapping a chip shows only ×, and the name is never cut for it */
 .pe-chip.on { max-width: 100%; }
 .pe-chip.on .svc-label { overflow: visible; text-overflow: clip; white-space: nowrap; }
