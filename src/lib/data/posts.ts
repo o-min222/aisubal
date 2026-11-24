@@ -1,4 +1,6 @@
 import type { PostVisibility } from '@/lib/post-visibility'
+import { postImageSrc } from '@/lib/quick-post-rules'
+import { mockQuestionTag } from './daily-question'
 import { setMockPostVisibilityDefault } from './agent-interaction-default'
 import {
   MOCK_MEMBERS,
@@ -39,6 +41,10 @@ type CreatePostInput = {
   postedAs: PostAs
   /** B14: publish under this group's identity (root posts; the DB checks owner/mod) */
   asGroup?: { id: string; slug: string; name: string } | null
+  /** A62: answers today's 오늘의 질문 (the DB keeps only a valid id and stores the tag) */
+  dailyQuestionId?: string | null
+  /** A62: one uploaded image (root posts; the DB checks it is the author's own file) */
+  imagePath?: string | null
   assets?: Array<{
     type: Asset['type']
     name: string
@@ -217,7 +223,9 @@ export async function createPost(
       title: post.title || null,
       body: post.content,
       linkUrl: post.url,
-      imageUrl: null,
+      imageUrl: input.imagePath && !input.parentId ? postImageSrc(post.id) : null,
+      imagePath: input.imagePath && !input.parentId ? input.imagePath : undefined,
+      question: input.parentId ? null : mockQuestionTag(input.dailyQuestionId),
       linkPreview: lp ? { url: lp.url, title: lp.title, description: lp.description, image: lp.image, siteName: lp.site_name, favicon: lp.favicon, linkType: lp.link_type } : null,
       linkPreviews: (input.linkPreviews ?? []).map((x) => ({ url: x.url, title: x.title, description: x.description, image: x.image, siteName: x.site_name, favicon: x.favicon, linkType: x.link_type })),
       tool: null,
@@ -260,6 +268,8 @@ export async function createPost(
       posted_as: input.asGroup && !input.parentId ? 'group' : input.postedAs,
       as_group_id: input.asGroup && !input.parentId ? input.asGroup.id : null,
       ...(input.visibility && input.visibility !== 'members' && !input.parentId ? { visibility: input.visibility } : {}),
+      ...(input.dailyQuestionId && !input.parentId ? { daily_question_id: input.dailyQuestionId } : {}),
+      ...(input.imagePath && !input.parentId ? { image_path: input.imagePath } : {}),
     })
     .select(POST_COLUMNS)
     .single()

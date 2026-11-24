@@ -4,9 +4,9 @@ import { scrollToPosted } from '@/lib/scroll-to-post'
 import { piiWarning } from '@/lib/pii'
 import { publishReplyDelta } from '@/lib/count-store'
 import { useT, tx, tn } from '@/i18n/client'
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useRef } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
-import { Users, ShieldAlert } from 'lucide-react'
+import { Users, ShieldAlert, ImagePlus, MessageCircleQuestion, X } from 'lucide-react'
 import { toast } from 'sonner'
 import { postedHref } from '@/lib/posted-rules'
 import { offerPushAfterPosting } from '@/lib/push-client'
@@ -21,6 +21,9 @@ import { LinkCarousel } from '@/components/link-carousel'
 import { useLinkPreviews } from '@/hooks/use-link-previews'
 import type { AgentInteraction, PostAs } from '@/lib/supabase/types'
 import { T } from '@/i18n/t'
+import { useLocale } from '@/i18n/client'
+import { uploadPickedImage, type PickedImage } from '@/lib/post-image-client'
+import { questionText, type DailyQuestion } from '@/lib/quick-post-rules'
 
 export type ComposerIdentity = {
   id: string
@@ -50,6 +53,9 @@ export function Composer({
   groupId,
   groupName,
   initialBody = '',
+  initialImage = null,
+  question = null,
+  onClearQuestion,
 }: {
   me: ComposerIdentity
   parentId?: string
@@ -60,6 +66,11 @@ export function Composer({
   groupName?: string
   /** prefilled text, e.g. '물어보기' from a tool page */
   initialBody?: string
+  /** A62: an image already uploaded from the quick composer */
+  initialImage?: PickedImage | null
+  /** A62: this post answers today's 오늘의 질문 */
+  question?: DailyQuestion | null
+  onClearQuestion?: () => void
   placeholder?: string
   autoFocus?: boolean
   onPosted?: (id: string) => void
@@ -77,6 +88,10 @@ export function Composer({
   const [interaction, setInteraction] = useState<AgentInteraction>(me.agentInteraction ?? 'humans_only')
   const [visibility, setVisibility] = useState<PostVisibility>(me.visibility ?? 'members')
   const [busy, setBusy] = useState(false)
+  const [image, setImage] = useState<PickedImage | null>(initialImage)
+  const [uploading, setUploading] = useState(false)
+  const fileRef = useRef<HTMLInputElement>(null)
+  const locale = useLocale()
   const isReply = Boolean(parentId)
   const asGroup = !isReply && who.startsWith('group:') ? (me.groupIdentities ?? []).find((g) => `group:${g.id}` === who) ?? null : null
   const restrictable = canRestrict({ isReply, groupId, asGroup: Boolean(asGroup), postedAs })
@@ -114,11 +129,14 @@ export function Composer({
           ...(restrictable ? { visibility } : {}),
           groupId,
           ...(isReply ? {} : { urls: previews.urls }),
+          ...(!isReply && image ? { imagePath: image.path } : {}),
+          ...(!isReply && question && !groupId && !asGroup ? { dailyQuestionId: question.id } : {}),
         }),
       })
       const data = await res.json().catch(() => ({}))
       if (!res.ok) throw new Error(data.error || '게시하지 못했어요.')
       setBody('')
+      setImage(null)
       previews.reset()
       toast.success(isReply ? tn('답글을 남겼어요') : tn('게시했어요'))
       if (isReply && countIds?.length) publishReplyDelta(countIds, 1)
@@ -138,6 +156,28 @@ export function Composer({
       setBusy(false)
     }
   }
+
+  async function pickImage(f: File | undefined) {
+    if (!f) return
+    setUploading(true)
+    try {
+      setImage(await uploadPickedImage(f, (x) => tr(x)))
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : tn('업로드하지 못했어요.'))
+    } finally {
+      setUploading(false)
+      if (fileRef.current) fileRef.current.value = ''
+    }
+  }
+  const imageButton = (
+    <>
+      <button type="button" className="agent-react-btn" onClick={() => fileRef.current?.click()} disabled={uploading || Boolean(image)} aria-label={tx('이미지 한 장')} title={tx('이미지 한 장')}>
+        <ImagePlus className="w-4 h-4 flex-shrink-0" />
+        {uploading && <span className="truncate"><T>올리는 중…</T></span>}
+      </button>
+      <input ref={fileRef} type="file" accept="image/png,image/jpeg,image/webp,image/gif" hidden onChange={(e) => void pickImage(e.target.files?.[0])} />
+    </>
+  )
 
   const options: IdentityOption[] = [
     { key: 'real', label: me.displayName, hint: tx('내 이름'), avatar: <UserAvatar id={me.id} name={me.displayName} avatarUrl={me.avatarUrl} size="sm" /> },
@@ -168,13 +208,17 @@ export function Composer({
         isReply ? null : (
           <span className="composer-tools">
             {groupId ? (
+              <>
+              {imageButton}
               <span className="composer-note">
                 <Users className="w-3.5 h-3.5 flex-shrink-0" />
                 <span className="truncate">{groupName ? tx('{groupName} 그룹에만 보여요 · 사람만', { groupName }) : tx('그룹에만 보여요 · 사람만')}</span>
               </span>
+              </>
             ) : (
               <>
                 {restrictable && <VisibilityPicker value={visibility} onChange={setVisibility} />}
+                {imageButton}
                 <AgentReactionPicker value={interaction} onChange={pickInteraction} />
               </>
             )}
@@ -186,12 +230,17 @@ export function Composer({
       busy={busy}
       submitLabel={busy ? <T>게시 중…</T> : piiAckFor === body && pii ? <T>그래도 게시</T> : <T>게시</T>}
     >
+      {question && !isReply && (
+        <button type="button" className="qc-qtag mb-1" onClick={onClearQuestion} aria-label={tx('오늘의 질문 빼기')}>
+          <MessageCircleQuestion className="w-3.5 h-3.5 flex-shrink-0" /><span className="truncate">{questionText(question, locale)}</span>{onClearQuestion && <X className="w-3 h-3 flex-shrink-0" />}
+        </button>
+      )}
       <ComposerTextarea
         value={body}
         onChange={(e) => setBody(e.target.value)}
         onSubmitShortcut={submit}
         mentions
-        placeholder={placeholder ? tr(placeholder) : isReply ? (replyKind === 'comment' ? tr('댓글 남기기…') : tr('답글 남기기…')) : tr('무슨 생각을 하고 있나요? 링크를 붙이면 미리보기가 생겨요.')}
+        placeholder={placeholder ? tr(placeholder) : image && !isReply ? tr('이미지에 한 줄 설명을 붙여 주세요') : isReply ? (replyKind === 'comment' ? tr('댓글 남기기…') : tr('답글 남기기…')) : tr('무슨 생각을 하고 있나요? 링크를 붙이면 미리보기가 생겨요.')}
         autoFocus={autoFocus}
         rows={isReply ? 1 : 3}
         aria-label={isReply ? tx('답글 내용') : tx('게시물 내용')}
@@ -200,6 +249,13 @@ export function Composer({
         <div role="alert" className="pii-warning flex items-start gap-1.5 rounded-lg px-2.5 py-2 text-xs mb-1" style={{ background: 'var(--c-fff4e5)', color: 'var(--c-8a4b00)' }}>
           <ShieldAlert className="w-3.5 h-3.5 mt-px flex-shrink-0" />
           <span><T s="{pii} 멤버 모두가 볼 수 있어요. 지우거나 가려주세요.{v}" vars={{ pii, v: piiAckFor === body ? tx(' (한 번 더 누르면 그대로 게시돼요)') : '' }} /></span>
+        </div>
+      )}
+      {image && !isReply && (
+        <div className="composer-image">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={image.preview} alt="" />
+          <button type="button" className="composer-image-x" onClick={() => setImage(null)} aria-label={tx('이미지 빼기')}><X className="w-3.5 h-3.5" /></button>
         </div>
       )}
       {!isReply && previews.items.length > 0 && (

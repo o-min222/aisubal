@@ -7,7 +7,8 @@ import { managedGroupIdentities } from '@/lib/data/groups'
 import { composerIdentity } from '@/lib/composer-identity'
 import { isFeedId } from '@/lib/feed-ids'
 import { FEED_SCOPES, feedHref, parseFeedScope } from '@/lib/social-rules'
-import { Composer } from '@/components/feed/composer'
+import { QuickComposer } from '@/components/feed/quick-composer'
+import { getTodayQuestion } from '@/lib/data/daily-question'
 import { FeedFilter } from '@/components/feed/feed-filter'
 import { FeedBoard } from '@/components/feed/feed-board'
 import { FeedTimeline } from '@/components/feed/feed-timeline'
@@ -39,7 +40,11 @@ export default async function FeedPage({ searchParams }: { searchParams: Promise
   if (sp.open && isFeedId(sp.open)) redirect(`/posts/${sp.open}`)
   const here = feedHref(scope)
 
-  const [{ posts, totalPages }, groupIdentities] = await Promise.all([listFeedPage(state.member.id, { scope, page: 1 }), managedGroupIdentities(state.member.id)])
+  const [{ posts, totalPages }, groupIdentities, question] = await Promise.all([
+    listFeedPage(state.member.id, { scope, page: 1 }),
+    managedGroupIdentities(state.member.id),
+    getTodayQuestion().catch(() => null),
+  ])
 
   async function more(page: number) {
     'use server'
@@ -56,7 +61,8 @@ export default async function FeedPage({ searchParams }: { searchParams: Promise
       <div className="feed-head">
         <FeedFilter active={scope} items={FEED_SCOPES.map((s) => ({ id: s.id, label: s.label, href: feedHref(s.id) }))} />
       </div>
-      {<Composer me={{ ...composerIdentity(state.member), groupIdentities }} className="only-desktop" />}
+      {/* A62: one light line on every screen size; ⤢ opens the full composer */}
+      <QuickComposer me={{ ...composerIdentity(state.member), groupIdentities }} question={question} />
       {/* A26: whose posts these are, and where to manage that list */}
       {(scope === 'following' || scope === 'friends') && (
         <p className="text-xs text-n-888 px-1 flex items-center gap-2">

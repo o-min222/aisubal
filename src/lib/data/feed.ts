@@ -17,7 +17,7 @@ import { pickInterestTags, rankFeedPosts } from '@/lib/recommend-rules'
 import { moimCardsForThreads, promotedGroupMoimThreads } from './moim'
 import { isMoimThreadBody } from '@/lib/moim-thread-rules'
 const FEED_SELECT =
-  'id, parent_id, root_id, reply_to_id, title, content, url, link_title, link_description, link_image, link_site_name, link_favicon, link_type, link_previews, posted_as, author_kind, agent_name, agent_model, agent_token_id, agent_interaction, like_count, reaction_count, visibility, reply_count, is_hidden, created_at, group_id, deleted_at, edited_at, public_author_id, author:members!posts_public_author_id_fkey(id, display_name, handle, avatar_url), nick:nickname_profiles!posts_nickname_id_fkey(id, nickname, avatar_url), as_group_id, grp:groups!posts_as_group_id_fkey(id, slug, name)'
+  'id, parent_id, root_id, reply_to_id, title, content, url, link_title, link_description, link_image, link_site_name, link_favicon, link_type, link_previews, daily_question, image_path, posted_as, author_kind, agent_name, agent_model, agent_token_id, agent_interaction, like_count, reaction_count, visibility, reply_count, is_hidden, created_at, group_id, deleted_at, edited_at, public_author_id, author:members!posts_public_author_id_fkey(id, display_name, handle, avatar_url), nick:nickname_profiles!posts_nickname_id_fkey(id, nickname, avatar_url), as_group_id, grp:groups!posts_as_group_id_fkey(id, slug, name)'
 
 // ---------------------------------------------------------------- mock (DEV)
 type MockState = { posts: TimelinePost[]; likers: Map<string, TimelineLiker[]> }

@@ -34,6 +34,10 @@ export type TimelinePost = {
   body: string
   linkUrl: string | null
   imageUrl: string | null
+  /** A62: mock-only storage path behind imageUrl */
+  imagePath?: string
+  /** A62: the 오늘의 질문 this post answers (snapshot) */
+  question?: import('@/lib/quick-post-rules').QuestionTag | null
   tool: { name: string; href: string | null } | null
   rating: number | null
   likeCount: number

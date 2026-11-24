@@ -16,6 +16,7 @@ import { fetchLinkPreviews } from '@/lib/link-preview-server'
 import { checkFetchUrl } from '@/lib/safe-fetch'
 import type { LinkPreview } from '@/lib/supabase/types'
 import { te } from '@/i18n/server'
+import { isPostImagePath } from '@/lib/quick-post-rules'
 
 const schema = z.object({
   body: z.string().max(2000),
@@ -30,6 +31,10 @@ const schema = z.object({
   groupId: z.string().max(64).nullish(),
   /** B14: post under this group's identity (group owners/mods, root posts) */
   asGroupId: z.string().max(64).nullish(),
+  /** A62: answering today's 오늘의 질문 */
+  dailyQuestionId: z.string().uuid().nullish(),
+  /** A62: one uploaded image (from /api/posts/image) */
+  imagePath: z.string().max(120).nullish(),
 })
 
 export async function GET(request: NextRequest) {
@@ -70,6 +75,9 @@ export async function POST(request: NextRequest) {
         .filter((u, i, a) => a.indexOf(u) === i && checkFetchUrl(u).ok)
         .slice(0, EXPANDED_LINKS)
   const url = previewUrls[0] ?? null
+  if (raw.imagePath && (raw.parentId || !isPostImagePath(raw.imagePath, member.auth_id))) {
+    return NextResponse.json({ error: await te('이미지를 다시 올려 주세요.') }, { status: 400 })
+  }
   const v = validateFeedInput({ ...raw, url })
   if (!v.ok) return NextResponse.json({ error: await te(v.error) }, { status: 400 })
 
@@ -112,6 +120,8 @@ export async function POST(request: NextRequest) {
       url: v.value.url || undefined,
       linkPreview,
       linkPreviews: linkPreviews.length ? linkPreviews : undefined,
+      dailyQuestionId: raw.parentId ? null : raw.dailyQuestionId ?? null,
+      imagePath: raw.parentId ? null : raw.imagePath ?? null,
     })
     kickWebhookWorker() // an @name.ai mention or a reply to an agent may have queued a webhook
     return NextResponse.json({ id: details.id }, { status: 201 })
@@ -125,6 +135,9 @@ export async function POST(request: NextRequest) {
     }
     if (msg.includes('feed_parent_not_found')) {
       return NextResponse.json({ error: await te('원글을 찾을 수 없어요.') }, { status: 404 })
+    }
+    if (msg.includes('post_image_invalid')) {
+      return NextResponse.json({ error: await te('이미지를 다시 올려 주세요.') }, { status: 400 })
     }
     if (msg.includes('feed_body_too_long')) {
       return NextResponse.json({ error: await te('글이 너무 길어요. 나눠서 올려 주세요.') }, { status: 400 })

@@ -1,4 +1,5 @@
 import { parseVisibility } from '@/lib/post-visibility'
+import { parseQuestionTag, postImageSrc } from '@/lib/quick-post-rules'
 import { msg } from '@/i18n/translate'
 import type { TimelineLinkPreview, TimelinePost } from '@/components/timeline/types'
 import type { AgentInteraction, LinkPreview, LinkType, PostAs } from '@/lib/supabase/types'
@@ -89,6 +90,8 @@ export type FeedRow = {
   link_favicon: string | null
   link_type: LinkType | null
   link_previews?: LinkPreview[] | null
+  daily_question?: unknown
+  image_path?: string | null
   posted_as: PostAs | 'group'
   author_kind: 'member' | 'agent'
   agent_name: string | null
@@ -176,7 +179,8 @@ export function feedRowToTimeline(r: FeedRow, liked: Set<string>, viewerId?: str
     title: r.title || null,
     body: r.content,
     linkUrl: r.url,
-    imageUrl: null,
+    imageUrl: r.image_path && !r.deleted_at ? postImageSrc(r.id) : null,
+    question: r.parent_id ? null : parseQuestionTag(r.daily_question),
     linkPreview: hasPreview
       ? {
           url: r.url!,
