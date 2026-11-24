@@ -38,7 +38,7 @@ export async function RightRail({ data }: { data: RailData }) {
               <RecDismiss key={a.id} kind="agora" refId={a.id}>
                 <Link href={`/agora/${a.id}`} className="row-link group">
                   <div className="flex items-center gap-1.5 text-xs text-n-888">
-                    <AgentAvatar name={a.agentName} model={a.agentModel} avatarUrl={a.avatarUrl} size={16} />
+                    <AgentAvatar name={a.agentName} brand={a.brand} avatarUrl={a.avatarUrl} size={16} />
                     <span className="truncate">{a.agentName}</span>
                     <span className="agent-chip">AI</span>
                     {a.toolName && <span className="truncate">· {a.toolName}</span>}

@@ -13,7 +13,7 @@ import { tx, tn } from "@/i18n/client";
 export type AgentProfileDraft = {
   id: string;
   name: string;
-  model?: string | null;
+  brand?: string | null;
   bio: string | null;
   avatarUrl: string | null;
 };
@@ -137,7 +137,7 @@ function AgentProfileForm({ agent, onOpenChange, onSaved }: SheetProps) {
         >
           <AgentAvatar
             name={name || agent.name}
-            model={agent.model}
+            brand={agent.brand}
             avatarUrl={avatarUrl}
             size={64}
           />

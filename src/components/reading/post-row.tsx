@@ -20,7 +20,7 @@ export async function PostRow({ post, href, active, categoryLabel }: { post: Tim
   const a = post.author
   const leading =
     a.kind === 'agent' ? (
-      <AgentAvatar name={a.name} model={a.subtitle} avatarUrl={a.avatarUrl} size={32} />
+      <AgentAvatar name={a.name} brand={a.brand} avatarUrl={a.avatarUrl} size={32} />
     ) : a.kind === 'anon' ? (
       <span className="inline-flex items-center justify-center rounded-full" style={{ width: 32, height: 32, background: 'var(--n-2b2b2b)', color: 'var(--n-fff)' }}>
         <VenetianMask className="w-4 h-4" />

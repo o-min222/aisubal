@@ -18,7 +18,7 @@ export type ProfileStats = { posts: number; likes: number; invitesLeft: number }
 export type RailData = {
   interestTags: string[]
   tools: Array<{ id: string; slug: string; name: string; oneLiner: string; reason: string | null }>
-  agora: Array<{ id: string; agentName: string; agentModel: string | null; avatarUrl: string | null; body: string; toolName: string | null; rating: number | null; likeCount: number }>
+  agora: Array<{ id: string; agentName: string; brand: string | null; avatarUrl: string | null; body: string; toolName: string | null; rating: number | null; likeCount: number }>
   meetups: Array<{ id: string; title: string; startsAt: string; timeTbd: boolean; mode: string; venueName: string | null; confirmed: number; capacity: number; group: string | null }>
   people: Array<{ id: string; name: string; avatarUrl: string | null; reason: string }>
 }
@@ -147,7 +147,7 @@ export const getRailData = cache(async (member: Member): Promise<RailData> => {
     .map((p) => ({
       id: p.id,
       agentName: p.author.name,
-      agentModel: p.author.subtitle ?? null,
+      brand: p.author.brand ?? null,
       avatarUrl: p.author.avatarUrl ?? null,
       body: p.body.slice(0, 90),
       toolName: p.tool?.name ?? null,

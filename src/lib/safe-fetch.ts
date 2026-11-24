@@ -118,7 +118,7 @@ function safeLookup(hostname: string, options: { all?: boolean } | number, cb: L
 
 type Raw = { status: number; headers: http.IncomingHttpHeaders; body: Buffer; truncated: boolean }
 
-function requestOnce(u: URL, accept: string): Promise<Raw> {
+function requestOnce(u: URL, accept: string, maxBytes = MAX_BYTES): Promise<Raw> {
   const mod = u.protocol === 'https:' ? https : http
   return new Promise((resolve, reject) => {
     let settled = false
@@ -149,9 +149,9 @@ function requestOnce(u: URL, accept: string): Promise<Raw> {
         res.on('data', (c: Buffer) => {
           if (truncated) return
           size += c.length
-          if (size > MAX_BYTES) {
+          if (size > maxBytes) {
             truncated = true
-            chunks.push(c.subarray(0, c.length - (size - MAX_BYTES)))
+            chunks.push(c.subarray(0, c.length - (size - maxBytes)))
             res.destroy()
             done(() => resolve({ status, headers: res.headers, body: Buffer.concat(chunks), truncated }))
           } else chunks.push(c)
@@ -220,6 +220,50 @@ export async function safeFetchText(raw: string, accept = 'text/html,application
       text = new TextDecoder('utf-8').decode(r.body)
     }
     return { ok: true, finalUrl: u.toString(), status: r.status, contentType, text, truncated: r.truncated, redirects }
+  }
+  return { ok: false, error: 'too_many_redirects', redirects }
+}
+
+// ------------------------------------------------------------------ image bytes (A69)
+export type SafeFetchBytesResult =
+  | { ok: true; finalUrl: string; contentType: string; body: Buffer; redirects: string[] }
+  | { ok: false; error: string; redirects: string[] }
+
+/**
+ * An image the server downloads for an agent (profile_set_avatar url): https on every hop, public
+ * addresses only (checked inside the socket lookup), at most 3 redirects, 6 s timeout, and a body
+ * over maxBytes is an error rather than a truncated image. The caller still sniffs the bytes.
+ */
+export async function safeFetchBytes(raw: string, maxBytes: number): Promise<SafeFetchBytesResult> {
+  const redirects: string[] = []
+  const httpsOnly = (c: UrlCheck): UrlCheck => (c.ok && c.url.protocol !== 'https:' ? { ok: false, reason: 'scheme_not_allowed' } : c)
+  let check = httpsOnly(checkFetchUrl(raw))
+  for (let hop = 0; hop <= 3; hop++) {
+    if (!check.ok) return { ok: false, error: check.reason, redirects }
+    const u = check.url
+    let r: Raw
+    try {
+      r = await requestOnce(u, 'image/png,image/jpeg,image/webp;q=0.9', maxBytes)
+    } catch (e) {
+      const code = (e as NodeJS.ErrnoException).code
+      return { ok: false, error: code === 'EBLOCKED' ? 'blocked_address' : (e as Error).message === 'timeout' ? 'timeout' : 'fetch_failed', redirects }
+    }
+    if (r.status >= 300 && r.status < 400) {
+      const loc = r.headers.location
+      if (!loc) return { ok: false, error: 'redirect_without_location', redirects }
+      let next: URL
+      try {
+        next = new URL(loc, u)
+      } catch {
+        return { ok: false, error: 'bad_redirect', redirects }
+      }
+      redirects.push(next.toString())
+      check = httpsOnly(checkFetchUrl(next))
+      continue
+    }
+    if (r.status < 200 || r.status >= 300) return { ok: false, error: `http_${r.status}`, redirects }
+    if (r.truncated) return { ok: false, error: 'too_large', redirects }
+    return { ok: true, finalUrl: u.toString(), contentType: String(r.headers['content-type'] || '').toLowerCase(), body: r.body, redirects }
   }
   return { ok: false, error: 'too_many_redirects', redirects }
 }

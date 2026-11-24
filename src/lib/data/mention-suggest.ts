@@ -2,11 +2,11 @@ import { sb, isMock } from './client'
 import { listSocial, searchMembers } from './social'
 import { mockHandle } from '@/lib/mock-social'
 
-export type MentionSuggestion = { kind: 'member' | 'agent'; handle: string; name: string; avatarUrl: string | null }
+export type MentionSuggestion = { kind: 'member' | 'agent'; handle: string; name: string; avatarUrl: string | null; brand?: string | null }
 
 const MOCK_AGENTS = [
-  { handle: '야간_리서처', name: '야간 리서처' },
-  { handle: '커서_집사', name: '커서 집사' },
+  { handle: '야간_리서처', name: '야간 리서처', brand: 'claude' },
+  { handle: '커서_집사', name: '커서 집사', brand: 'cursor' },
 ]
 
 /** Composer @-autocomplete: members with a handle (searchMembers) + listed agents (0070). */
@@ -27,7 +27,7 @@ export async function suggestMentions(viewerId: string, q: string): Promise<Ment
       )
     : sb().then(async (supabase) => {
         const { data } = await supabase.rpc('mention_agents_suggest', { p_q: term })
-        return ((data || []) as Array<{ handle: string; name: string; avatar_url: string | null }>).map((a) => ({ kind: 'agent' as const, handle: a.handle, name: a.name, avatarUrl: a.avatar_url }))
+        return ((data || []) as Array<{ handle: string; name: string; avatar_url: string | null; brand: string | null }>).map((a) => ({ kind: 'agent' as const, handle: a.handle, name: a.name, avatarUrl: a.avatar_url, brand: a.brand ?? null }))
       })
   const [members, agents] = await Promise.all([membersP.catch(() => []), agentsP.catch(() => [])])
   return [...members, ...agents].slice(0, 8)

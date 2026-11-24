@@ -26,6 +26,6 @@ export async function loadProfileEditor(m: Member) {
       skillExtras: stack?.skillExtras ?? [],
       vis: { ai: stack?.ai?.visibility ?? 'members', subs: stack?.subs?.visibility ?? 'members', skills: stack?.skills?.visibility ?? 'members' },
     },
-    agents: connected.filter((c) => c.showOnProfile).map((c) => ({ id: c.id, name: c.agentName, client: c.client ?? null })),
+    agents: connected.filter((c) => c.showOnProfile).map((c) => ({ id: c.id, name: c.agentName, client: c.client ?? null, avatarUrl: c.avatarUrl ?? null, brand: c.brand ?? null })),
   }
 }

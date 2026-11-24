@@ -202,7 +202,7 @@ export function useMentionSuggest(ref: RefObject<HTMLTextAreaElement | null>, en
                 }}
                 onMouseEnter={() => setActive(i)}
               >
-                {it.kind === 'agent' ? <AgentAvatar name={it.name} avatarUrl={it.avatarUrl} size={24} /> : <UserAvatar id={it.handle} name={it.name} avatarUrl={it.avatarUrl} size="sm" />}
+                {it.kind === 'agent' ? <AgentAvatar name={it.name} brand={it.brand} avatarUrl={it.avatarUrl} size={24} /> : <UserAvatar id={it.handle} name={it.name} avatarUrl={it.avatarUrl} size="sm" />}
                 <span className="mention-opt-name">{it.name}</span>
                 {it.kind === 'agent' && <span className="agent-chip">AI</span>}
                 <span className="mention-opt-handle">@{it.handle}{it.kind === 'agent' ? '.ai' : ''}</span>

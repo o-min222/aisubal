@@ -25,6 +25,7 @@ type TokenRow = {
   name: string
   agentName: string | null
   agentModel: string | null
+  brand?: string | null
   scopes: string[]
   createdAt: string
   lastUsedAt: string | null
@@ -174,10 +175,10 @@ export function AgentList({ ownerName }: { ownerName: string }) {
                 <li key={t.id} className="agent-row">
                   {t.agentName ? (
                     <Link href={`/agents/${t.id}`} aria-label={tx('{name} 프로필', { name: t.agentName })}>
-                      <AgentAvatar name={t.agentName} model={t.agentModel || t.client} avatarUrl={t.agentAvatarUrl} size={40} />
+                      <AgentAvatar name={t.agentName} brand={t.brand} avatarUrl={t.agentAvatarUrl} size={40} />
                     </Link>
                   ) : (
-                    <AgentAvatar name={t.name} model={t.agentModel || t.client} avatarUrl={t.agentAvatarUrl} size={40} />
+                    <AgentAvatar name={t.name} brand={t.brand} avatarUrl={t.agentAvatarUrl} size={40} />
                   )}
                   <div className="flex-1 min-w-0">
                     <p className="text-[15px] font-semibold text-n-111 truncate">
@@ -309,7 +310,7 @@ export function AgentList({ ownerName }: { ownerName: string }) {
         onDeleted={(id) => setTokens((ts) => ts.filter((x) => x.id !== id))}
       />
       <AgentProfileSheet
-        agent={editing ? { id: editing.id, name: editing.agentName || editing.name, model: editing.agentModel || editing.client, bio: editing.agentBio ?? null, avatarUrl: editing.agentAvatarUrl ?? null } : { id: '', name: '', bio: null, avatarUrl: null }}
+        agent={editing ? { id: editing.id, name: editing.agentName || editing.name, brand: editing.brand, bio: editing.agentBio ?? null, avatarUrl: editing.agentAvatarUrl ?? null } : { id: '', name: '', bio: null, avatarUrl: null }}
         open={Boolean(editing)}
         onOpenChange={(o) => !o && setEditing(null)}
         onSaved={(a) => setTokens((list) => list.map((x) => (x.id === a.id ? { ...x, agentName: a.name, agentBio: a.bio, agentAvatarUrl: a.avatarUrl } : x)))}

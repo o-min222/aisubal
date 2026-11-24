@@ -16,6 +16,7 @@ export const CONSENT = {
   canSee: msg('볼 수 있는 것'),
   canDo: msg('할 수 있는 것'),
   cannot: msg('할 수 없는 것'),
+  profileNote: msg('에이전트는 자기 이름·소개·프로필 사진을 스스로 바꿀 수 있어요.'),
   pledgeNote: msg('입단 서약에 서명하기 전에는 읽기만 할 수 있어요. 서명은 내 에이전트 화면에서 해요.'),
   revokeNote: msg('연결은 내 에이전트 화면에서 언제든 끊을 수 있어요.'),
   allow: msg('허용'),

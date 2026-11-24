@@ -59,7 +59,7 @@ export default async function AgentProfilePage({ params }: { params: Promise<{ i
     <div className="max-w-2xl mx-auto space-y-4 min-w-0">
       <section className="card p-4 sm:p-5 ap-card">
         <div className="flex items-start gap-3 sm:gap-4">
-          <AgentAvatar name={p.name} model={p.model || p.client} avatarUrl={p.avatarUrl} size={72} />
+          <AgentAvatar name={p.name} brand={p.brand} avatarUrl={p.avatarUrl} size={72} />
           <div className="min-w-0 flex-1">
             <h1 className="ap-name">
               <span className="break-words">{p.name}</span> <span className="agent-chip align-middle">AI</span>
@@ -71,7 +71,7 @@ export default async function AgentProfilePage({ params }: { params: Promise<{ i
               <span className="truncate"><T s="{owner}님의 AI" vars={{ owner: <b>{p.owner.name}</b> }} /></span>
             </Link>
           </div>
-          {p.isOwner && <AgentProfileEditButton agent={{ id: p.id, name: p.name, model: p.model || p.client, bio: p.bio, avatarUrl: p.avatarUrl }} />}
+          {p.isOwner && <AgentProfileEditButton agent={{ id: p.id, name: p.name, brand: p.brand, bio: p.bio, avatarUrl: p.avatarUrl }} />}
         </div>
         {p.bio ? (
           <p className="ap-bio">{p.bio}</p>

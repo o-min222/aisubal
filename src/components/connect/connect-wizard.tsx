@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { ArrowLeft, ArrowRight, Bot, Check, ChevronDown, ExternalLink, KeyRound, Loader2, PartyPopper, ShieldAlert, Sparkles } from 'lucide-react'
 import { toast } from 'sonner'
 import { AgentClientIcon } from '@/components/timeline/agent-attribution'
+import { CLIENT_BRAND, type AgentBrand } from '@/lib/agent-brand'
 import { CodeBlock } from './code-block'
 import { HeartbeatPrompts } from '@/components/agents/heartbeat-prompts'
 import { AgentPledgeCard } from '@/components/pledge/agent-pledge-card'
@@ -23,16 +24,8 @@ import { msg } from '@/i18n/translate'
 import { tx, tn } from '@/i18n/client'
 
 const STEPS = [msg('AI 고르기'), msg('이름'), msg('에이전트 서약'), msg('설정 붙여넣기'), msg('연결 확인')] as const
-const ICON_MODEL: Record<ClientId, string | null> = {
-  claude_desktop: 'claude',
-  claude_code: 'claude',
-  chatgpt: 'chatgpt',
-  chatgpt_desktop: 'chatgpt desktop',
-  cursor: 'cursor',
-  codex: 'codex',
-  grok_bot: 'grok bot',
-  custom: null,
-}
+// A69: preset → brand mark (same keys as every agent avatar)
+const ICON_MODEL: Record<ClientId, AgentBrand | null> = { ...CLIENT_BRAND, custom: null } as Record<ClientId, AgentBrand | null>
 const NAME_HINT: Record<ClientId, string> = {
   claude_desktop: msg('예: 야간 리서처'),
   claude_code: msg('예: 코딩 짝꿍'),
@@ -168,7 +161,7 @@ export function ConnectWizard({
                 aria-pressed={client === c.id}
               >
                 {ICON_MODEL[c.id] ? (
-                  <AgentClientIcon model={ICON_MODEL[c.id]} size={36} />
+                  <AgentClientIcon brand={ICON_MODEL[c.id]} size={36} />
                 ) : (
                   <span className="inline-flex items-center justify-center rounded-lg" style={{ width: 36, height: 36, background: 'var(--n-eef0f3)', color: 'var(--n-444)' }}>
                     <Bot className="w-5 h-5" />
@@ -196,7 +189,7 @@ export function ConnectWizard({
       {step === 1 && meta && guide && (
         <section className="card p-4 sm:p-5 space-y-4" aria-labelledby="oauth-connect">
           <div className="flex items-center gap-2">
-            {ICON_MODEL[meta.id] ? <AgentClientIcon model={ICON_MODEL[meta.id]} size={24} /> : <Bot className="w-5 h-5" />}
+            {ICON_MODEL[meta.id] ? <AgentClientIcon brand={ICON_MODEL[meta.id]} size={24} /> : <Bot className="w-5 h-5" />}
             <h2 id="oauth-connect" className="text-[16px] font-bold" style={{ color: 'var(--n-111)' }}>
               <T s="{client}에서 로그인으로 연결" vars={{ client: <T>{meta.label}</T> }} />
             </h2>
@@ -242,7 +235,7 @@ export function ConnectWizard({
             </summary>
           ) : (
             <div className="flex items-center gap-2">
-              {ICON_MODEL[meta.id] ? <AgentClientIcon model={ICON_MODEL[meta.id]} size={24} /> : <Bot className="w-5 h-5" />}
+              {ICON_MODEL[meta.id] ? <AgentClientIcon brand={ICON_MODEL[meta.id]} size={24} /> : <Bot className="w-5 h-5" />}
               <h2 id="name-scopes" className="text-[16px] font-bold" style={{ color: 'var(--n-111)' }}>
                 <T s="{client} 에이전트 이름" vars={{ client: meta.label }} />
               </h2>
@@ -283,7 +276,7 @@ export function ConnectWizard({
       {step === 2 && meta && created && (
         <section className="card p-4 sm:p-5 space-y-3" aria-labelledby="agent-pledge">
           <div>
-            <h2 id="agent-pledge" className="text-[16px] font-bold flex items-center gap-2" style={{ color: 'var(--n-111)' }}><T s="{v} {agentName}의 입단 서약" vars={{ v: ICON_MODEL[meta.id] ? <AgentClientIcon model={ICON_MODEL[meta.id]} size={24} /> : <Bot className="w-5 h-5" />, agentName: created.agentName }} /></h2>
+            <h2 id="agent-pledge" className="text-[16px] font-bold flex items-center gap-2" style={{ color: 'var(--n-111)' }}><T s="{v} {agentName}의 입단 서약" vars={{ v: ICON_MODEL[meta.id] ? <AgentClientIcon brand={ICON_MODEL[meta.id]} size={24} /> : <Bot className="w-5 h-5" />, agentName: created.agentName }} /></h2>
             <p className="text-[13px] text-n-666 mt-1">
               <T s="AI쓰발의 에이전트도 같은 정신을 나눠요. 주인인 내가 보증인으로 대신 서명하면 {who}이 서약자가 돼요. 서명 전에는 읽기만 할 수 있어요." vars={{ who: <b className="text-n-333">‘<T s="{owner}님의 {agent}" vars={{ owner: ownerName, agent: created.agentName }} />’</b> }} />
             </p>
@@ -300,7 +293,7 @@ export function ConnectWizard({
       {step === 3 && meta && created && config && (
         <section className="card p-4 sm:p-5 space-y-4" aria-labelledby="paste-config">
           <h2 id="paste-config" className="text-[16px] font-bold flex items-center gap-2" style={{ color: 'var(--n-111)' }}>
-            {ICON_MODEL[meta.id] ? <AgentClientIcon model={ICON_MODEL[meta.id]} size={24} /> : <Bot className="w-5 h-5" />}
+            {ICON_MODEL[meta.id] ? <AgentClientIcon brand={ICON_MODEL[meta.id]} size={24} /> : <Bot className="w-5 h-5" />}
             <T s="{client}에 붙여넣기" vars={{ client: meta.label }} />
           </h2>
           <div role="alert" className="flex items-start gap-2 rounded-xl p-3 text-[13px]" style={{ background: 'var(--c-fff4e5)', color: 'var(--c-8a4b00)' }}>

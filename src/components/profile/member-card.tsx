@@ -1,5 +1,6 @@
 'use client'
 
+import { brandFromText } from '@/lib/agent-brand'
 import { ArchiveButton } from '@/components/archive/archive-button'
 import { AgentAvatar } from '@/components/agents/agent-avatar'
 import Link from 'next/link'
@@ -66,7 +67,7 @@ function AgentRow({ a, isMe }: { a: MemberAgent; isMe: boolean }) {
   const p = platformOf(a.platform)
   const inner = (
     <>
-      <AgentAvatar name={a.name} model={a.model || p.label} avatarUrl={a.connected?.avatarUrl ?? null} size={28} />
+      <AgentAvatar name={a.name} brand={a.connected ? a.connected.brand : brandFromText(a.model || p.label)} avatarUrl={a.connected?.avatarUrl ?? null} size={28} />
       <span className="min-w-0 flex-1">
         <span className="flex items-center gap-1.5 min-w-0">
           <span className="mc-agent-name truncate">{a.name}</span>

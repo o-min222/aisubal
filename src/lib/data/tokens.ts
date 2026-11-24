@@ -1,4 +1,5 @@
 import { pledgeDigest } from '@/lib/pledge-record'
+import { parseBrand, resolveAgentBrand, type AgentBrand } from '@/lib/agent-brand'
 import { agentSigner } from '@/lib/pledge'
 import { createHash, randomBytes } from 'crypto'
 import type { TokenScope } from '@/lib/supabase/types'
@@ -9,6 +10,8 @@ import { sb, isMock } from './client'
 const gAgents = globalThis as unknown as { __aisubalAgentNames?: Map<string, string> }
 /** DEV mock: agent names of tokens issued in this process */
 const mockAgentNames = (): Map<string, string> => (gAgents.__aisubalAgentNames ??= new Map())
+/** DEV mock: photos saved through the profile editor (agent-profiles.ts keeps the same map) */
+const mockPhoto = (id: string): string | null | undefined => (globalThis as unknown as { __aisubalAgentProfiles?: Map<string, { avatarUrl?: string | null }> }).__aisubalAgentProfiles?.get(id)?.avatarUrl
 
 export type PublicToken = {
   id: string
@@ -36,10 +39,12 @@ export type PublicToken = {
   /** 0050 agent profile */
   agentBio?: string | null
   agentAvatarUrl?: string | null
+  /** A69: api_tokens.agent_brand (0122), the one brand mark for this agent */
+  brand?: AgentBrand | null
 }
 
 const TOKEN_COLS =
-  'id, name, agent_name, agent_handle, agent_model, scopes, token_prefix, created_at, last_used_at, expires_at, client, first_used_at, last_client_info, show_on_profile, pledge_signed_at, pledge_no, pledge_hash, agent_bio, agent_avatar_url, oauth_client_id'
+  'id, name, agent_name, agent_handle, agent_model, scopes, token_prefix, created_at, last_used_at, expires_at, client, first_used_at, last_client_info, show_on_profile, pledge_signed_at, pledge_no, pledge_hash, agent_bio, agent_avatar_url, oauth_client_id, agent_brand'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function fromRow(t: any): PublicToken {
@@ -64,6 +69,7 @@ function fromRow(t: any): PublicToken {
     pledgeHash: t.pledge_hash ?? null,
     agentBio: t.agent_bio ?? null,
     agentAvatarUrl: t.agent_avatar_url ?? null,
+    brand: parseBrand(t.agent_brand),
   }
 }
 
@@ -124,8 +130,9 @@ export async function listApiTokens(memberId: string): Promise<PublicToken[]> {
         id: a.id, name: a.name, agentName: a.name, agentModel: null, scopes: a.scopes, tokenPrefix: 'aisubal_', oauth: true,
         createdAt: new Date().toISOString(), lastUsedAt: null, expiresAt: null, client: null, firstUsedAt: null, clientInfo: null,
         showOnProfile: true, pledgeSignedAt: mockPledged().get(a.id) ?? null, pledgeNo: null, pledgeHash: null,
+        oauthClientName: a.oauthClientName,
       })),
-    ] as PublicToken[]).filter((t) => !mockDeletedAgents.has(t.id))
+    ] as Array<PublicToken & { oauthClientName?: string | null }>).filter((t) => !mockDeletedAgents.has(t.id)).map(({ oauthClientName, ...t }) => ({ ...t, agentAvatarUrl: mockPhoto(t.id) ?? t.agentAvatarUrl ?? null, brand: resolveAgentBrand({ model: t.agentModel, client: t.client, oauthClientName, clientInfo: t.clientInfo }) }))
   }
 
   const supabase = await sb()
@@ -314,6 +321,8 @@ export type ProfileAgent = {
   lastUsedAt: string | null
   showOnProfile: boolean
   avatarUrl?: string | null
+  /** A69: api_tokens.agent_brand */
+  brand?: AgentBrand | null
   bio?: string | null
   /** owner only */
   scopes: string[] | null
@@ -384,7 +393,7 @@ function mockAgents(viewerId: string, memberId: string): ProfileAgent[] {
 }
 
 export async function listProfileAgents(viewerId: string, memberId: string): Promise<ProfileAgent[]> {
-  if (isMock()) return mockAgents(viewerId, memberId)
+  if (isMock()) return mockAgents(viewerId, memberId).map((a) => ({ ...a, avatarUrl: mockPhoto(a.id) ?? a.avatarUrl ?? null, brand: resolveAgentBrand({ model: a.agentModel, client: a.client, clientInfo: a.clientInfo }) }))
   const supabase = await sb()
   const { data, error } = await supabase.rpc('profile_agents', { p_member: memberId })
   if (error) throw error
@@ -399,6 +408,7 @@ export async function listProfileAgents(viewerId: string, memberId: string): Pro
     lastUsedAt: a.last_used_at ?? null,
     showOnProfile: a.show_on_profile !== false,
     avatarUrl: a.avatar_url ?? null,
+    brand: parseBrand(a.brand),
     bio: a.bio ?? null,
     scopes: Array.isArray(a.scopes) ? a.scopes.map((x: string) => x.trim()) : null,
     clientInfo: a.client_info ?? null,

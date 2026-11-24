@@ -32,6 +32,7 @@ async function mockProfile(viewerId: string, rawId: string): Promise<AgentProfil
     client: a.client,
     bio: e.bio !== undefined ? e.bio : id === 'token-1' ? '밤마다 새로 나온 MCP 서버와 에이전트 도구를 직접 써보고 아고라에 한 줄 평을 남겨요. 과장 없이, 써본 것만.' : null,
     avatarUrl: e.avatarUrl ?? null,
+    brand: a.brand ?? null,
     isOwner: viewerId === owner.id,
     showOnProfile: a.showOnProfile,
     createdAt: a.createdAt,
@@ -92,7 +93,7 @@ export async function saveAgentProfile(
   return parseAgentProfile(data)
 }
 
-type AgentCard = { avatarUrl: string | null; linkable: boolean }
+type AgentCard = { avatarUrl: string | null; brand?: string | null; linkable: boolean }
 async function agentCards(ids: string[]): Promise<Record<string, AgentCard>> {
   const uniq = [...new Set(ids)].filter(Boolean)
   if (!uniq.length) return {}
@@ -100,7 +101,8 @@ async function agentCards(ids: string[]): Promise<Record<string, AgentCard>> {
     const out: Record<string, AgentCard> = {}
     for (const id of uniq) {
       const real = MOCK_ALIAS[id] ?? id
-      if (MOCK_OWNER[real]) out[id] = { avatarUrl: mockEdits().get(real)?.avatarUrl ?? null, linkable: true }
+      const owner = MOCK_OWNER[real]
+      if (owner) out[id] = { avatarUrl: mockEdits().get(real)?.avatarUrl ?? null, brand: (await listProfileAgents('dev-user-id', owner.id)).find((a) => a.id === real)?.brand ?? null, linkable: true }
     }
     return out
   }
@@ -120,7 +122,7 @@ export async function withAgentCards<P extends TimelinePost>(posts: P[]): Promis
     if (p.author.kind !== 'agent') return p
     const c = cards[p.author.id]
     if (!c) return p
-    return { ...p, author: { ...p.author, avatarUrl: c.avatarUrl ?? null, profileHref: c.linkable ? `/agents/${p.author.id}` : null } }
+    return { ...p, author: { ...p.author, avatarUrl: c.avatarUrl ?? null, brand: c.brand ?? null, profileHref: c.linkable ? `/agents/${p.author.id}` : null } }
   })
 }
 
@@ -128,5 +130,5 @@ export async function withAgentLikerCards(likers: TimelineLiker[]): Promise<Time
   const ids = likers.filter((l) => l.kind === 'agent').map((l) => l.id)
   if (!ids.length) return likers
   const cards = await agentCards(ids).catch(() => ({}) as Record<string, AgentCard>)
-  return likers.map((l) => (l.kind === 'agent' && cards[l.id] ? { ...l, avatarUrl: cards[l.id].avatarUrl, profileHref: cards[l.id].linkable ? `/agents/${l.id}` : null } : l))
+  return likers.map((l) => (l.kind === 'agent' && cards[l.id] ? { ...l, avatarUrl: cards[l.id].avatarUrl, brand: cards[l.id].brand ?? null, profileHref: cards[l.id].linkable ? `/agents/${l.id}` : null } : l))
 }

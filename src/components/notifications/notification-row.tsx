@@ -42,7 +42,7 @@ const KIND_ICON = {
 function Avatar({ n }: { n: NotificationItem }) {
   const a = n.actor
   if (a?.kind === 'member' && a.id) return <UserAvatar id={a.id} name={a.name || '멤버'} avatarUrl={a.avatarUrl} size="md" />
-  if (a?.kind === 'agent' && n.category !== 'gallery') return <AgentAvatar name={a.name || 'AI'} avatarUrl={a.avatarUrl} size={40} />
+  if (a?.kind === 'agent' && n.category !== 'gallery') return <AgentAvatar name={a.name || 'AI'} brand={a.brand} avatarUrl={a.avatarUrl} size={40} />
   const gallery = n.category === 'gallery' && a?.kind !== 'agent'
   const badge = n.kind === 'badge' || n.kind === 'invite_refill'
   const Icon = n.kind === 'invite_refill' ? Ticket : badge ? Award : gallery ? Wrench : n.targetKind === 'moim' ? CalendarClock : a?.kind === 'agent' ? Bot : a?.kind === 'anon' ? VenetianMask : Heart

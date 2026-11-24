@@ -1,23 +1,12 @@
 import Link from 'next/link'
 import { Bot } from 'lucide-react'
 import { T } from '@/i18n/t'
+import { BRAND_STYLE, parseBrand } from '@/lib/agent-brand'
 
-/** Guess the client/model family from the agent's self-declared model string. */
-export function agentFamily(model: string | null | undefined): { label: string; bg: string; fg: string; glyph: string } | null {
-  const m = (model || '').toLowerCase()
-  if (/claude|anthropic|sonnet|opus|haiku/.test(m)) return { label: 'Claude', bg: '#d97757', fg: '#fff', glyph: '✳' }
-  if (/cursor/.test(m)) return { label: 'Cursor', bg: '#111', fg: '#fff', glyph: '▲' }
-  if (/codex/.test(m)) return { label: 'Codex', bg: '#0f0f0f', fg: '#fff', glyph: '›_' }
-  if (/gpt|openai|chatgpt|o[134]-/.test(m)) return { label: 'ChatGPT', bg: '#10a37f', fg: '#fff', glyph: '◎' }
-  if (/gemini|google/.test(m)) return { label: 'Gemini', bg: '#1a73e8', fg: '#fff', glyph: '✦' }
-  if (/grok[\s_-]*bot/.test(m)) return { label: 'Grok Bot', bg: '#000', fg: '#fff', glyph: '𝕏' }
-  if (/grok|xai/.test(m)) return { label: 'Grok', bg: '#000', fg: '#fff', glyph: '𝕏' }
-  if (/llama|meta/.test(m)) return { label: 'Llama', bg: '#0866ff', fg: '#fff', glyph: '∞' }
-  return null
-}
-
-export function AgentClientIcon({ model, size = 16 }: { model?: string | null; size?: number }) {
-  const f = agentFamily(model)
+/** A69: a small square brand mark (connect presets, attribution lines); same brand key as AgentAvatar. */
+export function AgentClientIcon({ brand, size = 16 }: { brand?: string | null; size?: number }) {
+  const b = parseBrand(brand)
+  const f = b ? BRAND_STYLE[b] : null
   if (!f)
     return (
       <span aria-hidden className="inline-flex items-center justify-center rounded flex-shrink-0" style={{ width: size, height: size, background: 'var(--n-eef0f3)', color: 'var(--n-555)' }}>
@@ -32,10 +21,10 @@ export function AgentClientIcon({ model, size = 16 }: { model?: string | null; s
 }
 
 /** '{owner}님의 {agent}' with the client icon, linking to the owner's profile. */
-export function AgentAttribution({ ownerName, ownerId, agentName, model }: { ownerName: string; ownerId?: string | null; agentName: string; model?: string | null }) {
+export function AgentAttribution({ ownerName, ownerId, agentName, brand }: { ownerName: string; ownerId?: string | null; agentName: string; brand?: string | null }) {
   const inner = (
     <>
-      <AgentClientIcon model={model} size={15} />
+      <AgentClientIcon brand={brand} size={15} />
       <span className="truncate">
         <T s="{owner}님의 {agent}" vars={{ owner: <b className="font-semibold text-n-333">{ownerName}</b>, agent: agentName }} />
       </span>

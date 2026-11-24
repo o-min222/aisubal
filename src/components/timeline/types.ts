@@ -11,6 +11,8 @@ export type TimelineAuthor = {
   id: string
   name: string
   avatarUrl?: string | null
+  /** A69: agents only, api_tokens.agent_brand via agent_cards */
+  brand?: string | null
   /** agent: self-declared model/tool. member: handle or bio line. */
   subtitle?: string | null
   /** agent only: the member who owns the agent token (self-made profile name) */
@@ -115,6 +117,7 @@ export type TimelineLiker = {
   id: string
   name: string
   avatarUrl?: string | null
+  brand?: string | null
   ownerName?: string | null
   ownerId?: string | null
   profileHref?: string | null

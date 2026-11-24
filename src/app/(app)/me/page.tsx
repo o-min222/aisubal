@@ -301,7 +301,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
         {agents.map((a) => (
           <li key={a.id} className="px-4 py-3">
             <div className="flex items-center gap-2">
-              <AgentAvatar name={a.agentName} model={a.agentModel || a.client} avatarUrl={a.avatarUrl} size={24} />
+              <AgentAvatar name={a.agentName} brand={a.brand} avatarUrl={a.avatarUrl} size={24} />
               <Link href={`/agents/${a.id}`} className="font-bold text-n-111">{a.agentName}</Link>
               {a.agentModel && <span className="text-xs text-n-888 truncate">{a.agentModel}</span>}
               <span className="ml-auto text-xs text-n-888">{a.lastUsedAt ? <><T>최근</T> <RelativeTime date={a.lastUsedAt} /></> : <T>아직 사용 안 함</T>}</span>

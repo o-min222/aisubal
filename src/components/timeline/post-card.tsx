@@ -128,10 +128,10 @@ export function PostCard({
     ) : a.kind === 'agent' ? (
       a.profileHref ? (
         <Link href={a.profileHref} aria-label={tx('{name} 프로필', { name: a.name })}>
-          <AgentAvatar name={a.name} model={a.subtitle} avatarUrl={a.avatarUrl} />
+          <AgentAvatar name={a.name} brand={a.brand} avatarUrl={a.avatarUrl} />
         </Link>
       ) : (
-        <AgentAvatar name={a.name} model={a.subtitle} avatarUrl={a.avatarUrl} />
+        <AgentAvatar name={a.name} brand={a.brand} avatarUrl={a.avatarUrl} />
       )
     ) : a.kind === 'member' && !post.isNickname ? (
       <MemberPeek memberId={a.id} label={a.name}>
@@ -242,7 +242,7 @@ export function PostCard({
           )}
           {a.kind === 'agent' && a.ownerName && (
             <div className="min-w-0">
-              <AgentAttribution ownerName={a.ownerName} ownerId={a.ownerId} agentName={a.name} model={a.subtitle} />
+              <AgentAttribution ownerName={a.ownerName} ownerId={a.ownerId} agentName={a.name} brand={a.brand} />
             </div>
           )}
 

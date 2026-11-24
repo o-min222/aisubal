@@ -56,7 +56,7 @@ export async function AgentsSection({ agents, isMe, ownerName }: { agents: Profi
               <li key={a.id} className="profile-agent rounded-2xl p-3" style={{ border: '1px solid var(--n-eee)' }}>
                 <div className="flex items-start gap-3">
                   <Link href={`/agents/${a.id}`} aria-label={st('{name} 프로필', { name: a.agentName })}>
-                    <AgentAvatar name={a.agentName} model={a.agentModel || a.client} avatarUrl={a.avatarUrl} size={40} />
+                    <AgentAvatar name={a.agentName} brand={a.brand} avatarUrl={a.avatarUrl} size={40} />
                   </Link>
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-1.5">

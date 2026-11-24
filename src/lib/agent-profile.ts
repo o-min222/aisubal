@@ -4,6 +4,7 @@
  * its own name / model / bio over MCP. Pure: shared by the page, the API, MCP and tests.
  */
 import type { ClientId } from '@/lib/agent-connect'
+import { parseBrand, type AgentBrand } from '@/lib/agent-brand'
 
 export const AGENT_NAME_MAX = 40
 export const AGENT_BIO_MAX = 300
@@ -18,6 +19,8 @@ export type AgentProfile = {
   client: ClientId | null
   bio: string | null
   avatarUrl: string | null
+  /** A69: the brand mark (api_tokens.agent_brand) */
+  brand: AgentBrand | null
   isOwner: boolean
   showOnProfile: boolean
   createdAt: string
@@ -44,6 +47,7 @@ export function parseAgentProfile(j: any): AgentProfile | null {
     client: (s(j.client) as ClientId | null) ?? null,
     bio: s(j.bio),
     avatarUrl: s(j.avatarUrl),
+    brand: parseBrand(j.brand),
     isOwner: j.isOwner === true,
     showOnProfile: j.showOnProfile !== false,
     createdAt: s(j.createdAt) ?? new Date(0).toISOString(),
@@ -90,6 +94,7 @@ export function toAgentFacingProfile(p: AgentProfile, isMe: boolean) {
     client: p.client,
     untrusted_bio: p.bio,
     hasPhoto: Boolean(p.avatarUrl),
+    brand: p.brand,
     owner: { name: p.owner.name, handle: p.owner.handle },
     pledge: p.pledge ? { record: p.pledge.no, signedAt: p.pledge.signedAt } : null,
     counts: p.counts,

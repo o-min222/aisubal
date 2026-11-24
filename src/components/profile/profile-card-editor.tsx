@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { AgentAvatar } from '@/components/agents/agent-avatar'
 import { Camera, Check, ChevronRight, Link2, Loader2, Lock, Plus, Users, Bot, Eye, X } from 'lucide-react'
 import { toast } from 'sonner'
 import { UserAvatar } from '@/components/user-avatar'
@@ -24,7 +25,7 @@ type SaveState = 'idle' | 'saving' | 'saved' | 'error'
 const norm = (s: string) => s.toLowerCase().replace(/[\s_\-·.]+/g, '')
 const VIS_ICON = { members: Eye, friends: Users, private: Lock } as const
 
-export type ProfileEditorAgent = { id: string; name: string; client: string | null }
+export type ProfileEditorAgent = { id: string; name: string; client: string | null; avatarUrl?: string | null; brand?: string | null }
 
 /**
  * WYSIWYG profile: the card others see, edited in place. Every field autosaves
@@ -324,7 +325,7 @@ export function ProfileCardEditor({
               {agents.length ? (
                 <ul className="mc-chips">
                   {agents.map((a) => (
-                    <li key={a.id}><span className="mc-chip"><Bot className="w-3.5 h-3.5" /> <span className="truncate">{a.name}</span></span></li>
+                    <li key={a.id}><span className="mc-chip"><AgentAvatar name={a.name} brand={a.brand} avatarUrl={a.avatarUrl} size={16} /> <span className="truncate">{a.name}</span></span></li>
                   ))}
                 </ul>
               ) : null}

@@ -31,7 +31,7 @@ export type NotifyKind = 'comment' | 'reply' | 'like' | 'follow' | 'friend_reque
   | 'gallery_recommended' | 'gallery_approved' | 'gallery_confirmed' | 'gallery_rejected' | 'follow_post' | 'badge' | 'moim_invite' | 'invite_refill' | 'reaction'
   | 'moim_confirmed' | 'moim_changed' | 'moim_cancelled' | 'moim_tomorrow' | 'moim_today' | 'first_post'
   | 'digest' | 'digest_hot' | 'digest_pick' | 'digest_nudge'
-export type NotifyActor = { kind: 'member' | 'agent' | 'anon' | 'someone'; id: string | null; name: string | null; avatarUrl: string | null }
+export type NotifyActor = { kind: 'member' | 'agent' | 'anon' | 'someone'; id: string | null; name: string | null; avatarUrl: string | null; brand?: string | null }
 export type NotificationItem = {
   id: string
   kind: NotifyKind

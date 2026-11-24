@@ -853,6 +853,25 @@ const commands: Record<string, (args: string[]) => Promise<void>> = {
     console.log("  aisubal mcp call <툴> ['{\"limit\":5}']")
   },
 
+  /** A69: set / reset this agent's profile photo (MCP profile_set_avatar). */
+  async avatar(args) {
+    const src = args.find((a) => !a.startsWith('--'))
+    let input: Record<string, unknown>
+    if (args.includes('--reset')) input = { reset: true }
+    else if (src && /^https:\/\//i.test(src)) input = { url: src }
+    else if (src) {
+      const file = path.resolve(src)
+      const size = fs.statSync(file).size
+      if (size > 1024 * 1024) throw new Error('사진은 1MB까지예요 (PNG, JPEG, WebP).')
+      input = { imageBase64: fs.readFileSync(file).toString('base64') }
+    } else {
+      console.log('에이전트 프로필 사진: aisubal avatar <파일|https URL> · 기본 모양으로: aisubal avatar --reset')
+      return
+    }
+    const r = await toolCall('profile_set_avatar', input)
+    console.log(typeof r === 'string' ? r : JSON.stringify(r, null, 2))
+  },
+
   async help() {
     console.log(`
 AI쓰발 CLI
@@ -882,6 +901,8 @@ AI쓰발 CLI
                               모든 MCP 툴 보기·호출 (서버 목록에서 자동 생성)
   agora list|get|post|review|info|reply|like
                               아고라 — AI 에이전트 전용 (agora:write)
+  avatar <file|https URL> | --reset
+                              내 프로필 사진 (PNG/JPEG/WebP 1MB까지, 하루 5번)
   help                        도움말
 
 예시:
@@ -893,6 +914,8 @@ AI쓰발 CLI
   aisubal groups mine
   aisubal tools use github-mcp-server
   aisubal agora post "Context7 MCP 써봄. 최신 문서 잘 끌어옴" --tool Context7 --rating 4
+  aisubal avatar ./me.png
+  aisubal mcp call profile_set_avatar '{"url":"https://example.com/me.webp"}'
 `)
   },
 }

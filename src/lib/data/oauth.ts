@@ -1,4 +1,5 @@
 import { createAnonClient } from '@/lib/supabase/anon'
+import { brandFromText } from '@/lib/agent-brand'
 import { sb, isMock } from './client'
 
 /** A66 P4: OAuth storage (0115). Every call goes through SECURITY DEFINER RPCs; dev uses an in-memory store. */
@@ -17,7 +18,7 @@ const g = globalThis as unknown as { __aisubalOAuth?: MockStore }
 const mock = (): MockStore => (g.__aisubalOAuth ??= { clients: new Map(), codes: new Map(), refresh: new Map(), agents: new Map() })
 
 /** dev only: agents created through the mock OAuth flow (shown in 내 에이전트) */
-export const mockOAuthAgents = () => [...mock().agents.entries()].map(([id, a]) => ({ id, name: a.name, scopes: a.scopes }))
+export const mockOAuthAgents = () => [...mock().agents.entries()].map(([id, a]) => ({ id, name: a.name, scopes: a.scopes, oauthClientName: mock().clients.get(a.clientId)?.name ?? null }))
 
 export async function registerClient(c: { name: string; redirectUris: string[]; clientUri?: string | null; softwareId?: string | null; softwareVersion?: string | null }): Promise<{ clientId: string; issuedAt: number } | { error: string }> {
   if (isMock()) {
@@ -43,18 +44,18 @@ export async function getClient(clientId: string): Promise<OAuthClient | null> {
 }
 
 /** the member's agents already connected through this client (consent screen: reconnect instead of a new agent) */
-export async function myOAuthAgents(memberId: string, clientId: string): Promise<{ id: string; name: string; lastUsedAt: string | null }[]> {
-  if (isMock()) return [...mock().agents.entries()].filter(([, a]) => a.clientId === clientId).map(([id, a]) => ({ id, name: a.name, lastUsedAt: null }))
+export async function myOAuthAgents(memberId: string, clientId: string): Promise<{ id: string; name: string; lastUsedAt: string | null; avatarUrl?: string | null; brand?: string | null }[]> {
+  if (isMock()) return [...mock().agents.entries()].filter(([, a]) => a.clientId === clientId).map(([id, a]) => ({ id, name: a.name, lastUsedAt: null, brand: brandFromText(mock().clients.get(a.clientId)?.name) }))
   const s = await sb()
   const { data } = await s
     .from('api_tokens')
-    .select('id, agent_name, name, last_used_at')
+    .select('id, agent_name, name, last_used_at, agent_avatar_url, agent_brand')
     .eq('member_id', memberId)
     .eq('oauth_client_id', clientId)
     .eq('is_revoked', false)
     .order('last_used_at', { ascending: false, nullsFirst: false })
     .limit(10)
-  return (data ?? []).map((t) => ({ id: t.id as string, name: (t.agent_name as string) || (t.name as string), lastUsedAt: (t.last_used_at as string) ?? null }))
+  return (data ?? []).map((t) => ({ id: t.id as string, name: (t.agent_name as string) || (t.name as string), lastUsedAt: (t.last_used_at as string) ?? null, avatarUrl: (t.agent_avatar_url as string) ?? null, brand: (t.agent_brand as string) ?? null }))
 }
 
 export async function createCode(p: { codeHash: string; clientId: string; redirectUri: string; challenge: string; scopes: string[]; agentName: string; tokenId: string | null; resource: string | null }): Promise<{ ok: true } | { error: string }> {

@@ -89,9 +89,9 @@ export function LikerList({
               <li key={`${l.kind}-${l.id}`} className="flex items-center gap-3 px-1 py-2 min-h-[48px]">
                 {l.kind === 'agent' ? (
                   l.profileHref ? (
-                    <Link href={l.profileHref} aria-label={l.name}><AgentAvatar name={l.name} avatarUrl={l.avatarUrl} size={32} /></Link>
+                    <Link href={l.profileHref} aria-label={l.name}><AgentAvatar name={l.name} brand={l.brand} avatarUrl={l.avatarUrl} size={32} /></Link>
                   ) : (
-                    <AgentAvatar name={l.name} avatarUrl={l.avatarUrl} size={32} />
+                    <AgentAvatar name={l.name} brand={l.brand} avatarUrl={l.avatarUrl} size={32} />
                   )
                 ) : (
                   <UserAvatar id={l.id} name={l.name} avatarUrl={l.avatarUrl} size="sm" />
@@ -103,7 +103,7 @@ export function LikerList({
                   </div>
                   {l.kind === 'agent' && l.ownerName && (
                     <div className="min-w-0">
-                      <AgentAttribution ownerName={l.ownerName} ownerId={l.ownerId} agentName={l.name} />
+                      <AgentAttribution ownerName={l.ownerName} ownerId={l.ownerId} agentName={l.name} brand={l.brand} />
                     </div>
                   )}
                 </div>

@@ -18,7 +18,8 @@ import {
   TOOLBOX_ENV_LABEL,
 } from '@/lib/toolbox-rules'
 import { AGENT_REPLY_MAX_CHARS as FEED_MAX_CHARS } from '@/lib/feed-rules'
-import { fetchPageSnapshot } from '@/lib/safe-fetch'
+import { fetchPageSnapshot, safeFetchBytes } from '@/lib/safe-fetch'
+import { AVATAR_INPUT_MAX, decodeBase64Image, processAvatar } from '@/lib/agent-avatar-image'
 import { isStale } from '@/lib/tool-review'
 import { AGENT_BIO_MAX, AGENT_NAME_MAX, AGENT_PROFILE_NOTICE, parseAgentProfile, toAgentFacingProfile } from '@/lib/agent-profile'
 import { revalidatePath } from 'next/cache'
@@ -47,6 +48,19 @@ const isUuid = (v: unknown): v is string => typeof v === 'string' && UUID_RE.tes
 const str = (v: unknown) => (typeof v === 'string' && v.trim() ? v.trim() : null)
 const num = (v: unknown, d: number, max: number) => Math.min(Math.max(Number(v) || d, 1), max)
 
+/** profile_set_avatar url: why the server refused to download it */
+const AVATAR_FETCH_ERRORS: Record<string, string> = {
+  scheme_not_allowed: 'url must be https.',
+  blocked_address: 'url must point to a public internet address.',
+  blocked_host: 'url must point to a public internet host.',
+  port_not_allowed: 'url must use the default https port.',
+  credentials_in_url: 'url must not contain a username or password.',
+  invalid_url: 'url is not a valid URL.',
+  too_large: 'The image is over 1 MB.',
+  timeout: 'The image URL took too long to answer.',
+  too_many_redirects: 'The image URL redirected too many times (max 3).',
+}
+
 export function dataErrorMessage(raw: string | null | undefined): string {
   const m = raw || ''
   if (m.includes('agent_mention_real_name')) return 'Do not mention members by real name. Use their @handle instead.'
@@ -71,6 +85,8 @@ export function dataErrorMessage(raw: string | null | undefined): string {
   if (m.includes('api_invalid:name')) return 'name must be 1-40 characters.'
   if (m.includes('api_invalid:bio')) return 'bio must be 300 characters or fewer.'
   if (m.includes('api_invalid:model')) return 'model must be 60 characters or fewer.'
+  if (m.includes('api_invalid:avatar_rate')) return 'Photo limit: max 5 changes a day. Try again tomorrow.'
+  if (m.includes('api_invalid:avatar_image')) return 'Could not store that image.'
   if (m.includes('api_nickname_missing')) return '부캐 프로필은 더 이상 쓸 수 없어요.'
   if (m.includes('api_invalid')) return `Invalid input (${m.split('api_invalid:')[1]?.split(/\s/)[0] || 'payload'}).`
   return 'Request failed.'
@@ -498,6 +514,35 @@ export async function handleDataTool(
         revalidatePath('/', 'layout')
         const p = parseAgentProfile(raw)
         return p ? { ok: true, agent: toAgentFacingProfile(p, true) } : { ok: true }
+      }
+      case 'agent_avatar_set': {
+        const b64 = typeof args.imageBase64 === 'string' && args.imageBase64.trim() ? args.imageBase64 : null
+        const url = typeof args.url === 'string' && args.url.trim() ? args.url.trim() : null
+        const reset = args.reset === true
+        if (Number(Boolean(b64)) + Number(Boolean(url)) + Number(reset) !== 1) return { error: 'Pass exactly one of imageBase64, url or reset=true.' }
+        if (reset) {
+          const raw = (await call('mcp_agent_avatar_reset', {})) as Record<string, unknown>
+          revalidatePath('/', 'layout')
+          const p = parseAgentProfile(raw)
+          return { ok: true, reset: true, agent: p ? toAgentFacingProfile(p, true) : undefined }
+        }
+        let bytes: Buffer
+        if (b64) {
+          if (b64.length > Math.ceil((AVATAR_INPUT_MAX * 4) / 3) + 128) return { error: 'imageBase64 is over 1 MB.' }
+          const d = decodeBase64Image(b64)
+          if (!d) return { error: 'imageBase64 is not valid base64.' }
+          bytes = d
+        } else {
+          const r = await safeFetchBytes(url as string, AVATAR_INPUT_MAX)
+          if (!r.ok) return { error: AVATAR_FETCH_ERRORS[r.error] ?? (r.error.startsWith('http_') ? `The image URL answered ${r.error.slice(5)}.` : 'Could not download the image.') }
+          bytes = r.body
+        }
+        const img = await processAvatar(bytes)
+        if (!img.ok) return { error: img.error === 'too_large' ? 'The image is over 1 MB.' : img.error === 'not_image' ? 'Only PNG, JPEG or WebP images (checked from the file bytes).' : 'Could not read that image.' }
+        const raw = (await call('mcp_agent_avatar_set', { p_webp_b64: img.webp.toString('base64') })) as Record<string, unknown>
+        revalidatePath('/', 'layout')
+        const p = parseAgentProfile(raw)
+        return { ok: true, agent: p ? toAgentFacingProfile(p, true) : undefined, changesLeftToday: Number(raw?.changesLeftToday ?? 0) }
       }
       case 'review_approve':
       case 'review_edit':

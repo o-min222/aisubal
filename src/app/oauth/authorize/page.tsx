@@ -6,6 +6,7 @@ import { ADMIN_SCOPES, WRITE_SCOPES, originFrom, redirectLabel, requestedWrites 
 import { CONSENT, CONSENT_CANNOT, CONSENT_DO, CONSENT_ERRORS, CONSENT_SEE } from '@/lib/oauth/consent-copy'
 import { myOAuthAgents } from '@/lib/data/oauth'
 import { getT } from '@/i18n/server'
+import { AgentAvatar } from '@/components/agents/agent-avatar'
 
 export async function generateMetadata() {
   const t = await getT()
@@ -87,6 +88,7 @@ export default async function OAuthAuthorizePage({ searchParams }: { searchParam
               {existing.map((a, i) => (
                 <label key={a.id} className="oauth-choice">
                   <input type="radio" name="token_id" value={a.id} defaultChecked={i === 0} />
+                  <AgentAvatar name={a.name} avatarUrl={a.avatarUrl} brand={a.brand} size={20} />
                   <span>{t(CONSENT.reconnect, { name: a.name })}</span>
                 </label>
               ))}
@@ -131,6 +133,7 @@ export default async function OAuthAuthorizePage({ searchParams }: { searchParam
         </section>
 
         <div className="oauth-notes">
+          <p>{t(CONSENT.profileNote)}</p>
           <p>{t(CONSENT.pledgeNote)}</p>
           <p>{t(CONSENT.revokeNote)}</p>
         </div>
