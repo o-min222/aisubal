@@ -16,6 +16,7 @@ import { BottomTabs, ComposeFab } from '@/components/shell/bottom-tabs'
 import { PullToRefresh } from '@/components/shell/pull-to-refresh'
 import { JustPosted } from '@/components/timeline/just-posted'
 import type { ShellMember } from '@/components/shell/nav-items'
+import { SeenPing } from '@/components/shell/seen-ping'
 import { getT } from '@/i18n/server'
 
 async function ProfileCardLoader({ member, me }: { member: Member; me: ShellMember }) {
@@ -65,6 +66,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     <div className="app-root">
       <TopBar me={me} />
       <PullToRefresh />
+      <SeenPing />
       <div className="app-grid">
         <aside className="app-left">
           <div className="app-sticky">

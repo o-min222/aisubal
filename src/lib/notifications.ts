@@ -3,6 +3,8 @@ import { badgeTierLabel, parseBadgeKey } from '@/lib/badges'
 
 /** 0048 notifications: categories double as the member's toggles (/settings/notifications). */
 export const NOTIFY_CATEGORIES = [
+  // A61: the gentle re-engagement digest (0110): at most daily, never at night, frequency in settings
+  { id: 'digest', label: msg('새 소식'), title: msg('새 소식'), hint: msg('하루 한 번, 낮 12시쯤 새 글이나 놓친 인기 글을 알려 드려요 · 밤 10시~아침 8시엔 보내지 않아요') },
   { id: 'replies', label: msg('댓글'), title: msg('내 글에 댓글·답글'), hint: msg('피드 · 그룹 · 익명 라운지') },
   { id: 'likes', label: msg('좋아요'), title: msg('좋아요'), hint: msg('같은 글의 좋아요는 한 줄로 모아요') },
   { id: 'following', label: msg('팔로잉 새 글'), title: msg('팔로우한 사람의 새 글'), hint: msg('한 사람이 연달아 올리면 한 줄로 모아요') },
@@ -15,8 +17,10 @@ export const NOTIFY_CATEGORIES = [
   { id: 'badges', label: msg('배지'), title: msg('배지 받음'), hint: msg('활동 배지를 새로 받거나 단계가 오를 때') },
 ] as const
 export type NotifyCategory = (typeof NOTIFY_CATEGORIES)[number]['id']
-export type NotifyPrefs = Record<NotifyCategory, boolean>
-export const DEFAULT_PREFS: NotifyPrefs = { replies: true, likes: true, following: true, social: true, gallery: true, invites: true, agents: true, badges: true, meetups: true, newcomers: true }
+/** digest_weekly: '새 소식' once a week instead of daily (only matters while digest is on) */
+export type NotifyPrefs = Record<NotifyCategory, boolean> & { digest_weekly: boolean }
+export type NotifyPrefKey = NotifyCategory | 'digest_weekly'
+export const DEFAULT_PREFS: NotifyPrefs = { replies: true, likes: true, following: true, social: true, gallery: true, invites: true, agents: true, badges: true, meetups: true, newcomers: true, digest: true, digest_weekly: false }
 
 export function parseNotifyCategory(v: string | string[] | null | undefined): NotifyCategory | null {
   const s = Array.isArray(v) ? v[0] : v
@@ -26,6 +30,7 @@ export function parseNotifyCategory(v: string | string[] | null | undefined): No
 export type NotifyKind = 'comment' | 'reply' | 'like' | 'follow' | 'friend_request' | 'friend_accept' | 'invite_joined' | 'agent_reply' | 'agent_like' | 'agent_mention' | 'mention'
   | 'gallery_recommended' | 'gallery_approved' | 'gallery_confirmed' | 'gallery_rejected' | 'follow_post' | 'badge' | 'moim_invite' | 'invite_refill' | 'reaction'
   | 'moim_confirmed' | 'moim_changed' | 'moim_cancelled' | 'moim_tomorrow' | 'moim_today' | 'first_post'
+  | 'digest' | 'digest_hot' | 'digest_pick' | 'digest_nudge'
 export type NotifyActor = { kind: 'member' | 'agent' | 'anon' | 'someone'; id: string | null; name: string | null; avatarUrl: string | null }
 export type NotificationItem = {
   id: string
@@ -87,6 +92,14 @@ export function notificationSentence(n: NotificationItem): { s: string; name: st
       return { s: msg('오늘 모임이 있어요'), name, n: 0 }
     case 'invite_joined':
       return { s: msg('{name}님이 내 초대로 가입했어요'), name, n: 0 }
+    case 'digest':
+      return { s: n.count > 1 ? msg('새 글 {n}개가 올라왔어요') : msg('새 글이 올라왔어요'), name, n: n.count }
+    case 'digest_pick':
+      return { s: msg('놓쳤을 수도 있는 인기 글이 있어요'), name, n: 0 }
+    case 'digest_nudge':
+      return { s: msg('오늘 AI쓰발에 잠깐 들러 보세요'), name, n: 0 }
+    case 'digest_hot':
+      return { s: msg('지금 반응이 뜨거운 글이 있어요'), name, n: 0 }
     case 'first_post':
       return { s: msg('{name}님이 첫 글을 올렸어요 — 첫 반응을 남겨 주세요'), name, n: 0 }
     case 'follow_post':
