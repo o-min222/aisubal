@@ -4,6 +4,8 @@ import { isDevMode } from '@/lib/auth'
 import { createAnonClient } from '@/lib/supabase/anon'
 import { McpContext } from '@/lib/mcp/dispatch'
 import { buildServer } from '@/lib/mcp/server'
+import { originFrom, wwwAuthenticate } from '@/lib/oauth/core'
+import { tokenUsable } from '@/lib/data/oauth'
 
 /**
  * A66: MCP over Streamable HTTP (official SDK), stateless: every POST is answered with plain JSON,
@@ -11,8 +13,12 @@ import { buildServer } from '@/lib/mcp/server'
  * Same URL and same JSON-RPC POST as before, so existing agents, the aisubal CLI and curl heartbeats
  * keep working: their missing Accept / Content-Type headers are filled in for the transport.
  */
-const rpcError = (id: unknown, code: number, message: string, status: number) =>
-  NextResponse.json({ jsonrpc: '2.0', error: { code, message }, id: id ?? null }, { status })
+const rpcError = (id: unknown, code: number, message: string, status: number, headers?: Record<string, string>) =>
+  NextResponse.json({ jsonrpc: '2.0', error: { code, message }, id: id ?? null }, { status, headers })
+
+/** A66 P4: every 401 points MCP clients at OAuth (RFC 9728); a presented-but-dead token says invalid_token so they refresh */
+const unauthorized = (request: NextRequest, id: unknown, message: string, presented: boolean) =>
+  rpcError(id, -32001, message, 401, { 'WWW-Authenticate': wwwAuthenticate(originFrom(request.headers), presented) })
 
 type Msg = { method?: unknown; id?: unknown; params?: { clientInfo?: { name?: unknown; version?: unknown } } }
 
@@ -37,7 +43,7 @@ export async function POST(request: NextRequest) {
   try {
     const authHeader = request.headers.get('authorization')
     const bearer = authHeader?.startsWith('Bearer ') ? authHeader.slice(7).trim() : null
-    if (!bearer && !isDevMode()) return rpcError(null, -32001, 'Unauthorized', 401)
+    if (!bearer && !isDevMode()) return unauthorized(request, null, 'Unauthorized', false)
 
     let body: unknown
     try {
@@ -55,7 +61,10 @@ export async function POST(request: NextRequest) {
       const ci = initialize?.params?.clientInfo
       const client = ci ? [ci.name, ci.version].filter((x) => typeof x === 'string' && x).join(' ') : null
       const { data: ok } = await createAnonClient().rpc('mcp_ping', { p_token: bearer, p_client: client || null })
-      if (ok !== true) return rpcError(handshake.id, -32001, 'Unauthorized: invalid, revoked or expired token', 401)
+      if (ok !== true) return unauthorized(request, handshake.id, 'Unauthorized: invalid, revoked or expired token', true)
+    } else if (bearer && !isDevMode() && msgs.some((m) => m?.id !== undefined)) {
+      // A66 P4: OAuth access tokens expire hourly; answer 401 (not a tool error) so the client refreshes
+      if (!(await tokenUsable(bearer))) return unauthorized(request, msgs.find((m) => m?.id !== undefined)?.id, 'Unauthorized: invalid, revoked or expired token', true)
     }
 
     const ctx = new McpContext(bearer, new URL(request.url).origin)
