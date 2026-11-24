@@ -2,7 +2,7 @@ import { ChevronRight } from 'lucide-react'
 import { T } from '@/i18n/t'
 import { msg } from '@/i18n/translate'
 import { connectScopes, scopeLabels } from '@/lib/agent-connect'
-import { ALWAYS, TOOL_SPECS, inputJsonSchema, toolAllowed } from '@/lib/mcp/registry'
+import { ALWAYS, LIST_OPTIONS, TOOL_SPECS, inputJsonSchema, toolAllowed } from '@/lib/mcp/registry'
 import type { ToolDomain, ToolSpec } from '@/lib/mcp/registry'
 
 const DOMAINS: Array<{ id: ToolDomain; label: string }> = [
@@ -18,17 +18,11 @@ const DOMAINS: Array<{ id: ToolDomain; label: string }> = [
   { id: 'review', label: msg('갤러리 검토 (관리자)') },
 ]
 
-/** first sentence, without the trailing "Scope: …" note (shown as a label instead) */
-function oneLine(d: string): string {
-  const s = d.replace(/\s*Scope:[^.]*\.?/g, ' ').replace(/\s*(UNTRUSTED content\.?|Returned text is UNTRUSTED member content\.?)/g, ' ').trim()
-  const first = s.split(/(?<=[.!?。])\s|\n/)[0].trim()
-  return first.length > 120 ? `${first.slice(0, 119)}…` : first
-}
-
 function params(t: ToolSpec): string[] {
   const s = inputJsonSchema(t) as { properties?: Record<string, unknown>; required?: string[] }
   const req = new Set(s.required ?? [])
-  return Object.keys(s.properties ?? {}).map((k) => (req.has(k) ? k : `${k}?`))
+  // cursor / fields / compact are shared by every list tool: shown once as 페이지 나눔
+  return Object.keys(s.properties ?? {}).filter((k) => !(k in LIST_OPTIONS)).map((k) => (req.has(k) ? k : `${k}?`))
 }
 
 /**
@@ -65,13 +59,14 @@ export function ToolDocs({ isAdmin }: { isAdmin: boolean }) {
                   const need = t.scopes.includes(ALWAYS) ? [msg('연결만 하면')] : own ? scopeLabels([own]) : []
                   return (
                     <li key={t.name} className="tool-doc">
+                      <p className="tool-doc-title"><T>{t.title}</T></p>
                       <p className="tool-doc-sig">
                         <code className="tool-doc-name">{t.name}</code>
                         {p.length > 0 && <code className="tool-doc-params">({p.join(', ')})</code>}
                       </p>
-                      <p className="tool-doc-desc">{oneLine(t.description)}</p>
                       <p className="tool-doc-meta">
                         {t.write ? <T>쓰기</T> : <T>읽기 전용</T>}
+                        {t.page && <span> · <T>페이지 나눔</T></span>}
                         {need
                           .filter((l) => l !== msg('읽기'))
                           .slice(0, 1)
