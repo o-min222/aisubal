@@ -15,6 +15,6 @@ export async function GET() {
     return NextResponse.json({ tree })
   } catch (e) {
     console.error(e)
-    return NextResponse.json({ error: await te('초대 트리를 불러오지 못했습니다.') }, { status: 500 })
+    return NextResponse.json({ error: await te('초대 네트워크를 불러오지 못했습니다.') }, { status: 500 })
   }
 }

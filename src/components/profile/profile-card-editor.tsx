@@ -351,7 +351,7 @@ export function ProfileCardEditor({
             <span className="ios-row-val">{agents.length || ''}</span>
             <ChevronRight className="w-4 h-4 text-n-bbb" />
           </Link>
-          <Link href={`/members/${me.id}`} className="ios-row">
+          <Link href="/members/me?preview=1" className="ios-row">
             <Link2 className="w-4 h-4 text-n-666" />
             <span className="flex-1 min-w-0"><T>다른 사람에게 보이는 모습</T></span>
             <ChevronRight className="w-4 h-4 text-n-bbb" />

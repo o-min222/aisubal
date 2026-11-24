@@ -28,6 +28,8 @@ import { listProfileAgents } from '@/lib/data/tokens'
 import { getProfileStack } from '@/lib/data/profile-stack'
 import { AgentList, StackChips } from '@/components/profile/member-card'
 import { T } from '@/i18n/t'
+import { ProfileCardEditor } from '@/components/profile/profile-card-editor'
+import { loadProfileEditor } from '@/lib/data/profile-editor'
 import { getT } from '@/i18n/server'
 
 export async function generateMetadata() {
@@ -35,7 +37,7 @@ export async function generateMetadata() {
   return { title: t('프로필 · AI쓰발') }
 }
 
-export default async function MemberProfilePage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ badges?: string }> }) {
+export default async function MemberProfilePage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ badges?: string; preview?: string }> }) {
   const st = await getT()
   const state = await getUserState()
   if (state.type === 'unauthenticated') redirect('/')
@@ -59,7 +61,11 @@ export default async function MemberProfilePage({ params, searchParams }: { para
     getProfileStack(viewer.id, member.id).catch(() => null),
     listMemberBadges(member.id).catch(() => []),
   ])
-  const openBadge = (await searchParams).badges?.slice(0, 20) ?? null
+  const sp = await searchParams
+  const openBadge = sp.badges?.slice(0, 20) ?? null
+  // A79 P2: the owner edits the profile right here; ?preview=1 shows it the way other members see it
+  const editing = isMe && sp.preview !== '1'
+  const editor = editing ? await loadProfileEditor(viewer) : null
   const usageVis = isMe ? await getUsageVisibility().catch(() => 'members' as const) : 'members'
   const authorId = member.id
   async function more(page: number) {
@@ -74,8 +80,63 @@ export default async function MemberProfilePage({ params, searchParams }: { para
   const links = await getProfileLinks(viewer.id, member.id, social?.relation.friend === 'friends').catch(() => [])
   const socialHref = (tab: string) => `/members/${isMe ? 'me' : member.id}/social?tab=${tab}`
 
+  const meta = (
+    <>
+      {badges.length > 0 && (
+        <div className="mt-3">
+          <BadgeChips badges={badges} isMe={isMe} initialOpen={openBadge} />
+        </div>
+      )}
+      {social && (
+        <div className="profile-social flex flex-wrap gap-x-5 gap-y-1 mt-3 text-sm">
+          <Link href={socialHref('followers')} className="min-h-[32px] inline-flex items-center gap-1">
+            <b className="text-n-111 tabular-nums">{social.followers}</b> <span className="text-n-777"><T>팔로워</T></span>
+          </Link>
+          <Link href={socialHref('following')} className="min-h-[32px] inline-flex items-center gap-1">
+            <b className="text-n-111 tabular-nums">{social.following}</b> <span className="text-n-777"><T>팔로잉</T></span>
+          </Link>
+          <Link href={socialHref('friends')} className="min-h-[32px] inline-flex items-center gap-1">
+            <b className="text-n-111 tabular-nums">{social.friends}</b> <span className="text-n-777"><T>친구</T></span>
+          </Link>
+          {isMe && (social.incomingRequests ?? 0) > 0 && (
+            <Link href={socialHref('requests')} className="min-h-[32px] inline-flex items-center gap-1 text-c-e5484d font-medium"><T s="친구 요청 {incomingRequests}" vars={{ incomingRequests: social.incomingRequests }} /></Link>
+          )}
+          {isMe && (
+            <Link href="/members/me/social" className="min-h-[32px] inline-flex items-center gap-1 text-link">
+              <T>관리하기</T>
+            </Link>
+          )}
+          <Link href={isMe ? networkHref() : networkHref({ root: member.id })} className="min-h-[32px] inline-flex items-center gap-1 text-link">
+            <Network className="w-3.5 h-3.5" /> <T>초대 네트워크</T>
+          </Link>
+        </div>
+      )}
+      {stats && (
+        <div className="flex gap-5 mt-2 text-sm">
+          <span><b className="text-n-111">{stats.posts}</b> <span className="text-n-777"><T>게시물</T></span></span>
+          <span><b className="text-n-111">{stats.likes}</b> <span className="text-n-777"><T>받은 좋아요</T></span></span>
+          <Link href="/invites"><b className="text-n-111">{stats.invitesLeft}</b> <span className="text-n-777"><T>남은 초대</T></span></Link>
+        </div>
+      )}
+    </>
+  )
+
   return (
     <div className="space-y-3">
+      {editing && editor ? (
+        <>
+          <div className="flex items-center justify-end gap-2">
+            <Link href="/members/me?preview=1" className="text-[13px] text-link min-h-[36px] inline-flex items-center">
+              <T>다른 사람에게 보이는 모습</T>
+            </Link>
+            <Link href="/settings" className="btn btn-secondary btn-sm min-h-[36px] min-w-[36px] rounded-full !px-0 justify-center" aria-label={st('설정')}>
+              <Settings className="w-[18px] h-[18px]" />
+            </Link>
+          </div>
+          <ProfileCardEditor {...editor} settingsRows={false} />
+          <section className="card px-4 pb-4 pt-1" aria-label={st('활동 요약')}>{meta}</section>
+        </>
+      ) : (
       <section className="card overflow-hidden">
         <div className="profile-card-cover h-20" aria-hidden />
         <div className="px-4 pb-4 -mt-8 flex items-end justify-between gap-3">
@@ -90,8 +151,8 @@ export default async function MemberProfilePage({ params, searchParams }: { para
           )}
           {isMe && (
             <div className="flex items-center gap-2">
-              <Link href="/settings/profile" className="btn btn-secondary btn-sm min-h-[40px] rounded-full">
-                <T>프로필 편집</T>
+              <Link href="/members/me" className="btn btn-secondary btn-sm min-h-[40px] rounded-full">
+                <T>편집으로 돌아가기</T>
               </Link>
               <Link href="/settings" className="btn btn-secondary btn-sm min-h-[40px] min-w-[40px] rounded-full !px-0 justify-center" aria-label={st('설정')}>
                 <Settings className="w-[18px] h-[18px]" />
@@ -126,46 +187,12 @@ export default async function MemberProfilePage({ params, searchParams }: { para
               })}
             </ul>
           )}
-          {badges.length > 0 && (
-            <div className="mt-3">
-              <BadgeChips badges={badges} isMe={isMe} initialOpen={openBadge} />
-            </div>
-          )}
-          {social && (
-            <div className="profile-social flex flex-wrap gap-x-5 gap-y-1 mt-3 text-sm">
-              <Link href={socialHref('followers')} className="min-h-[32px] inline-flex items-center gap-1">
-                <b className="text-n-111 tabular-nums">{social.followers}</b> <span className="text-n-777"><T>팔로워</T></span>
-              </Link>
-              <Link href={socialHref('following')} className="min-h-[32px] inline-flex items-center gap-1">
-                <b className="text-n-111 tabular-nums">{social.following}</b> <span className="text-n-777"><T>팔로잉</T></span>
-              </Link>
-              <Link href={socialHref('friends')} className="min-h-[32px] inline-flex items-center gap-1">
-                <b className="text-n-111 tabular-nums">{social.friends}</b> <span className="text-n-777"><T>친구</T></span>
-              </Link>
-              {isMe && (social.incomingRequests ?? 0) > 0 && (
-                <Link href={socialHref('requests')} className="min-h-[32px] inline-flex items-center gap-1 text-c-e5484d font-medium"><T s="친구 요청 {incomingRequests}" vars={{ incomingRequests: social.incomingRequests }} /></Link>
-              )}
-              {isMe && (
-                <Link href="/members/me/social" className="min-h-[32px] inline-flex items-center gap-1 text-link">
-                  <T>관리하기</T>
-                </Link>
-              )}
-              <Link href={isMe ? networkHref() : networkHref({ root: member.id })} className="min-h-[32px] inline-flex items-center gap-1 text-link">
-                <Network className="w-3.5 h-3.5" /> <T>초대 네트워크</T>
-              </Link>
-            </div>
-          )}
-          {stats && (
-            <div className="flex gap-5 mt-2 text-sm">
-              <span><b className="text-n-111">{stats.posts}</b> <span className="text-n-777"><T>게시물</T></span></span>
-              <span><b className="text-n-111">{stats.likes}</b> <span className="text-n-777"><T>받은 좋아요</T></span></span>
-              <Link href="/invites"><b className="text-n-111">{stats.invitesLeft}</b> <span className="text-n-777"><T>남은 초대</T></span></Link>
-            </div>
-          )}
+          {meta}
         </div>
       </section>
+      )}
 
-      {(stackShown || isMe) && (
+      {!editing && (stackShown || isMe) && (
         <section id="stack" className="card p-4 scroll-mt-20" aria-labelledby="stack-title">
           <div className="flex items-center justify-between gap-2 mb-3">
             <h2 id="stack-title" className="text-sm font-semibold text-n-111">

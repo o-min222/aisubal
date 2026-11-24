@@ -1,13 +1,11 @@
 'use client'
 
 import Link from 'next/link'
-import { ChevronRight, Globe, LogOut, Mail, Moon, ShieldCheck } from 'lucide-react'
-import { signOut } from '@/components/shell/sign-out'
-import { LocaleSwitch } from '@/components/i18n/locale-switch'
-import { ThemeSwitch } from '@/components/theme/theme-switch'
+import { ChevronRight, Mail, ShieldCheck } from 'lucide-react'
 import { useLocale, useT } from '@/i18n/client'
 import { LOCALE_META } from '@/i18n/config'
 
+/** A79 P4: email · membership · privacy only. 언어 · 화면 모드 · 로그아웃 live in the account menu (avatar). */
 export function AccountSettings({ email, joinedAt, isAdmin, privacy }: { email: string; joinedAt: string | null; isAdmin: boolean; privacy?: React.ReactNode }) {
   const t = useT()
   const locale = useLocale()
@@ -39,38 +37,6 @@ export function AccountSettings({ email, joinedAt, isAdmin, privacy }: { email: 
       </section>
 
       {privacy}
-
-      <section className="card p-4" id="language">
-        <div className="flex items-start gap-3">
-          <Globe className="w-5 h-5 text-n-666 mt-0.5" />
-          <div className="min-w-0 flex-1">
-            <div className="text-sm font-medium text-n-333">{t('언어')}</div>
-            <p className="text-xs text-n-888 mb-3">{t('이 브라우저와 내 계정에 저장돼요. 다른 기기에서 로그인해도 그대로예요.')}</p>
-            <LocaleSwitch variant="block" />
-          </div>
-        </div>
-      </section>
-
-      <section className="card p-4" id="theme">
-        <div className="flex items-start gap-3">
-          <Moon className="w-5 h-5 text-n-666 mt-0.5" />
-          <div className="min-w-0 flex-1">
-            <div className="text-sm font-medium text-n-333">{t('화면 모드')}</div>
-            <p className="text-xs text-n-888 mb-3">{t('시스템을 고르면 기기 설정을 따라가요. 이 브라우저와 내 계정에 저장돼요.')}</p>
-            <ThemeSwitch variant="block" />
-          </div>
-        </div>
-      </section>
-
-      <section className="card p-4 flex items-center justify-between gap-3">
-        <div>
-          <p className="font-medium text-n-333">{t('로그아웃')}</p>
-          <p className="text-xs text-n-888">{t('이 기기에서 로그아웃합니다.')}</p>
-        </div>
-        <button type="button" onClick={signOut} className="btn btn-secondary btn-sm min-h-[40px]">
-          <LogOut className="w-4 h-4" /> {t('로그아웃')}
-        </button>
-      </section>
     </div>
   )
 }

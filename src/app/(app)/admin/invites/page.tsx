@@ -18,7 +18,7 @@ export default async function AdminInvitesPage() {
   const tree = (await getInviteTree().catch(() => null)) as TreeNode | null
   return (
     <>
-      <SubPageHeader title={msg('초대 트리')} description={msg('누가 누구를 초대했는지 보여요 (Lobsters 방식).')} />
+      <SubPageHeader title={msg('초대 네트워크 (전체)')} description={msg('누가 누구를 초대했는지 보여요 (Lobsters 방식).')} />
       <div className="card p-3">{tree ? <InviteTree node={tree} /> : <p className="p-4 text-sm text-n-888"><T>트리를 불러오지 못했어요.</T></p>}</div>
     </>
   )

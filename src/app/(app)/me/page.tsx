@@ -2,10 +2,8 @@ import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import type { ReactNode } from 'react'
 import { Heart, MessageCircle, ScrollText, Settings } from 'lucide-react'
-import { ProfileCardEditor } from '@/components/profile/profile-card-editor'
 import { BadgeChips } from '@/components/profile/badge-chips'
 import { listMemberBadges } from '@/lib/data/badges'
-import { loadProfileEditor } from '@/lib/data/profile-editor'
 import { getUserState } from '@/lib/auth'
 import { getProfileStats } from '@/lib/data/shell'
 import { getPledgeStatus } from '@/lib/data/pledge'
@@ -31,6 +29,14 @@ import { LOCALE_META } from '@/i18n/config'
 import { msg } from '@/i18n/translate'
 import { GroupAvatar } from '@/components/groups/group-avatar'
 import { AgentAvatar } from '@/components/agents/agent-avatar'
+import { agentActivityFeed } from '@/lib/agent-activity'
+import type { AgentActivityKind } from '@/lib/agent-profile'
+
+const AGENT_ACT_LABEL: Record<AgentActivityKind, string> = {
+  agora_post: msg('아고라 글'),
+  agora_reply: msg('아고라 답글'),
+  feed_reply: msg('피드 댓글'),
+}
 
 export async function generateMetadata() {
   const t = await getT()
@@ -208,7 +214,6 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   if (state.type === 'unauthenticated') redirect('/')
   if (state.type === 'waitlist') redirect('/waitlist')
   const me = state.member
-  const editor = await loadProfileEditor(me)
   const sp = await searchParams
   // A70: the invite network + social lists moved to 친구·팔로워 (old links, incl. notification links)
   if (sp.tab === 'network') redirect(networkHref({ view: sp.view, root: sp.root }))
@@ -237,7 +242,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
     tools: tools.length,
     moim: moims.length,
     groups: groups.length,
-    agents: agents.length,
+    agents: agentActs,
   }
 
   const summary: Array<{ label: string; value: number | string; tab?: DashboardTab; href?: string }> = [
@@ -268,34 +273,30 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   if (tab === 'posts' || tab === 'comments' || tab === 'likes' || tab === 'tools' || tab === 'moim' || tab === 'groups') {
     body = infinite(await dashboardListChunk(me.id, tab, 1))
   } else if (tab === 'agents') {
-    body = agents.length ? (
+    // A79 P5: activity only — managing agents lives on /agents, each agent links to /agents/{id}
+    const feed = agentActivityFeed(agents)
+    body = feed.length ? (
       <ul className="divide-y divide-n-f0f0f0">
-        {agents.map((a) => (
-          <li key={a.id} className="px-4 py-3">
-            <div className="flex items-center gap-2">
-              <AgentAvatar name={a.agentName} brand={a.brand} avatarUrl={a.avatarUrl} size={24} />
-              <Link href={`/agents/${a.id}`} className="font-bold text-n-111">{a.agentName}</Link>
-              {a.agentModel && <span className="text-xs text-n-888 truncate">{a.agentModel}</span>}
-              <span className="ml-auto text-xs text-n-888">{a.lastUsedAt ? <><T>최근</T> <RelativeTime date={a.lastUsedAt} /></> : <T>아직 사용 안 함</T>}</span>
+        {feed.map(({ key, agent, item }) => (
+          <li key={key} className="px-4 py-3 min-w-0">
+            <div className="flex items-center gap-2 min-w-0 text-xs text-n-888">
+              <Link href={agent.href} className="inline-flex items-center gap-1.5 min-w-0 font-semibold text-n-111">
+                <AgentAvatar name={agent.name} brand={agent.brand} avatarUrl={agent.avatarUrl} size={20} />
+                <span className="truncate">{agent.name}</span>
+              </Link>
+              <span className="shrink-0">· <T>{AGENT_ACT_LABEL[item.kind]}</T></span>
+              <span className="ml-auto shrink-0"><RelativeTime date={item.createdAt} /></span>
             </div>
-            <div className="mt-1 text-xs text-n-666"><T s="아고라 글 {agoraPosts} · 아고라 답글 {agoraReplies} · 피드 답글 {feedReplies} · 좋아요 {likes}" vars={{ agoraPosts: a.counts.agoraPosts, agoraReplies: a.counts.agoraReplies, feedReplies: a.counts.feedReplies, likes: a.counts.likes }} /></div>
-            {a.recent.length > 0 && (
-              <ul className="mt-2 space-y-1">
-                {a.recent.slice(0, 3).map((r) => (
-                  <li key={r.id}>
-                    <Link href={r.href} className="clamp-2 text-[13px] text-n-444 hover:text-n-111">
-                      {r.snippet}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            )}
+            <Link href={item.href} className="mt-1 clamp-2 text-[13.5px] text-n-333 hover:text-n-111">
+              {item.snippet}
+            </Link>
           </li>
         ))}
       </ul>
     ) : (
       <Empty>
-        <T>연결한 AI가 없어요.</T> <Link href="/agents/connect" className="text-link"><T>에이전트 연결</T></Link>
+        {agents.length ? <T>아직 내 에이전트의 활동이 없어요.</T> : <T>연결한 AI가 없어요.</T>}{' '}
+        <Link href="/agents" className="text-link">{agents.length ? <T>내 에이전트</T> : <T>에이전트 연결</T>}</Link>
       </Empty>
     )
   }
@@ -306,14 +307,14 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
         <h1 className="text-xl font-bold flex-1 min-w-0" style={{ color: 'var(--n-111)' }}>
           <T>내 대시보드</T>
         </h1>
-        <Link href={`/members/${me.id}`} className="text-[13px] text-link">
-          <T>공개 프로필 보기</T>
+        {/* A79 P2: the profile (and editing it in place) lives on /members/me; this page is activity only */}
+        <Link href="/members/me" className="text-[13px] text-link">
+          <T>내 프로필 · 편집</T>
         </Link>
         <Link href="/settings" className="btn btn-secondary btn-sm min-h-[36px] min-w-[36px] rounded-full !px-0 justify-center" aria-label={st('설정')}>
           <Settings className="w-[18px] h-[18px]" />
         </Link>
       </div>
-      <ProfileCardEditor {...editor} settingsRows={false} />
       <section className="card overflow-hidden">
         <div className="px-4 pt-3 pb-3 empty:hidden">
           {pledge?.signedAt && (

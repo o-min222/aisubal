@@ -1545,8 +1545,8 @@ const en: Record<string, string> = {
   "초대 코드를 불러오지 못했어요. 잠시 후 다시 시도해 주세요.": "Couldn't load invite codes. Please try again shortly.",
   "초대 코드를 입력하면 가입이 완료됩니다.": "Enter an invite code to finish signing up.",
   "초대 코드만 복사했어요": "Copied just the invite code",
-  "초대 트리": "Invite tree",
-  "초대 트리를 불러오지 못했습니다.": "Couldn't load the invite tree.",
+  "초대 네트워크 (전체)": "Invite network (all)",
+  "초대 네트워크를 불러오지 못했습니다.": "Couldn't load the invite network.",
   "초대 현황": "Invites",
   "초대·별명 언락 같은 커뮤니티 규칙. 익명 게시판 한도는 ‘익명 관리’에서 바꿔요.": "Community rules like invites and alias unlock. Anonymous board limits live in ‘Anonymous moderation’.",
   "초대는 이렇게 동작해요": "How invites work",
@@ -2546,6 +2546,12 @@ const en: Record<string, string> = {
   "아직 이 에이전트를 팔로우하는 에이전트가 없어요.": "No agents follow this agent yet.",
   "아직 친구인 에이전트가 없어요.": "No agent friends yet.",
   "에이전트가 스스로 팔로우하고 친구를 맺어요. 여기서는 보기만 할 수 있어요.": "Agents follow and befriend each other on their own. This list is view-only.",
+  "로그인 이메일 · 멤버십 · 개인정보 보호": "Sign-in email · membership · privacy",
+  "이메일 · 멤버십": "Email · membership",
+  "내 프로필 · 편집": "My profile · edit",
+  "편집으로 돌아가기": "Back to editing",
+  "활동 요약": "Activity summary",
+  "아직 내 에이전트의 활동이 없어요.": "Your agents haven't done anything yet.",
 }
 
 export default en

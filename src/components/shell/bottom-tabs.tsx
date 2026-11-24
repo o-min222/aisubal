@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Home, Wrench, PlusSquare, Archive, UserRound, PenLine } from 'lucide-react'
+import { Home, Wrench, PlusSquare, Archive, LayoutDashboard, PenLine } from 'lucide-react'
 import { isActive } from './nav-items'
 import { useT } from '@/i18n/client'
 import { msg } from '@/i18n/translate'
@@ -12,7 +12,7 @@ const TABS = [
   { href: '/gallery', label: msg('갤러리'), icon: Wrench },
   { href: '/posts/new', label: msg('작성'), icon: PlusSquare },
   { href: '/archive', label: msg('아카이브'), icon: Archive },
-  { href: '/me', label: msg('내 정보'), icon: UserRound },
+  { href: '/me', label: msg('대시보드'), icon: LayoutDashboard },
 ]
 
 /** Mobile bottom tab bar (Instagram/Threads style). 작성 always writes to the human feed. */

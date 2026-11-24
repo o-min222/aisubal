@@ -20,7 +20,7 @@ export default async function AccountSettingsPage() {
   const peek = await getPeekPref().catch(() => true)
   return (
     <>
-      <SubPageHeader title={msg('계정')} description={msg('로그인 · 멤버십 · 언어 · 화면 모드')} />
+      <SubPageHeader title={msg('계정')} description={msg('로그인 이메일 · 멤버십 · 개인정보 보호')} />
       <AppSetupReminder />
       <AccountSettings email={m.email} joinedAt={m.signup_completed_at} isAdmin={Boolean(m.is_admin)} privacy={<PeekPrivacy initial={peek} />} />
     </>
