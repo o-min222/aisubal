@@ -78,7 +78,7 @@ async function toolCall(name: string, args: Record<string, unknown>) {
 }
 
 async function printCharter() {
-  const text = await toolCall('get_charter', {}).catch(() => null)
+  const text = await toolCall('charter_get', {}).catch(() => null)
   console.log('')
   console.log(typeof text === 'string' && text ? text : 'From the Shadows, Toward the Light.\n가장 어두운 가능성까지 외면하지 않고 포용하며, AI와 함께 진리와 인류의 다음 장을 엽니다.')
   console.log('')
@@ -370,7 +370,7 @@ const commands: Record<string, (args: string[]) => Promise<void>> = {
       const tab = rest.includes('--past') ? 'past' : rest.includes('--mine') ? 'mine' : 'upcoming'
       const gi = rest.indexOf('--group')
       const group = gi >= 0 ? rest[gi + 1] : undefined
-      const data = await toolCall('list_meetups', { tab, ...(group ? { group } : {}) })
+      const data = await toolCall('meetup_list', { tab, ...(group ? { group } : {}) })
       if (data.error) {
         console.error('❌', data.error)
         process.exitCode = 1
@@ -394,7 +394,7 @@ const commands: Record<string, (args: string[]) => Promise<void>> = {
         process.exitCode = 1
         return
       }
-      const data = await toolCall('read_meetup', { meetupId: id })
+      const data = await toolCall('meetup_get', { meetupId: id })
       if (data.error) {
         console.error('❌', data.error)
         process.exitCode = 1
@@ -407,7 +407,7 @@ const commands: Record<string, (args: string[]) => Promise<void>> = {
     if (action === 'mine' || action === 'ics') {
       // A53: my own 모임 (host · confirmed · pending · waitlist · invited) + what changed + today/tomorrow
       const si = rest.indexOf('--since')
-      const data = await toolCall('my_meetups', si >= 0 && rest[si + 1] ? { since: rest[si + 1] } : {})
+      const data = await toolCall('meetup_mine', si >= 0 && rest[si + 1] ? { since: rest[si + 1] } : {})
       if (data.error) {
         console.error('❌', data.error)
         process.exitCode = 1
@@ -460,7 +460,7 @@ const commands: Record<string, (args: string[]) => Promise<void>> = {
   async groups(args) {
     const [action] = args
     if (!action || action === 'mine' || action === 'list') {
-      const data = await toolCall('my_groups', {})
+      const data = await toolCall('meetup_groups', {})
       if (data.error) {
         console.error('❌', data.error)
         process.exitCode = 1
@@ -487,7 +487,7 @@ const commands: Record<string, (args: string[]) => Promise<void>> = {
       return i >= 0 && rest[i + 1] && !rest[i + 1].startsWith('--') ? rest[i + 1] : ''
     }
     if (!action || action === 'list') {
-      const data = await toolCall('list_tools', {
+      const data = await toolCall('gallery_list', {
         category: flag('category') || undefined,
         tag: flag('tag') || undefined,
         q: flag('q') || undefined,
@@ -517,7 +517,7 @@ const commands: Record<string, (args: string[]) => Promise<void>> = {
         console.error('사용법: aisubal tools read <slug|id>')
         return
       }
-      const data = await toolCall('read_tool', { entryId: id })
+      const data = await toolCall('gallery_get', { entryId: id })
       if (data.error) {
         console.error('❌', data.error)
         return
@@ -531,7 +531,7 @@ const commands: Record<string, (args: string[]) => Promise<void>> = {
         console.error(`사용법: aisubal tools ${action} <slug|id>`)
         return
       }
-      const data = await toolCall('set_tool_usage', { entryId: id, using: action === 'use' })
+      const data = await toolCall('gallery_use', { entryId: id, using: action === 'use' })
       if (data.error) {
         console.error('❌', data.error)
         return
@@ -549,7 +549,7 @@ const commands: Record<string, (args: string[]) => Promise<void>> = {
         console.error('사용법: aisubal tools install <slug|id> [--env cursor|claude_code|...]')
         return
       }
-      const data = await toolCall('install_tool', { entryId: id, environment: env })
+      const data = await toolCall('gallery_install', { entryId: id, environment: env })
       if (data.error) {
         console.error('❌', data.error)
         return
@@ -604,7 +604,7 @@ const commands: Record<string, (args: string[]) => Promise<void>> = {
         return
       }
       const tags = flag('tags')
-      const data = await toolCall('submit_tool', {
+      const data = await toolCall('gallery_submit', {
         name, oneLiner, url, type: type || undefined, description: flag('description') || undefined, note: flag('note') || undefined,
         tags: tags ? tags.split(',').map((t) => t.trim()).filter(Boolean) : undefined,
       })
@@ -618,7 +618,7 @@ const commands: Record<string, (args: string[]) => Promise<void>> = {
       return
     }
     if (action === 'submissions') {
-      const data = await toolCall('my_tool_submissions', {})
+      const data = await toolCall('gallery_submissions', {})
       if (data.error) {
         console.error('❌', data.error)
         return
@@ -639,7 +639,7 @@ const commands: Record<string, (args: string[]) => Promise<void>> = {
         )
         return
       }
-      const data = await toolCall('launch_product', {
+      const data = await toolCall('gallery_launch', {
         name,
         tagline,
         description,
@@ -730,11 +730,11 @@ const commands: Record<string, (args: string[]) => Promise<void>> = {
     }
     if (sub === 'review') {
       if (!flags.tool || !flags.rating) throw new Error('사용법: aisubal agora review "한 줄 평" --tool 이름 --rating 1-5')
-      show(await toolCall('agora_post_review', postArgs()))
+      show(await toolCall('agora_post', { ...postArgs(), kind: 'review' }))
       return
     }
     if (sub === 'info') {
-      show(await toolCall('agora_post_info', postArgs()))
+      show(await toolCall('agora_post', { ...postArgs(), kind: 'info' }))
       return
     }
     if (sub === 'reply' || sub === 'comment') {
