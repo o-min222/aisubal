@@ -19,6 +19,7 @@ import { mockHandle, mockPerson } from '@/lib/mock-social'
 import { rankToolsForMember } from '@/lib/recommend-rules'
 import { sortByRelation, type Relation } from '@/lib/social-rules'
 import type { LinkVisibility } from '@/lib/profile-rules'
+import { sortUsage } from '@/lib/profile-stack'
 import { sb, isMock } from './client'
 import { getRelations, socialAuthorIds } from './social'
 import { MEMBER_PUBLIC_COLUMNS } from './member-columns'
@@ -33,7 +34,7 @@ export type ToolUser = { id: string; name: string; handle: string | null; avatar
 export type ToolUsers = { count: number; users: ToolUser[]; usedByMe: boolean }
 
 // ------------------------------------------------------------------ mock (DEV)
-type MockState = { usage: Array<{ entry_id: string; member_id: string; created_at: string }> }
+type MockState = { usage: Array<{ entry_id: string; member_id: string; created_at: string; position?: number | null }> }
 const g = globalThis as unknown as { __aisubalToolUsage?: MockState; __aisubalUsageVis?: LinkVisibility; __aisubalToolLikes?: Array<{ entry_id: string; member_id: string }> }
 function mockLikes() {
   return (g.__aisubalToolLikes ??= MUTABLE_TOOLBOX.slice(0, 4).flatMap((e, i) => ['member-2', 'member-3', 'member-4'].slice(0, 3 - (i % 3)).map((m) => ({ entry_id: e.id, member_id: m }))))
@@ -183,7 +184,7 @@ export async function listTools(
 /** Tools a member marked '사용 중' (profile: 내가 쓰는 것). */
 export async function listMemberTools(memberId: string): Promise<ToolboxEntry[]> {
   if (isMock()) {
-    const order = mockUsage().usage.filter((u) => u.member_id === memberId).map((u) => u.entry_id)
+    const order = sortUsage(mockUsage().usage.filter((u) => u.member_id === memberId)).map((u) => u.entry_id)
     const all = mockEntries()
     return order.map((id) => all.find((e) => e.id === id)).filter((e): e is ToolboxEntry => Boolean(e))
   }
@@ -192,10 +193,24 @@ export async function listMemberTools(memberId: string): Promise<ToolboxEntry[]>
     .from('tool_users')
     .select('created_at, entry:toolbox_entries(*)')
     .eq('member_id', memberId)
+    // A90 (0126): owner's order; not-yet-placed (NULL) first, newest first
+    .order('position', { ascending: true, nullsFirst: true })
     .order('created_at', { ascending: false })
     .limit(60)
   if (error) throw error
   return ((data || []) as unknown as Array<{ entry: ToolboxEntry | null }>).map((r) => r.entry).filter((e): e is ToolboxEntry => Boolean(e))
+}
+
+/** A90: the owner reorders their '내가 쓰는 것' (ids = entry ids in the new order). */
+export async function reorderMemberTools(memberId: string, entryIds: string[]): Promise<void> {
+  const ids = [...new Set(entryIds.filter((id) => typeof id === 'string' && id.length > 0))].slice(0, 200)
+  if (isMock()) {
+    for (const u of mockUsage().usage) if (u.member_id === memberId) { const k = ids.indexOf(u.entry_id); if (k >= 0) u.position = k }
+    return
+  }
+  const supabase = await sb()
+  const { error } = await supabase.rpc('member_tools_reorder', { p_entry_ids: ids })
+  if (error) throw new Error(error.message)
 }
 
 /**

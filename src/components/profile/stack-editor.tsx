@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Plus, Search, X } from 'lucide-react'
+import { Check, Plus, Search, X } from 'lucide-react'
 import { toast } from 'sonner'
 import { LINK_VISIBILITY, type LinkVisibility } from '@/lib/profile-rules'
 import { AI_SUGGESTIONS, STACK_GROUP_LABEL, STACK_LIMIT, SUB_SUGGESTIONS, SKILL_TYPES, type StackGroup } from '@/lib/profile-stack'
@@ -10,13 +10,17 @@ import { T } from '@/i18n/t'
 import { ServiceIcon } from '@/components/service-chip'
 import { tx, tn } from '@/i18n/client'
 
-export type Item = { label: string; entryId: string | null; iconUrl?: string | null; slug?: string; visibility?: LinkVisibility | null }
+export type Item = { label: string; entryId: string | null; iconUrl?: string | null; slug?: string; visibility?: LinkVisibility | null; /** skills: a '사용 중' catalog tool (tool_users), not free text */ used?: boolean }
 type CatalogHit = { id: string; slug: string; name: string; icon_url: string | null; type: string }
 
 const norm = (s: string) => s.toLowerCase().replace(/\s+/g, '')
 
-/** Searchable picker: 툴 catalog hits + quick picks + free-text fallback. */
-export function Picker({ onPick, suggestions, skillsOnly, placeholder, disabled }: { onPick: (i: Item) => void; suggestions: string[]; skillsOnly?: boolean; placeholder: string; disabled?: boolean }) {
+/**
+ * Searchable picker: 툴 catalog hits + quick picks + free-text fallback.
+ * `inline` (A90, the 추가 sheet): one flat surface — the search stays on top, every quick pick
+ * is listed and the list scrolls inside; items already added show a check.
+ */
+export function Picker({ onPick, suggestions, skillsOnly, placeholder, disabled, inline, taken }: { onPick: (i: Item) => void; suggestions: string[]; skillsOnly?: boolean; placeholder: string; disabled?: boolean; inline?: boolean; taken?: string[] }) {
   const [q, setQ] = useState('')
   const [hits, setHits] = useState<CatalogHit[]>([])
   const [open, setOpen] = useState(false)
@@ -38,7 +42,9 @@ export function Picker({ onPick, suggestions, skillsOnly, placeholder, disabled 
     return () => document.removeEventListener('mousedown', close)
   }, [])
   const term = q.trim()
-  const quick = suggestions.filter((s) => !term || norm(s).includes(norm(term))).slice(0, 6)
+  const quick = suggestions.filter((s) => !term || norm(s).includes(norm(term))).slice(0, inline ? undefined : 6)
+  const isTaken = (label: string) => (taken ?? []).some((t) => norm(t) === norm(label))
+  const show = inline || open
   const shownHits = term ? hits : []
   function pick(i: Item) {
     onPick(i)
@@ -46,8 +52,8 @@ export function Picker({ onPick, suggestions, skillsOnly, placeholder, disabled 
     setOpen(false)
   }
   return (
-    <div ref={box} className="relative">
-      <div className="flex items-center gap-2 rounded-lg border border-n-ddd px-2.5 min-h-[42px] bg-n-fff">
+    <div ref={box} className={inline ? 'stack-pick is-inline' : 'relative'}>
+      <div className="stack-pick-search flex items-center gap-2 rounded-lg border border-n-ddd px-2.5 min-h-[42px] bg-n-fff">
         <Search className="w-4 h-4 text-n-999 flex-shrink-0" />
         <input
           value={q}
@@ -69,8 +75,8 @@ export function Picker({ onPick, suggestions, skillsOnly, placeholder, disabled 
           aria-label={placeholder}
         />
       </div>
-      {open && (shownHits.length > 0 || quick.length > 0 || term) && (
-        <ul className="stack-pick-menu" role="listbox">
+      {show && (shownHits.length > 0 || quick.length > 0 || term) && (
+        <ul className={inline ? 'stack-pick-list' : 'stack-pick-menu'} role="listbox" aria-label={placeholder}>
           {shownHits.map((h) => (
             <li key={h.id}>
               <button type="button" onClick={() => pick({ label: h.name, entryId: h.id, iconUrl: h.icon_url, slug: h.slug })}>
@@ -80,17 +86,22 @@ export function Picker({ onPick, suggestions, skillsOnly, placeholder, disabled 
               </button>
             </li>
           ))}
-          {quick.map((s) => (
-            <li key={s}>
-              <button type="button" onClick={() => pick({ label: s, entryId: null })}>
-                <span className="truncate">{s}</span>
-              </button>
-            </li>
-          ))}
+          {quick.map((s) => {
+            const done = isTaken(s)
+            return (
+              <li key={s}>
+                <button type="button" disabled={done} aria-disabled={done} onClick={() => pick({ label: s, entryId: null })}>
+                  {inline && <ServiceIcon label={s} iconUrl={null} />}
+                  <span className="truncate">{s}</span>
+                  {done && <Check className="w-4 h-4 ml-auto text-n-888" aria-label={tx('추가됨')} />}
+                </button>
+              </li>
+            )
+          })}
           {term && !quick.some((s) => norm(s) === norm(term)) && !shownHits.some((h) => norm(h.name) === norm(term)) && (
             <li>
               <button type="button" onClick={() => pick({ label: term.slice(0, 60), entryId: null })}>
-                <Plus className="w-4 h-4" /> ‘{term.slice(0, 60)}’ 직접 추가
+                <Plus className="w-4 h-4" /> <T s="‘{term}’ 직접 추가" vars={{ term: term.slice(0, 60) }} />
               </button>
             </li>
           )}
@@ -139,6 +150,8 @@ export type StackEditorInitial = {
   /** catalog skills from '사용 중' (tool_users) */
   usedSkills: Item[]
   skillExtras: string[]
+  /** A90: the skills row in its saved order (used + extras); falls back to used-then-extras */
+  skills?: Item[]
   vis: Record<StackGroup, LinkVisibility>
 }
 

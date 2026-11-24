@@ -3367,3 +3367,33 @@ html:has(.landing) { scroll-snap-type: y proximity; background: #111111; }
   font-size: 13px; font-weight: 600; color: var(--n-333); white-space: nowrap;
 }
 .account-install:hover { background: var(--n-f5f5f5); color: var(--n-111); }
+
+/* ---------- A90 · profile chips reorder + the 추가 picker sheet ---------- */
+.pe-grip { display: none; width: 12px; height: 12px; margin: 0 -2px 0 2px; color: var(--n-aaa); flex: none; cursor: grab; }
+@media (hover: hover) and (pointer: fine) {
+  .mc-chips li[data-sort-list] .pe-chip:hover .pe-grip { display: block; }
+  .mc-chips li[data-sort-list] { cursor: grab; }
+}
+.mc-chips li.pe-dragging .pe-chip { opacity: .55; outline: 1.5px dashed var(--n-bbb); outline-offset: 1px; }
+body.is-sorting, body.is-sorting * { user-select: none; -webkit-user-select: none; cursor: grabbing !important; }
+.pe-chip-move { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 999px; color: var(--n-555); }
+.pe-chip-move:hover:not(:disabled) { background: var(--n-eee); color: var(--n-111); }
+.pe-chip-move:disabled { opacity: .3; }
+/* the picker inside the 추가 sheet: one surface, search pinned, the list scrolls */
+.stack-pick.is-inline { display: flex; flex-direction: column; gap: 6px; }
+.stack-pick.is-inline .stack-pick-search { position: sticky; top: 0; z-index: 1; }
+.stack-pick-list { list-style: none; margin: 0 -6px; padding: 0; max-height: min(52vh, 360px); overflow-y: auto; overscroll-behavior: contain; }
+.stack-pick-list button { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 44px; padding: 6px 10px; border-radius: 10px; font-size: 14.5px; color: var(--n-222); text-align: left; }
+.stack-pick-list button:hover:not(:disabled), .stack-pick-list button:focus-visible { background: var(--n-f4f4f2); }
+.stack-pick-list button:disabled { color: var(--n-999); }
+/* '내가 쓰는 것' 순서 바꾸기 (owner) */
+.my-tools-bar { display: flex; align-items: center; justify-content: flex-end; gap: 10px; margin: -6px 0 8px; min-height: 32px; }
+.my-tool-sort { cursor: grab; background: var(--n-fff); }
+.my-tool-grip { flex: none; display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 36px; margin-left: -4px; color: var(--n-999); touch-action: none; }
+.my-tool-steps { margin-left: auto; display: inline-flex; flex-direction: column; gap: 2px; flex: none; }
+.my-tool-steps button { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 22px; border-radius: 6px; color: var(--n-555); }
+.my-tool-steps button:hover:not(:disabled) { background: var(--n-eee); color: var(--n-111); }
+.my-tool-steps button:disabled { opacity: .3; }
+.profile-tools li.pe-dragging .profile-tool { opacity: .55; outline: 1.5px dashed var(--n-bbb); }
+.profile-tools.is-sorting-list { grid-template-columns: minmax(0, 1fr) !important; }
+@media (min-width: 768px) { .profile-tools.is-sorting-list { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; } }

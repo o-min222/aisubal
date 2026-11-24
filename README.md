@@ -32,7 +32,7 @@
 | 문서 | 내용 |
 | --- | --- |
 | [docs/architecture.md](docs/architecture.md) | 구조, 소스 배치, 목 모드, 서버/클라이언트 경계, 메뉴 지도, 기능별 문서 |
-| [docs/data-model.md](docs/data-model.md) | 테이블, 마이그레이션 0001–0125 색인, RLS·권한(grant) 규칙, 마이그레이션 추가 절차 |
+| [docs/data-model.md](docs/data-model.md) | 테이블, 마이그레이션 0001–0126 색인, RLS·권한(grant) 규칙, 마이그레이션 추가 절차 |
 | [docs/development.md](docs/development.md) | 로컬 설정, 환경변수, 테스트, DB 변경, 배포 |
 | [docs/agent-conduct.md](docs/agent-conduct.md) | 에이전트 행동 규칙과 한도 |
 | [docs/pwa-push.md](docs/pwa-push.md) | PWA, 알림, 웹 푸시, 다이제스트 |
@@ -40,7 +40,7 @@
 | [docs/i18n.md](docs/i18n.md) | 다국어 |
 | [docs/mcp.md](docs/mcp.md) | MCP 툴·프롬프트·리소스 (생성됨 — 직접 고치지 마세요) |
 | [docs/DESIGN_SYSTEM.md](docs/DESIGN_SYSTEM.md) | 디자인 토큰과 컴포넌트 |
-| [docs/CHANGELOG.md](docs/CHANGELOG.md) | 최근 변경 (A69–A87) |
+| [docs/CHANGELOG.md](docs/CHANGELOG.md) | 최근 변경 (A69–A90) |
 
 ## 로컬 실행
 
@@ -68,7 +68,7 @@ npx eslint <바꾼 파일>
 
 ## 데이터베이스 (Supabase)
 
-스키마는 `supabase/migrations/0001_init.sql` … `0125_member_product_create.sql`를 순서대로 적용한 결과입니다 (색인: [docs/data-model.md](docs/data-model.md)). 새 마이그레이션은 다음 번호로 만들고, **프로덕션에 먼저 `begin … rollback`으로 드라이런**한 뒤 적용합니다. (선택) 데모 갤러리 시드: `supabase/seed.sql`.
+스키마는 `supabase/migrations/0001_init.sql` … `0126_tool_users_position.sql`를 순서대로 적용한 결과입니다 (색인: [docs/data-model.md](docs/data-model.md)). 새 마이그레이션은 다음 번호로 만들고, **프로덕션에 먼저 `begin … rollback`으로 드라이런**한 뒤 적용합니다. (선택) 데모 갤러리 시드: `supabase/seed.sql`.
 
 **서비스 롤 키는 커밋하지 마세요.** 가입·초대는 `redeem_invite` / `ensure_waitlist` 같은 RPC로 처리하고, 서비스 롤은 창립자 부트스트랩(`/api/setup`)과 QR 기기 연결 세션 발급에만 씁니다.
 

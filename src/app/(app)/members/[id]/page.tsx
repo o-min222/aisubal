@@ -14,7 +14,7 @@ import { getProfileStats } from '@/lib/data/shell'
 import { isFeedId } from '@/lib/feed-ids'
 import { UserAvatar } from '@/components/user-avatar'
 import { PostCard } from '@/components/timeline/post-card'
-import { ToolIcon } from '@/components/tools/tool-icon'
+import { MyToolsList } from '@/components/profile/my-tools-list'
 import { getUsageVisibility, listMemberTools } from '@/lib/data/tools'
 import { UsageVisibility } from '@/components/tools/usage-visibility'
 import { BadgeChips } from '@/components/profile/badge-chips'
@@ -245,22 +245,10 @@ export default async function MemberProfilePage({ params, searchParams }: { para
             )}
           </p>
         ) : (
-          <ul className="profile-tools" style={{ display: 'grid', gap: 8, gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 150px), 1fr))' }}>
-            {tools.map((t) => (
-              <li key={t.id} className="min-w-0">
-                <Link href={toolHref(t)} className="profile-tool min-w-0">
-                  <ToolIcon name={t.name} iconUrl={t.icon_url} dim="w-9 h-9" />
-                  <span className="min-w-0">
-                    <span className="block text-sm font-medium text-n-111 truncate">{t.name}</span>
-                    <span className="block text-[11.5px] text-n-888 truncate">
-                      <T>{TOOL_TYPE_CHIP[t.type]}</T>
-                      {(t.user_count ?? 0) > 1 ? <> · <T s="{n}명이 써요" vars={{ n: t.user_count ?? 0 }} /></> : ''}
-                    </span>
-                  </span>
-                </Link>
-              </li>
-            ))}
-          </ul>
+          <MyToolsList
+            editable={isMe}
+            tools={tools.map((t) => ({ id: t.id, name: t.name, iconUrl: t.icon_url ?? null, href: toolHref(t), typeLabel: TOOL_TYPE_CHIP[t.type], users: t.user_count ?? 0 }))}
+          />
         )}
       </section>
 

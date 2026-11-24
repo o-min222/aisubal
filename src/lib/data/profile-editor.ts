@@ -24,6 +24,8 @@ export async function loadProfileEditor(m: Member) {
       subs: items('subs'),
       usedSkills: tools.filter((t) => SKILL_TYPES.includes(t.type)).map((t) => ({ label: t.name, entryId: t.id, iconUrl: t.icon_url, slug: t.slug })),
       skillExtras: stack?.skillExtras ?? [],
+      // A90: the skills row in its saved order ('사용 중' tools + extras), used = from tool_users
+      skills: (stack?.skills?.items ?? []).map((i) => ({ label: i.label, entryId: i.entry?.id ?? null, iconUrl: i.entry?.iconUrl ?? null, slug: i.entry?.slug, used: Boolean(i.entry) })),
       vis: { ai: stack?.ai?.visibility ?? 'members', subs: stack?.subs?.visibility ?? 'members', skills: stack?.skills?.visibility ?? 'members' },
     },
     agents: connected.filter((c) => c.showOnProfile).map((c) => ({ id: c.id, name: c.agentName, client: c.client ?? null, avatarUrl: c.avatarUrl ?? null, brand: c.brand ?? null })),

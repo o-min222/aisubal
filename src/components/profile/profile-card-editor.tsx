@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { AgentAvatar } from '@/components/agents/agent-avatar'
-import { Camera, Check, ChevronRight, Link2, Loader2, Lock, Plus, Users, Bot, Eye, X } from 'lucide-react'
+import { Camera, Check, ChevronLeft, ChevronRight, GripVertical, Link2, Loader2, Lock, Plus, Users, Bot, Eye, X } from 'lucide-react'
 import { toast } from 'sonner'
 import { UserAvatar } from '@/components/user-avatar'
 import { ServiceIcon } from '@/components/service-chip'
@@ -16,7 +16,8 @@ import { LinkIcon } from '@/components/profile/link-icon'
 import { Picker, type Item, type StackEditorInitial } from '@/components/profile/stack-editor'
 import type { ProfileFormMember } from '@/components/profile/profile-form'
 import { LINK_KINDS, LINK_VISIBILITY, normalizeHandle, validateDisplayName, validateHandle, type ProfileLink } from '@/lib/profile-rules'
-import { AI_SUGGESTIONS, STACK_GROUP_LABEL, STACK_LIMIT, SUB_SUGGESTIONS, type StackGroup } from '@/lib/profile-stack'
+import { AI_SUGGESTIONS, STACK_GROUP_LABEL, STACK_LIMIT, SUB_SUGGESTIONS, moveItem, skillsPayload, type StackGroup } from '@/lib/profile-stack'
+import { useDragSort } from '@/hooks/use-drag-sort'
 import { piiWarning } from '@/lib/pii'
 import { T } from '@/i18n/t'
 import { tx, tn } from '@/i18n/client'
@@ -30,7 +31,7 @@ export type ProfileEditorAgent = { id: string; name: string; client: string | nu
 /**
  * WYSIWYG profile: the card others see, edited in place. Every field autosaves
  * (name/handle/bio on blur, chips on change) with one small saved indicator.
- * Chips: tap → menu (lock: who can see this chip · remove); '+' → picker sheet.
+ * Chips: tap → ‹ › (move) and × (remove); drag to reorder with a mouse (A90); '+' → picker sheet.
  */
 export function ProfileCardEditor({
   me,
@@ -124,12 +125,12 @@ export function ProfileCardEditor({
   }
 
   // ---- stack chips (PUT /api/profile/stack on every change) ----
-  const [groups, setGroups] = useState<Record<'ai' | 'subs' | 'extras', Item[]>>({
+  // A90: every group is one ordered list; skills mixes '사용 중' tools (used) and free-text extras
+  const [groups, setGroups] = useState<Record<StackGroup, Item[]>>({
     ai: stack.ai,
     subs: stack.subs,
-    extras: stack.skillExtras.map((label) => ({ label, entryId: null })),
+    skills: stack.skills ?? [...stack.usedSkills.map((i) => ({ ...i, used: true })), ...stack.skillExtras.map((label) => ({ label, entryId: null }))],
   })
-  const [used, setUsed] = useState<Item[]>(stack.usedSkills)
   const [vis, setVis] = useState(stack.vis)
   const [adding, setAdding] = useState<StackGroup | null>(null)
   // A41: tap a chip → an inline × appears; tap × deletes; tap elsewhere / the chip again hides it
@@ -152,7 +153,7 @@ export function ProfileCardEditor({
       const res = await fetch('/api/profile/stack', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ai: strip(nextGroups.ai), subs: strip(nextGroups.subs), skills: strip(nextGroups.extras), vis: nextVis }),
+        body: JSON.stringify({ ai: strip(nextGroups.ai), subs: strip(nextGroups.subs), skills: skillsPayload(nextGroups.skills), vis: nextVis }),
       })
       const d = await res.json().catch(() => ({}))
       if (!res.ok) throw new Error(d.error || '저장하지 못했어요.')
@@ -163,17 +164,34 @@ export function ProfileCardEditor({
       toast.error(e instanceof Error ? e.message : tn('저장하지 못했어요.'))
     }
   }
-  const keyOf = (g: StackGroup) => (g === 'skills' ? 'extras' : g)
   function setGroup(g: StackGroup, items: Item[]) {
-    const next = { ...groups, [keyOf(g)]: items }
+    const next = { ...groups, [g]: items }
     setGroups(next)
     void putStack(next)
   }
   function addItem(g: StackGroup, i: Item) {
-    const list = groups[keyOf(g)]
-    if (list.length + (g === 'skills' ? used.length : 0) >= STACK_LIMIT) return toast.error(tn('{n}개까지 추가할 수 있어요.', { n: STACK_LIMIT }))
+    const list = groups[g]
+    if (list.length >= STACK_LIMIT) return toast.error(tn('{n}개까지 추가할 수 있어요.', { n: STACK_LIMIT }))
     if (list.some((x) => (i.entryId && x.entryId === i.entryId) || norm(x.label) === norm(i.label))) return
     setGroup(g, [...list, { ...i, visibility: null }])
+  }
+  // A90: reorder — live while dragging, saved once on drop; ‹ › save right away
+  const latest = useRef(groups)
+  useEffect(() => { latest.current = groups }, [groups])
+  const moveLocal = (g: StackGroup) => (from: number, to: number) => setGroups((cur) => ({ ...cur, [g]: moveItem(cur[g], from, to) }))
+  const commit = () => void putStack(latest.current)
+  const sorters = {
+    ai: useDragSort('pe-ai', moveLocal('ai'), commit),
+    subs: useDragSort('pe-subs', moveLocal('subs'), commit),
+    skills: useDragSort('pe-skills', moveLocal('skills'), commit),
+  }
+  function step(g: StackGroup, idx: number, d: -1 | 1) {
+    const list = groups[g]
+    const next = moveItem(list, idx, idx + d)
+    if (next === list) return
+    const it = list[idx]
+    setArmed(`${g}-${it.label}`)
+    setGroup(g, next)
   }
   async function toggleUsage(item: Item, using: boolean) {
     if (!item.entryId) return
@@ -183,9 +201,11 @@ export function ProfileCardEditor({
       mark('error')
       return toast.error(tn('사용 중 표시를 바꾸지 못했어요.'))
     }
-    setUsed(using ? [...used.filter((u) => u.entryId !== item.entryId), item] : used.filter((u) => u.entryId !== item.entryId))
-    mark('saved')
-    router.refresh()
+    // the new tool keeps the spot it was given (end of the row); the order is saved with the row
+    const rest = groups.skills.filter((u) => u.entryId !== item.entryId)
+    const next = { ...groups, skills: using ? [...rest, { ...item, used: true }] : rest }
+    setGroups(next)
+    await putStack(next)
   }
 
   const [linksOpen, setLinksOpen] = useState(false)
@@ -193,9 +213,8 @@ export function ProfileCardEditor({
   const bioPii = piiWarning(bio)
 
   const group = (g: StackGroup) => {
-    const own = groups[keyOf(g)]
-    const items: Array<{ it: Item; used: boolean; idx: number }> =
-      g === 'skills' ? [...used.map((it, idx) => ({ it, used: true, idx })), ...own.map((it, idx) => ({ it, used: false, idx }))] : own.map((it, idx) => ({ it, used: false, idx }))
+    const list = groups[g]
+    const sort = sorters[g]
     const GIcon = VIS_ICON[vis[g]]
     return (
       <div className="mc-group">
@@ -220,16 +239,27 @@ export function ProfileCardEditor({
           </DropdownMenu>
         </div>
         <ul className="mc-chips">
-          {items.map(({ it, used: isUsed, idx }) => {
-            const key = `${g}-${isUsed ? 'u' : 'o'}-${it.label}-${idx}`
+          {list.map((it, idx) => {
+            const key = `${g}-${it.label}`
             const on = armed === key
             return (
-              <li key={key}>
+              <li key={key} {...sort.item(idx)} className={sort.dragIdx === idx ? 'pe-dragging' : undefined}>
                 <span className={`mc-chip pe-chip${on ? ' on' : ''}`} data-pe-chip={on ? '' : undefined}>
-                  <button type="button" className="pe-chip-btn" aria-expanded={on} onClick={() => setArmed(on ? null : key)} aria-label={tx('{label} 삭제 버튼 보기', { label: it.label })}>
+                  {list.length > 1 && <GripVertical className="pe-grip" aria-hidden />}
+                  <button type="button" className="pe-chip-btn" aria-expanded={on} onClick={() => !sort.wasDrag() && setArmed(on ? null : key)} aria-label={tx('{label} 편집 버튼 보기', { label: it.label })}>
                     <ServiceIcon label={it.label} iconUrl={it.iconUrl} />
                     <span className="svc-label">{it.label}</span>
                   </button>
+                  {on && list.length > 1 && (
+                    <>
+                      <button type="button" className="pe-chip-move" disabled={idx === 0} aria-label={tx('{label} 앞으로', { label: it.label })} onClick={() => step(g, idx, -1)}>
+                        <ChevronLeft className="w-3.5 h-3.5" strokeWidth={2.25} />
+                      </button>
+                      <button type="button" className="pe-chip-move" disabled={idx === list.length - 1} aria-label={tx('{label} 뒤로', { label: it.label })} onClick={() => step(g, idx, 1)}>
+                        <ChevronRight className="w-3.5 h-3.5" strokeWidth={2.25} />
+                      </button>
+                    </>
+                  )}
                   {on && (
                     <button
                       type="button"
@@ -238,8 +268,8 @@ export function ProfileCardEditor({
                       aria-label={tx('{label} 삭제', { label: it.label })}
                       onClick={() => {
                         setArmed(null)
-                        if (isUsed) void toggleUsage(it, false)
-                        else setGroup(g, own.filter((_, j) => j !== idx))
+                        if (g === 'skills' && it.used) void toggleUsage(it, false)
+                        else setGroup(g, list.filter((_, j) => j !== idx))
                       }}
                     >
                       <X className="w-3 h-3" strokeWidth={2.25} />
@@ -370,9 +400,11 @@ export function ProfileCardEditor({
 
       <AdaptiveSheet open={adding !== null} onOpenChange={(o) => !o && setAdding(null)} title={adding ? tx('{label} 추가', { label: tx(STACK_GROUP_LABEL[adding]) }) : ''}>
         {adding && (
-          <div className="pb-2 min-h-[280px]">
+          <div className="pb-1">
             <Picker
               key={adding}
+              inline
+              taken={groups[adding].map((i) => i.label)}
               skillsOnly={adding === 'skills'}
               suggestions={adding === 'ai' ? AI_SUGGESTIONS : adding === 'subs' ? SUB_SUGGESTIONS : []}
               placeholder={adding === 'skills' ? tx('스킬·플러그인·MCP 검색') : adding === 'ai' ? tx('AI 검색 또는 직접 입력') : tx('구독 서비스 검색 또는 직접 입력')}

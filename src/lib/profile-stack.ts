@@ -37,7 +37,7 @@ export const STACK_LIMIT = 20
 
 /** Quick picks for the pickers (free text is always allowed too). */
 export const AI_SUGGESTIONS = ['Claude', 'ChatGPT', 'Gemini', 'Grok', 'Cursor', 'Perplexity', 'GitHub Copilot', 'Claude Code', 'Codex', 'Midjourney', 'NotebookLM', 'v0']
-export const SUB_SUGGESTIONS = ['ChatGPT Plus', 'ChatGPT Pro', 'Claude Pro', 'Claude Max', 'Cursor Pro', 'Cursor Ultra', 'Google AI Pro', 'Google AI Ultra', 'SuperGrok', 'SuperGrok Heavy', 'Perplexity Pro', 'Perplexity Max', 'GitHub Copilot Pro', 'Midjourney', 'ZCRE (지크)']
+export const SUB_SUGGESTIONS = ['ChatGPT Plus', 'ChatGPT Pro', 'Claude Pro', 'Claude Max', 'Claude Ultra', 'Cursor Pro', 'Cursor Ultra', 'Google AI Pro', 'Google AI Ultra', 'SuperGrok', 'SuperGrok Heavy', 'Perplexity Pro', 'Perplexity Max', 'GitHub Copilot Pro', 'Midjourney', 'ZCRE (지크)']
 /** catalog types that count as 스킬·플러그인·MCP (from '사용 중' tool usage) */
 export const SKILL_TYPES: ReadonlyArray<string> = ['agent_skill', 'mcp_server', 'cli_tool', 'cursor_rules', 'prompt']
 
@@ -118,6 +118,53 @@ export function agentsFromConnected(memberId: string, connected: ConnectedLike[]
         brand: c.brand ?? null,
       },
     }))
+}
+
+/**
+ * A90: 스킬·플러그인·MCP order. Saved skills rows are free-text extras (no entry) and order
+ * anchors for catalog tools marked '사용 중' (entry set). Anchors whose tool isn't in use any
+ * more (or that this viewer can't see) drop out; in-use tools without an anchor come first,
+ * as before A90.
+ */
+export function mergeSkillOrder<I extends { entry: { id: string } | null }>(saved: I[], used: I[]): I[] {
+  const usedById = new Map(used.map((u) => [u.entry!.id, u]))
+  const placed = new Set<string>()
+  const ordered: I[] = []
+  for (const s of saved) {
+    if (!s.entry) ordered.push(s)
+    else if (usedById.has(s.entry.id) && !placed.has(s.entry.id)) {
+      ordered.push(usedById.get(s.entry.id)!)
+      placed.add(s.entry.id)
+    }
+  }
+  return [...used.filter((u) => !placed.has(u.entry!.id)), ...ordered]
+}
+
+/** A90: the skills row to save: extras as text, in-use tools as anchors; over the cap, trailing anchors go first. */
+export function skillsPayload(items: Array<{ label: string; entryId: string | null; used?: boolean }>, limit = STACK_LIMIT): Array<{ label: string; entryId: string | null }> {
+  const out = items.map((i) => ({ label: i.label, entryId: i.used ? i.entryId : null }))
+  for (let k = out.length - 1; out.length > limit && k >= 0; k--) if (out[k].entryId) out.splice(k, 1)
+  return out.slice(0, limit)
+}
+
+/** A90: '내가 쓰는 것' order — not-yet-placed first (newest first), then by position. */
+export function sortUsage<T extends { created_at: string; position?: number | null }>(rows: T[]): T[] {
+  return [...rows].sort((a, b) => {
+    const pa = a.position ?? null, pb = b.position ?? null
+    if (pa === null && pb !== null) return -1
+    if (pb === null && pa !== null) return 1
+    if (pa !== null && pb !== null && pa !== pb) return pa - pb
+    return b.created_at.localeCompare(a.created_at)
+  })
+}
+
+/** Move one item in a list (reorder by drag or ‹ ›). */
+export function moveItem<T>(list: T[], from: number, to: number): T[] {
+  if (from === to || from < 0 || from >= list.length || to < 0 || to >= list.length) return list
+  const next = [...list]
+  const [x] = next.splice(from, 1)
+  next.splice(to, 0, x)
+  return next
 }
 
 /** Visible chips + how many are folded into '+N'. */

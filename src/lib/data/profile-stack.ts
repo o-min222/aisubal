@@ -2,6 +2,7 @@ import type { LinkVisibility } from '@/lib/profile-rules'
 import {
   SKILL_TYPES,
   agentsFromConnected,
+  mergeSkillOrder,
   type MemberAgent,
   type StackGroup,
   type StackGroupData,
@@ -70,7 +71,7 @@ function mockRaw(viewerId: string, memberId: string): RawStack {
     if (!s) return { visibility: own ? 'members' : null, items: [] }
     const vis = s.save.vis[k]
     return can(vis)
-      ? { visibility: own ? vis : null, items: s.save[k].filter((i) => !i.visibility || can(i.visibility)).map((i) => ({ label: i.label, entry: null, visibility: own ? (i.visibility ?? null) : null })) }
+      ? { visibility: own ? vis : null, items: s.save[k].filter((i) => !i.visibility || can(i.visibility)).map((i) => ({ label: i.label, entry: i.entryId ? { id: i.entryId, slug: '', name: i.label, iconUrl: null } : null, visibility: own ? (i.visibility ?? null) : null })) }
       : null
   }
   return {
@@ -97,12 +98,13 @@ export async function getProfileStack(viewerId: string, memberId: string): Promi
   const skillTools: StackItem[] = tools
     .filter((t) => SKILL_TYPES.includes(t.type))
     .map((t) => ({ label: t.name, entry: { id: t.id, slug: t.slug, name: t.name, iconUrl: t.icon_url, type: t.type } }))
-  const extras = raw.skills?.items ?? []
+  const saved = raw.skills?.items ?? []
   return {
     ai: raw.ai,
     subs: raw.subs,
-    skills: raw.skills ? { visibility: raw.skills.visibility, items: [...skillTools, ...extras] } : null,
-    skillExtras: extras.map((i) => i.label),
+    // A90: one owner-chosen order across '사용 중' tools and free-text extras
+    skills: raw.skills ? { visibility: raw.skills.visibility, items: mergeSkillOrder(saved, skillTools) } : null,
+    skillExtras: saved.filter((i) => !i.entry).map((i) => i.label),
     agents: agentsFromConnected(memberId, connected, own),
   }
 }
