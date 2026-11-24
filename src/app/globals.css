@@ -3108,3 +3108,28 @@ html:has(.landing) { scroll-snap-type: y proximity; background: #111111; }
   .landing-login :is(.auth-hero-logo, .auth-invite, .auth-hero-actions, .auth-hero-locale),
   .landing-login .auth-hero-brand > :not(.auth-hero-logo) { animation: landing-rise-pc 600ms cubic-bezier(.22, 1, .36, 1) calc(100ms + var(--d, 0ms)) both; }
 }
+
+/* A66 P3: MCP usage (agent page + admin) */
+.mu-note { font-size: 12.5px; line-height: 1.55; color: var(--n-888); }
+.mu-dim { color: var(--n-888); }
+.mu-err { color: var(--n-555); }
+.mu-h3 { font-size: 12.5px; font-weight: 600; color: var(--n-555); margin-bottom: 6px; }
+.mu-stats { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 4px 8px; }
+.mu-stats dt { font-size: 11.5px; color: var(--n-888); }
+.mu-stats dd { font-size: 17px; font-weight: 650; color: var(--n-111); font-variant-numeric: tabular-nums; white-space: nowrap; }
+@media (max-width: 420px) { .mu-stats { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.mu-chart { display: flex; align-items: stretch; gap: 6px; height: 104px; }
+.mu-day { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; gap: 3px; }
+.mu-day-n { font-size: 10.5px; color: var(--n-888); font-variant-numeric: tabular-nums; min-height: 13px; }
+.mu-day-bar { width: 100%; max-width: 36px; border-radius: 3px 3px 0 0; background: var(--n-111); opacity: .78; max-height: calc(100% - 36px); }
+.mu-day-label { font-size: 10.5px; color: var(--n-888); border-top: 1px solid var(--n-eee); width: 100%; text-align: center; padding-top: 3px; font-variant-numeric: tabular-nums; }
+.mu-tools { display: grid; grid-template-columns: minmax(0, 9.5rem) minmax(2rem, 1fr) auto; align-items: center; gap: 6px 8px; font-size: 12.5px; min-width: 0; }
+.mu-tool-name { font-size: 12px; color: var(--n-111); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mu-tool-bar { height: 6px; border-radius: 3px; background: var(--n-eee); overflow: hidden; }
+.mu-tool-bar > span { display: block; height: 100%; background: var(--n-555); border-radius: 3px; }
+.mu-tool-num { text-align: right; color: var(--n-111); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.mu-table { width: 100%; font-size: 12.5px; border-collapse: collapse; }
+.mu-table th { text-align: left; font-weight: 500; color: var(--n-888); padding: 6px 8px; border-bottom: 1px solid var(--n-eee); white-space: nowrap; }
+.mu-table td { padding: 7px 8px; border-bottom: 1px solid var(--n-eee); color: var(--n-111); font-variant-numeric: tabular-nums; vertical-align: top; }
+.mu-table td.num, .mu-table th.num { text-align: right; white-space: nowrap; }
+.mu-table tr:last-child td { border-bottom: 0; }

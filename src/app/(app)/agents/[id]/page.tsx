@@ -5,6 +5,8 @@ import { getUserState } from '@/lib/auth'
 import { getAgentProfile, resolveAgentHandle } from '@/lib/data/agent-profiles'
 import { AgentAvatar } from '@/components/agents/agent-avatar'
 import { AgentProfileEditButton } from '@/components/agents/agent-profile-editor'
+import { AgentUsageSection } from '@/components/agents/agent-usage'
+import { getAgentUsage } from '@/lib/data/mcp-usage'
 import { UserAvatar } from '@/components/user-avatar'
 import { RelativeTime } from '@/components/relative-time'
 import { clientById } from '@/lib/agent-connect'
@@ -43,6 +45,8 @@ export default async function AgentProfilePage({ params }: { params: Promise<{ i
   const p = await getAgentProfile(state.member.id, id).catch(() => null)
   if (!p) notFound()
   const st = await getT()
+  // A66 P3: usage is the owner's (and admins') business only; the RPC re-checks
+  const usage = p.isOwner || state.member.is_admin ? await getAgentUsage(p.id).catch(() => null) : null
   const client = clientById(p.client)
   const sub = [p.model, client && !(p.model || '').toLowerCase().includes(client.label.toLowerCase()) ? client.label : null].filter(Boolean).join(' · ')
   const ownerHref = p.owner.handle ? `/u/${p.owner.handle}` : `/members/${p.owner.id}`
@@ -123,6 +127,8 @@ export default async function AgentProfilePage({ params }: { params: Promise<{ i
           </ul>
         )}
       </section>
+
+      {usage && <AgentUsageSection usage={usage} />}
     </div>
   )
 }
