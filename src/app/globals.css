@@ -3049,31 +3049,50 @@ html:has(.landing) { scroll-snap-type: y proximity; background: #111111; }
 .auth-invite-status.warn { color: #f5c27a; }
 .auth-invite-how { margin-top: 6px; font-size: 12.5px; line-height: 1.6; color: rgba(255,255,255,.55); }
 
-/* AI-3 (A65c): the login floats up instead of just being there.
-   Timings: 900ms — rise cubic-bezier(.22,1,.36,1), fade cubic-bezier(.33,1,.68,1) — 20px rise; stagger logo 0 → text 100ms →
-   invite 180ms → button 240ms → language 320ms. The peek dims to .55 over 600ms while the login is in view.
-   PC: the same entrance once on load (CSS only, ends visible without JS), 700ms, 16px, starting at 120ms. */
-.landing-login { --rise-ease: cubic-bezier(.22, 1, .36, 1); }
-.landing-login .auth-hero-logo { --rise-d: 0ms; }
-.landing-login .auth-hero-brand > :not(.auth-hero-logo) { --rise-d: 100ms; }
-.landing-login .auth-invite { --rise-d: 180ms; }
-.landing-login .auth-hero-actions { --rise-d: 240ms; }
-.landing-login .auth-hero-locale { --rise-d: 320ms; }
-.landing-login .auth-hero-logo, .landing-login .auth-hero-brand > :not(.auth-hero-logo), .landing-login .auth-invite, .landing-login .auth-hero-actions, .landing-login .auth-hero-locale {
-  transition: opacity 900ms cubic-bezier(.33, 1, .68, 1) var(--rise-d, 0ms), transform 900ms var(--rise-ease) var(--rise-d, 0ms);
+/* A65d: mobile — the login takes the peek's place on the same screen, scrubbed by scroll (--p 0→1, set by
+   LandingCrossfade, which also adds .xfade; without it the stacked layout above stays).
+   Peek: opacity 1 → .4 under a veil (fixed 12px backdrop blur + 55% #111) fading in by p = .7 — about .18 effective
+   at p = 1; only opacity animates (no per-frame blur radius).
+   Login: each part fades 0 → 1 and rises 24px over .42 of p, starting logo .22 / tagline .30 / invite .36 /
+   button .42 / language .48 (all in by p = .9). Cue fades out by p = .35. Taps go to the login from p = .6. */
+.landing-stage { display: contents; }
+.landing-veil, .xf-snap { display: none; }
+@media (max-width: 1023px) {
+  html:has(.landing.xfade) { scroll-snap-type: y proximity; }
+  .landing.xfade { position: relative; height: calc(var(--xf-stage-h) + var(--xf-travel)); --p: 0; }
+  .landing.xfade .landing-stage { display: block; position: sticky; top: var(--xf-top); height: var(--xf-stage-h); overflow: hidden; }
+  .landing.xfade .landing-peek { scroll-snap-align: none; opacity: calc(1 - var(--p) * .6); }
+  .landing.xfade .landing-veil { display: block; position: absolute; left: 0; right: 0; bottom: 0; height: var(--xf-vh); z-index: 1; pointer-events: none;
+    background: rgba(17, 17, 17, .55); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); opacity: clamp(0, var(--p) * 1.4, 1); will-change: opacity; }
+  .landing.xfade .landing-login { position: absolute; left: 0; right: 0; bottom: 0; height: var(--xf-vh); min-height: 0; z-index: 2; background: transparent; scroll-snap-align: none; pointer-events: none; }
+  .landing.xfade.xf-live .landing-login { pointer-events: auto; }
+  .landing.xfade.xf-live .landing-peek { pointer-events: none; }
+  .landing.xfade .landing-login :is(.auth-hero-logo, .auth-invite, .auth-hero-actions, .auth-hero-locale),
+  .landing.xfade .landing-login .auth-hero-brand > :not(.auth-hero-logo) {
+    --k: clamp(0, (var(--p) - var(--s, 0)) / .42, 1);
+    opacity: var(--k); transform: translate3d(0, calc((1 - var(--k)) * 24px), 0); will-change: opacity, transform;
+  }
+  .landing.xfade .landing-login .auth-hero-logo { --s: .22; }
+  .landing.xfade .landing-login .auth-hero-brand > :not(.auth-hero-logo) { --s: .30; }
+  .landing.xfade .landing-login .auth-invite { --s: .36; }
+  .landing.xfade .landing-login .auth-hero-actions { --s: .42; }
+  .landing.xfade .landing-login .auth-hero-locale { --s: .48; }
+  .landing.xfade .landing-cue { position: fixed; left: 50%; bottom: max(14px, env(safe-area-inset-bottom)); transform: translateX(-50%); margin: 0; z-index: 3;
+    opacity: clamp(0, 1 - var(--p) / .35, 1); }
+  .landing.xfade.xf-live .landing-cue { pointer-events: none; visibility: hidden; }
+  .landing.xfade .xf-snap { display: block; position: absolute; left: 0; width: 1px; height: 1px; scroll-snap-align: start; pointer-events: none; }
+  .landing.xfade .xf-snap-0 { top: var(--xf-start); }
+  .landing.xfade .xf-snap-1 { top: calc(var(--xf-start) + var(--xf-travel)); }
 }
-.landing.rise-ready:not(.risen) .landing-login :is(.auth-hero-logo, .auth-invite, .auth-hero-actions, .auth-hero-locale),
-.landing.rise-ready:not(.risen) .landing-login .auth-hero-brand > :not(.auth-hero-logo) { opacity: 0; transform: translateY(20px); }
-.landing-peek .peek { transition: opacity 600ms ease-out; }
-.landing.login-in-view .landing-peek .peek { opacity: .55; }
-@keyframes landing-rise-pc { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
-@media (min-width: 1024px) {
+/* PC: a soft one-time entrance of the login column on load (CSS only, ends visible without JS) — 600ms, 12px,
+   from 100ms, logo → text +90ms → invite +160ms → button +220ms → language +280ms */
+@keyframes landing-rise-pc { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+@media (min-width: 1024px) and (prefers-reduced-motion: no-preference) {
+  .landing-login .auth-hero-logo { --d: 0ms; }
+  .landing-login .auth-hero-brand > :not(.auth-hero-logo) { --d: 90ms; }
+  .landing-login .auth-invite { --d: 160ms; }
+  .landing-login .auth-hero-actions { --d: 220ms; }
+  .landing-login .auth-hero-locale { --d: 280ms; }
   .landing-login :is(.auth-hero-logo, .auth-invite, .auth-hero-actions, .auth-hero-locale),
-  .landing-login .auth-hero-brand > :not(.auth-hero-logo) { animation: landing-rise-pc 700ms var(--rise-ease) calc(120ms + var(--rise-d, 0ms)) both; }
-  .landing.login-in-view .landing-peek .peek { opacity: 1; }
-}
-@media (prefers-reduced-motion: reduce) {
-  .landing-login :is(.auth-hero-logo, .auth-invite, .auth-hero-actions, .auth-hero-locale),
-  .landing-login .auth-hero-brand > :not(.auth-hero-logo) { animation: none !important; transition: none !important; opacity: 1 !important; transform: none !important; }
-  .landing-peek .peek { transition: none; }
+  .landing-login .auth-hero-brand > :not(.auth-hero-logo) { animation: landing-rise-pc 600ms cubic-bezier(.22, 1, .36, 1) calc(100ms + var(--d, 0ms)) both; }
 }

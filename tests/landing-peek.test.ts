@@ -83,9 +83,10 @@ describe('A65 landing layout (dev)', () => {
     const res = await fetch(`${BASE_URL}/i/axk8m2pq`, { redirect: 'manual' })
     expect(res.headers.get('set-cookie') ?? '').toMatch(/aisubal_invite=AXK8M2PQ;.*HttpOnly/i)
   })
-  it('AI-3: the server HTML never ships the login hidden (the rise is added by JS only while off-screen)', async () => {
+  it('A65d: the server HTML never ships the crossfade state (JS adds it; no-JS keeps the stacked login)', async () => {
     const html = await page()
-    expect(html).not.toMatch(/rise-ready|class="[^"]*\brisen\b/)
+    expect(html).not.toMatch(/class=\"[^\"]*\b(xfade|xf-live)\b/)
+    expect(html).not.toContain('--p:')
   })
   it('?error=… → the plain screen, so the error is on the first screen', async () => {
     const html = await get('/?preview=1&error=auth')
