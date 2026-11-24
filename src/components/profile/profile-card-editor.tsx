@@ -327,7 +327,7 @@ export function ProfileCardEditor({
           />
           {bioPii && <p role="alert" className="pii-warning text-[12px] rounded-lg px-2.5 py-1.5 mt-1" style={{ background: 'var(--c-fff4e5)', color: 'var(--c-8a4b00)' }}><T s="{pii} 멤버 모두가 볼 수 있어요. 지우거나 가려주세요." vars={{ pii: bioPii }} /></p>}
 
-          <div className="mc-body">
+          <div className="mc-body scroll-mt-20" id="stack">
             {group('ai')}
             {group('subs')}
             {group('skills')}

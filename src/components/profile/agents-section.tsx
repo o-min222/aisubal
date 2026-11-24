@@ -19,7 +19,7 @@ const KIND_LABEL: Record<AgentActivity['kind'], string> = {
 export async function AgentsSection({ agents, isMe, ownerName }: { agents: ProfileAgent[]; isMe: boolean; ownerName: string }) {
   const st = await getT()
   return (
-    <section id="agents" className="card p-4 scroll-mt-20" aria-labelledby="agents-title">
+    <section id="agents" className="card pf-section p-4 scroll-mt-20" aria-labelledby="agents-title">
       <div className="flex items-center justify-between gap-2 mb-3">
         <h2 id="agents-title" className="text-sm font-semibold text-n-111 inline-flex items-center gap-1.5">
           <Bot className="w-4 h-4" /> {isMe ? <T>내 AI</T> : <T s="{owner}님의 AI" vars={{ owner: ownerName }} />}

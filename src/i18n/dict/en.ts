@@ -2631,6 +2631,25 @@ const en: Record<string, string> = {
   // A93
   "{name}님이 질문했어요": "{name} asked a question",
   "한 사람이 연달아 올리면 한 줄로 모아요 · 친구나 팔로우한 사람의 질문도 알려 드려요": "Several posts in a row fold into one line · questions from friends and people you follow too",
+  // A91
+  "한 줄 소개 추가": "Add a headline",
+  "실명 {public_real_name}": "Real name {public_real_name}",
+  "내 프로필로 돌아가기": "Back to my profile",
+  "소개 편집": "Edit about",
+  "블로그, GitHub, X 같은 링크를 더해 보세요.": "Add links like your blog, GitHub or X.",
+  "글 {posts} · 받은 좋아요 {likes}": "{posts} posts · {likes} likes received",
+  "아직 쓴 글이 없어요. 오늘 써 본 AI 이야기로 시작해 보세요.": "No posts yet. Start with something you tried with AI today.",
+  "첫 글 쓰기": "Write your first post",
+  "모두 보기": "Show all",
+  "활동 내역": "Activity",
+  "내가 쓰는 것 편집": "Edit what I use",
+  "쓰는 AI, 구독 중인 서비스, 스킬·MCP를 더하면 비슷한 사람과 이어져요.": "Add the AI, subscriptions and skills/MCP you use to meet people like you.",
+  "갤러리 서비스·툴": "Gallery services & tools",
+  "갤러리·런칭": "Gallery & launches",
+  "직접 만든 도구나 서비스가 있다면 갤러리에 올려 보세요.": "Built a tool or service? Post it to the gallery.",
+  "같이 이야기하고 싶은 주제가 있다면 모임을 열어 보세요.": "Have a topic to talk through together? Host a meetup.",
+  "예정 · 호스트 · {n}명 참여": "Upcoming · Host · {n} going",
+  "지난 모임 · 호스트 · {n}명 참여": "Past · Host · {n} going",
 }
 
 export default en

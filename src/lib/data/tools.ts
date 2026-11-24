@@ -201,6 +201,15 @@ export async function listMemberTools(memberId: string): Promise<ToolboxEntry[]>
   return ((data || []) as unknown as Array<{ entry: ToolboxEntry | null }>).map((r) => r.entry).filter((e): e is ToolboxEntry => Boolean(e))
 }
 
+/** A91: what a member made (gallery entries with them as maker), newest first — 갤러리·런칭 on the profile. */
+export async function listMemberMade(memberId: string, limit = 6): Promise<ToolboxEntry[]> {
+  const all = await allEntries()
+  return all
+    .filter((e) => (e.maker_ids ?? []).includes(memberId))
+    .sort((a, b) => (b.created_at ?? '').localeCompare(a.created_at ?? ''))
+    .slice(0, limit)
+}
+
 /** A90: the owner reorders their '내가 쓰는 것' (ids = entry ids in the new order). */
 export async function reorderMemberTools(memberId: string, entryIds: string[]): Promise<void> {
   const ids = [...new Set(entryIds.filter((id) => typeof id === 'string' && id.length > 0))].slice(0, 200)
