@@ -15,11 +15,12 @@ import { enrichAll, markLiked, type Enricher } from './enrich'
 import { getRelations, socialAuthorIds } from './social'
 import { listDismissed } from './rec-dismissals'
 import { pickInterestTags, rankFeedPosts } from '@/lib/recommend-rules'
+import { canRepost } from '@/lib/repost-rules'
 
 import { moimCardsForThreads, promotedGroupMoimThreads } from './moim'
 import { isMoimThreadBody } from '@/lib/moim-thread-rules'
 const FEED_SELECT =
-  'id, parent_id, root_id, reply_to_id, title, content, url, link_title, link_description, link_image, link_site_name, link_favicon, link_type, link_previews, image_path, posted_as, author_kind, agent_name, agent_model, agent_token_id, agent_interaction, like_count, reaction_count, visibility, reply_count, is_hidden, created_at, group_id, deleted_at, edited_at, public_author_id, author:members!posts_public_author_id_fkey(id, display_name, handle, avatar_url), nick:nickname_profiles!posts_nickname_id_fkey(id, nickname, avatar_url), as_group_id, grp:groups!posts_as_group_id_fkey(id, slug, name)'
+  'id, parent_id, root_id, reply_to_id, title, content, url, link_title, link_description, link_image, link_site_name, link_favicon, link_type, link_previews, image_path, posted_as, author_kind, agent_name, agent_model, agent_token_id, agent_interaction, like_count, reaction_count, repost_count, visibility, reply_count, is_hidden, created_at, group_id, deleted_at, edited_at, public_author_id, author:members!posts_public_author_id_fkey(id, display_name, handle, avatar_url), nick:nickname_profiles!posts_nickname_id_fkey(id, nickname, avatar_url), as_group_id, grp:groups!posts_as_group_id_fkey(id, slug, name)'
 
 // ---------------------------------------------------------------- mock (DEV)
 type MockState = { posts: TimelinePost[]; likers: Map<string, TimelineLiker[]> }
@@ -282,7 +283,141 @@ export type FeedListOpts = {
   q?: string
 }
 
+// ---------------------------------------------------------------- reposts (A95, 0128)
+type MockRepost = { postId: string; memberId: string; at: string }
+const mockReposts = ((globalThis as unknown as { __aisubalReposts?: MockRepost[] }).__aisubalReposts ??= [
+  // a followed member reposted a post by someone the viewer doesn't follow
+  { postId: 'post-3', memberId: 'member-2', at: new Date(Date.now() - 2 * 3600_000).toISOString() },
+])
+const mockRepostCount = (postId: string) => mockReposts.filter((r) => r.postId === postId).length
+
+/** the viewer's reposts among these posts (and, in DEV, the counts) */
+async function withRepostState(viewerId: string, posts: TimelinePost[]): Promise<TimelinePost[]> {
+  const ids = [...new Set(posts.filter((p) => !p.parentId).map((p) => p.id))]
+  if (!ids.length) return posts
+  if (isMock()) {
+    return posts.map((p) => (p.parentId ? p : { ...p, repostCount: mockRepostCount(p.id), repostedByMe: mockReposts.some((r) => r.postId === p.id && r.memberId === viewerId) }))
+  }
+  const supabase = await sb()
+  const { data } = await supabase.from('post_reposts').select('post_id').eq('member_id', viewerId).in('post_id', ids)
+  const mine = new Set((data || []).map((d: { post_id: string }) => d.post_id))
+  return posts.map((p) => (mine.has(p.id) ? { ...p, repostedByMe: true } : p))
+}
+
+/** Repost (or undo) a post as the member; returns the new count. The DB guard decides what's repostable. */
+export async function setMemberRepost(postId: string, memberId: string, on: boolean): Promise<number> {
+  if (isMock()) {
+    const p = mockState().posts.find((x) => x.id === postId)
+    if (!p) throw new Error('not_found')
+    const i = mockReposts.findIndex((r) => r.postId === postId && r.memberId === memberId)
+    if (on && i < 0) {
+      if (!canRepost({ ...p, isMine: p.author.id === memberId })) throw new Error('repost_not_allowed')
+      mockReposts.push({ postId, memberId, at: new Date().toISOString() })
+    }
+    if (!on && i >= 0) mockReposts.splice(i, 1)
+    return mockRepostCount(postId)
+  }
+  const supabase = await sb()
+  if (on) {
+    const { error } = await supabase.from('post_reposts').insert({ post_id: postId, member_id: memberId })
+    if (error && error.code !== '23505') throw error
+  } else {
+    const { error } = await supabase.from('post_reposts').delete().eq('post_id', postId).eq('member_id', memberId)
+    if (error) throw error
+  }
+  const { data } = await supabase.from('posts').select('repost_count').eq('id', postId).maybeSingle()
+  return (data as { repost_count: number } | null)?.repost_count ?? 0
+}
+
+/**
+ * Reposts by `reposterIds` created between `lower` and `upper` (exclusive), newest first, one entry per post.
+ * The post is read under its own RLS, so a post that has since been restricted, hidden or deleted never shows;
+ * posts by `skipAuthors` are left out because the feed already carries them.
+ */
+async function listRepostEntries(viewerId: string, reposterIds: string[], skipAuthors: Set<string>, lower: string | null, upper: string | null, extra: Enricher[]): Promise<TimelinePost[]> {
+  if (!reposterIds.length) return []
+  const inWindow = (at: string) => (!lower || at > lower) && (!upper || at < upper)
+  type Entry = { postId: string; at: string; who: { id: string; name: string } }
+  let entries: Entry[] = []
+  let posts: TimelinePost[] = []
+  if (isMock()) {
+    const st = mockState()
+    entries = mockReposts
+      .filter((r) => reposterIds.includes(r.memberId) && inWindow(r.at))
+      .sort((a, b) => b.at.localeCompare(a.at))
+      .map((r) => ({ postId: r.postId, at: r.at, who: { id: r.memberId, name: MOCK_MEMBERS.find((m) => m.id === r.memberId)?.display_name ?? '멤버' } }))
+    posts = st.posts.filter((p) => !p.parentId && !p.groupId && !p.isNickname && !p.isDeleted && !skipAuthors.has(p.author.id)).map((p) => ({ ...p, isMine: p.author.id === viewerId }))
+  } else {
+    const supabase = await sb()
+    let q = supabase
+      .from('post_reposts')
+      .select('post_id, created_at, member:members!post_reposts_member_id_fkey(id, display_name)')
+      .in('member_id', reposterIds.slice(0, 500))
+      .order('created_at', { ascending: false })
+      .limit(60)
+    if (upper) q = q.lt('created_at', upper)
+    if (lower) q = q.gt('created_at', lower)
+    const { data, error } = await q
+    if (error) throw error
+    type R = { post_id: string; created_at: string; member: { id: string; display_name: string } | Array<{ id: string; display_name: string }> | null }
+    entries = ((data || []) as unknown as R[]).flatMap((r) => {
+      const m = Array.isArray(r.member) ? r.member[0] : r.member
+      return m ? [{ postId: r.post_id, at: r.created_at, who: { id: m.id, name: m.display_name } }] : []
+    })
+    const ids = [...new Set(entries.map((e) => e.postId))]
+    if (!ids.length) return []
+    const { data: rows, error: e2 } = await supabase
+      .from('posts')
+      .select(FEED_SELECT)
+      .in('id', ids)
+      .is('parent_id', null)
+      .is('group_id', null)
+      .eq('posted_as', 'real')
+      .eq('is_hidden', false)
+      .is('deleted_at', null)
+    if (e2) throw e2
+    const nickId = await myNicknameId()
+    posts = ((rows || []) as unknown as FeedRow[]).filter((r) => !skipAuthors.has(r.public_author_id ?? r.author?.id ?? '')).map((r) => feedRowToTimeline(r, new Set(), viewerId, nickId))
+    posts = markLiked(posts, await likedSet(viewerId, posts.map((p) => p.id)))
+  }
+  const byId = new Map(posts.map((p) => [p.id, p]))
+  const seen = new Set<string>()
+  const picked: Array<{ e: Entry; p: TimelinePost }> = []
+  for (const e of entries) {
+    const p = byId.get(e.postId)
+    if (!p || seen.has(e.postId)) continue
+    seen.add(e.postId)
+    picked.push({ e, p })
+  }
+  const enriched = await enrichAll(picked.map((x) => x.p), [(p) => withFollowState(viewerId, p), (p) => withRepostState(viewerId, p), ...extra])
+  return enriched.map((p, i) => ({ ...p, repostedBy: { id: picked[i].e.who.id, name: picked[i].e.who.name, at: picked[i].e.at } }))
+}
+
+/**
+ * 팔로잉 / 친구 also carry the reposts of the people in that list, at the time they reposted, with a
+ * 'reposted by' header. The page keeps its normal 20 posts; reposts that fall between this page's
+ * newest and oldest post are added to it, so none is lost or doubled across pages.
+ */
 async function queryFeed(viewerId: string, opts: FeedListOpts, withCount: boolean, extra: Enricher[] = []): Promise<{ posts: TimelinePost[]; total: number | null }> {
+  const scope = opts.scope ?? 'all'
+  if (!((scope === 'following' || scope === 'friends') && !opts.groupId && !opts.authorId && !opts.q)) return queryFeedBase(viewerId, opts, withCount, extra)
+  const limit = Math.min(opts.limit ?? 30, 100)
+  const offset = Math.max(0, opts.offset ?? 0)
+  const lead = offset > 0 ? 1 : 0 // the row just before this page: its time bounds the page from above
+  const [base, authorIds] = await Promise.all([
+    queryFeedBase(viewerId, { ...opts, offset: offset - lead, limit: limit + lead }, withCount, extra),
+    socialAuthorIds(viewerId, scope).catch(() => [] as string[]),
+  ])
+  const rows = base.posts.slice(lead)
+  const upper = lead ? (base.posts[0]?.createdAt ?? null) : (opts.before ?? null)
+  const lower = rows.length >= limit ? rows[rows.length - 1].createdAt : null
+  const reposts = await listRepostEntries(viewerId, authorIds, new Set(authorIds), lower, upper, extra).catch(() => [] as TimelinePost[])
+  if (!reposts.length) return { posts: rows, total: base.total }
+  const at = (p: TimelinePost) => p.repostedBy?.at ?? p.createdAt
+  return { posts: [...rows, ...reposts].sort((a, b) => at(b).localeCompare(at(a))), total: base.total }
+}
+
+async function queryFeedBase(viewerId: string, opts: FeedListOpts, withCount: boolean, extra: Enricher[] = []): Promise<{ posts: TimelinePost[]; total: number | null }> {
   const scope = opts.scope ?? 'all'
   if (scope === 'for_you') {
     const r = await queryForYou(viewerId, opts)
@@ -298,7 +433,7 @@ async function queryFeed(viewerId: string, opts: FeedListOpts, withCount: boolea
     !opts.groupId && !opts.authorId ? promotedGroupMoimThreads().catch(() => [] as string[]) : ([] as string[]),
   ])
   const promoted = new Set(promotedIds)
-  const steps: Enricher[] = [(p) => withFollowState(viewerId, p), (p) => withGroupIdentity(viewerId, p), (p) => withMoimCards(viewerId, p), ...extra]
+  const steps: Enricher[] = [(p) => withFollowState(viewerId, p), (p) => withGroupIdentity(viewerId, p), (p) => withMoimCards(viewerId, p), (p) => withRepostState(viewerId, p), ...extra]
   if (isMock()) {
     const st = mockState()
     let rows = st.posts.filter(
@@ -454,7 +589,7 @@ async function getFeedThread__raw(
 /** Group identity on the root (B14) and agent photos/links (0050) for a thread. */
 function enrichThread(viewerId: string, posts: TimelinePost[]): Promise<TimelinePost[]> {
   // A82: the relationship chip shows on the post and its comments too
-  return enrichAll(posts, [(p) => withFollowState(viewerId, p), (p) => withGroupIdentity(viewerId, p.slice(0, 1)).then((g) => [...g, ...p.slice(1)]), (p) => withAgentCards(p)])
+  return enrichAll(posts, [(p) => withFollowState(viewerId, p), (p) => withGroupIdentity(viewerId, p.slice(0, 1)).then((g) => [...g, ...p.slice(1)]), (p) => withAgentCards(p), (p) => withRepostState(viewerId, p)])
 }
 
 async function listFeedLikers__raw(postId: string): Promise<TimelineLiker[]> {

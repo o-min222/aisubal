@@ -24,9 +24,9 @@ describe('A85 (queue) · calmer post meta and action row', () => {
     expect(menu).toMatch(/JSON\.stringify\(patch\)/)
   })
 
-  it('action row: three even slots, bookmark at the far right, no 0 counts, quiet when untouched', () => {
-    expect(card.match(/className="tc-slot"/g)?.length).toBe(3) // reaction, comment, share
-    expect(card.indexOf('className="tc-foot-end"')).toBeLessThan(card.indexOf('<ArchiveButton'))
+  it('action row (A95): one compact left group, no 0 counts, quiet when untouched', () => {
+    expect(card.match(/className="tc-slot"/g)?.length).toBe(5) // reaction, comment, repost, share, save
+    expect(card.indexOf('<ArchiveButton')).toBeLessThan(card.indexOf('className="tc-foot-end'))
     expect(card).toMatch(/counts\.replyCount > 0 && <span className="tabular-nums">/)
     expect(card).toMatch(/quiet \? ' is-quiet' : ''/)
     expect(src('src/components/timeline/like-button.tsx')).toMatch(/\{count > 0 \? count : null\}/)

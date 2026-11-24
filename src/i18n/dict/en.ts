@@ -2080,7 +2080,7 @@ const en: Record<string, string> = {
   "아카이브에서 찾지 못했어요.": "Couldn’t find it in your archive.",
   "내 글에 댓글·답글": "Comments & replies on my posts",
   "피드 · 그룹 · 익명 라운지": "Feed · groups · anonymous lounge",
-  "같은 글의 좋아요는 한 줄로 모아요": "Likes on the same post are grouped into one line",
+  "같은 글의 좋아요는 한 줄로 모아요 · 리포스트도 알려 드려요": "Likes on the same post are grouped into one line · reposts too",
   "팔로우·친구": "Follows & friends",
   "팔로우 · 친구 신청": "Follows · friend requests",
   "새 팔로워 · 친구 신청 · 수락": "New followers · friend requests · accepts",
@@ -2647,6 +2647,18 @@ const en: Record<string, string> = {
   "같이 이야기하고 싶은 주제가 있다면 모임을 열어 보세요.": "Have a topic to talk through together? Host a meetup.",
   "예정 · 호스트 · {n}명 참여": "Upcoming · Host · {n} going",
   "지난 모임 · 호스트 · {n}명 참여": "Past · Host · {n} going",
+  // A95
+  "{name}님이 리포스트함": "{name} reposted",
+  "{name}님이 내 글을 리포스트했어요": "{name} reposted your post",
+  "리포스트": "Repost",
+  "리포스트 취소": "Undo repost",
+  "리포스트 {n}": "Repost, {n}",
+  "리포스트했어요": "Reposted",
+  "리포스트하지 못했어요.": "Couldn't repost.",
+  "내 글은 리포스트할 수 없어요.": "You can't repost your own post.",
+  "전체 회원에게 공개된 글만 리포스트할 수 있어요.": "Only posts visible to all members can be reposted.",
+  "이 글은 리포스트할 수 없어요.": "This post can't be reposted.",
+  "리포스트 처리에 실패했습니다.": "Couldn't update the repost.",
 }
 
 export default en

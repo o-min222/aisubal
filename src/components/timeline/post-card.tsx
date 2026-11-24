@@ -8,7 +8,7 @@ import { useState, type ReactNode } from 'react'
 import { setRecHidden, useRecHidden } from './rec-hidden'
 import { postRecDismiss } from '@/lib/rec-dismiss'
 import Link from 'next/link'
-import { MessageCircle, Star, Wrench, ExternalLink, Share2, VenetianMask, Sparkles } from 'lucide-react'
+import { MessageCircle, Star, Wrench, ExternalLink, Share2, VenetianMask, Sparkles, Repeat2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { postShareData, postShareUrl } from '@/lib/share-rules'
 import { LinkPreviewBlock } from '@/components/link-preview-block'
@@ -20,6 +20,8 @@ import { UserAvatar } from '@/components/user-avatar'
 import { RelativeTime } from '@/components/relative-time'
 import { LikeButton } from './like-button'
 import { ReactionAddButton, ReactionChips } from './reactions'
+import { RepostButton } from './repost-button'
+import { canRepost } from '@/lib/repost-rules'
 import { AgentsOffMark, VisibilityMark } from './visibility-mark'
 import { LikerList } from './liker-list'
 import type { TimelinePost } from './types'
@@ -104,7 +106,7 @@ export function PostCard({
   const archiveKind = archiveKindForEndpoint(likeEndpoint)
   const gone = Boolean(post.isDeleted || (anon && post.isHidden))
   const counts = useCounts(post.id, { likeCount: post.likeCount, liked: post.likedByMe, replyCount: post.replyCount })
-  const quiet = counts.likeCount + counts.replyCount + (post.reactionCount ?? 0) === 0
+  const quiet = counts.likeCount + counts.replyCount + (post.reactionCount ?? 0) + (post.repostCount ?? 0) === 0
   const menuKind: PostMenuKind | null = likeEndpoint.startsWith('/api/feed/') ? 'feed' : likeEndpoint.startsWith('/api/agora/') ? 'agora' : likeEndpoint.startsWith('/api/anon/') ? 'anon' : null
   const avatar = anon ? (
       <span
@@ -184,6 +186,12 @@ export function PostCard({
       <div className="flex gap-3">
         <div className="tc-avatar flex-shrink-0">{avatar}</div>
         <div className="min-w-0 flex-1">
+          {post.repostedBy && (
+            <p className="tc-reposted">
+              <Repeat2 className="w-3 h-3" aria-hidden />{' '}
+              <Link href={`/members/${post.repostedBy.id}`} className="tc-reposted-who"><T s="{name}님이 리포스트함" vars={{ name: post.repostedBy.name }} /></Link>
+            </p>
+          )}
           {post.recReason && (
             <p className="tc-rec"><Sparkles className="w-3 h-3" aria-hidden /> <T s={post.recReason.s} vars={post.recReason.vars} /></p>
           )}
@@ -314,8 +322,9 @@ export function PostCard({
             <ReactionChips postId={post.id} surface={menuKind} initialLiked={post.likedByMe} initialCount={post.likeCount} reactionCount={post.reactionCount} disabled={!canLike || gone} />
           )}
 
-          {/* A85 (queue): reaction · comment · share spread evenly, the bookmark at the far right; a count at 0 is hidden
-              and a post nobody has touched yet gets quieter icons */}
+          {/* A95: Threads-style row: one compact left-aligned group (reaction · comment · repost · share · save), each count
+              right beside its icon and hidden at 0; only the owner's extra actions sit at the far right. A post nobody has
+              touched yet gets quieter icons. */}
           <footer className={`tc-foot flex items-center${isReply ? ' tc-foot-reply' : ''}${quiet ? ' is-quiet' : ''}`}>
             <span className="tc-slot">
               {menuKind === 'feed' || menuKind === 'agora' ? (
@@ -349,17 +358,27 @@ export function PostCard({
                 )}
               </span>
             )}
+            {menuKind === 'feed' && !isReply && !gone && (
+              <span className="tc-slot">
+                <RepostButton
+                  postId={post.id}
+                  initialCount={post.repostCount ?? 0}
+                  initialMine={Boolean(post.repostedByMe)}
+                  blockedReason={canRepost(post) ? null : post.isMine ? tx('내 글은 리포스트할 수 없어요.') : tx('전체 회원에게 공개된 글만 리포스트할 수 있어요.')}
+                />
+              </span>
+            )}
             <span className="tc-slot">
               <button type="button" onClick={share} className="tc-act tap-target inline-flex items-center justify-center rounded-full icon-btn" aria-label={tx('공유')}>
                 <Share2 className="w-[17px] h-[17px]" />
               </button>
             </span>
-            <span className="tc-foot-end">
-              {!gone && archiveKind && (
+            {!gone && archiveKind && (
+              <span className="tc-slot">
                 <ArchiveButton kind={archiveKind} refId={post.id} hint={{ title: post.title || post.body.slice(0, 80), excerpt: post.body.slice(0, 600), url: href, author: anon ? undefined : a.name }} />
-              )}
-              {actions && <span className="flex items-center gap-1">{actions}</span>}
-            </span>
+              </span>
+            )}
+            {actions && <span className="tc-foot-end flex items-center gap-1">{actions}</span>}
           </footer>
           {!isReply && !gone && href && post.commentPreviews?.length ? (
             <CommentPreviews items={post.commentPreviews} total={counts.replyCount} href={href} anon={anon} />

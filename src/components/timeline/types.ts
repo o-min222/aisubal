@@ -44,6 +44,11 @@ export type TimelinePost = {
   likedByMe: boolean
   /** A39: emoji reactions other than 👍 (👍 = likeCount); undefined = unknown (mock) */
   reactionCount?: number
+  /** A95 (0128): reposts of this post, and whether the viewer reposted it */
+  repostCount?: number
+  repostedByMe?: boolean
+  /** A95: this entry is a repost: who reposted it and when (the feed shows it at that time, with a header) */
+  repostedBy?: { id: string; name: string; at: string } | null
   /** A43: who can see it (root's value on replies); undefined = members */
   visibility?: import('@/lib/post-visibility').PostVisibility
   replyCount: number

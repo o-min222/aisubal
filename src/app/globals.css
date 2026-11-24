@@ -3314,13 +3314,24 @@ html:has(.landing) { scroll-snap-type: y proximity; background: #111111; }
 }
 
 /* ---------- A85 (queue) · calmer post meta + action row ---------- */
-/* reaction · comment · share in even fixed slots (icons line up card to card), bookmark at the far right */
-.tc-foot { gap: 0; }
+/* A95: Threads-style row: one compact left-aligned group (reaction · comment · repost · share · save), a count right beside
+   its icon. The old even fixed slots spread the icons across the card. */
+.tc-foot { gap: 0; margin-left: -6px; }
 @media (min-width: 640px) { .tc-foot { gap: 0; } }
-.tc-slot { display: inline-flex; align-items: center; min-width: 68px; }
-@media (min-width: 640px) { .tc-slot { min-width: 88px; } }
-.tc-foot-reply .tc-slot { min-width: 56px; }
+.tc-slot { display: inline-flex; align-items: center; }
+.tc-foot .tap-target { width: 30px; min-width: 30px; }
+.tc-foot .tc-act { gap: 0; }
+.tc-foot .tc-act > .tabular-nums { margin-left: -2px; margin-right: 6px; }
 .tc-foot-end { margin-left: auto; display: inline-flex; align-items: center; gap: 4px; }
+/* repost: reposted = bolder icon and number; a post that can't be reposted keeps the icon, quiet */
+.tc-foot .tc-repost[data-on], .tc-foot .tc-repost[data-on] .tabular-nums { color: var(--n-111); font-weight: 600; }
+.tc-foot .tc-repost[data-blocked] { color: var(--n-bbb); cursor: default; }
+.tc-foot .tc-repost[data-blocked]:hover { color: var(--n-bbb); }
+/* 'X님이 리포스트함' above a reposted card */
+.tc-reposted { display: flex; align-items: center; gap: 4px; font-size: 12px; line-height: 16px; color: var(--n-888); margin-bottom: 2px; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 600; }
+.tc-reposted svg { flex: 0 0 auto; }
+.tc-reposted a, .tc-reposted a:visited { color: var(--n-888); text-decoration: none; }
+.tc-reposted a:hover { color: var(--n-111); text-decoration: underline; }
 .tc-foot .tc-act, .tc-foot .tc-act:visited { color: var(--n-555); }
 .tc-foot .tc-act:hover { color: var(--n-111); text-decoration: none; }
 /* nobody has touched this post yet: quieter icons (a saved bookmark keeps its weight) */

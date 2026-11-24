@@ -100,6 +100,8 @@ export type FeedRow = {
   like_count: number
   /** A39 (0092): non-👍 emoji reactions */
   reaction_count?: number
+  /** A95 (0128) */
+  repost_count?: number
   /** A43 (0095) */
   visibility?: string | null
   reply_count: number
@@ -195,6 +197,7 @@ export function feedRowToTimeline(r: FeedRow, liked: Set<string>, viewerId?: str
     rating: null,
     likeCount: r.like_count ?? 0,
     reactionCount: r.reaction_count ?? 0,
+    repostCount: r.repost_count ?? 0,
     visibility: parseVisibility(r.visibility) ?? 'members',
     likedByMe: liked.has(r.id),
     replyCount: r.reply_count ?? 0,

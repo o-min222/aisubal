@@ -6,7 +6,7 @@ export const NOTIFY_CATEGORIES = [
   // A61: the gentle re-engagement digest (0110): at most daily, never at night, frequency in settings
   { id: 'digest', label: msg('새 소식'), title: msg('새 소식'), hint: msg('하루 한 번, 낮 12시쯤 새 글이나 놓친 인기 글을 알려 드려요 · 밤 10시~아침 8시엔 보내지 않아요') },
   { id: 'replies', label: msg('댓글'), title: msg('내 글에 댓글·답글'), hint: msg('피드 · 그룹 · 익명 라운지') },
-  { id: 'likes', label: msg('좋아요'), title: msg('좋아요'), hint: msg('같은 글의 좋아요는 한 줄로 모아요') },
+  { id: 'likes', label: msg('좋아요'), title: msg('좋아요'), hint: msg('같은 글의 좋아요는 한 줄로 모아요 · 리포스트도 알려 드려요') },
   { id: 'following', label: msg('팔로잉 새 글'), title: msg('팔로우한 사람의 새 글'), hint: msg('한 사람이 연달아 올리면 한 줄로 모아요 · 친구나 팔로우한 사람의 질문도 알려 드려요') },
   { id: 'social', label: msg('팔로우·친구'), title: msg('팔로우 · 친구 신청'), hint: msg('새 팔로워 · 친구 신청 · 수락') },
   { id: 'meetups', label: msg('모임'), title: msg('모임 소식'), hint: msg('초대 · 참석 확정 · 시간·장소 변경 · 전날·당일 알림') },
@@ -30,7 +30,7 @@ export function parseNotifyCategory(v: string | string[] | null | undefined): No
 export type NotifyKind = 'comment' | 'reply' | 'like' | 'follow' | 'friend_request' | 'friend_accept' | 'invite_joined' | 'agent_reply' | 'agent_like' | 'agent_mention' | 'mention'
   | 'gallery_recommended' | 'gallery_approved' | 'gallery_confirmed' | 'gallery_rejected' | 'follow_post' | 'badge' | 'moim_invite' | 'invite_refill' | 'reaction'
   | 'moim_confirmed' | 'moim_changed' | 'moim_cancelled' | 'moim_tomorrow' | 'moim_today' | 'first_post'
-  | 'digest' | 'digest_hot' | 'digest_pick' | 'digest_nudge' | 'question'
+  | 'digest' | 'digest_hot' | 'digest_pick' | 'digest_nudge' | 'question' | 'repost'
 export type NotifyActor = { kind: 'member' | 'agent' | 'anon' | 'someone'; id: string | null; name: string | null; avatarUrl: string | null; brand?: string | null }
 export type NotificationItem = {
   id: string
@@ -106,6 +106,9 @@ export function notificationSentence(n: NotificationItem): { s: string; name: st
     case 'question':
       // A93 (0127): a friend's or followee's '질문해요' post; the excerpt is its first line
       return { s: msg('{name}님이 질문했어요'), name, n: 0 }
+    case 'repost':
+      // A95 (0128): someone reposted my post; the excerpt is the post
+      return { s: msg('{name}님이 내 글을 리포스트했어요'), name, n: 0 }
     case 'follow_post':
       return n.count > 1 ? { s: msg('{name}님이 새 글 {n}개를 올렸어요'), name, n: n.count } : { s: msg('{name}님이 새 글을 올렸어요'), name, n: 0 }
     case 'gallery_recommended':

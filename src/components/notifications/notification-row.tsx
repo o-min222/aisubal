@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { Flame, Newspaper, AtSign, MessageCircleQuestion, Award, Bell, Bot, CalendarCheck, CalendarClock, CalendarDays, CalendarX, Check, Heart, MessageCircle, PenLine, Sparkles, Ticket, UserPlus, Users, VenetianMask, Wrench, X } from 'lucide-react'
+import { Flame, Newspaper, AtSign, MessageCircleQuestion, Repeat2, Award, Bell, Bot, CalendarCheck, CalendarClock, CalendarDays, CalendarX, Check, Heart, MessageCircle, PenLine, Sparkles, Ticket, UserPlus, Users, VenetianMask, Wrench, X } from 'lucide-react'
 import { UserAvatar } from '@/components/user-avatar'
 import { relativeLabel } from '@/lib/relative-label'
 import { getLocale, getT } from '@/i18n/server'
@@ -33,6 +33,7 @@ const KIND_ICON = {
   digest_nudge: Newspaper,
   follow_post: PenLine,
   question: MessageCircleQuestion,
+  repost: Repeat2,
   gallery_recommended: Sparkles,
   gallery_approved: Check,
   gallery_confirmed: Check,
