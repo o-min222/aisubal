@@ -24,14 +24,16 @@ describe('A83 sticky sub-header is one opaque block that follows the mobile top 
     expect(readFileSync(join(root, 'src/components/shell/top-bar.tsx'), 'utf8')).toContain("toggleAttribute('data-topbar-hidden', hidden)")
   })
 
-  it('gallery: search · category · sort are sticky, the tag row is not', () => {
+  it('gallery (A84): search + one tab row with the sort menu are sticky; no tag chip row, no sort pill bar', () => {
     const page = readFileSync(join(root, 'src/app/(app)/gallery/page.tsx'), 'utf8')
-    const start = page.indexOf('<div className="sticky-sub')
+    const start = page.indexOf('<div className="sticky-sub gallery-controls"')
     expect(start).toBeGreaterThan(0)
-    const tags = page.indexOf('<ChipBar className="gallery-tags"')
-    const sort = page.indexOf("aria-label={st('정렬')}")
-    expect(sort).toBeGreaterThan(start)
-    expect(tags).toBeGreaterThan(sort)
-    expect(page).not.toContain('anon-toolbar')
+    const search = page.indexOf('<ToolSearch', start)
+    const bar = page.indexOf('<div className="gallery-bar">', start)
+    const sort = page.indexOf('<GallerySort', start)
+    expect(search).toBeGreaterThan(start)
+    expect(bar).toBeGreaterThan(search)
+    expect(sort).toBeGreaterThan(bar)
+    expect(page).not.toMatch(/ChipBar|className="seg"|anon-toolbar/)
   })
 })

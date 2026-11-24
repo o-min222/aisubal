@@ -3,24 +3,27 @@ import { T } from '@/i18n/t'
 import { getT } from '@/i18n/server'
 import { TabScroller } from '@/components/tab-scroller'
 
-/** Underlined link tabs (server-renderable). Scrolls horizontally when they don't fit, with a visible overflow cue. */
+/** Underlined link tabs (server-renderable). Scrolls horizontally when they don't fit (A84: clips at the edge, no fade). */
 export async function LinkTabs({
   tabs,
   active,
   label,
   className = '',
+  flush = false,
 }: {
   tabs: Array<{ id: string; label: string; href: string; count?: number | null; dot?: boolean }>
   active: string
   label: string
   className?: string
+  /** A84: no bottom rule of its own (the row it sits in draws it) */
+  flush?: boolean
 }) {
   const st = await getT()
   return (
     <TabScroller
       label={st(label)}
       className={`link-tabs ${className}`}
-      style={{ display: 'flex', gap: 4, overflowX: 'auto', borderBottom: '1px solid var(--n-ececec)', scrollbarWidth: 'none' }}
+      style={{ display: 'flex', gap: 4, overflowX: 'auto', borderBottom: flush ? undefined : '1px solid var(--n-ececec)', scrollbarWidth: 'none' }}
     >
       {tabs.map((t) => {
         const on = t.id === active

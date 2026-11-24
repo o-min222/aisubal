@@ -18,6 +18,7 @@ import { AdaptiveSheet } from '@/components/adaptive-sheet'
 import { UserAvatar } from '@/components/user-avatar'
 import { ToolUsersCard } from '@/components/tools/tool-users'
 import { ToolQuickActions } from '@/components/tools/tool-quick-actions'
+import { UpvoteBox } from '@/components/tools/upvote-box'
 import type { ComposerIdentity } from '@/components/feed/composer'
 import type { AiRatingSummary } from '@/lib/data/agora'
 import { AiRatingSection } from './ai-rating-section'
@@ -151,38 +152,43 @@ export function ToolboxDetailClient({ entry: initial, mentionPosts, member, aiRa
         </Link>
       )}
 
-      <header className="td-head">
-        <ToolIcon name={entry.name} iconUrl={entry.icon_url} dim="w-10 h-10" />
-        <div className="td-title">
-          <h1>{entry.name}</h1>
-          <span className="td-type"><T>{TOOLBOX_TYPE_LABEL[entry.type]}</T></span>
-          {entry.product_id && <span className="launch-chip"><T>런치</T></span>}
-        </div>
-        <div className="td-actions">
-          <ToolQuickActions
-            variant="header"
-            entryId={entry.id}
-            name={entry.name}
-            liked={likedByMe}
-            likeCount={entry.like_count ?? 0}
-            using={usage?.usedByMe ?? false}
-            useCount={usage?.count ?? entry.user_count ?? 0}
-          />
-          <ArchiveButton kind="tool" refId={entry.id} hint={{ title: entry.name, excerpt: entry.one_liner ?? undefined, url: `/gallery/${entry.slug || entry.id}` }} className="td-icon" />
-          {entry.github_url && (
-            <a href={entry.github_url} target="_blank" rel="noreferrer" className="icon-btn td-icon" aria-label="GitHub" title="GitHub">
-              <GitBranch className="w-4 h-4" />
-            </a>
-          )}
-          {entry.homepage_url && (
-            <a href={entry.homepage_url} target="_blank" rel="noreferrer" className="icon-btn td-icon" aria-label={tx('홈페이지')} title={tx('홈페이지')}>
-              <ExternalLink className="w-4 h-4" />
-            </a>
-          )}
+      {/* A84: light Product Hunt touch — big logo, name + tagline, then the ▲ upvote (= 좋아요) */}
+      <header className="td-head td-head-ph">
+        <ToolIcon name={entry.name} iconUrl={entry.icon_url} dim="td-logo" text="text-2xl" />
+        <div className="td-headtext">
+          <div className="td-title">
+            <h1>{entry.name}</h1>
+            <span className="td-type"><T>{TOOLBOX_TYPE_LABEL[entry.type]}</T></span>
+            {entry.product_id && <span className="launch-chip"><T>런치</T></span>}
+          </div>
+          {entry.one_liner && <p className="td-lead">{entry.one_liner}</p>}
         </div>
       </header>
+      <div className="td-actions td-actions-ph">
+        <UpvoteBox key={`${likedByMe}-${entry.like_count}`} size="lg" entryId={entry.id} name={entry.name} voted={likedByMe} count={entry.like_count ?? 0} />
+        <ToolQuickActions
+          hideLike
+          variant="header"
+          entryId={entry.id}
+          name={entry.name}
+          liked={likedByMe}
+          likeCount={entry.like_count ?? 0}
+          using={usage?.usedByMe ?? false}
+          useCount={usage?.count ?? entry.user_count ?? 0}
+        />
+        <ArchiveButton kind="tool" refId={entry.id} hint={{ title: entry.name, excerpt: entry.one_liner ?? undefined, url: `/gallery/${entry.slug || entry.id}` }} className="td-icon" />
+        {entry.github_url && (
+          <a href={entry.github_url} target="_blank" rel="noreferrer" className="icon-btn td-icon" aria-label="GitHub" title="GitHub">
+            <GitBranch className="w-4 h-4" />
+          </a>
+        )}
+        {entry.homepage_url && (
+          <a href={entry.homepage_url} target="_blank" rel="noreferrer" className="icon-btn td-icon" aria-label={tx('홈페이지')} title={tx('홈페이지')}>
+            <ExternalLink className="w-4 h-4" />
+          </a>
+        )}
+      </div>
 
-      {entry.one_liner && <p className="td-lead">{entry.one_liner}</p>}
       {entry.tags.length > 0 && <p className="td-tags">{entry.tags.map((t) => `#${t}`).join(' ')}</p>}
       {entry.description && entry.description.trim() !== (entry.one_liner ?? '').trim() && (
         <div className="td-desc prose-sm">

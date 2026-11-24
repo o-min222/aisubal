@@ -95,6 +95,8 @@ export function popularityScore(e: ToolboxEntry): number {
     e.mention_count * 2 +
     e.install_count +
     (e.upvote_count ?? 0) * 2 +
+    // A84: the gallery's ▲ upvote is the 좋아요, so the popular ranks follow it
+    (e.like_count ?? 0) * 2 +
     Number(e.avg_rating) * e.rating_count +
     (e.featured ? 5 : 0)
   )

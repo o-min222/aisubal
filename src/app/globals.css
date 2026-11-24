@@ -1577,14 +1577,7 @@ body { -webkit-tap-highlight-color: transparent; }
 }
 .chip-bar-track::-webkit-scrollbar { display: none; }
 .chip-bar-track > * { flex: 0 0 auto; }
-.chip-bar::before, .chip-bar::after {
-  content: ''; position: absolute; top: 0; bottom: 0; width: 28px; pointer-events: none; z-index: 1;
-  opacity: 0; transition: opacity .15s ease;
-}
-.chip-bar::before { left: 0; background: linear-gradient(to right, var(--chip-fade, var(--bg-base)), transparent); }
-.chip-bar::after { right: 0; background: linear-gradient(to left, var(--chip-fade, var(--bg-base)), transparent); }
-.chip-bar.fade-l::before, .chip-bar.fade-r::after { opacity: 1; }
-.composer .chip-bar, .card .chip-bar, .sheet .chip-bar { --chip-fade: var(--n-fff); }
+/* A84: no fade masks on horizontal scroll rows; they clip naturally */
 .filter-chip.is-sm { min-height: 30px; padding: 0 11px; font-size: 12.5px; }
 .filter-chip {
   flex: 0 0 auto; display: inline-flex; align-items: center; min-height: 36px; padding: 0 14px;
@@ -2194,12 +2187,8 @@ button.rp-link { width: 100%; text-align: left; font: inherit; cursor: pointer; 
 .ios-install-icon { flex: none; display: inline-flex; align-items: center; justify-content: center; min-width: 32px; height: 32px; padding: 0 6px; border-radius: 9px; background: var(--n-f3f3f3); color: var(--c-06c); }
 .ios-install-text { font-size: 12.5px; font-weight: 600; }
 
-/* tab strips: overflow cue (fade + chevron) so off-screen tabs are discoverable */
+/* tab strips scroll sideways; A84: no fade or chevron cue, they clip naturally */
 .tabs-scroll { position: relative; min-width: 0; }
-.tabs-more { position: absolute; top: 0; bottom: 1px; width: 44px; display: flex; align-items: center; color: var(--n-555); border: 0; padding: 0 6px; cursor: pointer; }
-.tabs-more-r { right: 0; justify-content: flex-end; background: linear-gradient(to right, transparent, var(--tabs-bg, var(--n-fff)) 60%); }
-.tabs-more-l { left: 0; justify-content: flex-start; background: linear-gradient(to left, transparent, var(--tabs-bg, var(--n-fff)) 60%); }
-.tabs-more:hover { color: var(--n-111); }
 .profile-stat-sub { display: block; padding: 0 6px 8px; margin-top: -6px; font-size: 11px; color: var(--link); }
 .profile-stats > .profile-stat-cell { padding: 0; }
 .profile-stat-cell > a:first-child { display: block; padding: 10px 6px; color: inherit; }
@@ -3189,3 +3178,94 @@ html:has(.landing) { scroll-snap-type: y proximity; background: #111111; }
 .invite-network .invite-graph { border: 0; border-radius: 0; box-shadow: none; }
 .invite-network .sm-hint { padding-bottom: 8px; }
 .invite-graph-loading { height: max(440px, calc(100dvh - 210px)); background: var(--n-fbfbfa); }
+
+/* ---------- A84 · gallery controls: search (tags as suggestions) + one tab row with the sort menu ---------- */
+.gallery-controls { display: flex; flex-direction: column; gap: 4px; }
+.tool-search { position: relative; }
+.tool-search-box {
+  display: flex; align-items: center; gap: 8px; height: 44px; padding: 0 4px 0 14px;
+  border: 1px solid var(--n-e3e3e3); border-radius: 999px; background: var(--n-fff); cursor: text;
+}
+.tool-search-box:focus-within { border-color: var(--n-bbb); }
+.tool-search-input { flex: 1 1 auto; min-width: 0; height: 100%; border: 0; outline: 0; background: transparent; font-size: 15px; color: var(--n-111); }
+.tool-search-input::placeholder { color: var(--n-999); }
+.tool-search-clear { flex: none; width: 36px; height: 36px; display: inline-flex; align-items: center; justify-content: center; border-radius: 999px; color: var(--n-888); }
+.tool-search-clear:hover { color: var(--n-111); }
+.tool-search-tag {
+  flex: none; display: inline-flex; align-items: center; gap: 2px; max-width: 50%; height: 28px; padding: 0 3px 0 10px;
+  border-radius: 999px; background: var(--n-111); color: var(--n-fff); font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden;
+}
+.tool-search-tag button { flex: none; width: 22px; height: 22px; display: inline-flex; align-items: center; justify-content: center; border-radius: 999px; color: inherit; opacity: .75; }
+.tool-search-tag button:hover { opacity: 1; }
+.tool-search-pop {
+  position: absolute; left: 0; right: 0; top: calc(100% + 6px); z-index: 40; padding: 10px 12px 12px;
+  border-radius: 14px; background: var(--n-fff); border: 1px solid var(--n-e5e5e5); box-shadow: 0 8px 24px rgba(0, 0, 0, .12);
+}
+.tool-search-pop-title { margin: 0 0 8px; font-size: 12px; color: var(--n-888); }
+.tool-search-pop-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.gallery-bar { display: flex; align-items: stretch; gap: 4px; border-bottom: 1px solid var(--n-ececec); }
+.gallery-bar .tabs-scroll { flex: 1 1 auto; }
+.gallery-sort {
+  flex: none; display: inline-flex; align-items: center; gap: 2px; min-height: 44px; padding: 0 2px 0 8px;
+  background: none; border: 0; font-size: 13px; font-weight: 600; color: var(--n-666); white-space: nowrap; cursor: pointer;
+}
+.gallery-sort:hover { color: var(--n-111); }
+.gallery-meta { margin: 0 2px; font-size: 12px; color: var(--n-888); }
+@media (max-width: 767px) {
+  /* the sticky block's own bottom border is the tab row's rule; tabs run to the screen edge and clip there */
+  .sticky-sub.gallery-controls { padding-bottom: 0; }
+  .sticky-sub .gallery-bar { border-bottom: 0; margin: 0 -10px; padding-right: 10px; }
+  .sticky-sub .gallery-bar .link-tabs { padding-left: 4px; }
+}
+
+/* ---------- A84 · Product Hunt-style gallery rows ---------- */
+.ph-row { display: flex; align-items: center; gap: 4px; padding: 0 12px 0 0; border-bottom: 1px solid var(--n-f0f0f0); min-width: 0; }
+.crow-list > .ph-row:last-child { border-bottom: 0; }
+.ph-row.on { background: var(--tint-hover); }
+.ph-link { flex: 1 1 auto; min-width: 0; display: flex; align-items: center; gap: 12px; padding: 14px 4px 14px 14px; color: inherit; }
+.ph-link:hover .ph-name { text-decoration: underline; text-underline-offset: 2px; }
+.ph-rank { flex: none; width: 18px; text-align: right; font-size: 13px; font-weight: 600; color: var(--n-999); }
+.ph-logo { width: 48px; height: 48px; border-radius: 12px; object-fit: cover; }
+.ph-row .product-icon.ph-logo { border-radius: 12px; }
+.ph-main { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.ph-name { font-size: 15px; font-weight: 700; color: var(--n-111); line-height: 1.3; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ph-tagline { font-size: 13.5px; color: var(--n-555); line-height: 1.4; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ph-meta { display: flex; align-items: center; gap: 6px; min-width: 0; margin-top: 3px; font-size: 12px; color: var(--n-888); white-space: nowrap; overflow: hidden; }
+.ph-meta .cat-chip, .ph-meta .maker-chip { flex: none; }
+/* tags give way first so the usage line (friends / avatars) stays visible */
+.ph-tag { flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; color: var(--n-999); }
+.ph-usage { display: inline-flex; flex: none; align-items: center; gap: 4px; max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+.ph-usage.is-friends { color: var(--c-1f7a4d); font-weight: 600; }
+.ph-ai { flex: none; display: inline-flex; align-items: center; gap: 2px; }
+.ph-save { flex: none; color: var(--n-bbb); opacity: .9; }
+.ph-save:hover { color: var(--n-555); }
+.ph-vote {
+  flex: none; display: inline-flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+  width: 48px; height: 52px; border: 1px solid var(--n-e3e3e3); border-radius: 10px; background: var(--n-fff);
+  font-size: 13px; font-weight: 700; color: var(--n-333); cursor: pointer; transition: border-color .12s ease, color .12s ease, background .12s ease;
+}
+.ph-vote:hover { border-color: var(--n-bbb); }
+.ph-vote-ic { width: 12px; height: 10px; fill: currentColor; }
+.ph-vote.on { border-color: var(--c-e5484d); color: var(--c-e5484d); background: color-mix(in srgb, var(--c-e5484d) 7%, var(--n-fff)); }
+.ph-vote-lg { flex: none; flex-direction: row; white-space: nowrap; width: auto; height: 44px; padding: 0 16px; gap: 8px; font-size: 14px; border-radius: 999px; }
+.ph-vote-lg .ph-vote-label { font-weight: 600; }
+.ph-group { padding: 14px 14px 6px; font-size: 12.5px; font-weight: 700; color: var(--n-666); border-bottom: 1px solid var(--n-f0f0f0); }
+.crow-list > .ph-group:first-child { padding-top: 10px; }
+@media (max-width: 480px) {
+  .ph-link { gap: 10px; padding: 12px 2px 12px 10px; }
+  .ph-logo { width: 44px; height: 44px; border-radius: 11px; }
+  .ph-row { padding-right: 10px; }
+  .ph-vote:not(.ph-vote-lg) { width: 44px; height: 50px; }
+  /* phones: the friends/usage line wins over tags instead of squeezing them to "#…" */
+  .ph-meta:has(.ph-usage) .ph-tag { display: none; }
+  .ph-rank { width: 14px; font-size: 12.5px; }
+}
+/* A84: detail header, light Product Hunt touch */
+.td-head-ph { grid-template-columns: 64px minmax(0, 1fr); column-gap: 14px; align-items: center; }
+.td-head-ph > :first-child { grid-row: auto; align-self: center; }
+.td-logo { width: 64px; height: 64px; border-radius: 14px; object-fit: cover; }
+.td-head-ph .product-icon.td-logo { border-radius: 14px; }
+.td-headtext { min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.td-head-ph .td-title h1 { font-size: 20px; }
+.td-head-ph .td-lead { margin: 0; font-size: 14.5px; color: var(--n-555); line-height: 1.45; }
+.td-actions-ph { margin: 14px 0 0; gap: 6px; }

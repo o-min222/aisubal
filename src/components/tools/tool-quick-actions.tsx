@@ -18,6 +18,7 @@ export function ToolQuickActions({
   using: initialUsing,
   useCount: initialUses,
   variant = 'row',
+  hideLike = false,
 }: {
   entryId: string
   name: string
@@ -26,6 +27,8 @@ export function ToolQuickActions({
   using: boolean
   useCount: number
   variant?: 'row' | 'header'
+  /** A84: the detail header shows the 좋아요 as the ▲ upvote instead */
+  hideLike?: boolean
 }) {
   const router = useRouter()
   const [liked, setLiked] = useState(initialLiked)
@@ -64,7 +67,7 @@ export function ToolQuickActions({
   const header = variant === 'header'
   return (
     <span className={`qa ${header ? 'qa-header' : 'qa-row'}`}>
-      <button
+      {!hideLike && <button
         type="button"
         className={`qa-btn qa-like${liked ? ' on' : ''}`}
         aria-pressed={liked}
@@ -74,7 +77,7 @@ export function ToolQuickActions({
       >
         <Heart className="qa-ic" aria-hidden />
         <span className="tabular-nums">{likes}</span>
-      </button>
+      </button>}
       <button
         type="button"
         className={`qa-btn qa-use${using ? ' on' : ''}`}

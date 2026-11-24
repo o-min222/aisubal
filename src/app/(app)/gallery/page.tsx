@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { ChipBar } from '@/components/chip-bar'
+import { Fragment } from 'react'
 import { redirect } from 'next/navigation'
 import { Inbox, Plus } from 'lucide-react'
 import { getUserState } from '@/lib/auth'
@@ -12,16 +12,20 @@ import {
   parseToolSort,
   topTags,
   type ToolCategory,
+  type ToolListItem,
   type ToolSort,
 } from '@/lib/tool-rules'
+import type { ToolUsageStack } from '@/lib/tool-usage-rules'
 import { LinkTabs } from '@/components/link-tabs'
 import { InfiniteList } from '@/components/infinite/infinite-list'
 import { PAGE_SIZE } from '@/lib/paging'
 import { ReadingLayout, openHref } from '@/components/reading/reading-layout'
 import { CompactList, EmptyList } from '@/components/reading/compact-row'
-import { ToolRow } from '@/components/reading/tool-row'
+import { GalleryGroupHeader, GalleryRow } from '@/components/tools/gallery-row'
+import { groupHeaderAt } from '@/lib/gallery-rows'
 import { loadToolEntry, ToolDetailView } from '@/components/detail/tool-detail-view'
 import { ToolSearch } from '@/components/tools/tool-search'
+import { GallerySort } from '@/components/tools/gallery-sort'
 import { T } from '@/i18n/t'
 import { getT } from '@/i18n/server'
 import { msg } from '@/i18n/translate'
@@ -32,6 +36,22 @@ export async function generateMetadata() {
 }
 
 type Params = { category?: string; type?: string; tag?: string; q?: string; sort?: string; view?: string; mine?: string; page?: string; open?: string }
+
+type RowCtx = { here: string; sort: ToolSort; ranked: boolean; grouped: boolean; openId?: string | null }
+
+/** A84: one page of Product Hunt-style rows; ranks and date groups continue across pages */
+function galleryRows(slice: ToolListItem[], offset: number, prev: ToolListItem | null, social: Map<string, ToolUsageStack>, c: RowCtx) {
+  const created = slice.map((t) => t.created_at)
+  return slice.map((t, i) => {
+    const bucket = c.grouped ? groupHeaderAt(created, i, prev?.created_at ?? null) : null
+    return (
+      <Fragment key={t.id}>
+        {bucket && <GalleryGroupHeader bucket={bucket} />}
+        <GalleryRow tool={t} href={openHref(c.here, t.slug)} active={c.openId === t.id} usage={social.get(t.id)} rank={c.ranked ? offset + i + 1 : null} sort={c.sort} />
+      </Fragment>
+    )
+  })
+}
 
 function hrefWith(base: Params, patch: Partial<Record<keyof Params, string | null>>) {
   const next: Record<string, string> = {}
@@ -81,19 +101,20 @@ export default async function ToolsPage({ searchParams }: { searchParams: Promis
   const social = await socialToolUsers(state.member.id, tools.map((t) => t.id), circle).catch(() => new Map())
   const tab = rec ? 'rec' : mine ? 'mine' : category ?? 'all'
 
+  const rowCtx: RowCtx = { here, sort, ranked: !rec && sort === 'popular', grouped: !rec && sort === 'newest' }
+
   async function more(page: number) {
     'use server'
     const s = await getUserState()
     if (s.type !== 'member') return { nodes: null, hasMore: false }
     const rows = await listTools(s.member.id, { category, tag, q, sort, rec, mine })
-    const slice = rows.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
+    const from = (page - 1) * PAGE_SIZE
+    const slice = rows.slice(from, page * PAGE_SIZE)
     const soc = await socialToolUsers(s.member.id, slice.map((t) => t.id)).catch(() => new Map())
     return {
       nodes: slice.length ? (
         <CompactList label={msg('갤러리 목록')}>
-          {slice.map((t) => (
-            <ToolRow key={t.id} tool={t} href={openHref(here, t.slug)} usage={soc.get(t.id)} />
-          ))}
+          {galleryRows(slice, from, rows[from - 1] ?? null, soc, rowCtx)}
         </CompactList>
       ) : null,
       hasMore: page * PAGE_SIZE < rows.length,
@@ -117,11 +138,13 @@ export default async function ToolsPage({ searchParams }: { searchParams: Promis
         </div>
       </header>
 
-      {/* A83: one sticky block on phones (search · category · sort); the tag row scrolls with the list to keep it short */}
-      <div className="sticky-sub space-y-2">
-        <ToolSearch key={q} initial={q} />
-        <div className="card" style={{ padding: '0 8px' }}>
+      {/* A83/A84: one sticky block on phones — search (tags live in its suggestions) + one tab row with the sort menu at its end */}
+      <div className="sticky-sub gallery-controls">
+        <ToolSearch key={`${q}|${tag ?? ''}`} initial={q} tags={tags} activeTag={tag} />
+        <div className="gallery-bar">
           <LinkTabs
+            flush
+            className="gallery-tabs"
             label={msg('카테고리')}
             active={tab}
             tabs={[
@@ -131,41 +154,12 @@ export default async function ToolsPage({ searchParams }: { searchParams: Promis
               ...TOOL_CATEGORIES.map((c) => ({ id: c.id, label: st(c.label), href: hrefWith(base, { category: c.id, view: null, tag: null }) })),
             ]}
           />
-        </div>
-        <div className="flex items-center justify-between gap-2">
-          {rec ? (
-            <p className="text-[12.5px] text-n-666"><T>내가 쓰는 것과 함께 많이 쓰는 것부터 보여줘요. 이미 쓰는 건 빼요.</T></p>
-          ) : (
-          <div className="seg" role="tablist" aria-label={st('정렬')}>
-            {TOOL_SORTS.map((s) => (
-              <Link
-                key={s.id}
-                href={hrefWith(base, { sort: s.id })}
-                role="tab"
-                aria-selected={sort === s.id}
-                className={sort === s.id ? 'on seg-link' : 'seg-link'}
-              >
-                <T>{s.label}</T>
-              </Link>
-            ))}
-          </div>
-          )}
-          <span className="text-xs text-n-888 tabular-nums"><T s="{length}개" vars={{ length: all.length }} /></span>
+          {!rec && <GallerySort active={sort} items={TOOL_SORTS.map((s) => ({ id: s.id, label: s.label, href: hrefWith(base, { sort: s.id }) }))} />}
         </div>
       </div>
-      {tags.length > 0 && (
-        <ChipBar className="gallery-tags" label={st('태그')}>
-          {tags.map((t) => (
-            <Link
-              key={t}
-              href={hrefWith(base, { tag: tag === t ? null : t })}
-              className={`tag-chip ${tag === t ? 'on' : ''}`}
-            >
-              #{t}
-            </Link>
-          ))}
-        </ChipBar>
-      )}
+      <p className="gallery-meta">
+        {rec ? <T>내가 쓰는 것과 함께 많이 쓰는 것부터 보여줘요. 이미 쓰는 건 빼요.</T> : <span className="tabular-nums"><T s="{length}개" vars={{ length: all.length }} /></span>}
+      </p>
 
       {tools.length === 0 ? (
         <EmptyList
@@ -175,9 +169,7 @@ export default async function ToolsPage({ searchParams }: { searchParams: Promis
       ) : (
         <InfiniteList key={here} className="inf-surface" hasMore={totalPages > 1} load={more} storageKey={here}>
           <CompactList label={msg('갤러리 목록')}>
-            {tools.map((t) => (
-              <ToolRow key={t.id} tool={t} href={openHref(here, t.slug)} active={Boolean(openEntry && openEntry.id === t.id)} usage={social.get(t.id)} />
-            ))}
+            {galleryRows(tools, 0, null, social, { ...rowCtx, openId: openEntry?.id ?? null })}
           </CompactList>
         </InfiniteList>
       )}
