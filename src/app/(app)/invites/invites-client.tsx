@@ -1,6 +1,8 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import Link from 'next/link'
+import { networkHref } from '@/lib/dashboard-tabs'
 import { Users, Copy, Check, AlertCircle, User, Share2, ChevronDown, Crown } from 'lucide-react'
 import { toast } from 'sonner'
 import type { InviteCodeRow } from '@/lib/data/invites'
@@ -58,7 +60,10 @@ export function InvitesClient({ inviterName, codes, codesActive, loadFailed, all
           <Users className="w-6 h-6" /> <T>초대하기</T>
         </h1>
         <p className="text-sm text-n-666 mt-1">
-          <T>초대 메시지를 복사해 카톡·문자·DM 어디로든 조용히 전하세요.</T>
+          <T>초대 메시지를 복사해 카톡·문자·DM 어디로든 조용히 전하세요.</T>{' '}
+          <Link href={networkHref()} className="text-link whitespace-nowrap">
+            <T>초대 네트워크 보기</T> ›
+          </Link>
         </p>
       </div>
 

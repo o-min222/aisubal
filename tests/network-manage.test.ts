@@ -29,6 +29,11 @@ describe('invite network → 친구·팔로워', () => {
     expect(read('src/app/(app)/me/page.tsx')).toMatch(/sp\.tab === 'network'\) redirect\(networkHref\(\{ view: sp\.view, root: sp\.root \}\)\)/)
     expect(read('src/app/(app)/me/page.tsx')).not.toMatch(/InviteGraph/)
   })
+  it('A71: 초대 현황 is not a dashboard tab; /invites is its one home', () => {
+    expect(DASHBOARD_TABS.map((t) => t.id)).not.toContain('invites')
+    expect(read('src/app/(app)/me/page.tsx')).toMatch(/sp\.tab === 'invites'\) redirect\('\/invites'\)/)
+    expect(read('src/app/(app)/invites/invites-client.tsx')).toMatch(/networkHref\(\)/)
+  })
   it('초대 stays in the avatar menu', () => {
     expect(read('src/components/shell/account-menu.tsx')).toMatch(/href="\/invites"/)
   })

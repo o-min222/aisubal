@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useEffect, useRef, useState, type ReactNode } from 'react'
-import { Bot, LogOut, Settings, Shield, SquarePlus, Ticket, UserRound, Users, LayoutDashboard } from 'lucide-react'
+import { Bot, LogOut, Settings, Shield, SquarePlus, Ticket, Users, LayoutDashboard } from 'lucide-react'
 import { AdaptiveSheet } from '@/components/adaptive-sheet'
 import { UserAvatar } from '@/components/user-avatar'
 import { useMediaQuery } from '@/hooks/use-media-query'
@@ -47,9 +47,7 @@ function MenuBody({ me, invitesLeft, close, onInstall }: { me: ShellMember; invi
       <Link href="/me" onClick={close} className="account-row">
         <LayoutDashboard className="w-[18px] h-[18px]" /> {t('내 대시보드')}
       </Link>
-      <Link href="/members/me" onClick={close} className="account-row">
-        <UserRound className="w-[18px] h-[18px]" /> {t('내 프로필')}
-      </Link>
+      {/* A71: the header row above is the profile link (no second 내 프로필 row) */}
       <Link href="/agents" onClick={close} className="account-row">
         <Bot className="w-[18px] h-[18px]" /> {t('내 에이전트')}
       </Link>

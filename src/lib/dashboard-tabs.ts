@@ -8,7 +8,6 @@ export const DASHBOARD_TABS = [
   { id: 'moim', label: msg('모임 신청/주최') },
   { id: 'groups', label: msg('내 그룹') },
   { id: 'agents', label: msg('내 AI 활동') },
-  { id: 'invites', label: msg('초대 현황') },
 ] as const
 
 /**

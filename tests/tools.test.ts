@@ -220,11 +220,14 @@ describe('routes, redirects and navigation', () => {
   it('side panel holds content sections only; account items live in the account menu', () => {
     const hrefs = SIDE_NAV.map((i) => i.href)
     expect(hrefs).toEqual(['/gallery', '/archive', '/moim', '/groups', '/anon'])
-    // 네트워크 moved into 내 대시보드; the old URL redirects there
+    // the invite network moved to 친구·팔로워 (A70); the old URL redirects there
     expect(read('src/app/(app)/network/page.tsx')).toMatch(/redirect\(networkHref/)
     for (const h of ['/members/me', '/invites', '/settings', '/admin', '/toolbox', '/products']) expect(hrefs).not.toContain(h)
     const menu = read('src/components/shell/account-menu.tsx')
-    for (const s of ['내 프로필', '초대', '설정', '관리', '로그아웃']) expect(menu).toContain(s)
+    for (const s of ['프로필 보기', '내 에이전트', '친구·팔로워', '초대', '설정', '관리', '로그아웃']) expect(menu).toContain(s)
+    // A71 MECE: every destination appears once in the account menu (the header row is the profile link)
+    const menuHrefs = [...menu.matchAll(/<Link href="([^"]+)"/g)].map((m) => m[1])
+    expect(new Set(menuHrefs).size).toBe(menuHrefs.length)
     // A10: 설정 / 관리 are single rows (no expandable sub-lists); sections are picked inside the pages
     expect(menu).toMatch(/me\.isAdmin && \(\s*<Link href="\/admin"/)
     expect(menu).toContain('<Link href="/settings"')
@@ -233,7 +236,9 @@ describe('routes, redirects and navigation', () => {
   })
 
   it('settings and admin have sub-sections with list → detail', () => {
-    expect(SETTINGS_SECTIONS.map((s) => s.label)).toEqual(['계정', '프로필 편집', '내 에이전트', '알림', '모바일 앱'])
+    // A71 (t297u): 내 에이전트 lives in the account menu only
+    expect(SETTINGS_SECTIONS.map((s) => s.label)).toEqual(['계정', '프로필 편집', '알림', '모바일 앱'])
+    expect(SETTINGS_SECTIONS.map((s) => s.href)).not.toContain('/agents')
     expect(ADMIN_SECTIONS.map((s) => s.label)).toEqual(['대시보드', '유저', '초대 트리', '대기 명단', '갤러리 기록', '설치 확인', '신고', '익명 관리', '사이트 설정'])
     expect(subNavActive('/settings', '/settings/account', '/settings', '/settings/account')).toBe(true)
     expect(subNavActive('/settings/tokens', '/settings/account', '/settings', '/settings/account')).toBe(false)

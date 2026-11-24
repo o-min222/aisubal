@@ -16,7 +16,6 @@ import { listMemberTools } from '@/lib/data/tools'
 import { listMoim, type Moim } from '@/lib/data/moim'
 import { listMyGroups } from '@/lib/data/groups'
 import { listProfileAgents } from '@/lib/data/tokens'
-import { listMyInviteCodes } from '@/lib/data/invites'
 import { DASHBOARD_TABS, dashboardHref, networkHref, pageSlice, parseDashboardTab, type DashboardTab } from '@/lib/dashboard-tabs'
 import { PAGE_SIZE } from '@/lib/paging'
 import { toolHref, TOOL_TYPE_CHIP } from '@/lib/tool-rules'
@@ -213,22 +212,22 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   const sp = await searchParams
   // A70: the invite network + social lists moved to 친구·팔로워 (old links, incl. notification links)
   if (sp.tab === 'network') redirect(networkHref({ view: sp.view, root: sp.root }))
+  // A71: 초대 현황 duplicated /invites (codes, who joined, progress); one home
+  if (sp.tab === 'invites') redirect('/invites')
   const tab = parseDashboardTab(sp.tab)
 
-  const [profile, tools, moimMine, moimHosting, groups, agents, invites, badges] = await Promise.all([
+  const [profile, tools, moimMine, moimHosting, groups, agents, badges] = await Promise.all([
     getProfileStats(me),
     listMemberTools(me.id).catch(() => []),
     listMoim(me.id, 'mine', null, 100).catch(() => [] as Moim[]),
     listMoim(me.id, 'hosting', null, 100).catch(() => [] as Moim[]),
     listMyGroups(me.id, true).catch(() => []),
     listProfileAgents(me.id, me.id).catch(() => []),
-    listMyInviteCodes(me.id, Boolean(me.signup_completed_at)).catch(() => null),
     listMemberBadges(me.id).catch(() => []),
   ])
   const pledge = await getPledgeStatus(me).catch(() => null)
   const stats = await getDashboardStats(me, profile.likes, profile.posts).catch(() => ({ posts: profile.posts, comments: 0, likesReceived: profile.likes, likesGiven: 0 }))
   const moims = [...new Map([...moimHosting, ...moimMine].map((m) => [m.id, m])).values()].sort((a, b) => b.startsAt.localeCompare(a.startsAt))
-  const codes = invites?.codes ?? []
   const agentActs = agents.reduce((s, a) => s + a.counts.agoraPosts + a.counts.agoraReplies + a.counts.feedReplies + a.counts.likes, 0)
 
   const counts: Record<DashboardTab, number> = {
@@ -239,10 +238,9 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
     moim: moims.length,
     groups: groups.length,
     agents: agents.length,
-    invites: codes.length,
   }
 
-  const summary: Array<{ label: string; value: number | string; tab: DashboardTab }> = [
+  const summary: Array<{ label: string; value: number | string; tab?: DashboardTab; href?: string }> = [
     { label: st('게시물'), value: stats.posts, tab: 'posts' },
     { label: st('댓글'), value: stats.comments, tab: 'comments' },
     { label: st('받은 좋아요'), value: stats.likesReceived, tab: 'posts' },
@@ -250,7 +248,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
     { label: st('모임'), value: moims.length, tab: 'moim' },
     { label: st('그룹'), value: groups.length, tab: 'groups' },
     { label: st('AI 활동'), value: agentActs, tab: 'agents' },
-    { label: st('남은 초대'), value: profile.invitesLeft, tab: 'invites' },
+    { label: st('남은 초대'), value: profile.invitesLeft, href: '/invites' },
   ]
 
   let body: ReactNode = null
@@ -300,45 +298,6 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
         <T>연결한 AI가 없어요.</T> <Link href="/agents/connect" className="text-link"><T>에이전트 연결</T></Link>
       </Empty>
     )
-  } else if (tab === 'invites') {
-    body = (
-      <div>
-        <p className="px-4 pt-3 text-sm text-n-555">
-          {invites ? (
-            <T s="초대한 {used}/{total}명 가입 · 남은 초대 {left}장 · 모두 가입하면 바로 {n}장이 다시 채워져요" vars={{ used: <b className="text-n-111">{invites.progress.joined}</b>, total: invites.progress.size, left: profile.invitesLeft, n: invites.allowance }} />
-          ) : null}
-          {' · '}
-          <Link href={networkHref()} className="text-link whitespace-nowrap"><T>초대 네트워크 보기</T> ›</Link>
-        </p>
-        {codes.length ? (
-          <ul className="divide-y divide-n-f0f0f0 mt-2">
-            {codes.map((c) => (
-              <li key={c.code} className="flex items-center gap-3 px-4 py-3">
-                <code className="font-mono text-[13px] text-n-111">{c.code}</code>
-                <span className="ml-auto text-xs text-n-888">
-                  {c.isUsed ? (
-                    <>
-                      {c.usedBy?.displayName ?? <T>가입 완료</T>} {c.usedAt && <>· <RelativeTime date={c.usedAt} /></>}
-                    </>
-                  ) : c.isActive ? (
-                    <T>사용 가능</T>
-                  ) : (
-                    <T>비활성</T>
-                  )}
-                </span>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <Empty><T>초대 코드가 없어요.</T></Empty>
-        )}
-        <div className="px-4 pb-3">
-          <Link href="/invites" className="text-sm text-link">
-            <T>초대 관리로 이동 →</T>
-          </Link>
-        </div>
-      </div>
-    )
   }
 
   return (
@@ -379,7 +338,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
         </div>
         <dl className="dash-stats grid grid-cols-4 border-t border-n-f0f0f0">
           {summary.map((s) => (
-            <Link key={s.label} href={dashboardHref(s.tab)} scroll={false} className="px-2 py-3 text-center hover:bg-n-fafafa">
+            <Link key={s.label} href={s.href ?? dashboardHref(s.tab ?? 'posts')} scroll={s.href ? undefined : false} className="px-2 py-3 text-center hover:bg-n-fafafa">
               <dd className="text-lg font-bold text-n-111 tabular-nums">{s.value}</dd>
               <dt className="text-[11.5px] text-n-888"><T>{s.label}</T></dt>
             </Link>
