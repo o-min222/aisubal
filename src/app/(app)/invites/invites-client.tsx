@@ -3,23 +3,25 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { networkHref } from '@/lib/dashboard-tabs'
-import { Users, Copy, Check, AlertCircle, User, Share2, ChevronDown, Crown } from 'lucide-react'
+import { Users, Copy, Check, AlertCircle, User, Share2, ChevronDown, Crown, QrCode } from 'lucide-react'
 import { toast } from 'sonner'
 import type { InviteCodeRow } from '@/lib/data/invites'
 import type { BatchProgress } from '@/lib/invite-batch'
 import { RelativeTime } from '@/components/relative-time'
 import { inviteShareText, inviteUrl } from '@/lib/invite-share'
+import { InviteQrOverlay } from '@/components/invites/invite-qr'
 import { T } from '@/i18n/t'
 import { msg as m } from '@/i18n/translate'
 import { tx, tn, useLocale } from '@/i18n/client'
 
 /** Real invite codes (no mock data): copy the invite message (send it anywhere) or the Web Share sheet. */
-export function InvitesClient({ inviterName, codes, codesActive, loadFailed, allowance, progress }: { inviterName: string; codes: InviteCodeRow[]; codesActive: boolean; loadFailed: boolean; allowance: number; progress: BatchProgress }) {
+export function InvitesClient({ inviterId, inviterName, inviterAvatarUrl, codes, codesActive, loadFailed, allowance, progress }: { inviterId: string; inviterName: string; inviterAvatarUrl?: string | null; codes: InviteCodeRow[]; codesActive: boolean; loadFailed: boolean; allowance: number; progress: BatchProgress }) {
   const locale = useLocale()
   const [copied, setCopied] = useState<string | null>(null)
   const [canShare, setCanShare] = useState(false)
   const [origin, setOrigin] = useState('https://aisubal.vercel.app')
   const [open, setOpen] = useState<string | null>(null)
+  const [qr, setQr] = useState<string | null>(null)
 
   useEffect(() => {
     // client-only capabilities (avoid hydration mismatch)
@@ -120,6 +122,9 @@ export function InvitesClient({ inviterName, codes, codesActive, loadFailed, all
                       <button type="button" onClick={() => copy(msg, `link:${c.code}`, m('초대 메시지를 복사했어요. 원하는 곳에 붙여넣어 보내세요.'))} className="btn btn-primary btn-sm min-h-[40px] rounded-full">
                         {copied === `link:${c.code}` ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />} <T>초대 메시지 복사</T>
                       </button>
+                      <button type="button" onClick={() => setQr(c.code)} className="btn btn-secondary btn-sm min-h-[40px] rounded-full" aria-label={tx('QR로 보여주기')} data-invite-qr-open={c.code}>
+                        <QrCode className="w-4 h-4" aria-hidden /> <T>QR</T>
+                      </button>
                       {canShare && (
                         <button type="button" onClick={() => share(c.code)} className="btn btn-secondary btn-sm min-h-[40px] rounded-full">
                           <Share2 className="w-4 h-4" /> <T>공유하기</T>
@@ -175,11 +180,23 @@ export function InvitesClient({ inviterName, codes, codesActive, loadFailed, all
         </details>
       )}
 
+      {qr && (
+        <InviteQrOverlay
+          code={qr}
+          origin={origin}
+          inviterId={inviterId}
+          inviterName={inviterName}
+          inviterAvatarUrl={inviterAvatarUrl}
+          remaining={availableCodes.length}
+          onClose={() => setQr(null)}
+        />
+      )}
+
       <div className="card p-4 space-y-2 text-sm text-n-555">
         <h2 className="font-semibold mb-1" style={{ color: 'var(--n-111)' }}>
           <T>초대는 이렇게 동작해요</T>
         </h2>
-        <p><T>1. ‘초대 메시지 복사’를 눌러 카카오톡·문자·메일·DM 등 원하는 곳에 붙여넣어 보내세요. 이름·코드·링크가 함께 담기고, 대부분의 메신저에서 미리보기 카드도 보여요.</T></p>
+        <p><T>1. ‘초대 메시지 복사’를 눌러 카카오톡·문자·메일·DM 등 원하는 곳에 붙여넣어 보내세요. 이름·코드·링크가 함께 담기고, 대부분의 메신저에서 미리보기 카드도 보여요. 앞에 있는 사람에게는 ‘QR’을 눌러 이 화면을 보여 주세요. 같은 링크로 가입이 시작돼요.</T></p>
         <p><T>2. 받은 분이 링크를 열면 누가 초대했는지와 코드 상태를 보고 Google로 로그인해요.</T></p>
         <p><T>3. 로그인 후 가입 화면에 코드가 자동으로 들어가 있어요. 버튼 한 번이면 가입 완료.</T></p>
         <p><T>4. 이미 쓰인 코드면 받은 분은 웨이트리스트로 가요. 각 코드는 1회용이에요.</T></p>

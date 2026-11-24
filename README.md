@@ -40,7 +40,7 @@
 | [docs/i18n.md](docs/i18n.md) | 다국어 |
 | [docs/mcp.md](docs/mcp.md) | MCP 툴·프롬프트·리소스 (생성됨 — 직접 고치지 마세요) |
 | [docs/DESIGN_SYSTEM.md](docs/DESIGN_SYSTEM.md) | 디자인 토큰과 컴포넌트 |
-| [docs/CHANGELOG.md](docs/CHANGELOG.md) | 최근 변경 (A69–A97) |
+| [docs/CHANGELOG.md](docs/CHANGELOG.md) | 최근 변경 (A69–A98) |
 
 ## 로컬 실행
 

@@ -30,6 +30,16 @@ describe('invite share', () => {
     expect(src).toMatch(/navigator\.share\(\{ title: tx\('AI쓰발 초대장'\), text: inviteShareText\(/)
     expect(src).toContain('<T>초대 메시지 복사</T>')
   })
+  it('usable codes also get a QR button that opens the full-screen view of the same link', () => {
+    const src = readFileSync('src/app/(app)/invites/invites-client.tsx', 'utf8')
+    expect(src).toContain("import { InviteQrOverlay } from '@/components/invites/invite-qr'")
+    expect(src).toContain("aria-label={tx('QR로 보여주기')}")
+    expect(src).toContain('setQr(c.code)')
+    expect(src).toContain('<InviteQrOverlay')
+    expect(src).toContain('remaining={availableCodes.length}')
+    // used / inactive rows never grow a QR button (the button lives inside `{usable &&`)
+    expect(src).toMatch(/\{usable && \([\s\S]*data-invite-qr-open/)
+  })
   it('every status has a clear message', () => {
     for (const s of ['valid', 'used', 'inactive', 'invalid'] as const) expect(INVITE_STATUS_TEXT[s].length).toBeGreaterThan(5)
   })

@@ -2608,6 +2608,20 @@ a.notif-pop-all:hover { background: var(--n-fafafa); }
 /* A31 invites: progress of the current batch toward the next refill */
 .invite-progress { height: 4px; border-radius: 999px; background: var(--n-eee); overflow: hidden; }
 .invite-progress > span { display: block; height: 100%; border-radius: inherit; background: var(--n-111); transition: width .3s ease; }
+/* A98: full-screen invite QR — always light so a camera can read it */
+.invite-qr-overlay { position: fixed; inset: 0; z-index: 300; background: #fff; color: #111; display: flex; align-items: center; justify-content: center; padding: 56px 24px calc(28px + env(safe-area-inset-bottom)); color-scheme: light; }
+.invite-qr-close { position: absolute; top: max(12px, env(safe-area-inset-top)); right: 12px; width: 44px; height: 44px; border-radius: 999px; display: inline-flex; align-items: center; justify-content: center; color: #111; background: transparent; }
+.invite-qr-close:hover, .invite-qr-close:focus-visible { background: #f2f2f2; outline: none; }
+.invite-qr-card { width: 100%; max-width: 400px; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 16px; }
+.invite-qr-who { display: flex; align-items: center; gap: 12px; text-align: left; }
+.invite-qr-name { font-size: 17px; font-weight: 650; line-height: 1.25; margin: 0; color: #111; }
+.invite-qr-line { font-size: 13.5px; color: #555; margin: 2px 0 0; }
+.invite-qr-frame { width: min(72vw, 56dvh, 320px); aspect-ratio: 1; background: #fff; padding: 4px; }
+.invite-qr-frame svg, .invite-qr-frame > span { width: 100%; height: 100%; display: block; }
+.invite-qr-wait { display: block; width: 100%; height: 100%; background: #f2f2f2; }
+.invite-qr-code { font-family: var(--font-mono), ui-monospace, monospace; font-size: 18px; letter-spacing: .14em; font-weight: 600; margin: 0; color: #111; }
+.invite-qr-hint { font-size: 14px; color: #333; margin: 0; word-break: keep-all; }
+.invite-qr-meta { font-size: 12.5px; color: #888; margin: 0; }
 .invite-used > summary { list-style: none; min-height: 52px; }
 .invite-used > summary::-webkit-details-marker { display: none; }
 .invite-used[open] .invite-used-chev { transform: rotate(180deg); }

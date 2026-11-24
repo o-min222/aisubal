@@ -2661,6 +2661,15 @@ const en: Record<string, string> = {
   "리포스트 처리에 실패했습니다.": "Couldn't update the repost.",
   // A97
   "질문": "Question",
+  // A98
+  "QR": "QR",
+  "QR로 보여주기": "Show QR code",
+  "AI쓰발에 초대해요": "is inviting you to AI쓰발",
+  "초대 QR": "Invite QR",
+  "카메라로 이 화면을 찍으면 가입이 시작돼요.": "Scan this screen to start joining.",
+  "이 코드는 한 번만 쓸 수 있어요": "This code works once",
+  "남은 초대장 {n}장": "{n} invites left",
+  "1. ‘초대 메시지 복사’를 눌러 카카오톡·문자·메일·DM 등 원하는 곳에 붙여넣어 보내세요. 이름·코드·링크가 함께 담기고, 대부분의 메신저에서 미리보기 카드도 보여요. 앞에 있는 사람에게는 ‘QR’을 눌러 이 화면을 보여 주세요. 같은 링크로 가입이 시작돼요.": "1. Tap ‘Copy invite message’ and paste it anywhere: a messenger, SMS, email or DM. It carries your name, the code and the link, and most apps show a preview card with it. In person, tap ‘QR’ and show this screen — it opens the same invite link.",
 }
 
 export default en
