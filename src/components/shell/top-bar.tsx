@@ -88,5 +88,10 @@ function useHideOnScroll(): boolean {
       if (frame) cancelAnimationFrame(frame)
     }
   }, [])
+  // A83: sticky sub-headers (.sticky-sub) move up with the bar instead of leaving a see-through band
+  useEffect(() => {
+    document.documentElement.toggleAttribute('data-topbar-hidden', hidden)
+  }, [hidden])
+  useEffect(() => () => document.documentElement.removeAttribute('data-topbar-hidden'), [])
   return hidden
 }

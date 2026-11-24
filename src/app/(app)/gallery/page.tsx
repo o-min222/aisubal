@@ -117,7 +117,8 @@ export default async function ToolsPage({ searchParams }: { searchParams: Promis
         </div>
       </header>
 
-      <div className="anon-toolbar space-y-2">
+      {/* A83: one sticky block on phones (search · category · sort); the tag row scrolls with the list to keep it short */}
+      <div className="sticky-sub space-y-2">
         <ToolSearch key={q} initial={q} />
         <div className="card" style={{ padding: '0 8px' }}>
           <LinkTabs
@@ -131,19 +132,6 @@ export default async function ToolsPage({ searchParams }: { searchParams: Promis
             ]}
           />
         </div>
-        {tags.length > 0 && (
-          <ChipBar label={st('태그')}>
-            {tags.map((t) => (
-              <Link
-                key={t}
-                href={hrefWith(base, { tag: tag === t ? null : t })}
-                className={`tag-chip ${tag === t ? 'on' : ''}`}
-              >
-                #{t}
-              </Link>
-            ))}
-          </ChipBar>
-        )}
         <div className="flex items-center justify-between gap-2">
           {rec ? (
             <p className="text-[12.5px] text-n-666"><T>내가 쓰는 것과 함께 많이 쓰는 것부터 보여줘요. 이미 쓰는 건 빼요.</T></p>
@@ -165,6 +153,19 @@ export default async function ToolsPage({ searchParams }: { searchParams: Promis
           <span className="text-xs text-n-888 tabular-nums"><T s="{length}개" vars={{ length: all.length }} /></span>
         </div>
       </div>
+      {tags.length > 0 && (
+        <ChipBar className="gallery-tags" label={st('태그')}>
+          {tags.map((t) => (
+            <Link
+              key={t}
+              href={hrefWith(base, { tag: tag === t ? null : t })}
+              className={`tag-chip ${tag === t ? 'on' : ''}`}
+            >
+              #{t}
+            </Link>
+          ))}
+        </ChipBar>
+      )}
 
       {tools.length === 0 ? (
         <EmptyList
