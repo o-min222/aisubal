@@ -53,17 +53,26 @@ describe('A64 real path (dev)', () => {
 })
 
 describe('A65 landing layout (dev)', () => {
-  const page = async () => (await fetch(`${BASE_URL}/?preview=1`, { headers: { cookie: 'aisubal_locale=ko' } })).text()
+  const get = async (path: string) => (await fetch(`${BASE_URL}${path}`, { headers: { cookie: 'aisubal_locale=ko' } })).text()
+  const page = () => get('/?preview=1')
   const admin = (landingPeek: boolean) => fetch(`${BASE_URL}/api/admin/settings`, { method: 'PATCH', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ landingPeek }) })
-  it('peek first, then the login section with the same /login entry; the cue jumps to it', async () => {
-    const html = await page()
-    const peekAt = html.indexOf('class="landing-peek"')
-    const loginAt = html.indexOf('id="login"')
-    expect(peekAt).toBeGreaterThan(-1)
-    expect(loginAt).toBeGreaterThan(peekAt)
-    expect(html).toContain('href="#login"')
-    expect(html.slice(loginAt)).toContain('href="/login"')
-    expect(html).toContain('/join?from=landing')
+  // A65b: /login (PWA start_url → /feed → /login, protected pages, shared links) is the same screen
+  for (const path of ['/?preview=1', '/login', '/login?next=%2Fposts%2Fabc']) {
+    it(`${path}: peek first, then the login section with the Google button; the cue jumps to it`, async () => {
+      const html = await get(path)
+      const peekAt = html.indexOf('class="landing-peek"')
+      const loginAt = html.indexOf('id="login"')
+      expect(peekAt).toBeGreaterThan(-1)
+      expect(loginAt).toBeGreaterThan(peekAt)
+      expect(html).toContain('href="#login"')
+      expect(html.slice(loginAt)).toContain('Google로 로그인')
+      expect(html).toContain('/join?from=landing')
+    })
+  }
+  it('/login?error=… → the plain screen, so the error is on the first screen', async () => {
+    const html = await get('/login?error=auth')
+    expect(html).not.toContain('class="landing')
+    expect(html).toContain('로그인에 실패했습니다')
   })
   it('kill switch off → the plain login screen, no empty first screen', async () => {
     expect((await admin(false)).status).toBe(200)
@@ -72,7 +81,8 @@ describe('A65 landing layout (dev)', () => {
       const html = await page()
       expect(html).not.toContain('class="landing')
       expect(html).toContain('auth-hero')
-      expect(html).toContain('href="/login"')
+      expect(html).toContain('Google로 로그인')
+      expect(await get('/login')).not.toContain('class="landing')
     } finally {
       await admin(true)
     }

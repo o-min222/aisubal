@@ -2,6 +2,8 @@ import type { Metadata } from 'next'
 import { sharedPostKind } from '@/lib/handoff-rules'
 import { getT } from '@/i18n/server'
 import { LoginScreen } from './login-content'
+import { LandingLayout } from '@/components/landing/landing-layout'
+import { getLandingPeek } from '@/lib/data/landing-peek'
 
 /**
  * A25: a shared post link opened signed out (and the KakaoTalk / Slack link scrapers, which have
@@ -17,6 +19,9 @@ export async function generateMetadata({ searchParams }: { searchParams: Promise
   return { openGraph: { title, description, siteName: 'AI쓰발', type: 'website' }, twitter: { card: 'summary', title, description } }
 }
 
-export default function LoginPage() {
-  return <LoginScreen />
+export default async function LoginPage({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
+  // A65b: same screen as / (peek first). A failed sign-in shows the plain screen so the error is on the first screen.
+  const failed = Boolean((await searchParams).error)
+  const peek = failed ? [] : await getLandingPeek().catch(() => [])
+  return <LandingLayout peek={peek} login={<LoginScreen />} />
 }

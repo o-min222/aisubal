@@ -1,85 +1,16 @@
 import { redirect } from 'next/navigation'
 import { getUserState } from '@/lib/auth'
-import Image from 'next/image'
-import { Slogan } from '@/components/slogan'
-import Link from 'next/link'
-import { ChevronDown } from 'lucide-react'
-import { getT } from '@/i18n/server'
-import { LocaleSwitch } from '@/components/i18n/locale-switch'
-import { LandingPeek } from '@/components/landing/landing-peek'
+import { LandingLayout } from '@/components/landing/landing-layout'
 import { getLandingPeek } from '@/lib/data/landing-peek'
+import { LoginScreen } from './login/login-content'
 
 export default async function HomePage({ searchParams }: { searchParams: Promise<{ preview?: string }> }) {
-  const st = await getT()
   const state = await getUserState()
   // dev only: DEV_BYPASS_AUTH signs everyone in, so ?preview=1 shows the signed-out landing
   const devPreview = process.env.NODE_ENV !== 'production' && (await searchParams).preview === '1'
-  
-  if (state.type === 'member' && !devPreview) {
-    redirect('/feed')
-  }
-  
-  if (state.type === 'waitlist') {
-    redirect('/waitlist')
-  }
+  if (state.type === 'member' && !devPreview) redirect('/feed')
+  if (state.type === 'waitlist') redirect('/waitlist')
 
-  const t = await getT()
   const peek = await getLandingPeek().catch(() => [])
-
-  const login = (
-    <>
-      <div className="auth-hero-brand">
-        <Image
-          src="/images/logo-white.png"
-          alt={st('AI쓰발')}
-          width={240}
-          height={72}
-          priority
-          className="auth-hero-logo auth-hero-logo-lg"
-        />
-        <Slogan />
-      </div>
-      <Link href="/login" className="auth-hero-btn auth-hero-btn-inline">
-        <GoogleIcon />
-        {t('Google로 시작하기')}
-      </Link>
-      <div className="auth-hero-locale locale-on-dark">
-        <LocaleSwitch />
-      </div>
-    </>
-  )
-
-  // nothing to peek at (or the admin switch is off): the plain login screen, as before
-  if (!peek.length) return <div className="auth-hero">{login}</div>
-
-  // A65: mobile — the peek fills the first screen, the login is one swipe below (gentle snap, no scroll-jacking);
-  // wide — login on the left (stays put), the peek on the right (scrolls on its own)
-  return (
-    <div className="landing">
-      <section className="landing-peek" aria-label={st('지금 안에서 오가는 이야기')}>
-        <div className="landing-mark only-narrow">
-          <Image src="/images/logo-white.png" alt={st('AI쓰발')} width={80} height={24} priority className="landing-mark-logo" />
-        </div>
-        <LandingPeek items={peek} />
-        <a href="#login" className="landing-cue only-narrow">
-          {t('아래로 내려서 로그인')}
-          <ChevronDown className="w-4 h-4" aria-hidden />
-        </a>
-      </section>
-      <section id="login" className="landing-login auth-hero" aria-label={st('로그인')}>
-        {login}
-      </section>
-    </div>
-  )
-}
-
-function GoogleIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-      <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z" fill="#4285F4"/>
-      <path d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 009 18z" fill="#34A853"/>
-      <path d="M3.964 10.71A5.41 5.41 0 013.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 000 9c0 1.452.348 2.827.957 4.042l3.007-2.332z" fill="#FBBC05"/>
-      <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 00.957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z" fill="#EA4335"/>
-    </svg>
-  )
+  return <LandingLayout peek={peek} login={<LoginScreen />} />
 }

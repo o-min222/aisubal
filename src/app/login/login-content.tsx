@@ -46,16 +46,17 @@ function LoginContent() {
     await startGoogleSignIn()
   }
 
+  // the wrapper (.auth-hero, plain or the landing's #login column) comes from LandingLayout
   return (
-    <div className="auth-hero">
+    <>
       <div className="auth-hero-brand">
         <Image
           src="/images/logo-white.png"
           alt={tx('AI쓰발')}
-          width={200}
-          height={60}
+          width={240}
+          height={72}
           priority
-          className="auth-hero-logo"
+          className="auth-hero-logo auth-hero-logo-lg"
         />
         <Slogan />
       </div>
@@ -93,7 +94,7 @@ function LoginContent() {
       <div className="auth-hero-locale locale-on-dark">
         <LocaleSwitch />
       </div>
-    </div>
+    </>
   )
 }
 
@@ -110,11 +111,7 @@ function GoogleIcon() {
 
 export function LoginScreen() {
   return (
-    <Suspense fallback={
-      <div className="auth-hero">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2" style={{ borderColor: '#fff' }}></div>
-      </div>
-    }>
+    <Suspense fallback={<div className="animate-spin rounded-full h-8 w-8 border-b-2" style={{ borderColor: '#fff' }}></div>}>
       <LoginContent />
     </Suspense>
   )
