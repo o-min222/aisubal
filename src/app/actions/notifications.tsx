@@ -11,11 +11,20 @@ const NOTIFY_PAGE = 20
 export async function loadNotificationChunk(rawCategory: string | null, page: number): Promise<Chunk & { unread: number; empty: boolean }> {
   const category = parseNotifyCategory(rawCategory ?? undefined)
   const p = Math.max(1, Math.floor(Number(page)) || 1)
-  const d = await listNotifications({ category, offset: (p - 1) * NOTIFY_PAGE, limit: NOTIFY_PAGE })
+  // A86: pending friend requests (their rows exist only while pending) are pinned to the top of page 1 and
+  // skipped in the regular stream, so they never sink under newer comments and likes.
+  const pinRequests = category === null || category === 'social'
+  const [d, pinned] = await Promise.all([
+    listNotifications({ category, offset: (p - 1) * NOTIFY_PAGE, limit: NOTIFY_PAGE }),
+    pinRequests && p === 1
+      ? listNotifications({ category: 'social', offset: 0, limit: 100 }).then((r) => r.items.filter((n) => n.kind === 'friend_request')).catch(() => [])
+      : Promise.resolve([]),
+  ])
+  const items = [...pinned, ...(pinRequests ? d.items.filter((n) => n.kind !== 'friend_request') : d.items)]
   return {
-    nodes: d.items.length ? (
+    nodes: items.length ? (
       <ul className="divide-y divide-n-f0f0f0">
-        {d.items.map((n) => (
+        {items.map((n) => (
           <li key={n.id}>
             <NotificationRow n={n} />
           </li>
@@ -24,6 +33,6 @@ export async function loadNotificationChunk(rawCategory: string | null, page: nu
     ) : null,
     hasMore: p * NOTIFY_PAGE < d.total,
     unread: d.unread,
-    empty: p === 1 && d.items.length === 0,
+    empty: p === 1 && items.length === 0,
   }
 }

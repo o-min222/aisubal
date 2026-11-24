@@ -1,5 +1,6 @@
 'use client'
 
+import { NOTIFY_READ_EVENT } from '@/lib/notifications'
 import { useMemo, useState, type ReactNode } from 'react'
 import Link from 'next/link'
 import { Check, Clock, HeartHandshake, MoreHorizontal, Search, UserMinus, UserPlus, UserRound, UserX, X, type LucideIcon } from 'lucide-react'
@@ -88,6 +89,8 @@ export function SocialManager({
     return c
   }, [initial, rel, overflow])
   const incoming = initial.filter((p) => rel[p.id].friend === 'pending_in').length
+  // A86: 받은 신청 first — whoever asked stays here (with their new state once answered) on every tab but 요청
+  const inbox = tab === 'requests' || tab === 'invites' ? [] : initial.filter((p) => p.relation.friend === 'pending_in' && (rel[p.id].friend === 'pending_in' || kept.has(p.id)))
 
   // each tab keeps its own server order (newest edge first); people who just joined a tab go last
   const list: ManageTab | null = tab === 'invites' ? null : tab
@@ -121,6 +124,7 @@ export function SocialManager({
       if (server && 'iFollow' in server) setRel((m) => ({ ...m, [p.id]: server as Relation }))
       else if (server) setRel((m) => ({ ...m, [p.id]: relationFromRow(server as Record<string, unknown>) }))
       toast.success(tx(DONE[a]))
+      if (a === 'accept' || a === 'decline') window.dispatchEvent(new Event(NOTIFY_READ_EVENT)) // A86: avatar/bell counts
     } catch (err) {
       setRel((m) => ({ ...m, [p.id]: before }))
       toast.error(err instanceof Error ? err.message : tn('처리하지 못했어요.'))
@@ -129,7 +133,7 @@ export function SocialManager({
     }
   }
 
-  function row(p: SocialPerson) {
+  function row(p: SocialPerson, respond = tab === 'requests') {
     const r = rel[p.id]
     const sub = [p.handle ? `@${p.handle}` : '', p.bio].filter(Boolean).join(' · ')
     const menu = manageActions(r)
@@ -148,7 +152,7 @@ export function SocialManager({
             {sub && <span className="sm-sub">{sub}</span>}
           </span>
         </Link>
-        {tab === 'requests' && r.friend === 'pending_in' && (
+        {respond && r.friend === 'pending_in' && (
           <span className="sm-respond">
             <button type="button" className="sm-accept" disabled={busy === p.id} onClick={() => act(p, 'accept')}>
               <Check className="w-3.5 h-3.5" aria-hidden /> <T>수락</T>
@@ -166,7 +170,7 @@ export function SocialManager({
             <DropdownMenuItem render={<Link href={`/members/${p.id}`} />}>
               <UserRound className="w-4 h-4" /> <T>프로필 보기</T>
             </DropdownMenuItem>
-            {tab !== 'requests' && r.friend === 'pending_in' && (
+            {!respond && r.friend === 'pending_in' && (
               <>
                 <DropdownMenuItem onClick={() => act(p, 'accept')}>
                   <Check className="w-4 h-4" /> <T>{MANAGE_ACTION_LABEL.accept}</T>
@@ -195,6 +199,19 @@ export function SocialManager({
 
   return (
     <section className="card overflow-hidden sm-card">
+      {inbox.length > 0 && (
+        <div className="sm-inbox">
+          <h2 className="sm-group">
+            <T>받은 신청</T> <span className="sm-count">{incoming}</span>
+          </h2>
+          <ul>{inbox.slice(0, 3).map((p) => row(p, true))}</ul>
+          {inbox.length > 3 && (
+            <button type="button" className="sm-inbox-more" onClick={() => pick('requests')}>
+              <T s="{n}개 더" vars={{ n: inbox.length - 3 }} /> ›
+            </button>
+          )}
+        </div>
+      )}
       <div className="sm-tabs" role="tablist" aria-label={t('관계 목록')}>
         {SOCIAL_TABS.map((x) => (
           <button key={x.id} type="button" role="tab" aria-selected={x.id === tab} className={`sm-tab ${x.id === tab ? 'on' : ''}`} onClick={() => pick(x.id)}>
@@ -231,7 +248,7 @@ export function SocialManager({
                   <h2 className="sm-group">
                     <T>받은 요청</T> <span className="sm-count">{received.length}</span>
                   </h2>
-                  <ul>{received.map(row)}</ul>
+                  <ul>{received.map((p) => row(p))}</ul>
                 </>
               )}
               {rest.length > 0 && (
@@ -239,12 +256,12 @@ export function SocialManager({
                   <h2 className="sm-group">
                     <T>보낸 요청</T> <span className="sm-count">{rest.length}</span>
                   </h2>
-                  <ul>{rest.map(row)}</ul>
+                  <ul>{rest.map((p) => row(p))}</ul>
                 </>
               )}
             </>
           ) : (
-            <ul>{rest.map(row)}</ul>
+            <ul>{rest.map((p) => row(p))}</ul>
           )}
         </>
       )}

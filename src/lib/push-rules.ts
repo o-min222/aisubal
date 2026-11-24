@@ -1,5 +1,6 @@
 import { notificationSentence, type NotificationItem } from '@/lib/notifications'
 import { msg } from '@/i18n/translate'
+import { FRIEND_REQUESTS_HREF, PUSH_FRIEND_REQUEST_BODY, PUSH_FRIEND_REQUEST_TITLE } from '@/lib/friend-requests'
 
 /** Web push (D1), pure parts: when to ask, what a push says, how to read a send failure. */
 
@@ -72,6 +73,11 @@ export const PUSH_TEST_TEXT = msg('테스트 알림이에요. 이 기기에서 �
 export function pushPayload(job: PushJob, t: Tr): PushPayload {
   if (!job.item) return { title: 'AI쓰발', body: t(PUSH_TEST_TEXT), url: '/settings/notifications', tag: 'test', badge: job.unread }
   const n = job.item
+  // A86: a friend request says what it is and what to do, and opens the requests list directly
+  if (n.kind === 'friend_request') {
+    const who = n.actor?.name || t('누군가')
+    return { title: t(PUSH_FRIEND_REQUEST_TITLE), body: t(PUSH_FRIEND_REQUEST_BODY, { name: who }), url: FRIEND_REQUESTS_HREF, tag: `${n.kind}:${n.targetId ?? n.id}`, badge: job.unread }
+  }
   const { s, name, n: count, nameIsLabel } = notificationSentence(n)
   const sentence = t(s, { name: nameIsLabel ? t(name) : name, n: count })
   const body = n.excerpt ? `${sentence}\n${n.excerpt}` : sentence

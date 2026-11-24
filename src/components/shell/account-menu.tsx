@@ -13,6 +13,8 @@ import { LocaleSwitch } from '@/components/i18n/locale-switch'
 import { ThemeSwitch } from '@/components/theme/theme-switch'
 import { usePwaInstall } from '@/hooks/use-pwa-install'
 import { IosInstallSheet } from '@/components/pwa/ios-install-sheet'
+import { useFriendRequests } from '@/hooks/use-friend-requests'
+import { FRIEND_REQUESTS_HREF } from '@/lib/friend-requests'
 
 function useInvitesLeft(open: boolean, initial: number | null) {
   const [left, setLeft] = useState<number | null>(initial)
@@ -34,6 +36,7 @@ function useInvitesLeft(open: boolean, initial: number | null) {
 
 function MenuBody({ me, invitesLeft, close, onInstall }: { me: ShellMember; invitesLeft: number | null; close: () => void; onInstall: (() => void) | null }) {
   const t = useT()
+  const requests = useFriendRequests()
   return (
     <nav aria-label={t('계정 메뉴')} className="account-menu-body">
       <Link href="/members/me" onClick={close} className="account-head">
@@ -51,8 +54,10 @@ function MenuBody({ me, invitesLeft, close, onInstall }: { me: ShellMember; invi
       <Link href="/agents" onClick={close} className="account-row">
         <Bot className="w-[18px] h-[18px]" /> {t('내 에이전트')}
       </Link>
-      <Link href="/members/me/social" onClick={close} className="account-row">
+      {/* A86: pending friend requests show here until answered, and the row opens straight to them */}
+      <Link href={requests > 0 ? FRIEND_REQUESTS_HREF : '/members/me/social'} onClick={close} className="account-row">
         <Users className="w-[18px] h-[18px]" /> {t('친구·팔로워')}
+        {requests > 0 && <span className="account-badge is-alert" aria-label={t('받은 친구 신청 {n}개', { n: requests })}>{t('신청 {n}', { n: requests })}</span>}
       </Link>
       <Link href="/invites" onClick={close} className="account-row">
         <Ticket className="w-[18px] h-[18px]" /> {t('초대')}
@@ -102,6 +107,7 @@ export function AccountMenu({
 }) {
   const [open, setOpen] = useState(false)
   const t = useT()
+  const requests = useFriendRequests()
   const desktop = useMediaQuery('(min-width: 768px)')
   const invitesLeft = useInvitesLeft(open, initialInvites)
   const wrap = useRef<HTMLDivElement>(null)
@@ -135,13 +141,14 @@ export function AccountMenu({
     <div ref={wrap} className="relative">
       <button
         type="button"
-        className={triggerClassName}
-        aria-label={triggerLabel ? t(triggerLabel) : t('내 계정 메뉴')}
+        className={`${triggerClassName} account-trigger`}
+        aria-label={(triggerLabel ? t(triggerLabel) : t('내 계정 메뉴')) + (requests > 0 ? ` · ${t('받은 친구 신청 {n}개', { n: requests })}` : '')}
         aria-haspopup="menu"
         aria-expanded={open}
         onClick={() => setOpen((v) => !v)}
       >
         {children}
+        {requests > 0 && <span className="account-dot" aria-hidden />}
       </button>
       {open && desktop && (
         <div className={`account-dropdown ${align === 'left' ? 'left-0' : 'right-0'}`} role="menu">

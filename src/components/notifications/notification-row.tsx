@@ -2,10 +2,11 @@ import Link from 'next/link'
 import { Flame, Newspaper, AtSign, Award, Bell, Bot, CalendarCheck, CalendarClock, CalendarDays, CalendarX, Check, Heart, MessageCircle, PenLine, Sparkles, Ticket, UserPlus, Users, VenetianMask, Wrench, X } from 'lucide-react'
 import { UserAvatar } from '@/components/user-avatar'
 import { relativeLabel } from '@/lib/relative-label'
-import { getLocale } from '@/i18n/server'
+import { getLocale, getT } from '@/i18n/server'
 import { notificationSentence, type NotificationItem } from '@/lib/notifications'
 import { T } from '@/i18n/t'
 import { AgentAvatar } from '@/components/agents/agent-avatar'
+import { FRIEND_REQUESTS_HREF } from '@/lib/friend-requests'
 
 const KIND_ICON = {
   comment: MessageCircle,
@@ -64,8 +65,13 @@ export async function NotificationRow({ n }: { n: NotificationItem }) {
   const s = notificationSentence(n)
   const KindIcon = KIND_ICON[n.kind as keyof typeof KIND_ICON] ?? Bell
   const locale = await getLocale()
-  return (
-    <Link href={n.link} className={`notif-row${n.unread ? ' unread' : ''}`} data-kind={n.kind}>
+  // A86: a friend request opens the requests list directly (old rows still carry /me?tab=network…) and is
+  // answered inline. The trigger deletes the row once answered, so any friend_request row is still pending.
+  // Plain markup only (see above): the bell's delegated listener (useFriendRequestDelegate) does the POST.
+  const respondTo = n.kind === 'friend_request' && n.actor?.kind === 'member' && n.actor.id ? { id: n.actor.id, name: n.actor.name || '' } : null
+  const href = n.kind === 'friend_request' ? FRIEND_REQUESTS_HREF : n.link
+  const row = (
+    <Link href={href} className={`notif-row${n.unread ? ' unread' : ''}${respondTo ? ' has-actions' : ''}`} data-kind={n.kind}>
       <span className="notif-ava-wrap">
         <Avatar n={n} />
         <span className={`notif-kind k-${n.kind}`} aria-hidden>
@@ -82,5 +88,35 @@ export async function NotificationRow({ n }: { n: NotificationItem }) {
       </span>
       {n.unread && <span className="notif-dot" aria-label="new" />}
     </Link>
+  )
+  if (!respondTo) return row
+  return (
+    <div className={`notif-item${n.unread ? ' unread' : ''}`}>
+      {row}
+      <FriendRequestInline id={respondTo.id} name={respondTo.name} />
+    </div>
+  )
+}
+
+/** A86: 수락 / 거절 as server markup; both outcomes are pre-rendered and shown via data-fr-done. */
+async function FriendRequestInline({ id, name }: { id: string; name: string }) {
+  const t = await getT()
+  return (
+    <div className="notif-actions" data-fr-member={id} data-fr-name={name}>
+      <span className="fr-actions">
+        <button type="button" className="fr-accept" data-fr-act="accept" aria-label={t('{name}님의 친구 신청 수락', { name })}>
+          <T>수락</T>
+        </button>
+        <button type="button" className="fr-decline" data-fr-act="decline" aria-label={t('{name}님의 친구 신청 거절', { name })}>
+          <T>거절</T>
+        </button>
+      </span>
+      <span className="fr-done is-ok" data-fr-show="accepted" role="status">
+        <Check className="w-3.5 h-3.5" aria-hidden /> <T>친구가 됐어요</T>
+      </span>
+      <span className="fr-done" data-fr-show="declined" role="status">
+        <T>거절했어요</T>
+      </span>
+    </div>
   )
 }

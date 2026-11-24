@@ -10,6 +10,8 @@ import { InfiniteList } from '@/components/infinite/infinite-list'
 import { ChipBar } from '@/components/chip-bar'
 import { T } from '@/i18n/t'
 import { tx } from '@/i18n/client'
+import { publishFriendRequests } from '@/hooks/use-friend-requests'
+import { useFriendRequestDelegate } from '@/hooks/use-friend-request-delegate'
 
 const POLL_MS = 60_000
 
@@ -23,12 +25,16 @@ export function NotificationBell() {
   const [unread, setUnread] = useState(0)
   const [open, setOpen] = useState(false)
   const wrap = useRef<HTMLDivElement>(null)
+  useFriendRequestDelegate() // A86: inline 수락/거절 on friend-request rows (popover and /notifications)
 
   const loadCount = useCallback(() => {
     if (document.visibilityState !== 'visible') return
     fetch('/api/notifications/unread', { cache: 'no-store' })
-      .then((r) => (r.ok ? r.json() : { unread: 0 }))
-      .then((d) => setUnread(Number(d.unread) || 0))
+      .then((r) => (r.ok ? r.json() : { unread: 0, requests: 0 }))
+      .then((d) => {
+        setUnread(Number(d.unread) || 0)
+        publishFriendRequests(Number(d.requests) || 0) // A86: avatar dot + 친구·팔로워 row
+      })
       .catch(() => {})
   }, [])
   useEffect(() => {

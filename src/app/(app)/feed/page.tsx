@@ -3,6 +3,8 @@ import { redirect } from 'next/navigation'
 import { networkHref } from '@/lib/dashboard-tabs'
 import { getUserState } from '@/lib/auth'
 import { listFeedPage } from '@/lib/data/feed'
+import { listSocial } from '@/lib/data/social'
+import { FriendRequestsCard } from '@/components/social/friend-requests-card'
 import { managedGroupIdentities } from '@/lib/data/groups'
 import { composerIdentity } from '@/lib/composer-identity'
 import { isFeedId } from '@/lib/feed-ids'
@@ -39,7 +41,12 @@ export default async function FeedPage({ searchParams }: { searchParams: Promise
   if (sp.open && isFeedId(sp.open)) redirect(`/posts/${sp.open}`)
   const here = feedHref(scope)
 
-  const [{ posts, totalPages }, groupIdentities] = await Promise.all([listFeedPage(state.member.id, { scope, page: 1 }), managedGroupIdentities(state.member.id)])
+  const [{ posts, totalPages }, groupIdentities, incoming] = await Promise.all([
+    listFeedPage(state.member.id, { scope, page: 1 }),
+    managedGroupIdentities(state.member.id),
+    // A86: incoming friend requests surface here, where people already are (the bell alone went unnoticed)
+    listSocial(state.member.id, state.member.id, 'requests', 0, 50).catch(() => []),
+  ])
 
   async function more(page: number) {
     'use server'
@@ -58,6 +65,7 @@ export default async function FeedPage({ searchParams }: { searchParams: Promise
       </div>
       {/* A62: one light line on every screen size; ⤢ opens the full composer */}
       <QuickComposer me={{ ...composerIdentity(state.member), groupIdentities }} />
+      <FriendRequestsCard people={incoming.map((p) => ({ id: p.id, name: p.name, avatarUrl: p.avatarUrl }))} total={incoming.length} />
       {/* A26: whose posts these are, and where to manage that list */}
       {(scope === 'following' || scope === 'friends') && (
         <p className="text-xs text-n-888 px-1 flex items-center gap-2">

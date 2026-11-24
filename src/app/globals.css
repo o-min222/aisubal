@@ -3272,3 +3272,46 @@ html:has(.landing) { scroll-snap-type: y proximity; background: #111111; }
 .td-head-ph .td-title h1 { font-size: 20px; }
 .td-head-ph .td-lead { margin: 0; font-size: 14.5px; color: var(--n-555); line-height: 1.45; }
 .td-actions-ph { margin: 14px 0 0; gap: 6px; }
+
+/* ---------- A86 · incoming friend requests: feed card, inline 수락/거절, avatar dot, inbox ---------- */
+.fr-actions { display: inline-flex; align-items: center; gap: 6px; flex: none; }
+.fr-accept, .fr-decline { display: inline-flex; align-items: center; justify-content: center; min-height: 32px; padding: 0 12px; border-radius: 999px; font-size: 13px; font-weight: 600; white-space: nowrap; }
+.fr-accept { background: var(--n-111); color: var(--n-fff); }
+.fr-decline { background: transparent; color: var(--n-666); border: 1px solid var(--n-e3e3e3); }
+.fr-decline:hover { color: var(--n-111); border-color: var(--n-bbb); }
+.fr-accept:disabled, .fr-decline:disabled { opacity: .5; }
+.fr-done { display: inline-flex; align-items: center; gap: 4px; flex: none; min-height: 32px; font-size: 13px; color: var(--n-888); white-space: nowrap; }
+.fr-done.is-ok { color: var(--c-1f7a4d); font-weight: 600; }
+.fr-card { border: 1px solid var(--n-e8e8e6); border-radius: 14px; background: var(--n-fff); padding: 4px 0 6px; }
+.fr-card-head { display: flex; align-items: center; justify-content: space-between; padding: 6px 6px 2px 14px; }
+.fr-card-title { font-size: 12.5px; font-weight: 600; color: var(--n-666); }
+.fr-count { margin-left: 2px; color: var(--c-e5484d); font-variant-numeric: tabular-nums; }
+.fr-dismiss { width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center; border-radius: 999px; color: var(--n-999); }
+.fr-dismiss:hover { color: var(--n-333); background: var(--n-f4f4f2); }
+.fr-list { margin: 0; padding: 0; list-style: none; }
+.fr-row { display: flex; align-items: center; gap: 8px; padding: 6px 12px 6px 14px; min-width: 0; }
+.fr-who { display: flex; align-items: center; gap: 10px; flex: 1 1 auto; min-width: 0; color: inherit; text-decoration: none; }
+.fr-text { min-width: 0; font-size: 14px; color: var(--n-333); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fr-text b { font-weight: 700; color: var(--n-111); }
+.fr-more { display: block; padding: 4px 14px 2px; font-size: 12.5px; color: var(--n-777); }
+.fr-more:hover { color: var(--n-111); }
+/* notification rows with inline actions: the actions line up under the sentence (avatar 40 + gap 12 + padding 16) */
+.notif-item.unread { background: var(--n-f4f4f2); }
+.notif-row.has-actions { padding-bottom: 6px; min-height: 0; }
+.notif-item.unread .notif-row.has-actions { background: transparent; }
+.notif-actions { padding: 0 16px 12px 68px; }
+.notif-actions [data-fr-show] { display: none; }
+.notif-actions[data-fr-done] .fr-actions { display: none; }
+.notif-actions[data-fr-done="accepted"] [data-fr-show="accepted"], .notif-actions[data-fr-done="declined"] [data-fr-show="declined"] { display: inline-flex; }
+/* avatar menu: a dot while friend requests wait; the 친구·팔로워 row shows how many */
+.account-trigger { position: relative; }
+.account-dot { position: absolute; top: 5px; right: 5px; width: 9px; height: 9px; border-radius: 999px; background: var(--c-e5484d); box-shadow: 0 0 0 2px var(--n-fff); pointer-events: none; }
+.account-badge.is-alert { color: var(--c-e5484d); background: color-mix(in srgb, var(--c-e5484d) 10%, transparent); }
+/* 친구·팔로워: 받은 신청 sits above the tabs */
+.sm-inbox { border-bottom: 1px solid var(--n-ececec); padding-bottom: 4px; }
+.sm-inbox .sm-group .sm-count { color: var(--c-e5484d); }
+.sm-inbox-more { display: block; width: 100%; text-align: left; padding: 4px 16px 6px; font-size: 12.5px; color: var(--n-777); }
+@media (max-width: 480px) {
+  .fr-accept, .fr-decline { padding: 0 10px; }
+  .fr-row { padding-right: 10px; }
+}

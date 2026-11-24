@@ -78,6 +78,9 @@ export function mockSocial(): SocialState {
       { requester: DEV_ID, addressee: 'member-5', status: 'accepted', at: at(45), respondedAt: at(44) },
       { requester: 'member-3', addressee: DEV_ID, status: 'pending', at: at(5), respondedAt: null },
       { requester: DEV_ID, addressee: 'member-6', status: 'pending', at: at(3), respondedAt: null },
+      // A86: more incoming requests so the feed card and inbox show several rows in dev (7/8 stay unconnected for the rail)
+      { requester: 'member-1', addressee: DEV_ID, status: 'pending', at: at(4), respondedAt: null },
+      { requester: 'member-4', addressee: DEV_ID, status: 'pending', at: at(1), respondedAt: null },
     ],
   }
   return g.__aisubalSocial
