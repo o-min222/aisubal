@@ -2844,6 +2844,18 @@ a.notif-pop-all:hover { background: var(--n-fafafa); }
 .tool-docs-scroll { max-height: min(70dvh, 640px); overflow-y: auto; overscroll-behavior: contain; margin-right: -4px; padding-right: 4px; }
 .sheet-x { position: absolute; top: 10px; right: 10px; width: 40px; height: 40px; display: grid; place-items: center; border-radius: 999px; color: var(--n-777); }
 .sheet-x:hover { background: var(--n-f4f4f4, rgba(127,127,127,.12)); color: var(--n-111); }
+/* AI-6: owner-only 에이전트 삭제 on the agent page — quiet until hovered, danger colour */
+.agent-delete-btn { display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 0 8px; font-size: 13px; color: var(--n-777); border-radius: 8px; }
+.agent-delete-btn:hover, .agent-delete-btn:focus-visible { color: var(--destructive); }
+.agent-delete-btn:focus-visible { outline: 2px solid var(--destructive); outline-offset: 2px; }
+/* AI-6 (t291u): connect wizard: sign-in first, token as a collapsed fallback */
+.connect-rec { flex-shrink: 0; white-space: nowrap; font-size: 11.5px; font-weight: 600; line-height: 1; padding: 4px 8px; border-radius: 999px; color: var(--n-555); border: 1px solid var(--n-e6e6e6); }
+.connect-alt > summary { list-style: none; cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 44px; margin: -6px 0; font-size: 14.5px; font-weight: 600; color: var(--n-111); border-radius: 10px; }
+.connect-alt > summary::-webkit-details-marker { display: none; }
+.connect-alt > summary:focus-visible { outline: 2px solid var(--n-111); outline-offset: 2px; }
+.connect-alt > summary > svg { transition: transform .15s ease; }
+.connect-alt[open] > summary > svg { transform: rotate(180deg); }
+.connect-alt:not([open]) > :not(summary) { display: none; }
 .hb-label { font-size: 13.5px; font-weight: 600; color: var(--n-222); flex-shrink: 0; }
 .hb-hint { font-size: 12px; color: var(--n-888); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .hb-body { display: flex; flex-direction: column; gap: 10px; padding: 0 0 12px 24px; min-width: 0; }

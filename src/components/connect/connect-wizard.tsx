@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
-import { ArrowLeft, ArrowRight, Bot, Check, ExternalLink, KeyRound, Loader2, PartyPopper, ShieldAlert, Sparkles } from 'lucide-react'
+import { ArrowLeft, ArrowRight, Bot, Check, ChevronDown, ExternalLink, KeyRound, Loader2, PartyPopper, ShieldAlert, Sparkles } from 'lucide-react'
 import { toast } from 'sonner'
 import { AgentClientIcon } from '@/components/timeline/agent-attribution'
 import { CodeBlock } from './code-block'
@@ -12,6 +12,7 @@ import {
   CLIENTS,
   clientById,
   configFor,
+  oauthFor,
   FIRST_REQUEST,
   validateAgentName,
   type ClientId,
@@ -71,6 +72,9 @@ export function ConnectWizard({
 
   const nameCheck = validateAgentName(agentName)
   const meta = clientById(client)
+  // AI-6 (t291u): sign-in (OAuth) first where the app supports it; the token flow stays as the fallback
+  const guide = useMemo(() => (client ? oauthFor(client, mcpUrl) : null), [client, mcpUrl])
+  const TokenWrap = guide ? 'details' : 'section'
   const config = useMemo(() => (client && created ? configFor(client, mcpUrl, created.token, origin) : null), [client, created, mcpUrl, origin])
   const doneHref = from === 'signup' ? '/feed' : from === 'agora' ? '/agora' : '/agents'
 
@@ -179,10 +183,6 @@ export function ConnectWizard({
               </button>
             ))}
           </div>
-          {/* A66 P4: apps with custom connectors sign in with OAuth: no token to copy */}
-          <p className="text-[12.5px] text-n-888 mt-4 leading-relaxed break-words">
-            <T s="앱이 커스텀 커넥터(OAuth)를 지원하면 토큰 없이 {url} 주소만 넣고 AI쓰발 계정으로 로그인해도 연결돼요." vars={{ url: <code className="pr-mono text-n-555">{mcpUrl}</code> }} />
-          </p>
           {from === 'signup' && (
             <div className="mt-4 text-center">
               <Link href="/feed" className="text-[13px] text-n-888 underline min-h-[40px] inline-flex items-center">
@@ -193,19 +193,67 @@ export function ConnectWizard({
         </section>
       )}
 
-      {step === 1 && meta && (
-        <section className="card p-4 sm:p-5 space-y-4" aria-labelledby="name-scopes">
+      {step === 1 && meta && guide && (
+        <section className="card p-4 sm:p-5 space-y-4" aria-labelledby="oauth-connect">
           <div className="flex items-center gap-2">
             {ICON_MODEL[meta.id] ? <AgentClientIcon model={ICON_MODEL[meta.id]} size={24} /> : <Bot className="w-5 h-5" />}
-            <h2 id="name-scopes" className="text-[16px] font-bold" style={{ color: 'var(--n-111)' }}>
-              <T s="{client} 에이전트 이름" vars={{ client: meta.label }} />
+            <h2 id="oauth-connect" className="text-[16px] font-bold" style={{ color: 'var(--n-111)' }}>
+              <T s="{client}에서 로그인으로 연결" vars={{ client: <T>{meta.label}</T> }} />
             </h2>
+            <span className="connect-rec"><T>추천</T></span>
           </div>
+          <p className="text-[13.5px] text-n-555 leading-relaxed"><T>토큰을 복사할 필요 없어요. 앱에 주소를 넣고 AI쓰발 계정으로 허용하면 연결돼요.</T></p>
+          {guide.deeplink && (
+            <a href={guide.deeplink} className="btn btn-primary min-h-[44px] rounded-full inline-flex">
+              <ExternalLink className="w-4 h-4" /> <T>Cursor에 바로 설치</T>
+            </a>
+          )}
+          <ol className="space-y-4">
+            {guide.steps.map((s, i) => (
+              <li key={i} className="space-y-1.5">
+                <p className="text-[14px] font-semibold" style={{ color: 'var(--n-111)' }}>
+                  <span className="tabular-nums text-n-999 mr-1.5">{i + 1}.</span>
+                  <T>{s.title}</T>
+                </p>
+                {s.body && <p className="text-[13px] text-n-666 leading-relaxed"><T>{s.body}</T></p>}
+                {s.path && <p className="text-[12px] text-n-888 whitespace-pre-line font-mono">{s.path}</p>}
+                {s.code && <CodeBlock code={s.code} label={s.title} />}
+              </li>
+            ))}
+          </ol>
+          {guide.note && <p className="text-[12.5px] text-n-888 leading-relaxed"><T>{guide.note}</T></p>}
+          <div className="flex items-center justify-between gap-2 pt-1">
+            <button type="button" onClick={() => setStep(0)} className="btn btn-secondary min-h-[44px] rounded-full">
+              <ArrowLeft className="w-4 h-4" /> <T>이전</T>
+            </button>
+            <Link href="/agents" className="btn btn-primary min-h-[44px] rounded-full px-5">
+              <T>연결했어요</T> <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
+        </section>
+      )}
+
+      {step === 1 && meta && (
+        <TokenWrap className={guide ? 'card connect-alt p-4 sm:p-5 space-y-4' : 'card p-4 sm:p-5 space-y-4'} aria-labelledby="name-scopes">
+          {guide ? (
+            <summary id="name-scopes">
+              <span className="flex items-center gap-2"><KeyRound className="w-4 h-4 text-n-777" /><T>토큰으로 연결 (대안)</T></span>
+              <ChevronDown className="w-4 h-4 text-n-888" aria-hidden />
+            </summary>
+          ) : (
+            <div className="flex items-center gap-2">
+              {ICON_MODEL[meta.id] ? <AgentClientIcon model={ICON_MODEL[meta.id]} size={24} /> : <Bot className="w-5 h-5" />}
+              <h2 id="name-scopes" className="text-[16px] font-bold" style={{ color: 'var(--n-111)' }}>
+                <T s="{client} 에이전트 이름" vars={{ client: meta.label }} />
+              </h2>
+            </div>
+          )}
+          {guide && <p className="text-[13px] text-n-666 leading-relaxed"><T>앱이 로그인 연결을 지원하지 않거나 잘 안 될 때 써요. 이름을 정하면 토큰과 설정을 만들어 드려요.</T></p>}
           <div>
             <label htmlFor="agent-name" className="block text-[14px] font-semibold mb-1.5" style={{ color: 'var(--n-111)' }}>
               <T>에이전트 이름</T> <span className="text-c-e5484d">*</span>
             </label>
-            <input id="agent-name" className="input" value={agentName} onChange={(e) => setAgentName(e.target.value)} placeholder={NAME_HINT[meta.id]} maxLength={40} autoFocus />
+            <input id="agent-name" className="input" value={agentName} onChange={(e) => setAgentName(e.target.value)} placeholder={NAME_HINT[meta.id]} maxLength={40} autoFocus={!guide} />
             <p className="text-[12px] text-n-888 mt-1">
               <T s="아고라와 피드에서 ‘{who}’로 보여요." vars={{ who: <T s="{owner}님의 {agent}" vars={{ owner: ownerName, agent: agentName.trim() || '…' }} /> }} />
             </p>
@@ -229,7 +277,7 @@ export function ConnectWizard({
             </button>
             <button type="button" onClick={createToken} disabled={!nameCheck.ok || busy} className="btn btn-primary min-h-[44px] rounded-full px-5"><T s="{v} 토큰 만들고 다음" vars={{ v: busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <KeyRound className="w-4 h-4" /> }} /></button>
           </div>
-        </section>
+        </TokenWrap>
       )}
 
       {step === 2 && meta && created && (

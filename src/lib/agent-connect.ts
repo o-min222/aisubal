@@ -111,13 +111,12 @@ export function configFor(client: ClientId, mcpUrl: string, token: string, origi
       }
     case 'chatgpt':
       return {
-        intro: 'ChatGPT 웹의 커스텀 커넥터는 설정 › 커넥터 › 고급 › 개발자 모드에서 추가해요. 다만 지금은 OAuth 또는 인증 없는 서버만 받아서, 토큰(Bearer)을 쓰는 AI쓰발은 웹에서 바로 연결되지 않아요.',
+        intro: 'ChatGPT 웹은 토큰(헤더)을 넣는 칸이 없어서 위의 로그인(OAuth) 방법으로 연결해요. 토큰으로 연결하려면 ChatGPT 데스크톱 앱이나 Codex CLI를 쓰세요.',
         steps: [
           { title: '지금 쓸 수 있는 방법', body: 'ChatGPT 데스크톱 앱(헤더 지원) 또는 Codex CLI로 연결하세요. 같은 토큰을 쓰면 돼요.' },
           { title: 'MCP 서버 URL', lang: 'text', code: mcpUrl },
           { title: '인증 헤더', lang: 'text', code: `Authorization: ${auth}` },
         ],
-        note: '개발자 모드·커넥터는 요금제(Plus·Pro·Business 등)와 워크스페이스 설정에 따라 보이지 않을 수 있어요. OAuth 연결을 지원하게 되면 여기에서 알려 드릴게요.',
       }
     case 'chatgpt_desktop':
       return {
@@ -182,6 +181,81 @@ export function configFor(client: ClientId, mcpUrl: string, token: string, origi
         ],
         note: 'initialize의 clientInfo.name이 연결 확인 화면에 보여요.',
       }
+  }
+}
+
+/**
+ * AI-6 (t291u): sign-in (OAuth) setup, shown before the token method. Only apps whose official docs
+ * describe adding a remote MCP URL with OAuth sign-in, checked 2026-11-24:
+ * - Claude: support.claude.com/en/articles/11176164 (Customize › Connectors › Add › Custom › Web)
+ * - Claude Code: code.claude.com/docs/en/mcp ("Authenticate with remote MCP servers")
+ * - ChatGPT web: help.openai.com/en/articles/12584461 (Plugins › Add custom MCP server)
+ * - ChatGPT desktop / Codex: developers.openai.com/codex/mcp (Settings › MCP servers; codex mcp login)
+ * - Cursor: cursor.com/docs/context/mcp (url-only server, OAuth with dynamic client registration)
+ * Our authorization server registers clients dynamically (RFC 7591) only, hence "Register automatically" for Claude.
+ * Grok Bot and custom clients keep the token method.
+ */
+export type OAuthGuide = { steps: ConfigStep[]; note?: string; deeplink?: string }
+
+export function oauthFor(client: ClientId, mcpUrl: string): OAuthGuide | null {
+  const url: ConfigStep = { title: 'MCP 서버 URL', lang: 'text', code: mcpUrl }
+  const consent: ConfigStep = { title: 'AI쓰발에 로그인하고 허용', body: '열린 AI쓰발 화면에서 새 에이전트 이름을 정하고 허용을 누르면 연결돼요. 토큰은 필요 없어요.' }
+  switch (client) {
+    case 'claude_desktop':
+      return {
+        steps: [
+          { title: '커스텀 커넥터 추가', body: 'Claude(데스크톱 앱 또는 claude.ai) › 사용자 지정(Customize) › 커넥터 › 추가 › 커스텀 › Web' },
+          { title: '이름과 URL 넣기', body: '이름은 AI쓰발, 원격 MCP 서버 URL에 아래 주소를 붙여넣고 계속을 누르세요.' },
+          url,
+          { title: '인증 설정', body: '인증은 ‘지금 로그인(Sign in now)’, OAuth 클라이언트는 ‘자동 등록(Register automatically)’을 고르고 추가를 누르세요. 요청 헤더는 비워 두세요.' },
+          consent,
+        ],
+        note: '커스텀 커넥터는 모든 요금제에서 쓸 수 있고 Free는 1개까지예요. Team·Enterprise는 소유자가 먼저 조직 설정 › 커넥터에서 추가해야 해요.',
+      }
+    case 'claude_code':
+      return {
+        steps: [
+          { title: 'MCP 서버 추가', lang: 'bash', code: `claude mcp add --transport http --scope user aisubal ${mcpUrl}` },
+          { title: '로그인', body: 'Claude Code에서 /mcp 를 입력하고 aisubal을 골라 브라우저에서 로그인하세요. 터미널에서 claude mcp login aisubal 로 해도 돼요.' },
+          consent,
+        ],
+      }
+    case 'chatgpt':
+      return {
+        steps: [
+          { title: '커스텀 MCP 서버 추가', body: 'ChatGPT 웹 › 플러그인(Plugins) › + › 커스텀 MCP 서버 추가(Add custom MCP server)' },
+          { title: '이름과 연결 URL', body: '이름은 AI쓰발, 연결(Connection)에 아래 주소를 넣고 인증은 OAuth를 고르세요.' },
+          url,
+          { title: '만들기', body: '위험 안내를 확인하는 체크박스를 켜고 플러그인으로 만들기(Create as a plugin)를 누르세요.' },
+          consent,
+        ],
+        note: '쓰기까지 되는 전체 MCP는 Business·Enterprise·Edu 요금제의 ChatGPT 웹에서 돼요. Pro는 읽기만 돼요. 대화에서 @를 입력해 AI쓰발을 고르면 써요.',
+      }
+    case 'chatgpt_desktop':
+    case 'codex':
+      return {
+        steps: [
+          { title: 'MCP 서버 추가', body: 'ChatGPT 데스크톱 › 설정 › MCP 서버 › 서버 추가 › 이름 aisubal · Streamable HTTP › 아래 URL › 저장 후 다시 시작' },
+          url,
+          { title: '또는 Codex CLI로', lang: 'bash', code: `codex mcp add aisubal --url ${mcpUrl}\ncodex mcp login aisubal` },
+          { title: '로그인', body: '서버 목록에서 aisubal 옆 인증(Authenticate)을 누르거나 codex mcp login aisubal 을 실행하세요.' },
+          consent,
+        ],
+        note: 'ChatGPT 데스크톱, Codex CLI, IDE 확장은 같은 설정(~/.codex/config.toml)을 써요. 한 곳에서 추가하면 다른 곳에서도 보여요.',
+      }
+    case 'cursor': {
+      const server = { url: mcpUrl }
+      return {
+        deeplink: `cursor://anysphere.cursor-deeplink/mcp/install?name=aisubal&config=${encodeURIComponent(b64(JSON.stringify(server)))}`,
+        steps: [
+          { title: '직접 넣기', path: '~/.cursor/mcp.json', lang: 'json', code: JSON.stringify({ mcpServers: { aisubal: server } }, null, 2) },
+          { title: '로그인', body: 'Cursor › 사용자 지정(Customize)에서 aisubal을 찾아 로그인하세요.' },
+          consent,
+        ],
+      }
+    }
+    default:
+      return null
   }
 }
 
