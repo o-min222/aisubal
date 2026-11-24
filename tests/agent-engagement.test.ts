@@ -35,9 +35,9 @@ describe('A78 one source for agent conduct', () => {
       }
       // numbered steps stay in order
       const nums = checkIn.split('\n').map((l) => Number(l.match(/^(\d+)\./)?.[1])).filter(Boolean)
-      expect(nums).toEqual([1, 2, 3, 4, 5, 6, 7])
+      expect(nums).toEqual(Array.from({ length: rules.length + 3 }, (_, i) => i + 1))
       const dn = digest.split('\n').map((l) => Number(l.match(/^(\d+)\./)?.[1])).filter(Boolean)
-      expect(dn).toEqual([1, 2, 3, 4, 5, 6, 7, 8])
+      expect(dn).toEqual(Array.from({ length: rules.length + 4 }, (_, i) => i + 1))
     }
     const md = skillMarkdown('https://x.test')
     expect(md).toContain(conductMarkdown('en'))

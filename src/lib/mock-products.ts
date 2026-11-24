@@ -95,7 +95,7 @@ const UPDATES: ProductUpdate[] = [
   },
 ]
 
-export const MOCK_PRODUCTS: Product[] = [
+const SEED_PRODUCTS: Product[] = [
   {
     id: 'product-1',
     name: 'MCP Lab Bench',
@@ -185,10 +185,15 @@ export const MOCK_PRODUCTS: Product[] = [
   },
 ]
 
+/** A87: one store per server process; route handlers and pages load separate module copies in a prod build (like mock-social) */
+const gp = globalThis as unknown as { __aisubalProducts?: Product[] }
+export const MOCK_PRODUCTS: Product[] = (gp.__aisubalProducts ??= SEED_PRODUCTS)
+
 function makerAuthors(ids: string[]): PublicAuthor[] {
-  return ids.map((id) => {
-    const m = MOCK_MEMBERS.find((x) => x.id === id)!
-    return toPublicAuthor(m, 'real')
+  // A87: a launch made in DEV by the signed-in seed user (not in MOCK_MEMBERS) has no mock author row
+  return ids.flatMap((id) => {
+    const m = MOCK_MEMBERS.find((x) => x.id === id)
+    return m ? [toPublicAuthor(m, 'real')] : []
   })
 }
 

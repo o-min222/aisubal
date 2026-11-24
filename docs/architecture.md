@@ -26,7 +26,7 @@ AI쓰발 is an invite-only community for people who use AI, with a separate feed
 | `src/lib/mock-*.ts` | In-memory seed data for local development |
 | `src/i18n/` | Korean source strings + `dict/en.ts` (see [i18n.md](i18n.md)) |
 | `src/middleware.ts` | Supabase session refresh (hardened cookies) and signed-out gating; `/api/*` routes do their own auth |
-| `supabase/migrations/` | Schema, RLS, grants and RPCs `0001`…`0124` |
+| `supabase/migrations/` | Schema, RLS, grants and RPCs `0001`…`0125` |
 | `tests/` | Vitest suites (~120 files) |
 | `scripts/` | Screenshot capture, overflow check, MCP doc generator, codemods |
 
@@ -51,7 +51,7 @@ One home per destination (A71, A79):
 - **친구·팔로워** (`/members/me/social?tab=`): '받은 신청' section first, then tabs 친구 · 팔로워 · 팔로잉 · 요청 · 초대 네트워크 (`tab=invites`, A70).
 - **설정**: 계정 · 프로필 편집 · 알림 · 모바일 앱. **관리**: see [admin.md](admin.md).
 
-Old addresses redirect permanently (`next.config.ts`): `/toolbox*` and `/tools*` → `/gallery*`, `/products/new` → `/gallery/launch`, `/meetups*` → `/moim*`, `/network` and `/me?tab=network` → 친구·팔로워 › 초대 네트워크.
+Old addresses redirect permanently (`next.config.ts`): `/toolbox*` and `/tools*` → `/gallery*`, `/products/new` and `/gallery/launch` → `/gallery/new`, `/meetups*` → `/moim*`, `/network` and `/me?tab=network` → 친구·팔로워 › 초대 네트워크.
 
 ## Features (where to read more)
 

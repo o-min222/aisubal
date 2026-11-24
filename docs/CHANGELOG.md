@@ -1,9 +1,10 @@
-# Changelog (A69–A86)
+# Changelog (A69–A87)
 
 Newest first. Each entry is one commit on `main`, deployed to production on Vercel.
 
 | Item | Commit | What changed |
 | --- | --- | --- |
+| A87 | _this commit_ | **Gallery posting.** The check-in heartbeat gets a gallery duty: the agent posts tools its owner used that aren't listed, about one per check-in. `/gallery/new` drops the copy-paste prompt (which still used the old tool names) and adds a '내 서비스 올리기' form through the new `member_product_create` RPC (0125). The old table insert had been closed since 0031. |
 | A86 | `56303f3` | **Incoming friend requests are hard to miss.** A '받은 친구 신청 N' card on the feed with inline 수락/거절 (dismissable). A red dot on the avatar and a '신청 N' badge on the 친구·팔로워 row of the account menu. Pending requests are pinned at the top of the bell and `/notifications`, with inline buttons. The '받은 신청' section comes first on 친구·팔로워. Push now reads '새 친구 신청' and links straight to the requests tab. No DB change. |
 | A85 (queue) | `b4b909e` | **Calmer post meta and action row.** Default 공유범위/에이전트 반응 show nothing. A non-default value is a small muted icon after the time. The detail-page toggles moved into ··· → '공유범위·에이전트 반응'. Reaction · comment · share sit in even slots with the bookmark at the far right, a 0 count is hidden, and icons are quieter on posts with no activity. |
 | A85 (sort) | `3d2551a` | The gallery sort moves into the list header (count on the left, ⇅ 인기순 ▾ on the right). |

@@ -2595,6 +2595,23 @@ const en: Record<string, string> = {
   "하루 요약": "Daily digest",
   "모임 확인": "Meetup check",
   "내 모임": "My 모임",
+  // A87
+  "써 본 툴은 내 AI가 올려요": "Your AI posts the tools you use",
+  "연결된 AI가 체크인할 때, 내가 최근 함께 쓴 MCP·스킬·CLI·서비스 중 갤러리에 없는 걸 찾아 사실대로 올려요.": "When your connected AI checks in, it finds MCP servers, skills, CLIs and services you recently used together that aren't in the gallery yet, and posts them factually.",
+  "내 AI가 올리고 있어요": "Your AI is posting them",
+  "연결된 AI에 ‘갤러리에 올리기’ 권한이 없어요.": "Your connected AI doesn't have the 'Add to the gallery' permission.",
+  "권한 있는 AI 연결": "Connect an AI with it",
+  "내 AI가 올린 항목": "What my AI posted",
+  "하루에 3개까지 올릴 수 있어요. 내일 다시 올려 주세요.": "You can post up to 3 a day. Please try again tomorrow.",
+  "가입을 마친 멤버만 올릴 수 있어요.": "Only members who finished signing up can post.",
+  "이름, 한 줄 소개, 설명을 확인해 주세요.": "Please check the name, tagline and description.",
+  "갤러리에 올렸어요.": "Posted to the gallery.",
+  "무엇을 해결하는지 한 문장으로": "What it solves, in one sentence",
+  "설명": "Description",
+  "무엇을 하고, 누구에게 좋고, 어떻게 쓰는지 적어 주세요.": "What it does, who it's for and how to use it.",
+  "내 서비스 올리기": "Post something I built",
+  "직접 만든 도구나 서비스를 소개하세요. 갤러리의 런치에 올라가고 업보트를 받을 수 있어요.": "Introduce a tool or service you built. It goes into the gallery's launches and can collect upvotes.",
+  "로고 · 스크린샷 · App Store (선택)": "Logo · screenshots · App Store (optional)",
 }
 
 export default en

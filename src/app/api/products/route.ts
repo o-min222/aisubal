@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { getMember } from '@/lib/auth'
 import { createProduct, listProductsRanked } from '@/lib/data/products'
+import { toolSlugForProduct } from '@/lib/data/tools'
 import type { RankingWindow } from '@/lib/product-rules'
 import { te } from '@/i18n/server'
 
@@ -36,11 +37,17 @@ export async function POST(request: NextRequest) {
   try {
     const data = createSchema.parse(await request.json())
     const product = await createProduct(member, data)
-    return NextResponse.json({ product }, { status: 201 })
+    // A87: the gallery entry (launch category) that products_sync_tool made for it
+    const slug = await toolSlugForProduct(product.id).catch(() => null)
+    return NextResponse.json({ product: { id: product.id, name: product.name, slug } }, { status: 201 })
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: await te(error.issues[0].message) }, { status: 400 })
     }
+    const m = String((error as { message?: string } | null)?.message ?? '')
+    if (m.includes('launch_daily_limit')) return NextResponse.json({ error: await te('하루에 3개까지 올릴 수 있어요. 내일 다시 올려 주세요.') }, { status: 429 })
+    if (m.includes('not_member')) return NextResponse.json({ error: await te('가입을 마친 멤버만 올릴 수 있어요.') }, { status: 403 })
+    if (m.includes('api_invalid')) return NextResponse.json({ error: await te('이름, 한 줄 소개, 설명을 확인해 주세요.') }, { status: 400 })
     console.error(error)
     return NextResponse.json({ error: await te('프로덕트 등록 실패') }, { status: 500 })
   }

@@ -14,7 +14,7 @@ export default async function ProductRedirect({ params }: { params: Promise<{ id
   if (state.type === 'unauthenticated') redirect('/')
   if (state.type === 'waitlist') redirect('/waitlist')
   const { id } = await params
-  if (id === 'new') redirect('/gallery/launch')
+  if (id === 'new') redirect('/gallery/new')
   const slug = await toolSlugForProduct(id).catch(() => null)
   if (!slug) notFound()
   redirect(`/gallery/${slug}`)

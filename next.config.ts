@@ -22,7 +22,8 @@ const nextConfig: NextConfig = {
       { source: "/toolbox", destination: "/gallery", permanent: true },
       { source: "/toolbox/new", destination: "/gallery/new", permanent: true },
       { source: "/toolbox/:slug", destination: "/gallery/:slug", permanent: true },
-      { source: "/products/new", destination: "/gallery/launch", permanent: true },
+      { source: "/products/new", destination: "/gallery/new", permanent: true },
+      { source: "/gallery/launch", destination: "/gallery/new", permanent: true }, // A87: one place to post
       // 툴 → 갤러리 (308, keeps old links and agent-shared URLs working)
       { source: "/tools", destination: "/gallery", permanent: true },
       { source: "/tools/:path*", destination: "/gallery/:path*", permanent: true },

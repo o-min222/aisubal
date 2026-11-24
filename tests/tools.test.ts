@@ -211,7 +211,7 @@ describe('routes, redirects and navigation', () => {
   it('old URLs redirect into /gallery', () => {
     const cfg = read('next.config.ts')
     expect(cfg).toMatch(/source: "\/toolbox", destination: "\/gallery"/)
-    expect(cfg).toMatch(/source: "\/products\/new", destination: "\/gallery\/launch"/)
+    expect(cfg).toMatch(/source: "\/products\/new", destination: "\/gallery\/new"/) // A87
     expect(read('src/app/(app)/products/page.tsx')).toMatch(/\/gallery\?category=launch/)
     expect(read('src/app/(app)/products/[id]/page.tsx')).toMatch(/toolSlugForProduct/)
     expect(existsSync(path.join(root, 'src/app/(app)/toolbox'))).toBe(false)

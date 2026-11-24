@@ -133,7 +133,7 @@ export default async function ToolsPage({ searchParams }: { searchParams: Promis
             <Inbox className="w-4 h-4" /> <span className="only-desktop"><T>내 요청</T></span>
           </Link>
           <Link href="/gallery/new" className="btn btn-primary btn-sm min-h-[40px]">
-            <Plus className="w-4 h-4" /> <T>등록</T>
+            <Plus className="w-4 h-4" /> <T>올리기</T>
           </Link>
         </div>
       </header>

@@ -204,10 +204,10 @@ export async function createProduct(
     return mockGetDetails(product.id, member.id)!
   }
 
+  // A87: members launch through member_product_create (0125); the products table insert is closed (0031)
   const supabase = await sb()
-  const { data: inserted, error } = await supabase
-    .from('products')
-    .insert({
+  const { data: made, error } = await supabase.rpc('member_product_create', {
+    p_payload: {
       name: data.name,
       tagline: data.tagline,
       description: data.description,
@@ -217,13 +217,13 @@ export async function createProduct(
       app_store_url: data.app_store_url ?? null,
       github_url: data.github_url ?? null,
       tags: data.tags ?? [],
-      maker_ids: data.maker_ids?.length ? data.maker_ids : [member.id],
-      featured: false,
-    })
-    .select('*')
-    .single()
+    },
+  })
   if (error) throw error
-  return hydrateProduct(inserted as Product, member.id)
+  const id = (made as { id?: string } | null)?.id
+  const product = id ? await getProductDetails(id, member.id) : null
+  if (!product) throw new Error('product_create_failed')
+  return product
 }
 
 export async function toggleProductUpvote(

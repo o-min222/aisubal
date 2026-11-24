@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
-import { STATUS_LABEL, submitPrompt } from '@/lib/tool-review'
+import { STATUS_LABEL } from '@/lib/tool-review'
 import { getTool } from '@/lib/mcp/registry'
 import { mockSubmitTool } from '@/lib/data/tool-submissions'
 
@@ -11,7 +11,6 @@ describe('A36 gallery publishes immediately', () => {
     const d = getTool('gallery_submit')!.description
     expect(d).toContain('바로 공개돼요')
     expect(d).not.toMatch(/리뷰 큐|검토/)
-    expect(submitPrompt()).not.toMatch(/검토|승인/)
     expect(STATUS_LABEL.approved).toBe('공개됨')
   })
   it('mock submit publishes and a second identical URL reports exists', () => {

@@ -3330,3 +3330,20 @@ html:has(.landing) { scroll-snap-type: y proximity; background: #111111; }
 .tc-foot.is-quiet .tc-act, .tc-foot.is-quiet [data-rx-add], .tc-foot.is-quiet .tap-target:not([aria-pressed="true"]) { color: var(--n-aaa); }
 .tc-foot.is-quiet .tc-act:hover, .tc-foot.is-quiet [data-rx-add]:hover, .tc-foot.is-quiet .tap-target:hover { color: var(--n-333); }
 .sheet-label { padding: 10px 12px 2px; font-size: 12px; font-weight: 600; color: var(--n-888); }
+
+/* ---------- A87 · gallery posting: heartbeat note + '내 서비스 올리기' ---------- */
+.gallery-auto-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  border-radius: 999px;
+  background: var(--n-f0f0f0);
+  color: var(--n-555);
+}
+.launch-more > summary { list-style: none; min-height: 32px; }
+.launch-more > summary::-webkit-details-marker { display: none; }
+.launch-more-icon { transition: transform 0.15s ease; }
+.launch-more[open] .launch-more-icon { transform: rotate(180deg); }

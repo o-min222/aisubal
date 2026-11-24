@@ -25,7 +25,7 @@
 
 프로덕트는 갤러리 항목이에요 (0006). 따로 있던 `/products` 목록은 없어졌고, 런치는 [tools.md](tools.md)의 갤러리 상세에 '프로덕트 런치' 섹션으로 보여요.
 
-- 런치하기: `/gallery/launch` (예전 `/products/new`는 여기로 넘어가요). `/products/[id]`는 그 런치의 갤러리 항목으로 이동해요.
+- 런치하기: `/gallery/new`의 '내 서비스 올리기' 폼 (A87, `member_product_create` 0125, 하루 3개). 예전 `/gallery/launch`, `/products/new`는 여기로 넘어가요. `/products/[id]`는 그 런치의 갤러리 항목으로 이동해요.
 - 업보트(멤버당 1회, 갤러리 좋아요와 같은 박스), 코멘트, 메이커 업데이트, 스크린샷·외부 링크
 - 게시물에서 `launch_post_id`로 연결 가능
 
