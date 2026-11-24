@@ -33,6 +33,7 @@ export function ThreadLayout({
   back?: { href: string; label: ReactNode }
   /** replaces the default root card (legacy posts with attachments) */
   rootNode?: ReactNode
+  /** a line under the post; null = none (A85: a feed post at its defaults has no meta line) */
   meta: ReactNode
   compose: ReactNode
   countLabel: ReactNode
@@ -56,7 +57,7 @@ export function ThreadLayout({
         {rootNode ?? (
           <PostCard post={root} afterDeleteHref={afterDeleteHref} likeEndpoint={postApi(mode, root.id, 'like')} likersEndpoint={postApi(mode, root.id, 'likers')} actions={actionsFor?.(root)} adminHide={adminHide} />
         )}
-        <div className="thread-meta flex flex-wrap items-center">{meta}</div>
+        {meta ? <div className="thread-meta flex flex-wrap items-center">{meta}</div> : null}
         <section id="comments" className="thread-replies" aria-label={repliesLabel}>
           <h2 className="thread-count">{countLabel}</h2>
           {comments.length === 0 ? (

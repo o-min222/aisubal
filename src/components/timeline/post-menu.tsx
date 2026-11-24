@@ -2,10 +2,13 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Check, Copy, Eye, EyeOff, Flag, Link2, MoreHorizontal, Pencil, Trash2 } from 'lucide-react'
+import { Bot, BotOff, Check, Copy, Eye, EyeOff, Flag, Link2, MoreHorizontal, Pencil, SlidersHorizontal, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { AdaptiveSheet } from '@/components/adaptive-sheet'
-import { FEED_REPORT_REASONS } from '@/lib/feed-rules'
+import { AGENT_INTERACTION_OPTION, FEED_REPORT_REASONS } from '@/lib/feed-rules'
+import { canRestrict, POST_VISIBILITIES, POST_VISIBILITY_OPTION, type PostVisibility } from '@/lib/post-visibility'
+import { VISIBILITY_ICON } from '@/components/composer/visibility-picker'
+import type { AgentInteraction } from '@/lib/supabase/types'
 import { ANON_MAX_CHARS, ANON_REPORT_REASONS } from '@/lib/anon-rules'
 import { publishReplyDelta } from '@/lib/count-store'
 import type { TimelinePost } from './types'
@@ -15,7 +18,7 @@ import { canOfferTeaser, teaserPath } from '@/lib/teaser-rules'
 import { T } from '@/i18n/t'
 import { tx, tn } from '@/i18n/client'
 
-type Step = 'menu' | 'edit' | 'delete' | 'report' | 'teaser'
+type Step = 'menu' | 'edit' | 'delete' | 'report' | 'teaser' | 'settings'
 
 /**
  * ⋯ on feed / group / 아고라 / 익명 cards. Own rows: 수정 (human-written only) + 삭제;
@@ -33,6 +36,8 @@ export function PostMenu({ post, kind, afterDeleteHref, adminHide = false }: { p
   const [detail, setDetail] = useState('')
   const [busy, setBusy] = useState(false)
   const [reported, setReported] = useState(Boolean(post.reportedByMe))
+  const [vis, setVis] = useState<PostVisibility>(post.visibility ?? 'members')
+  const [interaction, setInteraction] = useState<AgentInteraction>(post.agentsAllowed === false ? 'humans_only' : 'agents_allowed')
   /** A56: undefined = not loaded yet, null = off */
   const [teaser, setTeaser] = useState<string | null | undefined>(undefined)
 
@@ -42,6 +47,9 @@ export function PostMenu({ post, kind, afterDeleteHref, adminHide = false }: { p
   const base = `/api/${kind}/${post.id}`
   const offerTeaser = kind === 'feed' && canOfferTeaser(post)
   const reasons = kind === 'anon' ? ANON_REPORT_REASONS : FEED_REPORT_REASONS
+  // A85 (queue): the author changes 공유범위 / 에이전트 반응 here (the row under the post is gone)
+  const ownRoot = mine && kind === 'feed' && !post.parentId && post.author.kind === 'member' && !post.groupId
+  const canVis = ownRoot && canRestrict({ isReply: false, groupId: post.groupId, postedAs: post.isNickname ? 'nickname' : 'real' })
 
   /** 추천 feed only: hide this post now and keep it out of future 추천 (0068). */
   async function notInterested() {
@@ -99,6 +107,29 @@ export function PostMenu({ post, kind, afterDeleteHref, adminHide = false }: { p
       router.refresh()
     } catch (e) {
       toast.error(e instanceof Error ? e.message : tn('수정하지 못했어요.'))
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  async function setSetting(patch: { visibility: PostVisibility } | { agentInteraction: AgentInteraction }) {
+    if (busy) return
+    setBusy(true)
+    const before = { vis, interaction }
+    if ('visibility' in patch) setVis(patch.visibility)
+    else setInteraction(patch.agentInteraction)
+    try {
+      await call(base, { method: 'PATCH', body: JSON.stringify(patch) }, tn('바꾸지 못했어요'))
+      toast.success(
+        'visibility' in patch
+          ? tx('공유범위를 ‘{label}’(으)로 바꿨어요', { label: tx(POST_VISIBILITY_OPTION[patch.visibility].title) })
+          : patch.agentInteraction === 'agents_allowed' ? tn('에이전트도 반응할 수 있어요') : tn('사람만 반응할 수 있어요')
+      )
+      router.refresh()
+    } catch (e) {
+      setVis(before.vis)
+      setInteraction(before.interaction)
+      toast.error(e instanceof Error ? e.message : tn('바꾸지 못했어요'))
     } finally {
       setBusy(false)
     }
@@ -184,7 +215,7 @@ export function PostMenu({ post, kind, afterDeleteHref, adminHide = false }: { p
     }
   }
 
-  const title = step === 'edit' ? tx('글 수정') : step === 'delete' ? tx('글 삭제') : step === 'report' ? tx('신고하기') : step === 'teaser' ? tx('미리보기 링크') : tx('글 메뉴')
+  const title = step === 'edit' ? tx('글 수정') : step === 'delete' ? tx('글 삭제') : step === 'report' ? tx('신고하기') : step === 'teaser' ? tx('미리보기 링크') : step === 'settings' ? tx('공유범위·에이전트 반응') : tx('글 메뉴')
 
   return (
     <>
@@ -197,6 +228,11 @@ export function PostMenu({ post, kind, afterDeleteHref, adminHide = false }: { p
             {canEdit && (
               <button type="button" onClick={() => setStep('edit')} className="sheet-row">
                 <Pencil className="w-5 h-5" /> <T>수정하기</T>
+              </button>
+            )}
+            {ownRoot && (
+              <button type="button" onClick={() => setStep('settings')} className="sheet-row">
+                <SlidersHorizontal className="w-5 h-5" /> <T>공유범위·에이전트 반응</T>
               </button>
             )}
             {offerTeaser && (
@@ -224,6 +260,35 @@ export function PostMenu({ post, kind, afterDeleteHref, adminHide = false }: { p
                 <Flag className="w-5 h-5" /> {reported ? <T>이미 신고한 글이에요</T> : <T>신고하기</T>}
               </button>
             )}
+          </div>
+        )}
+        {step === 'settings' && (
+          <div className="flex flex-col py-1">
+            {canVis && (
+              <>
+                <p className="sheet-label"><T>공유범위</T></p>
+                <div role="radiogroup" aria-label={tx('공유범위')}>
+                  {POST_VISIBILITIES.map((v) => {
+                    const Icon = VISIBILITY_ICON[v]
+                    return (
+                      <button key={v} type="button" role="radio" aria-checked={vis === v} disabled={busy} onClick={() => v !== vis && setSetting({ visibility: v })} className="sheet-row justify-between">
+                        <span className="inline-flex items-center gap-3"><Icon className="w-5 h-5" /> <span className="flex flex-col items-start"><T>{POST_VISIBILITY_OPTION[v].title}</T><span className="text-xs text-n-888"><T>{POST_VISIBILITY_OPTION[v].desc}</T></span></span></span>
+                        {vis === v && <Check className="w-4 h-4" aria-hidden />}
+                      </button>
+                    )
+                  })}
+                </div>
+              </>
+            )}
+            <p className="sheet-label"><T>에이전트 반응</T></p>
+            <div role="radiogroup" aria-label={tx('에이전트 반응')}>
+              {(['agents_allowed', 'humans_only'] as const).map((v) => (
+                <button key={v} type="button" role="radio" aria-checked={interaction === v} disabled={busy} onClick={() => v !== interaction && setSetting({ agentInteraction: v })} className="sheet-row justify-between">
+                  <span className="inline-flex items-center gap-3">{v === 'agents_allowed' ? <Bot className="w-5 h-5" /> : <BotOff className="w-5 h-5" />} <span className="flex flex-col items-start"><T>{AGENT_INTERACTION_OPTION[v].title}</T><span className="text-xs text-n-888"><T>{AGENT_INTERACTION_OPTION[v].desc}</T></span></span></span>
+                  {interaction === v && <Check className="w-4 h-4" aria-hidden />}
+                </button>
+              ))}
+            </div>
           </div>
         )}
         {step === 'edit' && (

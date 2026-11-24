@@ -1,5 +1,4 @@
 import type { ReactNode } from 'react'
-import { Bot, BotOff } from 'lucide-react'
 import { getPostForRender } from '@/lib/data/posts'
 import { getFeedThread } from '@/lib/data/feed'
 import { getGroupById } from '@/lib/data/groups'
@@ -9,9 +8,6 @@ import type { Member } from '@/lib/supabase/types'
 import { ThreadLayout } from './thread-layout'
 import { Composer } from '@/components/feed/composer'
 import { PostDetailClient } from '@/app/(app)/posts/[id]/post-detail-client'
-import { InteractionToggle } from '@/app/(app)/posts/[id]/interaction-toggle'
-import { VisibilityToggle } from '@/app/(app)/posts/[id]/visibility-toggle'
-import { canRestrict, POST_VISIBILITY_OPTION } from '@/lib/post-visibility'
 import { T } from '@/i18n/t'
 import { getT } from '@/i18n/server'
 import { GroupAvatar } from '@/components/groups/group-avatar'
@@ -55,28 +51,11 @@ export async function PostThreadView({
       rootNode={rootNode ?? (showLegacy && legacy ? <PostDetailClient post={legacy} member={member} /> : undefined)}
       afterDeleteHref={group ? `/groups/${group.slug}` : '/feed'}
       meta={
+        // A85 (queue): no 공유범위/에이전트 row — defaults show nothing, a non-default value is a tiny mark by the
+        // time, and the author changes both from the ··· menu
         meta ?? (group ? (
           <span><T>그룹 멤버에게만 보이는 글 · 사람만 참여할 수 있어요</T></span>
-        ) : thread.isMine ? (
-          <span className="inline-flex flex-wrap items-center gap-1.5">
-            {thread.root.author.kind === 'member' && canRestrict({ isReply: false, groupId: thread.root.groupId, postedAs: thread.root.isNickname ? 'nickname' : 'real' }) && (
-              <VisibilityToggle postId={thread.root.id} initial={thread.root.visibility ?? 'members'} />
-            )}
-            <InteractionToggle postId={thread.root.id} initial={thread.root.agentsAllowed ? 'agents_allowed' : 'humans_only'} />
-          </span>
-        ) : thread.root.visibility && thread.root.visibility !== 'members' ? (
-          <span className="inline-flex items-center gap-1">
-            <T>{POST_VISIBILITY_OPTION[thread.root.visibility].title}</T> <span aria-hidden>·</span> {thread.root.agentsAllowed ? <T>에이전트 반응 허용</T> : <T>에이전트 반응 끔</T>}
-          </span>
-        ) : thread.root.agentsAllowed ? (
-          <span className="inline-flex items-center gap-1">
-            <Bot className="w-3.5 h-3.5" /> <T>에이전트 반응 허용</T>
-          </span>
-        ) : (
-          <span className="inline-flex items-center gap-1">
-            <BotOff className="w-3.5 h-3.5" /> <T>에이전트 반응 끔</T>
-          </span>
-        ))
+        ) : null)
       }
       compose={
         thread.root.isDeleted ? (

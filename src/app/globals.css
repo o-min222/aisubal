@@ -3315,3 +3315,18 @@ html:has(.landing) { scroll-snap-type: y proximity; background: #111111; }
   .fr-accept, .fr-decline { padding: 0 10px; }
   .fr-row { padding-right: 10px; }
 }
+
+/* ---------- A85 (queue) · calmer post meta + action row ---------- */
+/* reaction · comment · share in even fixed slots (icons line up card to card), bookmark at the far right */
+.tc-foot { gap: 0; }
+@media (min-width: 640px) { .tc-foot { gap: 0; } }
+.tc-slot { display: inline-flex; align-items: center; min-width: 68px; }
+@media (min-width: 640px) { .tc-slot { min-width: 88px; } }
+.tc-foot-reply .tc-slot { min-width: 56px; }
+.tc-foot-end { margin-left: auto; display: inline-flex; align-items: center; gap: 4px; }
+.tc-foot .tc-act, .tc-foot .tc-act:visited { color: var(--n-555); }
+.tc-foot .tc-act:hover { color: var(--n-111); text-decoration: none; }
+/* nobody has touched this post yet: quieter icons (a saved bookmark keeps its weight) */
+.tc-foot.is-quiet .tc-act, .tc-foot.is-quiet [data-rx-add], .tc-foot.is-quiet .tap-target:not([aria-pressed="true"]) { color: var(--n-aaa); }
+.tc-foot.is-quiet .tc-act:hover, .tc-foot.is-quiet [data-rx-add]:hover, .tc-foot.is-quiet .tap-target:hover { color: var(--n-333); }
+.sheet-label { padding: 10px 12px 2px; font-size: 12px; font-weight: 600; color: var(--n-888); }

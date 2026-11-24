@@ -8,7 +8,7 @@ import { useState, type ReactNode } from 'react'
 import { setRecHidden, useRecHidden } from './rec-hidden'
 import { postRecDismiss } from '@/lib/rec-dismiss'
 import Link from 'next/link'
-import { Bot, MessageCircle, Star, Wrench, ExternalLink, Share2, VenetianMask, Sparkles } from 'lucide-react'
+import { MessageCircle, Star, Wrench, ExternalLink, Share2, VenetianMask, Sparkles } from 'lucide-react'
 import { toast } from 'sonner'
 import { postShareData, postShareUrl } from '@/lib/share-rules'
 import { LinkPreviewBlock } from '@/components/link-preview-block'
@@ -20,7 +20,7 @@ import { UserAvatar } from '@/components/user-avatar'
 import { RelativeTime } from '@/components/relative-time'
 import { LikeButton } from './like-button'
 import { ReactionAddButton, ReactionChips } from './reactions'
-import { VisibilityMark } from './visibility-mark'
+import { AgentsOffMark, VisibilityMark } from './visibility-mark'
 import { LikerList } from './liker-list'
 import type { TimelinePost } from './types'
 import { categoryLabel } from '@/lib/anon-rules'
@@ -104,6 +104,7 @@ export function PostCard({
   const archiveKind = archiveKindForEndpoint(likeEndpoint)
   const gone = Boolean(post.isDeleted || (anon && post.isHidden))
   const counts = useCounts(post.id, { likeCount: post.likeCount, liked: post.likedByMe, replyCount: post.replyCount })
+  const quiet = counts.likeCount + counts.replyCount + (post.reactionCount ?? 0) === 0
   const menuKind: PostMenuKind | null = likeEndpoint.startsWith('/api/feed/') ? 'feed' : likeEndpoint.startsWith('/api/agora/') ? 'agora' : likeEndpoint.startsWith('/api/anon/') ? 'anon' : null
   const avatar = anon ? (
       <span
@@ -216,16 +217,12 @@ export function PostCard({
               <span className="tc-time">
                 <span className="text-n-bbb" aria-hidden>·</span> <RelativeTime date={post.createdAt} />
               </span>
+              {/* A85 (queue): defaults (전체 회원, agents may react) show nothing; a non-default value is a tiny mark here */}
               {!isReply && post.visibility && post.visibility !== 'members' && <VisibilityMark v={post.visibility} />}
+              {!isReply && menuKind === 'feed' && post.agentsAllowed === false && a.kind === 'member' && !post.groupId && <AgentsOffMark />}
             </span>
             {post.isEdited && !gone && <span className="text-n-999 text-xs"><T>수정됨</T></span>}
             {post.isHidden && !anon && <span className="badge badge-note"><T>숨김</T></span>}
-            {post.agentsAllowed && (
-              <span className="agents-ok-chip" title={tx('작성자가 에이전트의 답글·좋아요를 허용했어요')}>
-                <Bot className="w-3 h-3" />
-                <T>에이전트 반응 허용</T>
-              </span>
-            )}
           </header>
           {menuKind && !gone && <PostMenu post={post} kind={menuKind} afterDeleteHref={afterDeleteHref} adminHide={adminHide} />}
           </div>
@@ -317,49 +314,52 @@ export function PostCard({
             <ReactionChips postId={post.id} surface={menuKind} initialLiked={post.likedByMe} initialCount={post.likeCount} reactionCount={post.reactionCount} disabled={!canLike || gone} />
           )}
 
-          <footer className={`tc-foot flex items-center${isReply ? ' tc-foot-reply' : ''}`}>
-            {menuKind === 'feed' || menuKind === 'agora' ? (
-              <ReactionAddButton postId={post.id} surface={menuKind} initialLiked={post.likedByMe} initialCount={post.likeCount} disabled={!canLike || gone} />
-            ) : (
-              <LikeButton
-                endpoint={likeEndpoint}
-                initialLiked={post.likedByMe}
-                initialCount={post.likeCount}
-                disabled={!canLike || gone}
-                onShowLikers={() => setLikersOpen(true)}
-              />
-            )}
-            {isReply ? null : replyHref ? (
-              <Link
-                href={replyHref}
-                className="tc-act inline-flex items-center gap-1 text-sm text-n-555 hover:text-n-111"
-                aria-label={tx('답글')}
-              >
-                <span className="tap-target inline-flex items-center justify-center rounded-full icon-btn">
-                  <MessageCircle className="w-[18px] h-[18px]" />
-                </span>
-                <span className="tabular-nums">{counts.replyCount}</span>
-              </Link>
-            ) : (
-              <span className="inline-flex items-center gap-1 text-sm text-n-555">
-                <span className="tap-target inline-flex items-center justify-center">
-                  <MessageCircle className="w-[18px] h-[18px]" />
-                </span>
-                <span className="tabular-nums">{counts.replyCount}</span>
+          {/* A85 (queue): reaction · comment · share spread evenly, the bookmark at the far right; a count at 0 is hidden
+              and a post nobody has touched yet gets quieter icons */}
+          <footer className={`tc-foot flex items-center${isReply ? ' tc-foot-reply' : ''}${quiet ? ' is-quiet' : ''}`}>
+            <span className="tc-slot">
+              {menuKind === 'feed' || menuKind === 'agora' ? (
+                <ReactionAddButton postId={post.id} surface={menuKind} initialLiked={post.likedByMe} initialCount={post.likeCount} disabled={!canLike || gone} />
+              ) : (
+                <LikeButton
+                  endpoint={likeEndpoint}
+                  initialLiked={post.likedByMe}
+                  initialCount={post.likeCount}
+                  disabled={!canLike || gone}
+                  onShowLikers={() => setLikersOpen(true)}
+                />
+              )}
+            </span>
+            {isReply ? null : (
+              <span className="tc-slot">
+                {replyHref ? (
+                  <Link href={replyHref} className="tc-act inline-flex items-center gap-1 text-sm" aria-label={counts.replyCount > 0 ? tx('댓글 {n}개', { n: counts.replyCount }) : tx('답글')}>
+                    <span className="tap-target inline-flex items-center justify-center rounded-full icon-btn">
+                      <MessageCircle className="w-[18px] h-[18px]" />
+                    </span>
+                    {counts.replyCount > 0 && <span className="tabular-nums">{counts.replyCount}</span>}
+                  </Link>
+                ) : (
+                  <span className="tc-act inline-flex items-center gap-1 text-sm">
+                    <span className="tap-target inline-flex items-center justify-center">
+                      <MessageCircle className="w-[18px] h-[18px]" />
+                    </span>
+                    {counts.replyCount > 0 && <span className="tabular-nums">{counts.replyCount}</span>}
+                  </span>
+                )}
               </span>
             )}
-            <button
-              type="button"
-              onClick={share}
-              className="tap-target inline-flex items-center justify-center rounded-full text-n-555 icon-btn hover:text-n-111"
-              aria-label={tx('공유')}
-            >
-              <Share2 className="w-[17px] h-[17px]" />
-            </button>
-            {!gone && archiveKind && (
-              <ArchiveButton kind={archiveKind} refId={post.id} hint={{ title: post.title || post.body.slice(0, 80), excerpt: post.body.slice(0, 600), url: href, author: anon ? undefined : a.name }} />
-            )}
-            {actions && <div className="ml-auto flex items-center gap-1">{actions}</div>}
+            <span className="tc-slot">
+              <button type="button" onClick={share} className="tc-act tap-target inline-flex items-center justify-center rounded-full icon-btn" aria-label={tx('공유')}>
+                <Share2 className="w-[17px] h-[17px]" />
+              </button>
+            </span>
+            <span className="tc-foot-end">
+              {!gone && archiveKind && (
+                <ArchiveButton kind={archiveKind} refId={post.id} hint={{ title: post.title || post.body.slice(0, 80), excerpt: post.body.slice(0, 600), url: href, author: anon ? undefined : a.name }} />
+              )}
+              {actions && <span className="flex items-center gap-1">{actions}</span>}
+            </span>
           </footer>
           {!isReply && !gone && href && post.commentPreviews?.length ? (
             <CommentPreviews items={post.commentPreviews} total={counts.replyCount} href={href} anon={anon} />
