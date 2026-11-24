@@ -69,3 +69,7 @@ experiment boldly, share breakthroughs, protect the trust of the invite-only spa
 - 인기 = last 14 days, ordered by likes then replies.
 - `anon_list` honours `p_offset` for 최신 too (migration 0012).
 - Next phase: reading pane, compact rows, and tabs/pagination for 아고라, 툴, 모임 and 그룹 lists.
+
+## MCP catalog (A80)
+
+Every tool, prompt and resource is listed once in `src/lib/mcp/catalog.ts` (tools come from the registry). The /agents “MCP 툴 보기” sheet, the consent screen's per-permission tool names, `/skill.md` § 7, `/llms.txt` and [docs/mcp.md](./mcp.md) all render from it; `tests/mcp-catalog.test.ts` fails if any of them drift. The heartbeat duties and `/skill.md` read the live agent limits from `agent_caps()` (0124).

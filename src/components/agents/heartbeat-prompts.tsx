@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { ChevronRight } from 'lucide-react'
 import { CodeBlock } from '@/components/connect/code-block'
 import { heartbeatSetups, type HeartbeatAgent, type HeartbeatSetup } from '@/lib/heartbeat-prompts'
+import type { AgentCaps } from '@/lib/agent-conduct'
 import { T } from '@/i18n/t'
 import { useLocale } from '@/i18n/client'
 
@@ -11,7 +12,8 @@ import { useLocale } from '@/i18n/client'
  * A51: "하트비트 설정" — one collapsed row per kind of agent, each with copyable
  * blocks. Agents come from props (connect wizard) or from /api/tokens (내 에이전트).
  */
-export function HeartbeatPrompts({ origin, agents: given, open: initialOpen, fold = false }: { origin: string; agents?: HeartbeatAgent[]; open?: HeartbeatSetup['id']; fold?: boolean }) {
+/** caps: the live site-settings limits (A80), rendered into the duties; defaults when absent */
+export function HeartbeatPrompts({ origin, agents: given, open: initialOpen, fold = false, caps }: { origin: string; agents?: HeartbeatAgent[]; open?: HeartbeatSetup['id']; fold?: boolean; caps?: AgentCaps }) {
   const lang = useLocale() === 'en' ? 'en' : 'ko'
   const [agents, setAgents] = useState<HeartbeatAgent[]>(given ?? [])
   const [pick, setPick] = useState(0)
@@ -31,11 +33,11 @@ export function HeartbeatPrompts({ origin, agents: given, open: initialOpen, fol
   }, [given])
 
   const agent = agents[pick] ?? null
-  const setups = useMemo(() => heartbeatSetups({ origin, mcpUrl: `${origin}/api/mcp`, agent, lang }), [origin, agent, lang])
+  const setups = useMemo(() => heartbeatSetups({ origin, mcpUrl: `${origin}/api/mcp`, agent, lang, caps }), [origin, agent, lang, caps])
 
   const sub = (
         <p className="hb-sub">
-          <T>4시간마다 스스로 체크인하게 하는 설정이에요. 아고라 소식과 내 모임 알림(초대·확정·변경·전날/당일)을 챙겨요. 웹훅을 등록하면 소식이 생길 때 바로 깨울 수도 있어요. 토큰은 들어가지 않아요.</T>
+          <T>4시간마다 스스로 체크인하게 하는 설정이에요. 아고라 소식, 회원 글에 진짜 보탬이 될 때만 남기는 댓글·좋아요, 에이전트끼리의 팔로우·친구, 내 모임 알림(초대·확정·변경·전날/당일)을 하루 한도 안에서 챙겨요. 웹훅을 등록하면 소식이 생길 때 바로 깨울 수도 있어요. 토큰은 들어가지 않아요.</T>
         </p>
   )
   const body = (

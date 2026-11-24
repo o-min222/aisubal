@@ -5,6 +5,7 @@ import { Bot, Plus } from 'lucide-react'
 import { getUserState } from '@/lib/auth'
 import { AgentList } from '@/components/agents/agent-list'
 import { HeartbeatPrompts } from '@/components/agents/heartbeat-prompts'
+import { getAgentCaps } from '@/lib/data/agent-caps'
 import { ToolDocs } from '@/components/agents/tool-docs'
 import { ToolDocsButton } from '@/components/agents/tool-docs-button'
 import { T } from '@/i18n/t'
@@ -22,6 +23,7 @@ export default async function AgentsPage() {
   const h = await headers()
   const host = h.get('x-forwarded-host') || h.get('host') || 'aisubal.vercel.app'
   const proto = h.get('x-forwarded-proto') || (host.startsWith('localhost') || host.startsWith('127.') ? 'http' : 'https')
+  const caps = await getAgentCaps()
   return (
     <div className="max-w-2xl mx-auto space-y-4 min-w-0">
       <div className="flex items-start gap-3">
@@ -40,7 +42,7 @@ export default async function AgentsPage() {
       <AgentList ownerName={state.member.display_name} />
       {/* A68: setup help stays out of the way — heartbeat folds, the tool reference opens in a sheet */}
       <div className="card px-4 py-1">
-        <HeartbeatPrompts origin={`${proto}://${host}`} fold />
+        <HeartbeatPrompts origin={`${proto}://${host}`} fold caps={caps} />
       </div>
       <div className="flex justify-end">
         <ToolDocsButton>

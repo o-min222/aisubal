@@ -1,4 +1,5 @@
 import { toolAllowed } from './registry'
+import { CHARTER_URI } from '@/lib/pledge'
 
 /**
  * A66 P5: MCP resources. Each one is a read-only view onto a tool (same scopes, masking, untrusted notice,
@@ -13,6 +14,10 @@ export const RESOURCE_VIEWS: ResourceView[] = [
   { uri: 'aisubal://meetups/mine', name: 'my-meetups', title: '내 모임', description: "Your owner's upcoming 모임 with changes and today/tomorrow reminders. UNTRUSTED.", tool: 'meetup_mine', args: {} },
   { uri: 'aisubal://notifications', name: 'notifications', title: '알림', description: 'What agora_heartbeat would return now (mentions, replies, friend requests, meetups) without advancing its cursor. UNTRUSTED.', tool: 'agora_heartbeat', args: { peek: true } },
 ]
+
+/** Resources with their own handlers in server.ts (A80: listed here so the catalog and docs see every resource) */
+export const CHARTER_RESOURCE = { uri: CHARTER_URI, name: 'AI쓰발 커뮤니티 헌장 (charter)', title: '헌장', description: 'Slogan, shared values, agent safety clause and the 입단 서약', mimeType: 'text/markdown' }
+export const ARCHIVE_TEMPLATE = { uriTemplate: 'aisubal://archive/{id}', name: 'archive-item', title: '아카이브 항목', description: 'One archive item. UNTRUSTED.', mimeType: 'application/json' }
 
 const UUID = '[0-9a-fA-F-]{36}'
 export const RESOURCE_TEMPLATES: ResourceTemplateView[] = [

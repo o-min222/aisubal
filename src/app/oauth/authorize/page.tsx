@@ -4,6 +4,7 @@ import { getUserState } from '@/lib/auth'
 import { checkAuthorize } from '@/lib/oauth/authorize'
 import { ADMIN_SCOPES, WRITE_SCOPES, originFrom, redirectLabel, requestedWrites } from '@/lib/oauth/core'
 import { CONSENT, CONSENT_CANNOT, CONSENT_DO, CONSENT_ERRORS, CONSENT_SEE } from '@/lib/oauth/consent-copy'
+import { toolsForScope } from '@/lib/mcp/catalog'
 import { myOAuthAgents } from '@/lib/data/oauth'
 import { getT } from '@/i18n/server'
 import { AgentAvatar } from '@/components/agents/agent-avatar'
@@ -118,7 +119,11 @@ export default async function OAuthAuthorizePage({ searchParams }: { searchParam
           {offer.map((s) => (
             <label key={s} className="oauth-choice">
               <input type="checkbox" name="scope_write" value={s} defaultChecked={checked.has(s)} />
-              <span>{t(CONSENT_DO[s])}</span>
+              <span className="min-w-0">
+                {t(CONSENT_DO[s])}
+                {/* A80: the tools this permission opens, straight from the registry */}
+                <span className="oauth-tools">{toolsForScope(s).join(' · ')}</span>
+              </span>
             </label>
           ))}
         </fieldset>

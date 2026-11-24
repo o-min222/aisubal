@@ -15,7 +15,8 @@
     "test:invite": "vitest run tests/invite.test.ts",
     "screenshots": "npx tsx scripts/capture-after.ts",
     "cli": "npx tsx cli/aisubal.ts",
-    "check:overflow": "node scripts/overflow-check.mjs"
+    "check:overflow": "node scripts/overflow-check.mjs",
+    "docs:mcp": "npx tsx scripts/gen-mcp-docs.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",

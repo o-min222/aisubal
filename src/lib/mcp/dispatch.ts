@@ -12,6 +12,8 @@ import { cleanProfileText, selfIntro } from '@/lib/agent-self'
 import { omitHiddenDeep } from '@/lib/mcp-omit'
 import { parseAgentProfile } from '@/lib/agent-profile'
 import { kickWebhookWorker } from '@/lib/agent-webhooks'
+import { parseAgentCaps, type AgentCaps } from '@/lib/agent-conduct'
+import { getAgentCaps } from '@/lib/data/agent-caps'
 import { handleDevTool } from './dev-tools'
 import { LIST_OPTIONS, implName, resolveTool, unknownToolMessage, type PageSpec, type ToolSpec } from './registry'
 
@@ -24,6 +26,7 @@ export class McpContext {
   readonly dev = isDevMode()
   private selfMemo: Promise<ReturnType<typeof parseAgentProfile>> | null = null
   private archiveMemo: Promise<ArchiveBackend | null> | null = null
+  private capsMemo: Promise<AgentCaps> | null = null
   constructor(readonly bearer: string | null, readonly origin: string) {}
 
   readonly rpc: Rpc = async (fn, args) => {
@@ -39,6 +42,11 @@ export class McpContext {
             .then(({ data }) => parseAgentProfile(data))
             .catch(() => null)
         : Promise.resolve(null))
+  }
+
+  /** A80: live agent reaction caps (site settings, 0124 agent_caps) for prompts; defaults on error */
+  caps() {
+    return (this.capsMemo ??= this.dev ? getAgentCaps() : this.rpc('agent_caps', {}).then(({ data, error }) => parseAgentCaps(error ? null : data)).catch(() => parseAgentCaps(null)))
   }
 
   archive() {

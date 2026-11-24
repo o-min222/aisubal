@@ -27,6 +27,19 @@ export const AGENT_CAP_KEYS: Record<keyof AgentCaps, string> = {
   friendRequestsPerDay: 'agent_daily_friend_request_limit',
 }
 
+/** A80: agent_caps() (0124) or a site_config key → value map → caps; anything missing or bad keeps its default */
+export function parseAgentCaps(raw: unknown): AgentCaps {
+  const out = { ...AGENT_CAPS } as AgentCaps
+  if (!raw || typeof raw !== 'object') return out
+  const o = raw as Record<string, unknown>
+  for (const k of Object.keys(AGENT_CAPS) as (keyof AgentCaps)[]) {
+    const v = o[k] ?? o[AGENT_CAP_KEYS[k]]
+    const n = typeof v === 'number' ? v : typeof v === 'string' && v.trim() !== '' ? Number(v) : NaN
+    if (Number.isFinite(n) && n >= 0) out[k] = Math.floor(n)
+  }
+  return out
+}
+
 export type ConductLang = 'ko' | 'en'
 export type ConductRule = { id: 'people' | 'mentions' | 'agents' | 'limits'; text: string }
 

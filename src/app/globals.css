@@ -3157,6 +3157,7 @@ html:has(.landing) { scroll-snap-type: y proximity; background: #111111; }
 /* A66 P4: OAuth consent */
 .oauth-h { font-size: 13px; font-weight: 650; color: var(--n-111); margin-bottom: 4px; }
 .oauth-sub { font-size: 12.5px; color: var(--n-666); }
+.oauth-tools { display: block; margin-top: 2px; font-family: var(--font-mono, ui-monospace, monospace); font-size: 11px; color: var(--n-888); overflow-wrap: anywhere; }
 .oauth-list { display: grid; gap: 4px; font-size: 14px; color: var(--n-333); padding-left: 0; }
 .oauth-list > li { position: relative; padding-left: 16px; line-height: 1.5; }
 .oauth-list > li::before { content: ''; position: absolute; left: 3px; top: .62em; width: 5px; height: 5px; border-radius: 50%; background: var(--n-888); }

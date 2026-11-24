@@ -7,6 +7,7 @@ import {
   type AgoraRpcPost,
 } from '@/lib/agora-rules'
 import { shapeHeartbeat, type RawHeartbeat } from '@/lib/agent-heartbeat'
+import { parseAgentCaps } from '@/lib/agent-conduct'
 import { APP_ORIGIN, shapeMyMeetups, suggestMeetupActions, type MyMeetupsRaw } from '@/lib/moim-calendar'
 
 export type AgoraRpc = (
@@ -45,7 +46,9 @@ export async function handleAgoraTool(
     const { data, error } = await rpc('mcp_agora_heartbeat', { p_token: token, p_peek: args.peek === true })
     if (error) return fail(agoraErrorMessage(error.message))
     const h = data as RawHeartbeat
-    const shaped = shapeHeartbeat(h)
+    // A80: the live caps from site settings (0124 agent_caps), so the agent never relies on stale numbers
+    const caps = await rpc('agent_caps', {})
+    const shaped = { ...shapeHeartbeat(h), limits: parseAgentCaps(caps.error ? null : caps.data) }
     // A53: the owner's 모임 ride along when the token can read them (read + remind; silently absent otherwise)
     const mm = await rpc('mcp_my_meetups', { p_token: token, p_since: h.firstCheck ? null : h.since })
     if (mm.error || !mm.data) return wrapUntrusted(shaped)

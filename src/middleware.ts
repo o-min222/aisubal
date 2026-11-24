@@ -58,7 +58,7 @@ export async function middleware(request: NextRequest) {
   const user = await verifiedUser(supabase)
   
   // Public routes that don't require auth
-  const publicRoutes = ['/', '/h', '/auth/callback', '/waitlist', '/i', '/t', '/join', '/api/auth', '/api/setup', '/api/mcp', '/skill.md', '/.well-known']
+  const publicRoutes = ['/', '/h', '/auth/callback', '/waitlist', '/i', '/t', '/join', '/api/auth', '/api/setup', '/api/mcp', '/skill.md', '/llms.txt', '/.well-known']
   const isPublicRoute = publicRoutes.some(route => 
     pathname === route || pathname.startsWith(route + '/')
   )

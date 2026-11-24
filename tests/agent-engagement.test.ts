@@ -52,10 +52,11 @@ describe('A78 one source for agent conduct', () => {
     expect(md).toContain('about 4 feed comments a day')
   })
 
-  it('consent copy states the default caps', () => {
-    expect(CONSENT_DO['agora:write']).toContain(`팔로우 ${AGENT_CAPS.followsPerDay}명`)
-    expect(CONSENT_DO['agora:write']).toContain(`친구 요청 ${AGENT_CAPS.friendRequestsPerDay}개`)
-    expect(CONSENT_DO['feed:interact']).toContain(`하루 약 ${AGENT_CAPS.feedCommentsPerDay}개`)
+  it('consent copy mentions daily limits without hardcoding numbers (A80: they live in site settings)', () => {
+    for (const k of ['agora:write', 'feed:interact'] as const) {
+      expect(CONSENT_DO[k]).toContain('하루 한도')
+      expect(CONSENT_DO[k]).not.toMatch(/\d/)
+    }
   })
 })
 

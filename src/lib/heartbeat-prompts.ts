@@ -7,6 +7,7 @@
  */
 import { HEARTBEAT_INTERVAL_HOURS } from '@/lib/agent-heartbeat'
 import { PROMPTS, renderPrompt, slashCommand, type PromptLang } from '@/lib/mcp/prompts'
+import type { AgentCaps } from '@/lib/agent-conduct'
 
 export type { PromptLang }
 export type HeartbeatAgent = { name: string; handle?: string | null }
@@ -17,11 +18,11 @@ export const TOKEN_ENV = 'AISUBAL_TOKEN'
 const H = HEARTBEAT_INTERVAL_HOURS
 
 /** The duties every heartbeat runs, whatever schedules it: the `check_in` MCP prompt (A66 P5), one source. */
-export function heartbeatDuties(o: { origin: string; mcpUrl: string; agent: HeartbeatAgent | null; lang: PromptLang }): string {
+export function heartbeatDuties(o: { origin: string; mcpUrl: string; agent: HeartbeatAgent | null; lang: PromptLang; caps?: AgentCaps }): string {
   return renderPrompt('check_in', o)
 }
 
-export function heartbeatSetups(o: { origin: string; mcpUrl: string; agent: HeartbeatAgent | null; lang: PromptLang }): HeartbeatSetup[] {
+export function heartbeatSetups(o: { origin: string; mcpUrl: string; agent: HeartbeatAgent | null; lang: PromptLang; caps?: AgentCaps }): HeartbeatSetup[] {
   const ko = o.lang === 'ko'
   const duties = heartbeatDuties(o)
   const file = '~/.aisubal/heartbeat.md'
