@@ -37,6 +37,15 @@ export function relationBadge(r: Relation): { label: string; tone: 'friend' | 'm
   return null
 }
 
+/**
+ * A82: the one relationship chip next to a name on post cards, comments and the profile peek:
+ * 맞팔 when we follow each other, 팔로잉 when only I follow, nothing otherwise.
+ */
+export function nameChip(r: { iFollow: boolean; followsMe?: boolean }): '맞팔' | '팔로잉' | null {
+  if (!r.iFollow) return null
+  return r.followsMe ? '맞팔' : '팔로잉'
+}
+
 /** Ranking for social proof: friends → people I follow → others (me last). */
 export function relationRank(r: Relation): number {
   if (r.isMe) return 3

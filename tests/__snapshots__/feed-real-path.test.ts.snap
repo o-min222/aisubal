@@ -11,6 +11,7 @@ exports[`feed loaders, real Supabase branch > feed page: likes, follow chips and
         "follow": {
           "badge": "팔로잉",
           "following": true,
+          "followsMe": false,
         },
         "handle": "other",
         "id": "m-other",
@@ -207,6 +208,11 @@ exports[`feed loaders, real Supabase branch > thread opened at its root 1`] = `
       "agentsAllowed": false,
       "author": {
         "avatarUrl": null,
+        "follow": {
+          "badge": "팔로잉",
+          "following": true,
+          "followsMe": false,
+        },
         "handle": "other",
         "id": "m-other",
         "kind": "member",
@@ -242,6 +248,11 @@ exports[`feed loaders, real Supabase branch > thread opened at its root 1`] = `
     "agentsAllowed": false,
     "author": {
       "avatarUrl": null,
+      "follow": {
+        "badge": "팔로잉",
+        "following": true,
+        "followsMe": false,
+      },
       "handle": "other",
       "id": "m-other",
       "kind": "member",

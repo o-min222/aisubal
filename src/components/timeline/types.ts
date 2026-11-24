@@ -22,8 +22,8 @@ export type TimelineAuthor = {
   profileHref?: string | null
   /** member: unique @handle (mentions resolve to handles only) */
   handle?: string | null
-  /** human feed, real-name authors only: viewer's follow state (null = me / not followable) */
-  follow?: { following: boolean; badge: string | null } | null
+  /** human feed, real-name authors only: viewer's follow state (null = me / not followable; A82: followsMe drives the 맞팔 chip) */
+  follow?: { following: boolean; followsMe?: boolean; badge: string | null } | null
 }
 
 export type TimelinePost = {

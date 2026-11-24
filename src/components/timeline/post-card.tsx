@@ -24,14 +24,13 @@ import { VisibilityMark } from './visibility-mark'
 import { LikerList } from './liker-list'
 import type { TimelinePost } from './types'
 import { categoryLabel } from '@/lib/anon-rules'
-import { FollowButton } from '@/components/social/follow-button'
+import { NameChip } from '@/components/social/name-chip'
 import { AgentAttribution } from './agent-attribution'
 import { AgentAvatar } from '@/components/agents/agent-avatar'
 import { MentionText } from './mention-text'
 import { PostMenu, type PostMenuKind } from './post-menu'
 import { useCounts } from '@/lib/count-store'
 import { ArchiveButton, archiveKindForEndpoint } from '@/components/archive/archive-button'
-import { RelationBadge } from '@/components/social/relation-badge'
 import { MemberPeek } from '@/components/profile/member-peek'
 import { GroupAvatar } from '@/components/groups/group-avatar'
 import { T } from '@/i18n/t'
@@ -189,17 +188,20 @@ export function PostCard({
           )}
           <div className="flex items-start gap-1">
           <header className="flex flex-1 min-w-0 flex-wrap items-center gap-x-1.5 gap-y-0.5 text-sm">
-            {a.kind === 'member' && !post.isNickname && !anon ? (
-              <MemberPeek memberId={a.id} label={a.name}>
-                <span className="peek-name font-semibold text-n-111">{a.name}</span>
-              </MemberPeek>
-            ) : (a.kind === 'agent' || a.kind === 'group') && a.profileHref ? (
-              <Link href={a.profileHref} className="font-semibold text-n-111">{a.name}</Link>
-            ) : (
-              <span className="font-semibold text-n-111">{anon ? <AnonName name={a.name} /> : a.name}</span>
-            )}
-            {a.kind === 'member' && a.handle && !post.isNickname && !anon && <span className="text-n-999 truncate max-w-[140px]">@{a.handle}</span>}
-            {a.follow?.badge && a.follow.badge !== '팔로잉' && <RelationBadge label={a.follow.badge} />}
+            {/* A82: name · @handle · one relationship chip stay on one line; the name and handle truncate, the chip never wraps alone */}
+            <span className="tc-who">
+              {a.kind === 'member' && !post.isNickname && !anon ? (
+                <MemberPeek memberId={a.id} label={a.name} className="tc-who-name">
+                  <span className="peek-name font-semibold text-n-111 truncate">{a.name}</span>
+                </MemberPeek>
+              ) : (a.kind === 'agent' || a.kind === 'group') && a.profileHref ? (
+                <Link href={a.profileHref} className="tc-who-name font-semibold text-n-111 truncate">{a.name}</Link>
+              ) : (
+                <span className="tc-who-name font-semibold text-n-111 truncate">{anon ? <AnonName name={a.name} /> : a.name}</span>
+              )}
+              {a.kind === 'member' && a.handle && !post.isNickname && !anon && <span className="tc-who-handle text-n-999 truncate">@{a.handle}</span>}
+              {a.follow && <span className="tc-who-chip"><NameChip memberId={a.id} following={a.follow.following} followsMe={a.follow.followsMe} cta={!isReply} /></span>}
+            </span>
             {anon && post.isOp && isReply && <span className="op-chip"><T>글쓴이</T></span>}
             {anon && post.isMine && <span className="text-xs text-n-888"><T>(나)</T></span>}
             {anon && !isReply && categoryLabel(post.category) && (
@@ -218,11 +220,6 @@ export function PostCard({
             </span>
             {post.isEdited && !gone && <span className="text-n-999 text-xs"><T>수정됨</T></span>}
             {post.isHidden && !anon && <span className="badge badge-note"><T>숨김</T></span>}
-            {a.follow && !isReply && (
-              <span className="ml-auto">
-                <FollowButton memberId={a.id} initialFollowing={a.follow.following} variant="chip" refresh={false} />
-              </span>
-            )}
             {post.agentsAllowed && (
               <span className="agents-ok-chip" title={tx('작성자가 에이전트의 답글·좋아요를 허용했어요')}>
                 <Bot className="w-3 h-3" />

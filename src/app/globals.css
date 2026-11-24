@@ -2422,6 +2422,13 @@ a.notif-pop-all:hover { background: var(--n-fafafa); }
 .tc-meta { display: inline-flex; align-items: baseline; gap: 6px; min-width: 0; flex: 0 1 auto; max-width: 100%; white-space: nowrap; color: var(--n-888); }
 .tc-sub { min-width: 0; overflow: hidden; text-overflow: ellipsis; max-width: 180px; }
 .tc-time { flex: 0 0 auto; }
+/* A82: name · @handle · relationship chip on one line; name and handle truncate (handle first), the chip never wraps alone */
+.tc-who { display: inline-flex; align-items: center; gap: 6px; min-width: 0; max-width: 100%; white-space: nowrap; }
+.tc-who-name { min-width: 0; flex: 0 1 auto; }
+.member-peek-trigger.tc-who-name { flex-shrink: 1; max-width: 100%; }
+.member-peek-trigger.tc-who-name > .peek-name { min-width: 0; }
+.tc-who-handle { min-width: 0; flex: 0 3 auto; max-width: 140px; }
+.tc-who-chip { flex: none; display: inline-flex; }
 @media (max-width: 480px) {
   /* basis 0 lets the meta stay on the name line and take the rest of it; the subtitle ellipsizes first */
   .tc-meta-sub { flex: 1 1 0; min-width: 9em; }

@@ -263,7 +263,7 @@ export async function withFollowState(viewerId: string, posts: TimelinePost[]): 
   return posts.map((p) => {
     const r = p.author.kind === 'member' && !p.isNickname ? rel.get(p.author.id) : undefined
     if (!r || r.isMe) return p
-    return { ...p, author: { ...p.author, follow: { following: r.iFollow, badge: relationBadge(r)?.label ?? null } } }
+    return { ...p, author: { ...p.author, follow: { following: r.iFollow, followsMe: r.followsMe, badge: relationBadge(r)?.label ?? null } } }
   })
 }
 
@@ -453,7 +453,8 @@ async function getFeedThread__raw(
 
 /** Group identity on the root (B14) and agent photos/links (0050) for a thread. */
 function enrichThread(viewerId: string, posts: TimelinePost[]): Promise<TimelinePost[]> {
-  return enrichAll(posts, [(p) => withGroupIdentity(viewerId, p.slice(0, 1)).then((g) => [...g, ...p.slice(1)]), (p) => withAgentCards(p)])
+  // A82: the relationship chip shows on the post and its comments too
+  return enrichAll(posts, [(p) => withFollowState(viewerId, p), (p) => withGroupIdentity(viewerId, p.slice(0, 1)).then((g) => [...g, ...p.slice(1)]), (p) => withAgentCards(p)])
 }
 
 async function listFeedLikers__raw(postId: string): Promise<TimelineLiker[]> {

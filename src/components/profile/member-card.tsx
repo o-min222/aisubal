@@ -9,7 +9,7 @@ import { ExternalLink, Lock, Users } from 'lucide-react'
 import { UserAvatar } from '@/components/user-avatar'
 import { ServiceChip } from '@/components/service-chip'
 import { RelativeTime } from '@/components/relative-time'
-import { FollowButton } from '@/components/social/follow-button'
+import { NameChip } from '@/components/social/name-chip'
 import { FriendButton } from '@/components/social/friend-button'
 import type { MemberCardData } from '@/lib/data/member-card'
 import { LINK_VISIBILITY, type LinkVisibility } from '@/lib/profile-rules'
@@ -136,17 +136,22 @@ export function MemberCard({ data, variant = 'side' }: { data: MemberCardData; v
               data.relation && (
                 <>
                   <ArchiveButton kind="member" refId={data.id} hint={{ title: data.displayName, excerpt: data.bio ?? undefined, url: `/members/${data.id}`, author: data.handle ? `@${data.handle}` : undefined }} />
-                  <FollowButton memberId={data.id} initialFollowing={data.relation.iFollow} variant="chip" refresh={false} />
                   <FriendButton memberId={data.id} initialState={data.relation.friend} compact />
                 </>
               )
             )}
           </div>
         </div>
-        <Link href={profileHref} className="block mt-2 min-w-0 group">
-          <span className="pc-name block font-semibold text-n-111 truncate">{data.displayName}</span>
-          {data.handle && <span className="block text-xs text-n-888 truncate">@{data.handle}</span>}
-        </Link>
+        {/* A82: one relationship chip right after the name (맞팔 / 팔로잉, or + 팔로우); the name truncates, the chip stays on its line */}
+        <div className="mt-2 flex items-center gap-1.5 min-w-0">
+          <Link href={profileHref} className="pc-name min-w-0 font-semibold text-n-111 truncate">{data.displayName}</Link>
+          {!data.isMe && data.relation && (
+            <span className="flex-none inline-flex">
+              <NameChip memberId={data.id} following={data.relation.iFollow} followsMe={data.relation.followsMe} cta />
+            </span>
+          )}
+        </div>
+        {data.handle && <Link href={profileHref} className="block text-xs text-n-888 truncate min-w-0">@{data.handle}</Link>}
         {data.bio && <p className="text-xs text-n-666 mt-1 line-clamp-2">{data.bio}</p>}
         {s && (
           <div className="mc-body">
