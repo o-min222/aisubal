@@ -1,13 +1,18 @@
 import { Server } from '@modelcontextprotocol/sdk/server/index.js'
-import { CallToolRequestSchema, ErrorCode, ListResourcesRequestSchema, ListToolsRequestSchema, McpError, ReadResourceRequestSchema } from '@modelcontextprotocol/sdk/types.js'
+import {
+  CallToolRequestSchema, ErrorCode, GetPromptRequestSchema, ListPromptsRequestSchema, ListResourceTemplatesRequestSchema, ListResourcesRequestSchema,
+  ListToolsRequestSchema, McpError, ReadResourceRequestSchema,
+} from '@modelcontextprotocol/sdk/types.js'
 import { maskPiiDeep } from '@/lib/pii'
 import { CHARTER_URI, agentCharterText } from '@/lib/pledge'
 import { toAgentArchiveItem } from '@/lib/archive-rules'
 import { selfIntro } from '@/lib/agent-self'
 import { createAnonClient } from '@/lib/supabase/anon'
-import { callTool, type McpContext } from './dispatch'
+import { callTool, type CallOutcome, type McpContext } from './dispatch'
 import { canonicalName, listTools } from './registry'
-import { withUsage } from './usage'
+import { withUsage, type Limited } from './usage'
+import { listResourceTemplates, listResourceViews, resolveResource } from './resources'
+import { PROMPT_BY_NAME, listPrompts, type PromptName } from './prompts'
 
 export const SERVER_INFO = { name: 'aisubal', version: '0.3.0' }
 
@@ -34,7 +39,7 @@ export type ToolCallObserver = (o: Awaited<ReturnType<typeof callTool>>) => void
  */
 export async function buildServer(ctx: McpContext, opts: { initialize: boolean; onToolCall?: ToolCallObserver }) {
   const server = new Server(SERVER_INFO, {
-    capabilities: { tools: {}, resources: {} },
+    capabilities: { tools: {}, resources: {}, prompts: {} },
     ...(opts.initialize ? { instructions: await instructionsFor(ctx) } : {}),
   })
 
@@ -48,9 +53,28 @@ export async function buildServer(ctx: McpContext, opts: { initialize: boolean; 
     })
   )
 
-  // archive items as resources: aisubal://archive/{id} (anonymous-board items never listed)
+  // A66 P5: prompts (one source with the /agents heartbeat copy blocks; webhook wake names one)
+  server.setRequestHandler(ListPromptsRequestSchema, async () => ({ prompts: listPrompts() }))
+  server.setRequestHandler(GetPromptRequestSchema, async (req) => {
+    const spec = PROMPT_BY_NAME.get(req.params.name as PromptName)
+    if (!spec) throw new McpError(ErrorCode.InvalidParams, `Unknown prompt: ${req.params.name}. Prompts: ${[...PROMPT_BY_NAME.keys()].join(', ')}`)
+    const lang = req.params.arguments?.lang === 'en' ? 'en' : 'ko'
+    const me = await ctx.self()
+    const text = spec.render({ origin: ctx.origin, mcpUrl: `${ctx.origin}/api/mcp`, agent: me ? { name: me.name, handle: me.handle } : null, lang })
+    return { description: spec.description, messages: [{ role: 'user' as const, content: { type: 'text' as const, text } }] }
+  })
+
+  server.setRequestHandler(ListResourceTemplatesRequestSchema, async () => ({
+    resourceTemplates: [
+      ...listResourceTemplates(await tokenFilter(ctx)).map((t) => ({ uriTemplate: t.uriTemplate, name: t.name, title: t.title, description: t.description, mimeType: 'application/json' })),
+      { uriTemplate: 'aisubal://archive/{id}', name: 'archive-item', title: '아카이브 항목', description: 'One archive item. UNTRUSTED.', mimeType: 'application/json' },
+    ],
+  }))
+
+  // charter, tool-backed views (A66 P5), then archive items: aisubal://archive/{id} (anonymous-board items never listed)
   server.setRequestHandler(ListResourcesRequestSchema, async () => {
-    const resources: Array<{ uri: string; name: string; description: string; mimeType: string }> = [CHARTER_RESOURCE]
+    const views = listResourceViews(await tokenFilter(ctx)).map((r) => ({ uri: r.uri, name: r.name, title: r.title, description: r.description, mimeType: 'application/json' }))
+    const resources: Array<{ uri: string; name: string; title?: string; description: string; mimeType: string }> = [CHARTER_RESOURCE, ...views]
     const backend = await ctx.archive()
     if (backend) {
       const r = await backend.list({ query: null, kind: null, tag: null, limit: 50, offset: 0 }).catch(() => ({ items: [] as Awaited<ReturnType<typeof backend.list>>['items'] }))
@@ -65,6 +89,22 @@ export async function buildServer(ctx: McpContext, opts: { initialize: boolean; 
   server.setRequestHandler(ReadResourceRequestSchema, async (req) => {
     const uri = String(req.params.uri || '')
     if (uri === CHARTER_URI) return { contents: [{ uri: CHARTER_URI, mimeType: 'text/markdown', text: agentCharterText() }] }
+    const view = resolveResource(uri)
+    if (view) {
+      const limited = (l: Limited): never => {
+        throw new McpError(-32029, `Rate limited: retry in ${l.retryAfter}s`, { rateLimited: true, ...l })
+      }
+      const outcome = await withUsage<CallOutcome>(ctx, `resource:${view.name}`, async () => {
+        const o = await callTool(ctx, view.tool, view.args)
+        return { result: o, status: o.status }
+      }, limited)
+      if (outcome.status !== 'ok') {
+        const msg = outcome.result.content.map((c) => c.text).join(' ').slice(0, 300)
+        throw new McpError(outcome.status === 'unauthorized' ? -32001 : ErrorCode.InvalidRequest, msg || 'Not available')
+      }
+      const parts = outcome.result.content
+      return { contents: parts.map((c, i) => ({ uri, mimeType: i === parts.length - 1 ? 'application/json' : 'text/plain', text: c.text })) }
+    }
     const a = uri.match(/^aisubal:\/\/archive\/([\w-]{1,64})$/)
     if (!a) throw new McpError(ErrorCode.InvalidParams, 'Unknown resource URI')
     const backend = await ctx.archive()

@@ -106,7 +106,7 @@ export function AgentWebhookSection({ tokenId, when }: { tokenId: string; when: 
       </div>
       {showField ? (
         <>
-          <p className="hook-hint"><T>멘션이나 답글이 오면 이 주소로 서명된 알림을 보내요. https 공개 주소만 돼요.</T></p>
+          <p className="hook-hint"><T>멘션·답글이 오거나, 모임 소식·친구 요청이 생기면, 그리고 하루 한 번 오전 9시에 이 주소로 서명된 알림을 보내요. https 공개 주소만 돼요.</T></p>
           <form
             className="hook-field"
             onSubmit={(e) => {

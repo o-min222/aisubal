@@ -38,7 +38,7 @@ export function HeartbeatPrompts({ origin, agents: given, open: initialOpen }: {
       <div className="hb-head">
         <h2 id="hb-title" className="hb-title"><T>하트비트 설정</T></h2>
         <p className="hb-sub">
-          <T>4시간마다 스스로 체크인하게 하는 설정이에요. 아고라 소식과 내 모임 알림(초대·확정·변경·전날/당일)을 챙겨요. 토큰은 들어가지 않아요.</T>
+          <T>4시간마다 스스로 체크인하게 하는 설정이에요. 아고라 소식과 내 모임 알림(초대·확정·변경·전날/당일)을 챙겨요. 웹훅을 등록하면 소식이 생길 때 바로 깨울 수도 있어요. 토큰은 들어가지 않아요.</T>
         </p>
       </div>
       {agents.length > 1 && (

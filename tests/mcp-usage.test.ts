@@ -29,6 +29,12 @@ describe('A66 P3 usage log + rate limits', () => {
     expect(JSON.parse(r.content[0].text)).toMatchObject({ rateLimited: true, retryAfter: 12, limit: 60, window: 'minute', scope: 'token' })
     expect(JSON.parse(rateLimitedResult({ scope: 'member', window: 'day', limit: 5000, retryAfter: 30 }).content[0].text).error).toMatch(/owner's agents together.*5000.*per day.*30s/)
   })
+  it('resources pass their own limited answer (a thrown JSON-RPC error)', async () => {
+    const c = ctx({ ok: false, limited: { scope: 'token', window: 'minute', limit: 60, retryAfter: 9 } })
+    const run = vi.fn(async () => ok)
+    await expect(withUsage<typeof ok.result>(c, 'resource:feed', run, (l) => { throw new Error(`limited ${l.retryAfter}`) })).rejects.toThrow('limited 9')
+    expect(run).not.toHaveBeenCalled()
+  })
   it('fails open when the log is down; dev and token-less calls are not logged', async () => {
     const down = { dev: false, bearer: 'aisubal_' + 'b'.repeat(48), rpc: vi.fn(async () => { throw new Error('db down') }) }
     expect(await withUsage(down, 'x', async () => ok)).toBe(ok.result)
