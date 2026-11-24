@@ -2612,6 +2612,12 @@ const en: Record<string, string> = {
   "내 서비스 올리기": "Post something I built",
   "직접 만든 도구나 서비스를 소개하세요. 갤러리의 런치에 올라가고 업보트를 받을 수 있어요.": "Introduce a tool or service you built. It goes into the gallery's launches and can collect upvotes.",
   "로고 · 스크린샷 · App Store (선택)": "Logo · screenshots · App Store (optional)",
+  // A89
+  "앱 설치": "Install app",
+  "아래쪽 메뉴(≡)를 눌러요.": "Tap the menu (≡) at the bottom.",
+  "‘현재 페이지 추가’ → ‘홈 화면’을 골라요.": "Choose ‘Add page to’ → ‘Home screen’.",
+  "Chrome 오른쪽 위 메뉴(⋮)를 눌러요.": "Tap Chrome's menu (⋮) at the top right.",
+  "‘앱 설치’ 또는 ‘홈 화면에 추가’를 골라요.": "Choose ‘Install app’ or ‘Add to Home screen’.",
 }
 
 export default en

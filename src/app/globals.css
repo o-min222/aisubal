@@ -3357,3 +3357,13 @@ html:has(.landing) { scroll-snap-type: y proximity; background: #111111; }
   .qc-chips { margin-right: -14px; padding-right: 14px; }
   .fr-card { margin: 0 -10px; border-radius: 0; border-width: 1px 0; }
 }
+
+/* ---------- A89 · '앱 설치' beside the profile row in the account menu ---------- */
+.account-head-row { display: flex; align-items: center; gap: 8px; }
+.account-head-row > .account-head { flex: 1 1 auto; min-width: 0; }
+.account-install {
+  flex: none; display: inline-flex; align-items: center; gap: 5px; height: 32px; padding: 0 12px; margin-right: 4px;
+  border-radius: 999px; border: 1px solid var(--n-e5e5e5); background: var(--n-fff);
+  font-size: 13px; font-weight: 600; color: var(--n-333); white-space: nowrap;
+}
+.account-install:hover { background: var(--n-f5f5f5); color: var(--n-111); }

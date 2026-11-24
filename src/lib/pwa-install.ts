@@ -1,6 +1,9 @@
 /**
- * '홈 화면에 추가': Chromium fires `beforeinstallprompt` (we keep it and call
+ * '앱 설치': Chromium fires `beforeinstallprompt` (we keep it and call
  * prompt() on one tap); iOS Safari has no prompt, so we explain Share → 홈 화면에 추가.
+ * A89: Android Chrome / Samsung Internet don't always fire it (engagement heuristics, a dismissed
+ * prompt), so there we fall back to the browser-menu steps instead of hiding the button.
+ * An install made elsewhere is spotted with getInstalledRelatedApps (manifest related_applications).
  * The boot script runs in <head> so an early event is never missed.
  */
 /** 'done' after install / opening on the phone, 'later' after 나중에 — drives the 설정 reminder (D1). */
@@ -33,7 +36,7 @@ export type BeforeInstallPromptEvent = Event & {
   userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>
 }
 
-export type InstallMode = 'prompt' | 'ios' | null
+export type InstallMode = 'prompt' | 'ios' | 'android' | null
 
 /** iPhone/iPad Safari (iPadOS reports a Mac UA with touch). Other iOS browsers are excluded. */
 export function isIosSafari(ua: string, maxTouchPoints = 0): boolean {
@@ -42,10 +45,22 @@ export function isIosSafari(ua: string, maxTouchPoints = 0): boolean {
   return /Safari\//.test(ua) && !/CriOS|FxiOS|EdgiOS|OPiOS|GSA\/|DuckDuckGo|YaBrowser|Instagram|FBAN|FBAV|KAKAOTALK|NAVER|Line\//.test(ua)
 }
 
+/** In-app browsers (KakaoTalk, NAVER, Instagram, Facebook, LINE, Android WebView…) can't install a web app. */
+const IN_APP = /; wv\)|KAKAOTALK|NAVER|Instagram|FBAN|FBAV|Line\/|DaumApps|everytimeApp|GSA\//
+
+/** Android browsers whose menu can install a web app: Chrome (and Chromium builds that say Chrome) and Samsung Internet. */
+export function androidBrowser(ua: string): 'chrome' | 'samsung' | null {
+  if (!/Android/.test(ua) || IN_APP.test(ua)) return null
+  if (/SamsungBrowser\//.test(ua)) return 'samsung'
+  if (/Chrome\/[\d.]+ Mobile/.test(ua) && !/Firefox|OPR\/|EdgA\/|YaBrowser|UCBrowser|MiuiBrowser|HeyTapBrowser/.test(ua)) return 'chrome'
+  return null
+}
+
 /** Which install path to show: none when already installed or unsupported. */
 export function installMode(s: { standalone: boolean; installed?: boolean; hasPrompt: boolean; ua: string; maxTouchPoints?: number }): InstallMode {
   if (s.standalone || s.installed) return null
   if (s.hasPrompt) return 'prompt'
   if (isIosSafari(s.ua, s.maxTouchPoints)) return 'ios'
+  if (androidBrowser(s.ua)) return 'android'
   return null
 }

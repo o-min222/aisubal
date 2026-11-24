@@ -4,7 +4,8 @@
 
 - `src/app/manifest.ts`: name 'AI쓰발 — AI 커뮤니티', `start_url: /feed`, `display: standalone`, with shortcuts to 새 글 and 아고라.
 - `public/sw.js` registers at scope `/`. **It caches nothing**, because pages are per member. Navigations use navigation preload and fall back to a small offline page. The worker also handles `push`, `notificationclick` and `pushsubscriptionchange`.
-- `src/lib/pwa-install.ts` handles '홈 화면에 추가'. On Chromium it keeps `beforeinstallprompt` and calls `prompt()` on one tap. On iOS Safari, which has no prompt, it explains Share → 홈 화면에 추가. It also registers `/sw.js`, which is skipped on localhost unless `?sw=1`.
+- `src/lib/pwa-install.ts` decides the install path (`installMode`: `'prompt' | 'ios' | 'android' | null`). On Chromium it keeps `beforeinstallprompt` and calls `prompt()` on one tap. On iOS Safari, which has no prompt, it explains Share → 홈 화면에 추가. Android Chrome and Samsung Internet don't always fire the event, so without it they get the browser-menu steps (⋮ → 앱 설치, or ≡ → 현재 페이지 추가 → 홈 화면). In-app browsers, Firefox and desktop browsers without a prompt get nothing. It also registers `/sw.js`, which is skipped on localhost unless `?sw=1`.
+- Install entry point (A89): a compact '앱 설치' button beside the profile row of the account menu (`account-menu.tsx`, sheet and dropdown). The help sheet is `src/components/pwa/install-help-sheet.tsx`. The button hides when running standalone, after `appinstalled`, or when `navigator.getInstalledRelatedApps()` finds the app. The manifest lists itself in `related_applications` (`platform: 'webapp'`, `prefer_related_applications: false`) for that check.
 - `/settings/app` (모바일 앱) offers 홈 화면에 추가 and **폰으로 보내기**: a QR device handoff from desktop to phone. The handoff is short-lived and single-use, and only its sha256 is stored (0072).
 
 ## In-app notifications

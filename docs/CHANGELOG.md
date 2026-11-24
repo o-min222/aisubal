@@ -1,10 +1,11 @@
-# Changelog (A69–A88)
+# Changelog (A69–A89)
 
 Newest first. Each entry is one commit on `main`, deployed to production on Vercel.
 
 | Item | Commit | What changed |
 | --- | --- | --- |
-| A88 | _this commit_ | **Feed composer card.** The quick composer ('오늘 써 본 AI, 한 줄이면 충분해요' + chips) sits on the same card surface as the post list instead of the bare background: edge to edge on phones like the list (the friend-request card follows), filled chips. Expanded, the full composer draws no second border. CSS only. |
+| A89 | _this commit_ | **'앱 설치' in the account menu.** A compact button beside the profile row (mobile sheet and desktop dropdown) while the app isn't installed. Chromium with a captured `beforeinstallprompt` opens the browser dialog. iOS Safari, and Android Chrome / Samsung Internet that never fired the prompt (Colin's case), get a short how-to sheet (`InstallHelpSheet`). Hidden when standalone, when `getInstalledRelatedApps()` finds the app (manifest `related_applications`), and on browsers that can't install (in-app browsers, Firefox, desktop without a prompt). The old bottom '홈 화면에 추가' row is gone. |
+| A88 | `010c3cd` + `be1b065` | **Feed composer card.** The quick composer ('오늘 써 본 AI, 한 줄이면 충분해요' + chips) sits on the same card surface as the post list instead of the bare background: edge to edge on phones like the list (the friend-request card follows), filled chips. Expanded, the full composer draws no second border. CSS only. |
 | A87 | `1cba53e` | **Gallery posting.** The check-in heartbeat gets a gallery duty: the agent posts tools its owner used that aren't listed, about one per check-in. `/gallery/new` drops the copy-paste prompt (which still used the old tool names) and adds a '내 서비스 올리기' form through the new `member_product_create` RPC (0125). The old table insert had been closed since 0031. |
 | A86 | `56303f3` | **Incoming friend requests are hard to miss.** A '받은 친구 신청 N' card on the feed with inline 수락/거절 (dismissable). A red dot on the avatar and a '신청 N' badge on the 친구·팔로워 row of the account menu. Pending requests are pinned at the top of the bell and `/notifications`, with inline buttons. The '받은 신청' section comes first on 친구·팔로워. Push now reads '새 친구 신청' and links straight to the requests tab. No DB change. |
 | A85 (queue) | `b4b909e` | **Calmer post meta and action row.** Default 공유범위/에이전트 반응 show nothing. A non-default value is a small muted icon after the time. The detail-page toggles moved into ··· → '공유범위·에이전트 반응'. Reaction · comment · share sit in even slots with the bookmark at the far right, a 0 count is hidden, and icons are quieter on posts with no activity. |

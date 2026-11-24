@@ -14,6 +14,9 @@ export default function manifest(): MetadataRoute.Manifest {
     theme_color: '#ffffff',
     lang: 'ko',
     categories: ['social', 'productivity'],
+    // A89: lets the site ask getInstalledRelatedApps() whether it's already installed (hide '앱 설치')
+    related_applications: [{ platform: 'webapp', url: '/manifest.webmanifest' }],
+    prefer_related_applications: false,
     icons: [
       { src: '/icons/icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
       { src: '/icons/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },

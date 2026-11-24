@@ -16,6 +16,16 @@ export function usePwaInstall() {
   useEffect(() => {
     const sync = () => setMode(read())
     sync()
+    // A89: installed from another tab / the browser menu — Chrome reports it via related_applications
+    const nav = navigator as Navigator & { getInstalledRelatedApps?: () => Promise<unknown[]> }
+    nav.getInstalledRelatedApps?.()
+      .then((apps) => {
+        if (apps.length > 0) {
+          ;(window as W).__aisubalInstalled = true
+          sync()
+        }
+      })
+      .catch(() => {})
     window.addEventListener(INSTALL_EVENT, sync)
     const mq = window.matchMedia?.('(display-mode: standalone)')
     mq?.addEventListener?.('change', sync)

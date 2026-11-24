@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useEffect, useRef, useState, type ReactNode } from 'react'
-import { Bot, LogOut, Settings, Shield, SquarePlus, Ticket, Users, LayoutDashboard } from 'lucide-react'
+import { Bot, Download, LogOut, Settings, Shield, Ticket, Users, LayoutDashboard } from 'lucide-react'
 import { AdaptiveSheet } from '@/components/adaptive-sheet'
 import { UserAvatar } from '@/components/user-avatar'
 import { useMediaQuery } from '@/hooks/use-media-query'
@@ -12,7 +12,7 @@ import { useT } from '@/i18n/client'
 import { LocaleSwitch } from '@/components/i18n/locale-switch'
 import { ThemeSwitch } from '@/components/theme/theme-switch'
 import { usePwaInstall } from '@/hooks/use-pwa-install'
-import { IosInstallSheet } from '@/components/pwa/ios-install-sheet'
+import { InstallHelpSheet } from '@/components/pwa/install-help-sheet'
 import { useFriendRequests } from '@/hooks/use-friend-requests'
 import { FRIEND_REQUESTS_HREF } from '@/lib/friend-requests'
 
@@ -39,13 +39,21 @@ function MenuBody({ me, invitesLeft, close, onInstall }: { me: ShellMember; invi
   const requests = useFriendRequests()
   return (
     <nav aria-label={t('계정 메뉴')} className="account-menu-body">
-      <Link href="/members/me" onClick={close} className="account-head">
-        <UserAvatar id={me.id} name={me.displayName} avatarUrl={me.avatarUrl} size="md" />
-        <span className="min-w-0">
-          <span className="block font-semibold text-n-111 truncate">{me.displayName}</span>
-          <span className="block text-xs text-n-888">{t('프로필 보기')}</span>
-        </span>
-      </Link>
+      {/* A89: '앱 설치' sits beside the profile row until the app is installed (hidden where install isn't possible) */}
+      <div className="account-head-row">
+        <Link href="/members/me" onClick={close} className="account-head">
+          <UserAvatar id={me.id} name={me.displayName} avatarUrl={me.avatarUrl} size="md" />
+          <span className="min-w-0">
+            <span className="block font-semibold text-n-111 truncate">{me.displayName}</span>
+            <span className="block text-xs text-n-888">{t('프로필 보기')}</span>
+          </span>
+        </Link>
+        {onInstall && (
+          <button type="button" onClick={onInstall} className="account-install">
+            <Download className="w-3.5 h-3.5" aria-hidden /> {t('앱 설치')}
+          </button>
+        )}
+      </div>
       <div className="account-sep" />
       <Link href="/me" onClick={close} className="account-row">
         <LayoutDashboard className="w-[18px] h-[18px]" /> {t('내 대시보드')}
@@ -74,11 +82,6 @@ function MenuBody({ me, invitesLeft, close, onInstall }: { me: ShellMember; invi
       <div className="account-sep" />
       <LocaleSwitch variant="row" />
       <ThemeSwitch variant="row" />
-      {onInstall && (
-        <button type="button" onClick={onInstall} className="account-row w-full text-left">
-          <SquarePlus className="w-[18px] h-[18px]" /> {t('홈 화면에 추가')}
-        </button>
-      )}
       <button type="button" onClick={signOut} className="account-row w-full text-left">
         <LogOut className="w-[18px] h-[18px]" /> {t('로그아웃')}
       </button>
@@ -113,13 +116,13 @@ export function AccountMenu({
   const wrap = useRef<HTMLDivElement>(null)
   const close = () => setOpen(false)
   const install = usePwaInstall()
-  const [iosHelp, setIosHelp] = useState(false)
-  // Chromium: one tap → the browser's install dialog; iOS Safari: how-to sheet (rendered outside the menu so closing it doesn't unmount it)
+  const [installHelp, setInstallHelp] = useState(false)
+  // Chromium: one tap → the browser's install dialog; iOS Safari / Android without a prompt: how-to sheet (rendered outside the menu so closing it doesn't unmount it)
   const onInstall = install.mode
     ? () => {
         close()
         if (install.mode === 'prompt') void install.prompt()
-        else setIosHelp(true)
+        else setInstallHelp(true)
       }
     : null
 
@@ -160,7 +163,7 @@ export function AccountMenu({
           <MenuBody me={me} invitesLeft={invitesLeft} close={close} onInstall={onInstall} />
         </AdaptiveSheet>
       )}
-      {install.mode === 'ios' && <IosInstallSheet open={iosHelp} onOpenChange={setIosHelp} />}
+      {(install.mode === 'ios' || install.mode === 'android') && <InstallHelpSheet platform={install.mode} open={installHelp} onOpenChange={setInstallHelp} />}
     </div>
   )
 }
