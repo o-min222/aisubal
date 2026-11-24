@@ -110,6 +110,7 @@ export function AnonComposer({
         value={body}
         onChange={(e) => setBody(e.target.value)}
         onSubmitShortcut={submit}
+        enterToSend={isReply}
         placeholder={isReply ? (replyKind === 'comment' ? tx('익명으로 댓글 남기기…') : tx('익명으로 답글 남기기…')) : tx('회사 얘기, 커리어 고민, AI 때문에 생긴 일… 편하게 털어놓으세요.')}
         autoFocus={autoFocus}
         rows={isReply ? 1 : 3}
