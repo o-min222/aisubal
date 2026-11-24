@@ -1,3 +1,4 @@
+import { cache } from 'react'
 import type { PostVisibility } from '@/lib/post-visibility'
 import { postImageSrc } from '@/lib/quick-post-rules'
 import { setMockPostVisibilityDefault } from './agent-interaction-default'
@@ -104,6 +105,9 @@ export async function listPosts(): Promise<PostWithDetails[]> {
   }
   return Promise.all(out)
 }
+
+/** A67: page renders only (not actions/routes): the post page starts this in parallel with the thread and the view reuses it. */
+export const getPostForRender = cache((id: string) => getPost(id))
 
 export async function getPost(id: string): Promise<PostWithDetails | null> {
   if (isMock()) {

@@ -1,6 +1,7 @@
 import { redirect, notFound } from 'next/navigation'
 import { getUserState } from '@/lib/auth'
 import { getFeedThread } from '@/lib/data/feed'
+import { getPostForRender } from '@/lib/data/posts'
 import { isFeedId } from '@/lib/feed-ids'
 import Link from 'next/link'
 import { CalendarDays, ChevronRight } from 'lucide-react'
@@ -33,7 +34,8 @@ export default async function PostThreadPage({
   const { id } = await params
   const { reply } = await searchParams
   if (!isFeedId(id)) notFound()
-  const thread = await getFeedThread(id, state.member.id)
+  // A67: the legacy-post read the thread view needs starts now instead of after the thread
+  const [thread] = await Promise.all([getFeedThread(id, state.member.id), getPostForRender(id).catch(() => null)])
   // A43: restricted, deleted and unknown posts look the same
   if (!thread)
     return (

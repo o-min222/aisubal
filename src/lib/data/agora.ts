@@ -3,6 +3,7 @@ import { withAgentCards, withAgentLikerCards } from './agent-profiles'
 import type { TimelineLiker, TimelinePost } from '@/components/timeline/types'
 import { MOCK_AGORA_LIKERS, MOCK_AGORA_POSTS, MOCK_AGORA_REPLIES } from '@/lib/mock-agora'
 import { sb, isMock } from './client'
+import { enrichAll, markLiked } from './enrich'
 import { pickCommentPreviews, previewLine, COMMENT_PREVIEW_COUNT } from '@/lib/feed-rules'
 
 const POST_SELECT =
@@ -125,7 +126,8 @@ async function listAgoraPage__raw(
     if (tab === 'reviews') rows = rows.filter((p) => p.rating != null)
     if (tab === 'tips') rows = rows.filter((p) => p.rating == null)
     if (tab === 'popular') rows = [...rows].sort((a, b) => (b.likeCount + (b.reactionCount ?? 0)) * 2 + b.replyCount - ((a.likeCount + (a.reactionCount ?? 0)) * 2 + a.replyCount))
-    return { posts: rows.slice(from, from + size), total: rows.length, totalPages: Math.max(1, Math.ceil(rows.length / size)) }
+    const posts = await enrichAll(rows.slice(from, from + size), [(p) => withAgentCards(p), (p) => withAgoraCommentPreviews(p)])
+    return { posts, total: rows.length, totalPages: Math.max(1, Math.ceil(rows.length / size)) }
   }
   const supabase = await sb()
   let q = supabase.from('agora_posts').select(POST_SELECT, { count: 'exact' }).is('parent_id', null).is('deleted_at', null)
@@ -138,9 +140,13 @@ async function listAgoraPage__raw(
   const { data, error, count } = await q.range(from, from + size - 1)
   if (error) throw error
   const rows = (data || []) as unknown as Row[]
-  const liked = await likedSet(viewerId, rows.map((r) => r.id))
+  // A67: likes, agent cards and comment previews in one wave
+  const [liked, posts] = await Promise.all([
+    likedSet(viewerId, rows.map((r) => r.id)),
+    enrichAll(rows.map((r) => toTimeline(r, new Set(), viewerId)), [(p) => withAgentCards(p), (p) => withAgoraCommentPreviews(p)]),
+  ])
   const total = count ?? rows.length
-  return { posts: rows.map((r) => toTimeline(r, liked, viewerId)), total, totalPages: Math.max(1, Math.ceil(total / size)) }
+  return { posts: markLiked(posts, liked), total, totalPages: Math.max(1, Math.ceil(total / size)) }
 }
 
 async function getAgoraThread__raw(
@@ -150,30 +156,28 @@ async function getAgoraThread__raw(
   if (isMock()) {
     const root = MOCK_AGORA_POSTS.find((p) => p.id === id)
     if (!root) return null
-    return { root, replies: MOCK_AGORA_REPLIES.filter((r) => r.rootId === id) }
+    const [r0, ...replies] = await withAgentCards([root, ...MOCK_AGORA_REPLIES.filter((r) => r.rootId === id)])
+    return { root: r0, replies }
   }
   const supabase = await sb()
-  const { data: first, error } = await supabase
-    .from('agora_posts')
-    .select(POST_SELECT)
-    .eq('id', id)
-    .maybeSingle()
+  const repliesOf = (rootId: string) => supabase.from('agora_posts').select(POST_SELECT).eq('root_id', rootId).order('created_at', { ascending: true })
+  // A67: links usually point at the root, so its replies come with it (an extra trip only for a reply id)
+  const [{ data: first, error }, guess] = await Promise.all([supabase.from('agora_posts').select(POST_SELECT).eq('id', id).maybeSingle(), repliesOf(id)])
   if (error) throw error
   if (!first) return null
-  let root = first as unknown as Row
-  if (root.root_id) {
-    const { data: r } = await supabase.from('agora_posts').select(POST_SELECT).eq('id', root.root_id).maybeSingle()
-    if (!r) return null
-    root = r as unknown as Row
-  }
-  const { data: rep } = await supabase
-    .from('agora_posts')
-    .select(POST_SELECT)
-    .eq('root_id', root.id)
-    .order('created_at', { ascending: true })
+  const f = first as unknown as Row
+  const [rootRes, { data: rep }] = f.root_id
+    ? await Promise.all([supabase.from('agora_posts').select(POST_SELECT).eq('id', f.root_id).maybeSingle(), repliesOf(f.root_id)])
+    : [{ data: f }, guess]
+  if (!rootRes.data) return null
+  const root = rootRes.data as unknown as Row
   const replies = (rep || []) as unknown as Row[]
-  const liked = await likedSet(viewerId, [root.id, ...replies.map((r) => r.id)])
-  return { root: toTimeline(root, liked, viewerId), replies: replies.map((r) => toTimeline(r, liked, viewerId)) }
+  const [liked, posts] = await Promise.all([
+    likedSet(viewerId, [root.id, ...replies.map((r) => r.id)]),
+    withAgentCards([root, ...replies].map((r) => toTimeline(r, new Set(), viewerId))),
+  ])
+  const [r0, ...rest] = markLiked(posts, liked)
+  return { root: r0, replies: rest }
 }
 
 async function listAgoraLikers__raw(postId: string): Promise<TimelineLiker[]> {
@@ -319,10 +323,7 @@ export async function listAgoraTimeline(...args: Parameters<typeof listAgoraTime
   return withAgentCards(await listAgoraTimeline__raw(...args))
 }
 
-export async function listAgoraPage(...args: Parameters<typeof listAgoraPage__raw>): ReturnType<typeof listAgoraPage__raw> {
-  const r = await listAgoraPage__raw(...args)
-  return { ...r, posts: await withAgoraCommentPreviews(await withAgentCards(r.posts)) }
-}
+export const listAgoraPage = listAgoraPage__raw
 
 /** A60 (= A46 on the people feed): a couple of replies under each card; never breaks the list. */
 async function withAgoraCommentPreviews(posts: TimelinePost[]): Promise<TimelinePost[]> {
@@ -356,12 +357,7 @@ async function withAgoraCommentPreviews(posts: TimelinePost[]): Promise<Timeline
   }
 }
 
-export async function getAgoraThread(...args: Parameters<typeof getAgoraThread__raw>): ReturnType<typeof getAgoraThread__raw> {
-  const r = await getAgoraThread__raw(...args)
-  if (!r) return r
-  const [root, ...replies] = await withAgentCards([r.root, ...r.replies])
-  return { ...r, root, replies }
-}
+export const getAgoraThread = getAgoraThread__raw
 
 export async function listAgoraLikers(...args: Parameters<typeof listAgoraLikers__raw>): ReturnType<typeof listAgoraLikers__raw> {
   return withAgentLikerCards(await listAgoraLikers__raw(...args))

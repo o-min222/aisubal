@@ -3,7 +3,7 @@ import { ChipBar } from '@/components/chip-bar'
 import { redirect } from 'next/navigation'
 import { Inbox, Plus } from 'lucide-react'
 import { getUserState } from '@/lib/auth'
-import { listTools, socialToolUsers } from '@/lib/data/tools'
+import { listTools, socialCircle, socialToolUsers } from '@/lib/data/tools'
 import {
   TOOL_CATEGORIES,
   TOOL_SORTS,
@@ -68,6 +68,8 @@ export default async function ToolsPage({ searchParams }: { searchParams: Promis
   const here = hrefWith(base, {})
   const open = sp.open ? decodeURIComponent(sp.open).slice(0, 120) : null
 
+  // A67: who-uses stacks need my friends/follows; fetch them alongside the lists instead of after
+  const circle = socialCircle(state.member.id)
   const [all, forTags, openEntry] = await Promise.all([
     listTools(state.member.id, { category, tag, q, sort, rec, mine }),
     listTools(state.member.id, { category }),
@@ -76,7 +78,7 @@ export default async function ToolsPage({ searchParams }: { searchParams: Promis
   const totalPages = Math.max(1, Math.ceil(all.length / PAGE_SIZE))
   const tools = all.slice(0, PAGE_SIZE)
   const tags = topTags(forTags, 14)
-  const social = await socialToolUsers(state.member.id, tools.map((t) => t.id)).catch(() => new Map())
+  const social = await socialToolUsers(state.member.id, tools.map((t) => t.id), circle).catch(() => new Map())
   const tab = rec ? 'rec' : mine ? 'mine' : category ?? 'all'
 
   async function more(page: number) {

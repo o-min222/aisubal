@@ -119,13 +119,14 @@ export function __resetToolUsageMock() {
 }
 
 // ------------------------------------------------------------------ reads
-async function allEntries(): Promise<ToolboxEntry[]> {
+/** A67: per request; the gallery lists tools twice (page + tag chips) from the same rows. */
+const allEntries = cache(async (): Promise<ToolboxEntry[]> => {
   if (isMock()) return mockEntries()
   const supabase = await sb()
   const { data, error } = await supabase.from('toolbox_entries').select('*').limit(1000)
   if (error) throw error
   return (data || []) as ToolboxEntry[]
-}
+})
 
 export const myToolIds = cache(async (memberId: string): Promise<Set<string>> => {
   if (isMock()) return new Set(mockUsage().usage.filter((u) => u.member_id === memberId).map((u) => u.entry_id))
@@ -244,13 +245,18 @@ export async function getToolUsers(entryId: string, viewerId: string, limit = 10
 }
 
 /** Per tool: friends first, then people I follow, who marked it '나도 써요'. */
-export async function socialToolUsers(viewerId: string, entryIds: string[]): Promise<Map<string, ToolUsageStack>> {
-  const out = new Map<string, ToolUsageStack>()
-  if (!entryIds.length) return out
-  const [friends, following] = await Promise.all([
+/** Friends and people I follow, for socialToolUsers; a page can start this before it knows which tools it shows (A67). */
+export function socialCircle(viewerId: string): Promise<[string[], string[]]> {
+  return Promise.all([
     socialAuthorIds(viewerId, 'friends').catch(() => [] as string[]),
     socialAuthorIds(viewerId, 'following').catch(() => [] as string[]),
   ])
+}
+
+export async function socialToolUsers(viewerId: string, entryIds: string[], circle?: Promise<[string[], string[]]>): Promise<Map<string, ToolUsageStack>> {
+  const out = new Map<string, ToolUsageStack>()
+  if (!entryIds.length) return out
+  const [friends, following] = await (circle ?? socialCircle(viewerId))
   // Visible marks only: RLS (0077) hides members whose '나도 써요' is friends-only or private.
   let rows: Array<{ entry_id: string; member_id: string; name: string; avatarUrl: string | null }> = []
   if (isMock()) {

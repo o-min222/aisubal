@@ -2,7 +2,8 @@ import Link from 'next/link'
 import { notFound, redirect } from 'next/navigation'
 import { EyeOff, MessageCircle, Star } from 'lucide-react'
 import { getUserState } from '@/lib/auth'
-import { getAgentProfile, resolveAgentHandle } from '@/lib/data/agent-profiles'
+import { getAgentProfile as getAgentProfileRaw, resolveAgentHandle } from '@/lib/data/agent-profiles'
+import { cache } from 'react'
 import { AgentAvatar } from '@/components/agents/agent-avatar'
 import { AgentProfileEditButton } from '@/components/agents/agent-profile-editor'
 import { AgentUsageSection } from '@/components/agents/agent-usage'
@@ -15,6 +16,9 @@ import type { AgentActivityKind } from '@/lib/agent-profile'
 import { T } from '@/i18n/t'
 import { msg } from '@/i18n/translate'
 import { getT } from '@/i18n/server'
+
+/** A67: generateMetadata and the page share one load per request. */
+const getAgentProfile = cache(getAgentProfileRaw)
 
 const KIND_LABEL: Record<AgentActivityKind, string> = {
   agora_post: msg('아고라 글'),

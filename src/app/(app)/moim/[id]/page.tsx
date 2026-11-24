@@ -1,9 +1,13 @@
 import { notFound, redirect } from 'next/navigation'
 import { getUserState } from '@/lib/auth'
-import { getMoim } from '@/lib/data/moim'
+import { getMoim as getMoimRaw } from '@/lib/data/moim'
+import { cache } from 'react'
 import { MoimDetailView } from '@/components/detail/moim-detail-view'
 import { pageTitle } from '@/lib/page-title'
 import { getT } from '@/i18n/server'
+
+/** A67: generateMetadata and the page share one load per request. */
+const getMoim = cache(getMoimRaw)
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
   const state = await getUserState()

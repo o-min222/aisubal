@@ -1,12 +1,16 @@
 import { redirect, notFound } from 'next/navigation'
 import { getUserState } from '@/lib/auth'
-import { loadToolEntry, ToolDetailView } from '@/components/detail/tool-detail-view'
+import { loadToolEntry as loadToolEntryRaw, ToolDetailView } from '@/components/detail/tool-detail-view'
+import { cache } from 'react'
 import { pageTitle } from '@/lib/page-title'
 import { canonical } from '@/lib/canonical'
 import { galleryRedirectSlug } from '@/lib/data/toolbox'
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 import { getT } from '@/i18n/server'
+
+/** A67: generateMetadata and the page share one load per request. */
+const loadToolEntry = cache(loadToolEntryRaw)
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
   const state = await getUserState()

@@ -1,3 +1,4 @@
+import { cache } from 'react'
 import type { PostVisibility } from '@/lib/post-visibility'
 import { ownPostsFilter } from './own-posts'
 import { myNicknameId } from './nickname'
@@ -10,6 +11,7 @@ import type { Member } from '@/lib/supabase/types'
 import { POPULAR_DAYS, relationBadge, type FeedScope } from '@/lib/social-rules'
 import { PAGE_SIZE } from '@/lib/paging'
 import { sb, isMock } from './client'
+import { enrichAll, markLiked, type Enricher } from './enrich'
 import { getRelations, socialAuthorIds } from './social'
 import { listDismissed } from './rec-dismissals'
 import { pickInterestTags, rankFeedPosts } from '@/lib/recommend-rules'
@@ -253,12 +255,6 @@ export async function withGroupIdentity(viewerId: string, posts: TimelinePost[])
   return posts.map((p) => (p.author.kind === 'group' ? { ...p, isMine: mine.has(p.id), groupWriter: writers[p.id] ?? null } : p))
 }
 
-/** Follow chips (member posts) and group identity (group posts) touch disjoint rows, so fetch both at once. */
-async function withViewerState(viewerId: string, posts: TimelinePost[]): Promise<TimelinePost[]> {
-  const [followed, grouped] = await Promise.all([withFollowState(viewerId, posts), withGroupIdentity(viewerId, posts)])
-  return followed.map((p, i) => (p.author.kind === 'group' ? grouped[i] : p))
-}
-
 /** Attach the viewer's follow state to real-name member authors (follow chip on cards). */
 export async function withFollowState(viewerId: string, posts: TimelinePost[]): Promise<TimelinePost[]> {
   const ids = posts.filter((p) => p.author.kind === 'member' && !p.isNickname).map((p) => p.author.id)
@@ -286,16 +282,23 @@ export type FeedListOpts = {
   q?: string
 }
 
-async function queryFeed(viewerId: string, opts: FeedListOpts, withCount: boolean): Promise<{ posts: TimelinePost[]; total: number | null }> {
+async function queryFeed(viewerId: string, opts: FeedListOpts, withCount: boolean, extra: Enricher[] = []): Promise<{ posts: TimelinePost[]; total: number | null }> {
   const scope = opts.scope ?? 'all'
-  if (scope === 'for_you') return queryForYou(viewerId, opts)
+  if (scope === 'for_you') {
+    const r = await queryForYou(viewerId, opts)
+    return { ...r, posts: await enrichAll(r.posts, extra) }
+  }
   const popular = scope === 'popular'
-  const authorIds = scope === 'following' || scope === 'friends' ? await socialAuthorIds(viewerId, scope) : null
   const limit = Math.min(opts.limit ?? 30, 100)
   const offset = Math.max(0, opts.offset ?? 0)
   const since = new Date(Date.now() - POPULAR_DAYS * 86400_000).toISOString()
   // A30: the main feed also carries open groups' public 모임 (their thread posts)
-  const promoted = !opts.groupId && !opts.authorId ? new Set(await promotedGroupMoimThreads().catch(() => [] as string[])) : new Set<string>()
+  const [authorIds, promotedIds] = await Promise.all([
+    scope === 'following' || scope === 'friends' ? socialAuthorIds(viewerId, scope) : null,
+    !opts.groupId && !opts.authorId ? promotedGroupMoimThreads().catch(() => [] as string[]) : ([] as string[]),
+  ])
+  const promoted = new Set(promotedIds)
+  const steps: Enricher[] = [(p) => withFollowState(viewerId, p), (p) => withGroupIdentity(viewerId, p), (p) => withMoimCards(viewerId, p), ...extra]
   if (isMock()) {
     const st = mockState()
     let rows = st.posts.filter(
@@ -309,7 +312,7 @@ async function queryFeed(viewerId: string, opts: FeedListOpts, withCount: boolea
     )
     if (popular) rows = [...rows].sort((a, b) => (b.likeCount + (b.reactionCount ?? 0)) * 2 + b.replyCount - ((a.likeCount + (a.reactionCount ?? 0)) * 2 + a.replyCount) || b.createdAt.localeCompare(a.createdAt))
     rows = rows.filter((p) => !p.isDeleted).map((p) => ({ ...p, isMine: p.author.id === viewerId }))
-    return { posts: await withMoimCards(viewerId, await withViewerState(viewerId, rows.slice(offset, offset + limit))), total: rows.length }
+    return { posts: await enrichAll(rows.slice(offset, offset + limit), steps), total: rows.length }
   }
   if (authorIds && authorIds.length === 0) return { posts: [], total: 0 }
   const supabase = await sb()
@@ -333,9 +336,13 @@ async function queryFeed(viewerId: string, opts: FeedListOpts, withCount: boolea
   const { data, error, count } = await q.range(offset, offset + limit - 1)
   if (error) throw error
   const rows = (data || []) as unknown as FeedRow[]
-  const [liked, nickId] = await Promise.all([likedSet(viewerId, rows.map((r) => r.id)), myNicknameId()])
-  const posts = await withMoimCards(viewerId, await withViewerState(viewerId, rows.map((r) => feedRowToTimeline(r, liked, viewerId, nickId))))
-  return { posts, total: withCount ? (count ?? null) : null }
+  const nickId = await myNicknameId()
+  // likes only set likedByMe, so they join the same wave as the other enrichers
+  const [liked, posts] = await Promise.all([
+    likedSet(viewerId, rows.map((r) => r.id)),
+    enrichAll(rows.map((r) => feedRowToTimeline(r, new Set(), viewerId, nickId)), steps),
+  ])
+  return { posts: markLiked(posts, liked), total: withCount ? (count ?? null) : null }
 }
 
 /** A30: 모임 thread posts render as 모임 cards; a card failing to load just leaves the text. */
@@ -386,17 +393,22 @@ async function queryForYou(viewerId: string, opts: FeedListOpts): Promise<{ post
   return { posts: ranked.slice(offset, offset + limit), total: ranked.length }
 }
 
-async function listFeedTimeline__raw(viewerId: string, opts: FeedListOpts = {}): Promise<TimelinePost[]> {
-  return (await queryFeed(viewerId, opts, false)).posts
+/** 0050: agent authors get their photo + /agents/{id} link; cards show comment previews. */
+function listExtras(viewerId: string): Enricher[] {
+  return [(p) => withAgentCards(p), (p) => withCommentPreviews(viewerId, p)]
+}
+
+export async function listFeedTimeline(viewerId: string, opts: FeedListOpts = {}): Promise<TimelinePost[]> {
+  return (await queryFeed(viewerId, opts, false, listExtras(viewerId))).posts
 }
 
 /** One numbered page (20 per page) with the total for the page links. */
-async function listFeedPage__raw(
+export async function listFeedPage(
   viewerId: string,
   opts: Omit<FeedListOpts, 'limit' | 'offset' | 'before'> & { page: number; pageSize?: number }
 ): Promise<{ posts: TimelinePost[]; page: number; totalPages: number; total: number }> {
   const size = opts.pageSize ?? PAGE_SIZE
-  const { posts, total } = await queryFeed(viewerId, { ...opts, limit: size, offset: (opts.page - 1) * size }, true)
+  const { posts, total } = await queryFeed(viewerId, { ...opts, limit: size, offset: (opts.page - 1) * size }, true, listExtras(viewerId))
   const t = total ?? posts.length
   return { posts, page: opts.page, total: t, totalPages: Math.max(1, Math.ceil(t / size)) }
 }
@@ -412,46 +424,36 @@ async function getFeedThread__raw(
     const root = first.rootId ? st.posts.find((p) => p.id === first.rootId) : first
     if (!root) return null
     const mine = (p: TimelinePost) => ({ ...p, isMine: p.author.id === viewerId })
-    const [r0] = await withGroupIdentity(viewerId, [mine(root)])
-    return { root: r0, replies: st.posts.filter((p) => p.rootId === root.id).map(mine), isMine: Boolean(r0.isMine) }
+    const [r0, ...replies] = await enrichThread(viewerId, [mine(root), ...st.posts.filter((p) => p.rootId === root.id).map(mine)])
+    return { root: r0, replies, isMine: Boolean(r0.isMine) }
   }
   const supabase = await sb()
-  const { data: first, error } = await supabase
-    .from('posts')
-    .select(FEED_SELECT)
-    .eq('id', id)
-    .maybeSingle()
+  const repliesOf = (rootId: string) =>
+    supabase.from('posts').select(FEED_SELECT).eq('root_id', rootId).eq('is_hidden', false).order('created_at', { ascending: true }).limit(500)
+  // A67: most links point at the root, so its replies are fetched alongside it (an extra round trip only when `id` is a reply)
+  const [{ data: first, error }, guess] = await Promise.all([supabase.from('posts').select(FEED_SELECT).eq('id', id).maybeSingle(), repliesOf(id)])
   if (error) throw error
   if (!first) return null
   const f = first as unknown as FeedRow
-  const rootId = f.root_id ?? f.id
-  // the root row (when `id` is a reply) and the replies only need rootId: fetch them together
-  const [rootRes, { data: rep }] = await Promise.all([
-    f.root_id ? supabase.from('posts').select(FEED_SELECT).eq('id', f.root_id).maybeSingle() : Promise.resolve({ data: f }),
-    supabase
-      .from('posts')
-      .select(FEED_SELECT)
-      .eq('root_id', rootId)
-      .eq('is_hidden', false)
-      .order('created_at', { ascending: true })
-      .limit(500),
-  ])
+  const [rootRes, { data: rep }] = f.root_id
+    ? await Promise.all([supabase.from('posts').select(FEED_SELECT).eq('id', f.root_id).maybeSingle(), repliesOf(f.root_id)])
+    : [{ data: f }, guess]
   if (!rootRes.data) return null
   const root = rootRes.data as unknown as FeedRow
   const replies = (rep || []) as unknown as FeedRow[]
-  // group identity only sets isMine / groupWriter on group rows, so it needn't wait for likes
-  const [liked, nickId, [g]] = await Promise.all([
+  const nickId = await myNicknameId()
+  // likes, group identity and agent cards set disjoint fields: one wave
+  const [liked, posts] = await Promise.all([
     likedSet(viewerId, [root.id, ...replies.map((r) => r.id)]),
-    myNicknameId(),
-    withGroupIdentity(viewerId, [feedRowToTimeline(root, new Set(), viewerId, null)]),
+    enrichThread(viewerId, [root, ...replies].map((r) => feedRowToTimeline(r, new Set(), viewerId, nickId))),
   ])
-  const base = feedRowToTimeline(root, liked, viewerId, nickId)
-  const rootPost = base.author.kind === 'group' ? { ...base, isMine: g.isMine, groupWriter: g.groupWriter } : base
-  return {
-    root: rootPost,
-    replies: replies.map((r) => feedRowToTimeline(r, liked, viewerId, nickId)),
-    isMine: Boolean(rootPost.isMine),
-  }
+  const [rootPost, ...rest] = markLiked(posts, liked)
+  return { root: rootPost, replies: rest, isMine: Boolean(rootPost.isMine) }
+}
+
+/** Group identity on the root (B14) and agent photos/links (0050) for a thread. */
+function enrichThread(viewerId: string, posts: TimelinePost[]): Promise<TimelinePost[]> {
+  return enrichAll(posts, [(p) => withGroupIdentity(viewerId, p.slice(0, 1)).then((g) => [...g, ...p.slice(1)]), (p) => withAgentCards(p)])
 }
 
 async function listFeedLikers__raw(postId: string): Promise<TimelineLiker[]> {
@@ -674,22 +676,8 @@ async function withCommentPreviews(viewerId: string, posts: TimelinePost[]): Pro
   }
 }
 
-// 0050: agent authors get their photo + /agents/{id} link
-export async function listFeedTimeline(...args: Parameters<typeof listFeedTimeline__raw>): ReturnType<typeof listFeedTimeline__raw> {
-  return withCommentPreviews(args[0], await withAgentCards(await listFeedTimeline__raw(...args)))
-}
-
-export async function listFeedPage(...args: Parameters<typeof listFeedPage__raw>): ReturnType<typeof listFeedPage__raw> {
-  const r = await listFeedPage__raw(...args)
-  return { ...r, posts: await withCommentPreviews(args[0], await withAgentCards(r.posts)) }
-}
-
-export async function getFeedThread(...args: Parameters<typeof getFeedThread__raw>): ReturnType<typeof getFeedThread__raw> {
-  const r = await getFeedThread__raw(...args)
-  if (!r) return r
-  const [root, ...replies] = await withAgentCards([r.root, ...r.replies])
-  return { ...r, root, replies }
-}
+/** A67: per request, so generateMetadata and the page share one load. */
+export const getFeedThread = cache(getFeedThread__raw)
 
 export async function listFeedLikers(...args: Parameters<typeof listFeedLikers__raw>): ReturnType<typeof listFeedLikers__raw> {
   return withAgentLikerCards(await listFeedLikers__raw(...args))

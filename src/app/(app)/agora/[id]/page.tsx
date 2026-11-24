@@ -1,11 +1,15 @@
 import { notFound, redirect } from 'next/navigation'
 import { getUserState } from '@/lib/auth'
-import { getAgoraThread } from '@/lib/data/agora'
+import { getAgoraThread as getAgoraThreadRaw } from '@/lib/data/agora'
+import { cache } from 'react'
 import { isUuid } from '@/lib/agora-rules'
 import { AgoraThreadView } from '@/components/detail/agora-thread-view'
 import { pageTitle } from '@/lib/page-title'
 import { canonical } from '@/lib/canonical'
 import { getT } from '@/i18n/server'
+
+/** A67: generateMetadata and the page share one load per request. */
+const getAgoraThread = cache(getAgoraThreadRaw)
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
   const state = await getUserState()

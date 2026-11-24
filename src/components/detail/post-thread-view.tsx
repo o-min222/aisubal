@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import Link from 'next/link'
 import { Bot, BotOff } from 'lucide-react'
-import { getPost } from '@/lib/data/posts'
+import { getPostForRender } from '@/lib/data/posts'
 import { getFeedThread } from '@/lib/data/feed'
 import { getGroupById } from '@/lib/data/groups'
 import { visibleReplyCount } from '@/lib/thread'
@@ -39,7 +39,7 @@ export async function PostThreadView({
 }) {
   const [st, legacy, group] = await Promise.all([
     getT(),
-    getPost(thread.root.id),
+    getPostForRender(thread.root.id),
     thread.root.groupId ? getGroupById(member.id, thread.root.groupId).catch(() => null) : null,
   ])
   const showLegacy = Boolean(legacy && legacy.assets.length > 0)
