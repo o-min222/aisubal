@@ -14,6 +14,7 @@ import { UserAvatar } from '@/components/user-avatar'
 import { ComposerFrame, ComposerTextarea } from '@/components/composer/composer-frame'
 import { VisibilityPicker } from '@/components/composer/visibility-picker'
 import { canRestrict, type PostVisibility } from '@/lib/post-visibility'
+import { canAskQuestion } from '@/lib/question-rules'
 import { AgentReactionPicker } from '@/components/composer/agent-reaction-picker'
 import { IdentityPicker, type IdentityOption } from '@/components/composer/identity-picker'
 import { GroupAvatar } from '@/components/groups/group-avatar'
@@ -52,6 +53,7 @@ export function Composer({
   groupName,
   initialBody = '',
   initialImage = null,
+  initialQuestion = false,
 }: {
   me: ComposerIdentity
   parentId?: string
@@ -64,6 +66,8 @@ export function Composer({
   initialBody?: string
   /** A62: an image already uploaded from the quick composer */
   initialImage?: PickedImage | null
+  /** A97: the quick composer's 질문해요 switch was on */
+  initialQuestion?: boolean
   placeholder?: string
   autoFocus?: boolean
   onPosted?: (id: string) => void
@@ -80,6 +84,7 @@ export function Composer({
   const [who, setWho] = useState('real')
   const [interaction, setInteraction] = useState<AgentInteraction>(me.agentInteraction ?? 'agents_allowed')
   const [visibility, setVisibility] = useState<PostVisibility>(me.visibility ?? 'members')
+  const [question, setQuestion] = useState(initialQuestion)
   const [busy, setBusy] = useState(false)
   const [image, setImage] = useState<PickedImage | null>(initialImage)
   const [uploading, setUploading] = useState(false)
@@ -87,6 +92,7 @@ export function Composer({
   const isReply = Boolean(parentId)
   const asGroup = !isReply && who.startsWith('group:') ? (me.groupIdentities ?? []).find((g) => `group:${g.id}` === who) ?? null : null
   const restrictable = canRestrict({ isReply, groupId, asGroup: Boolean(asGroup), postedAs })
+  const questionable = canAskQuestion({ isReply, groupId, asGroup: Boolean(asGroup), postedAs })
   // live link previews (top-level posts only; replies never get cards)
   const previews = useLinkPreviews(body, !isReply)
   // PII guard: warn before publishing; a second press posts anyway (the poster decides).
@@ -119,6 +125,7 @@ export function Composer({
           asGroupId: asGroup?.id,
           agentInteraction: groupId ? 'humans_only' : interaction,
           ...(restrictable ? { visibility } : {}),
+          ...(questionable && question ? { isQuestion: true } : {}),
           groupId,
           ...(isReply ? {} : { urls: previews.urls }),
           ...(!isReply && image ? { imagePath: image.path } : {}),
@@ -127,6 +134,7 @@ export function Composer({
       const data = await res.json().catch(() => ({}))
       if (!res.ok) throw new Error(data.error || '게시하지 못했어요.')
       setBody('')
+      setQuestion(false)
       setImage(null)
       previews.reset()
       toast.success(isReply ? tn('답글을 남겼어요') : tn('게시했어요'))
@@ -209,6 +217,11 @@ export function Composer({
             ) : (
               <>
                 {restrictable && <VisibilityPicker value={visibility} onChange={setVisibility} />}
+                {questionable && (
+                  <button type="button" className="qc-chip composer-q" aria-pressed={question} onClick={() => setQuestion((q) => !q)}>
+                    <T>질문해요</T>
+                  </button>
+                )}
                 {imageButton}
                 <AgentReactionPicker value={interaction} onChange={pickInteraction} />
               </>

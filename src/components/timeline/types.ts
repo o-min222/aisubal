@@ -44,6 +44,8 @@ export type TimelinePost = {
   likedByMe: boolean
   /** A39: emoji reactions other than 👍 (👍 = likeCount); undefined = unknown (mock) */
   reactionCount?: number
+  /** A97 (0129): marked as a question with the composer's 질문해요 button; shown with a 질문 tag before the body */
+  isQuestion?: boolean
   /** A95 (0128): reposts of this post, and whether the viewer reposted it */
   repostCount?: number
   repostedByMe?: boolean

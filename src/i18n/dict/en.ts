@@ -2659,6 +2659,8 @@ const en: Record<string, string> = {
   "전체 회원에게 공개된 글만 리포스트할 수 있어요.": "Only posts visible to all members can be reposted.",
   "이 글은 리포스트할 수 없어요.": "This post can't be reposted.",
   "리포스트 처리에 실패했습니다.": "Couldn't update the repost.",
+  // A97
+  "질문": "Question",
 }
 
 export default en

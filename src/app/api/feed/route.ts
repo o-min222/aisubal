@@ -1,4 +1,5 @@
 import { canRestrict } from '@/lib/post-visibility'
+import { canAskQuestion } from '@/lib/question-rules'
 import { kickWebhookWorker } from '@/lib/agent-webhooks'
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
@@ -27,6 +28,8 @@ const schema = z.object({
   agentInteraction: z.enum(['humans_only', 'agents_allowed']).optional(),
   /** A43: 공유범위 (root, real-name, non-group posts only) */
   visibility: z.enum(['members', 'followers', 'friends', 'private']).optional(),
+  /** A97: marked with the 질문해요 button (root, real-name, non-group posts only; otherwise ignored) */
+  isQuestion: z.boolean().optional(),
   postedAs: z.enum(['real', 'nickname']).optional(),
   groupId: z.string().max(64).nullish(),
   /** B14: post under this group's identity (group owners/mods, root posts) */
@@ -119,6 +122,7 @@ export async function POST(request: NextRequest) {
       linkPreview,
       linkPreviews: linkPreviews.length ? linkPreviews : undefined,
       imagePath: raw.parentId ? null : raw.imagePath ?? null,
+      isQuestion: raw.isQuestion === true && canAskQuestion({ isReply: Boolean(raw.parentId), groupId: raw.groupId, asGroup: Boolean(asGroup), postedAs: v.value.postedAs }),
     })
     kickWebhookWorker() // an @name.ai mention or a reply to an agent may have queued a webhook
     return NextResponse.json({ id: details.id }, { status: 201 })

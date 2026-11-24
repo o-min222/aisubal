@@ -6,15 +6,16 @@ const BASE_URL = process.env.TEST_BASE_URL || 'http://127.0.0.1:43256'
 const starters = QUICK_STARTERS.filter((s) => s.prefill).map((s) => s.prefill!)
 
 describe('A62 quick post rules', () => {
-  it('four chips; only the screenshot one has no sentence', () => {
+  it('four chips; the screenshot one opens the picker and 질문해요 is a switch (A97): neither types a sentence', () => {
     expect(QUICK_STARTERS.map((s) => s.id)).toEqual(['ask', 'tried', 'chat', 'shot'])
     expect(QUICK_STARTERS.find((s) => s.id === 'shot')!.prefill).toBeNull()
+    expect(QUICK_STARTERS.find((s) => s.id === 'ask')!.prefill).toBeNull()
   })
   it('a starter replaces another starter and keeps what was typed', () => {
-    const [ask, tried] = starters
-    expect(applyStarter('', ask, starters)).toBe(ask)
+    const [tried, chat] = starters
+    expect(applyStarter('', tried, starters)).toBe(tried)
     expect(applyStarter('클로드 좋아요', tried, starters)).toBe(`${tried}클로드 좋아요`)
-    expect(applyStarter(`${ask}클로드 좋아요`, tried, starters)).toBe(`${tried}클로드 좋아요`)
+    expect(applyStarter(`${tried}클로드 좋아요`, chat, starters)).toBe(`${chat}클로드 좋아요`)
   })
   it('Enter posts; Shift+Enter, IME composition and empty text never do', () => {
     expect(quickShouldSubmit({ key: 'Enter', shiftKey: false }, 'hi')).toBe(true)

@@ -102,6 +102,8 @@ export type FeedRow = {
   reaction_count?: number
   /** A95 (0128) */
   repost_count?: number
+  /** A97 (0129) */
+  is_question?: boolean
   /** A43 (0095) */
   visibility?: string | null
   reply_count: number
@@ -198,6 +200,7 @@ export function feedRowToTimeline(r: FeedRow, liked: Set<string>, viewerId?: str
     likeCount: r.like_count ?? 0,
     reactionCount: r.reaction_count ?? 0,
     repostCount: r.repost_count ?? 0,
+    isQuestion: Boolean(r.is_question),
     visibility: parseVisibility(r.visibility) ?? 'members',
     likedByMe: liked.has(r.id),
     replyCount: r.reply_count ?? 0,

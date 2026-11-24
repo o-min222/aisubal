@@ -64,7 +64,7 @@ describe('A95 · 0128 migration', () => {
 describe('A95 · surfaces', () => {
   it('the feed reads repost_count and carries reposts only in 팔로잉 / 친구', () => {
     const f = read('src/lib/data/feed.ts')
-    expect(f).toContain('reaction_count, repost_count, visibility')
+    expect(f).toContain('reaction_count, repost_count, is_question, visibility')
     expect(f).toMatch(/\(scope === 'following' \|\| scope === 'friends'\) && !opts\.groupId && !opts\.authorId && !opts\.q/)
     // the post is read under its own RLS and only plain real-name root posts qualify
     expect(f).toMatch(/\.is\('parent_id', null\)\s*\.is\('group_id', null\)\s*\.eq\('posted_as', 'real'\)\s*\.eq\('is_hidden', false\)\s*\.is\('deleted_at', null\)/)

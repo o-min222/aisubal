@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { readFileSync } from 'node:fs'
 import en from '@/i18n/dict/en'
-import { QUICK_STARTERS } from '@/lib/quick-post-rules'
 import { notificationSentence, type NotificationItem } from '@/lib/notifications'
 import { pushPayload } from '@/lib/push-rules'
 
@@ -13,11 +12,8 @@ const item: NotificationItem = {
 }
 
 describe('A93 · 질문해요 posts notify friends and followers (0127)', () => {
-  it('the SQL detects exactly the composer chip prefill, in both locales', () => {
-    const ask = QUICK_STARTERS.find((s) => s.id === 'ask')!.prefill!
-    const enAsk = (en as Record<string, string>)[ask]
-    expect(enAsk).toBeTruthy()
-    for (const p of [ask, enAsk]) {
+  it('0127 detected the old composer prefill in both locales (A97 replaced that with a flag; this is what the backfill used)', () => {
+    for (const p of ['혹시 이거 아시는 분? ', 'Does anyone know this? ']) {
       // post__is_question and post__question_line both carry the pattern
       expect(SQL.split(reEsc(p.trim()).replace(/\\\?/g, '\\?')).length - 1).toBeGreaterThanOrEqual(2)
     }

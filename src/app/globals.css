@@ -3031,6 +3031,11 @@ a.notif-pop-all:hover { background: var(--n-fafafa); }
 .qc-chip { flex: 0 0 auto; display: inline-flex; align-items: center; gap: 4px; height: 28px; padding: 0 10px; border-radius: 999px; border: 0; background: var(--n-f4f4f2); font-size: 12.5px; color: var(--n-555); white-space: nowrap; }
 .qc-chip:hover { color: var(--n-111); background: var(--n-f0f0f0); }
 .qc-chip:disabled { opacity: .6; }
+/* A97: the 질문해요 chip is a switch; the 질문 tag sits before the text (composer and post) */
+.qc-chip[aria-pressed="true"] { background: var(--n-111); color: var(--n-fff); }
+.qc-chip[aria-pressed="true"]:hover { background: var(--n-222); color: var(--n-fff); }
+.qc-field .q-tag { margin-right: 0; }
+.q-tag { display: inline-flex; align-items: center; flex: none; height: 18px; padding: 0 7px; margin-right: 6px; border-radius: 999px; background: var(--n-f4f4f2); color: var(--n-555); font-size: 11.5px; font-weight: 650; line-height: 1; vertical-align: 1px; white-space: nowrap; }
 .qc-pii { padding-left: 40px; font-size: 12px; color: var(--c-8a4b00); }
 .qc-open { gap: 2px; }
 .qc-fold { align-self: flex-end; font-size: 12.5px; color: var(--n-777); min-height: 32px; padding: 0 6px; }

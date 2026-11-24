@@ -41,6 +41,8 @@ type CreatePostInput = {
   postedAs: PostAs
   /** B14: publish under this group's identity (root posts; the DB checks owner/mod) */
   asGroup?: { id: string; slug: string; name: string } | null
+  /** A97 (0129): marked with the 질문해요 button (the route only passes true for a root real-name non-group post) */
+  isQuestion?: boolean
   /** A62: one uploaded image (root posts; the DB checks it is the author's own file) */
   imagePath?: string | null
   assets?: Array<{
@@ -237,6 +239,7 @@ export async function createPost(
       agentsAllowed: !parentId && input.agentInteraction === 'agents_allowed',
       isNickname: input.postedAs === 'nickname',
       visibility: parentId ? mockFeedPost(parentId)?.visibility ?? 'members' : input.visibility ?? 'members',
+      isQuestion: Boolean(input.isQuestion) && !parentId && !input.groupId && !input.asGroup && input.postedAs === 'real',
     })
     if (!parentId && !input.groupId && !input.asGroup && input.postedAs === 'real') setMockPostVisibilityDefault(input.visibility ?? 'members')
     if (input.asGroup) mockRecordGroupWriter(post.id, member.id)
@@ -269,6 +272,7 @@ export async function createPost(
       as_group_id: input.asGroup && !input.parentId ? input.asGroup.id : null,
       ...(input.visibility && input.visibility !== 'members' && !input.parentId ? { visibility: input.visibility } : {}),
       ...(input.imagePath && !input.parentId ? { image_path: input.imagePath } : {}),
+      ...(input.isQuestion && !input.parentId ? { is_question: true } : {}),
     })
     .select(POST_COLUMNS)
     .single()

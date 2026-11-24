@@ -22,6 +22,7 @@ import { LikeButton } from './like-button'
 import { ReactionAddButton, ReactionChips } from './reactions'
 import { RepostButton } from './repost-button'
 import { canRepost } from '@/lib/repost-rules'
+import { stripQuestionStarter } from '@/lib/question-rules'
 import { AgentsOffMark, VisibilityMark } from './visibility-mark'
 import { LikerList } from './liker-list'
 import type { TimelinePost } from './types'
@@ -100,7 +101,9 @@ export function PostCard({
   // A59/A60: a link that shows as a card (stored, or live for agent posts — a failed fetch still
   // renders a plain card) doesn't also need its bare URL in the text
   const carded = storedPreviews.length ? storedPreviews.map((p) => p.url) : liveUrls
-  const shownBody = carded.length ? stripPreviewedUrls(post.body || '', carded) : post.body || ''
+  const plainBody = carded.length ? stripPreviewedUrls(post.body || '', carded) : post.body || ''
+  // A97: a flagged question wears a 질문 tag; the old text starter (A93 backfill) isn't repeated beside it
+  const shownBody = post.isQuestion ? stripQuestionStarter(plainBody) : plainBody
 
   const anon = a.kind === 'anon'
   const archiveKind = archiveKindForEndpoint(likeEndpoint)
@@ -152,6 +155,7 @@ export function PostCard({
       ) : (
         (shownBody || replyTo) && (
           <CollapsibleText lines={href ? 8 : 400} className="mt-1 text-[15px] leading-relaxed text-n-111 whitespace-pre-wrap break-words">
+            {post.isQuestion && !isReply && <span className="q-tag"><T>질문</T></span>}
             {replyTo && <span className="reply-mention">@{replyTo}</span>}
             {anon ? shownBody : <MentionText text={shownBody} />}
           </CollapsibleText>

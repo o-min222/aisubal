@@ -26,6 +26,8 @@ export function QuickComposer({ me }: { me: ComposerIdentity }) {
   const [image, setImage] = useState<PickedImage | null>(null)
   const [busy, setBusy] = useState(false)
   const [uploading, setUploading] = useState(false)
+  // A97: the 질문해요 chip is a switch: the post is saved as a question (a 질문 tag before the text), no sentence is typed for you
+  const [question, setQuestion] = useState(false)
   const [piiAckFor, setPiiAckFor] = useState<string | null>(null)
   const input = useRef<HTMLInputElement>(null)
   const file = useRef<HTMLInputElement>(null)
@@ -35,6 +37,7 @@ export function QuickComposer({ me }: { me: ComposerIdentity }) {
   function starter(id: string) {
     const s = QUICK_STARTERS.find((x) => x.id === id)
     if (!s) return
+    if (s.id === 'ask') { setQuestion((q) => !q); requestAnimationFrame(() => input.current?.focus()); return }
     if (!s.prefill) { file.current?.click(); return }
     setBody((b) => applyStarter(b, tr(s.prefill!), starters))
     requestAnimationFrame(() => { const el = input.current; if (el) { el.focus(); el.setSelectionRange(el.value.length, el.value.length) } })
@@ -71,11 +74,13 @@ export function QuickComposer({ me }: { me: ComposerIdentity }) {
           postedAs: 'real',
           agentInteraction: me.agentInteraction ?? 'agents_allowed',
           visibility: me.visibility ?? 'members',
+          ...(question ? { isQuestion: true } : {}),
         }),
       })
       const data = await res.json().catch(() => ({}))
       if (!res.ok) throw new Error(data.error || tn('게시하지 못했어요.'))
       setBody('')
+      setQuestion(false)
       toast.success(tn('게시했어요'))
       router.push(postedHref('/feed', data.id))
       router.refresh()
@@ -92,10 +97,11 @@ export function QuickComposer({ me }: { me: ComposerIdentity }) {
         <Composer
           me={me}
           initialBody={body}
+          initialQuestion={question}
           initialImage={image}
           autoFocus
           className="qc-full"
-          onPosted={() => { setExpanded(false); setBody(''); setImage(null) }}
+          onPosted={() => { setExpanded(false); setBody(''); setImage(null); setQuestion(false) }}
         />
         <button type="button" className="qc-fold" onClick={() => { setExpanded(false); setImage(null) }}><T>접기</T></button>
       </div>
@@ -107,6 +113,7 @@ export function QuickComposer({ me }: { me: ComposerIdentity }) {
       <div className="qc-row">
         <UserAvatar id={me.id} name={me.displayName} avatarUrl={me.avatarUrl} size="sm" />
         <div className="qc-field">
+          {question && <span className="q-tag"><T>질문</T></span>}
           <input
             ref={input}
             className="qc-input"
@@ -134,7 +141,7 @@ export function QuickComposer({ me }: { me: ComposerIdentity }) {
       {pii && <p role="alert" className="qc-pii"><T s="{pii} 멤버 모두가 볼 수 있어요. 지우거나 가려주세요." vars={{ pii }} /></p>}
       <div className="qc-chips chip-row">
         {QUICK_STARTERS.map((s) => (
-          <button key={s.id} type="button" className="qc-chip" onClick={() => starter(s.id)} disabled={s.id === 'shot' && uploading}>
+          <button key={s.id} type="button" className="qc-chip" onClick={() => starter(s.id)} disabled={s.id === 'shot' && uploading} aria-pressed={s.id === 'ask' ? question : undefined}>
             {s.id === 'shot' && <ImagePlus className="w-3.5 h-3.5" />}
             {s.id === 'shot' && uploading ? <T>올리는 중…</T> : <T>{s.label}</T>}
           </button>
