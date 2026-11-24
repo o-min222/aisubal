@@ -34,23 +34,3 @@ export function isPostImagePath(p: unknown, authId?: string): p is string {
   return typeof p === 'string' && PATH.test(p) && (!authId || p.startsWith(`${authId}/`))
 }
 export const postImageSrc = (postId: string) => `/api/post-image/${encodeURIComponent(postId)}`
-
-// ---- 오늘의 질문 -------------------------------------------------------------------------
-export type DailyQuestion = { id: string; ko: string; en: string | null; date: string; answered: boolean; answers: number }
-export type QuestionTag = { id: string; ko: string; en: string | null; date: string }
-export const questionText = (q: { ko: string; en: string | null }, locale: string) => (locale === 'en' && q.en ? q.en : q.ko)
-export function parseQuestionTag(v: unknown): QuestionTag | null {
-  if (!v || typeof v !== 'object') return null
-  const o = v as Record<string, unknown>
-  if (typeof o.id !== 'string' || typeof o.ko !== 'string' || typeof o.date !== 'string') return null
-  return { id: o.id, ko: o.ko, en: typeof o.en === 'string' ? o.en : null, date: o.date }
-}
-/** the same rotation as daily_question__for(): day index since 2026-01-01 over the active pool */
-export function questionIndex(kstDate: string, n: number): number {
-  if (n <= 0) return 0
-  const d = Math.round((Date.parse(`${kstDate}T00:00:00Z`) - Date.parse('2026-01-01T00:00:00Z')) / 86400000)
-  return ((d % n) + n) % n
-}
-export function kstDate(now = new Date()): string {
-  return new Date(now.getTime() + 9 * 3600000).toISOString().slice(0, 10)
-}

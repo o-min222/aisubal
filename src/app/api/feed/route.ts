@@ -31,8 +31,6 @@ const schema = z.object({
   groupId: z.string().max(64).nullish(),
   /** B14: post under this group's identity (group owners/mods, root posts) */
   asGroupId: z.string().max(64).nullish(),
-  /** A62: answering today's 오늘의 질문 */
-  dailyQuestionId: z.string().uuid().nullish(),
   /** A62: one uploaded image (from /api/posts/image) */
   imagePath: z.string().max(120).nullish(),
 })
@@ -120,7 +118,6 @@ export async function POST(request: NextRequest) {
       url: v.value.url || undefined,
       linkPreview,
       linkPreviews: linkPreviews.length ? linkPreviews : undefined,
-      dailyQuestionId: raw.parentId ? null : raw.dailyQuestionId ?? null,
       imagePath: raw.parentId ? null : raw.imagePath ?? null,
     })
     kickWebhookWorker() // an @name.ai mention or a reply to an agent may have queued a webhook

@@ -8,7 +8,7 @@ import { useState, type ReactNode } from 'react'
 import { setRecHidden, useRecHidden } from './rec-hidden'
 import { postRecDismiss } from '@/lib/rec-dismiss'
 import Link from 'next/link'
-import { Bot, MessageCircle, Star, Wrench, ExternalLink, Share2, VenetianMask, Sparkles, MessageCircleQuestion } from 'lucide-react'
+import { Bot, MessageCircle, Star, Wrench, ExternalLink, Share2, VenetianMask, Sparkles } from 'lucide-react'
 import { toast } from 'sonner'
 import { postShareData, postShareUrl } from '@/lib/share-rules'
 import { LinkPreviewBlock } from '@/components/link-preview-block'
@@ -35,8 +35,7 @@ import { RelationBadge } from '@/components/social/relation-badge'
 import { MemberPeek } from '@/components/profile/member-peek'
 import { GroupAvatar } from '@/components/groups/group-avatar'
 import { T } from '@/i18n/t'
-import { tx, tn, useLocale } from '@/i18n/client'
-import { questionText } from '@/lib/quick-post-rules'
+import { tx, tn } from '@/i18n/client'
 
 const ANON_COLORS = ['#6d5bd0', '#2f7d6d', '#c2581f', '#3466b8', '#a23d7a', '#5b6b2f', '#7a4b2b', '#1f7a94']
 function anonColor(seed: string) {
@@ -88,7 +87,6 @@ export function PostCard({
   /** root card in a detail view: where to go after a delete that leaves no tombstone */
   afterDeleteHref?: string
 }) {
-  const locale = useLocale()
   const [likersOpen, setLikersOpen] = useState(false)
   const a = post.author
   const recHidden = useRecHidden(post.id)
@@ -145,9 +143,6 @@ export function PostCard({
 
   const body = (
     <>
-      {post.question && !gone && !isReply && (
-        <p className="post-qtag"><MessageCircleQuestion className="w-3.5 h-3.5 flex-shrink-0" /><span className="post-qtag-l"><T>오늘의 질문</T></span><span className="truncate">{questionText(post.question, locale)}</span></p>
-      )}
       {post.title && <h3 className="mt-1 text-[15px] font-semibold text-n-111 break-words">{post.title}</h3>}
       {gone ? (
         <p className="mt-1 text-[15px] text-n-999 italic">

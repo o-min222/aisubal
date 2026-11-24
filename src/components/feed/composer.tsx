@@ -6,7 +6,7 @@ import { publishReplyDelta } from '@/lib/count-store'
 import { useT, tx, tn } from '@/i18n/client'
 import { useState, useMemo, useRef } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
-import { Users, ShieldAlert, ImagePlus, MessageCircleQuestion, X } from 'lucide-react'
+import { Users, ShieldAlert, ImagePlus, X } from 'lucide-react'
 import { toast } from 'sonner'
 import { postedHref } from '@/lib/posted-rules'
 import { offerPushAfterPosting } from '@/lib/push-client'
@@ -21,9 +21,7 @@ import { LinkCarousel } from '@/components/link-carousel'
 import { useLinkPreviews } from '@/hooks/use-link-previews'
 import type { AgentInteraction, PostAs } from '@/lib/supabase/types'
 import { T } from '@/i18n/t'
-import { useLocale } from '@/i18n/client'
 import { uploadPickedImage, type PickedImage } from '@/lib/post-image-client'
-import { questionText, type DailyQuestion } from '@/lib/quick-post-rules'
 
 export type ComposerIdentity = {
   id: string
@@ -54,8 +52,6 @@ export function Composer({
   groupName,
   initialBody = '',
   initialImage = null,
-  question = null,
-  onClearQuestion,
 }: {
   me: ComposerIdentity
   parentId?: string
@@ -68,9 +64,6 @@ export function Composer({
   initialBody?: string
   /** A62: an image already uploaded from the quick composer */
   initialImage?: PickedImage | null
-  /** A62: this post answers today's 오늘의 질문 */
-  question?: DailyQuestion | null
-  onClearQuestion?: () => void
   placeholder?: string
   autoFocus?: boolean
   onPosted?: (id: string) => void
@@ -91,7 +84,6 @@ export function Composer({
   const [image, setImage] = useState<PickedImage | null>(initialImage)
   const [uploading, setUploading] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
-  const locale = useLocale()
   const isReply = Boolean(parentId)
   const asGroup = !isReply && who.startsWith('group:') ? (me.groupIdentities ?? []).find((g) => `group:${g.id}` === who) ?? null : null
   const restrictable = canRestrict({ isReply, groupId, asGroup: Boolean(asGroup), postedAs })
@@ -130,7 +122,6 @@ export function Composer({
           groupId,
           ...(isReply ? {} : { urls: previews.urls }),
           ...(!isReply && image ? { imagePath: image.path } : {}),
-          ...(!isReply && question && !groupId && !asGroup ? { dailyQuestionId: question.id } : {}),
         }),
       })
       const data = await res.json().catch(() => ({}))
@@ -230,11 +221,6 @@ export function Composer({
       busy={busy}
       submitLabel={busy ? <T>게시 중…</T> : piiAckFor === body && pii ? <T>그래도 게시</T> : <T>게시</T>}
     >
-      {question && !isReply && (
-        <button type="button" className="qc-qtag mb-1" onClick={onClearQuestion} aria-label={tx('오늘의 질문 빼기')}>
-          <MessageCircleQuestion className="w-3.5 h-3.5 flex-shrink-0" /><span className="truncate">{questionText(question, locale)}</span>{onClearQuestion && <X className="w-3 h-3 flex-shrink-0" />}
-        </button>
-      )}
       <ComposerTextarea
         value={body}
         onChange={(e) => setBody(e.target.value)}

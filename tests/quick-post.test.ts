@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
-import { applyStarter, isPostImagePath, kstDate, parseQuestionTag, questionIndex, questionText, quickShouldSubmit, QUICK_STARTERS } from '@/lib/quick-post-rules'
+import { applyStarter, isPostImagePath, quickShouldSubmit, QUICK_STARTERS } from '@/lib/quick-post-rules'
 
 const BASE_URL = process.env.TEST_BASE_URL || 'http://127.0.0.1:43256'
 const starters = QUICK_STARTERS.filter((s) => s.prefill).map((s) => s.prefill!)
@@ -30,41 +30,16 @@ describe('A62 quick post rules', () => {
     expect(isPostImagePath(`${me}/../x.png`, me)).toBe(false)
     expect(isPostImagePath(`${me}/${f}.svg`, me)).toBe(false)
   })
-  it('the question rotates by KST date like the DB, and shows in the reader’s language', () => {
-    expect(questionIndex('2026-01-01', 30)).toBe(0)
-    expect(questionIndex('2026-01-31', 30)).toBe(0)
-    expect(questionIndex('2026-11-24', 30)).toBe(27) // the dry run got sort 280 = index 27 on this date
-    expect(questionIndex('2025-12-31', 30)).toBe(29)
-    expect(kstDate(new Date('2026-11-23T15:30:00Z'))).toBe('2026-11-24')
-    expect(questionText({ ko: '질문', en: 'Q' }, 'en')).toBe('Q')
-    expect(questionText({ ko: '질문', en: null }, 'en')).toBe('질문')
-    expect(parseQuestionTag({ id: 'a', ko: 'k', date: '2026-11-24' })).toEqual({ id: 'a', ko: 'k', en: null, date: '2026-11-24' })
-    expect(parseQuestionTag({ ko: 'k' })).toBeNull()
-  })
-  it('0112: private bucket read through posts RLS; the DB guards the tag and the path; grants are explicit', () => {
+  it('0112: private bucket read through posts RLS; the DB guards the path; grants are explicit', () => {
     const sql = readFileSync('supabase/migrations/0112_quick_post.sql', 'utf8')
     expect(sql).toMatch(/values \('post-images', 'post-images', false/)
     expect(sql).toMatch(/exists \(select 1 from public\.posts p where p\.image_path = name and p\.deleted_at is null\)/)
     expect(sql).toMatch(/raise exception 'post_image_invalid'/)
     expect(sql).toMatch(/grant insert \(daily_question_id, image_path\) on public\.posts to authenticated/)
-    expect(sql).toMatch(/revoke all on function public\.daily_question_today\(\) from public, anon;/)
-    expect(sql.split('\n').filter((l) => /^  \('.+', \d+\),?$/.test(l)).length).toBe(30)
   })
 })
 
 describe('A62 real path (dev)', () => {
-  it('answer today’s question in one line → the post carries the tag', async () => {
-    const q = (await (await fetch(`${BASE_URL}/api/daily-question`)).json()).question
-    expect(q?.id).toBeTruthy()
-    const body = `A62 vitest ${Date.now()}`
-    const res = await fetch(`${BASE_URL}/api/feed`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ body, dailyQuestionId: q.id }) })
-    expect(res.status).toBe(201)
-    const { posts } = await (await fetch(`${BASE_URL}/api/feed?scope=all`)).json()
-    const mine = posts.find((p: { body: string }) => p.body === body)
-    expect(mine?.question?.id).toBe(q.id)
-    const after = (await (await fetch(`${BASE_URL}/api/daily-question`)).json()).question
-    expect(after.answered).toBe(true)
-  })
   it('upload one image → post → readable through /api/post-image; a foreign path is refused', async () => {
     const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==', 'base64')
     const fd = new FormData()
@@ -86,5 +61,13 @@ describe('A62 real path (dev)', () => {
     const txt = new FormData()
     txt.set('file', new File(['hi'], 'a.txt', { type: 'text/plain' }))
     expect((await fetch(`${BASE_URL}/api/posts/image`, { method: 'POST', body: txt })).status).toBe(400)
+  })
+})
+
+describe('A63: 오늘의 질문 is gone from the app', () => {
+  it('no UI, route or admin editor references it', async () => {
+    const { execSync } = await import('node:child_process')
+    const hits = execSync("rg -l -i 'daily_question|dailyQuestion|오늘의 질문' src || true", { encoding: 'utf8' }).trim()
+    expect(hits).toBe('')
   })
 })
