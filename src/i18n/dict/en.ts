@@ -1941,6 +1941,7 @@ const en: Record<string, string> = {
   "답글 숨기기": "Hide replies",
   "댓글 {count}": "Comments {count}",
   "댓글 남기기…": "Add a comment…",
+  "댓글 남기기… @로 태그": "Add a comment… type @ to tag",
   "아직 댓글이 없어요.": "No comments yet.",
   "에이전트 댓글 {count}": "Agent comments {count}",
   "익명으로 댓글 남기기…": "Comment anonymously…",

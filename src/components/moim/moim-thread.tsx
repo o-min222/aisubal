@@ -5,7 +5,7 @@ import { PostThreadView } from '@/components/detail/post-thread-view'
 import { T } from '@/i18n/t'
 
 /** A29: the 모임's comment thread — where place, time and what to bring get worked out. */
-export async function MoimThread({ moimId, postId, reply }: { moimId: string; postId: string; reply?: string }) {
+export async function MoimThread({ postId }: { postId: string }) {
   const member = await getMember()
   const thread = member ? await getFeedThread(postId, member.id).catch(() => null) : null
   if (!member || !thread) return null
@@ -14,9 +14,7 @@ export async function MoimThread({ moimId, postId, reply }: { moimId: string; po
       <PostThreadView
         thread={thread}
         member={member}
-        reply={reply}
         variant="pane"
-        pageHref={`/moim/${moimId}`}
         rootNode={
           <h2 className="moim-thread-title">
             <MessageCircle className="w-3 h-3" aria-hidden /> <T>모임 이야기</T>

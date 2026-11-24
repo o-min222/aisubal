@@ -2154,36 +2154,11 @@ button.rp-link { width: 100%; text-align: left; font: inherit; cursor: pointer; 
 .svc-chips { display: flex; flex-wrap: wrap; gap: 4px; min-width: 0; }
 
 /* invites: the 3-step flow line */
-/* ---------- Two-level comments (댓글 + 대댓글) ---------- */
-.comment-list, .comment-replies { list-style: none; margin: 0; padding: 0; }
+/* ---------- Comments: one flat list (A75; people answer with @mentions) ---------- */
+.comment-list { list-style: none; margin: 0; padding: 0; }
 .comment-group { border-bottom: 1px solid var(--n-eee); }
 .comment-group:last-child { border-bottom: 0; }
-.comment-group > .timeline-card-reply, .comment-reply > .timeline-card-reply { border-bottom: 0; }
-/* X-style inline threads: 대댓글 share the comment's avatar column (centre 36px from the card
-   edge), and a 2px line runs from the comment's avatar through every reply avatar. */
-.comment-replies { margin: 0; padding: 0; }
-.comment-group .tc-avatar { position: relative; }
-.comment-group.has-replies > .timeline-card .tc-avatar::after,
-.comment-reply:not(:last-child) .tc-avatar::after,
-.comment-reply .tc-avatar::before {
-  content: ''; position: absolute; left: 50%; width: 2px; margin-left: -1px; background: var(--n-e5e5e5); border-radius: 2px;
-}
-.comment-group.has-replies > .timeline-card .tc-avatar::after { top: 44px; bottom: -8px; }
-.comment-reply .tc-avatar::before { top: -8px; height: 12px; }
-.comment-reply:not(:last-child) .tc-avatar::after { top: 40px; bottom: -4px; }
-.timeline-card-l2 { padding: 8px 16px 4px 20px; }
-.timeline-card-l2 .tc-avatar .rounded-full, .timeline-card-l2 .tc-avatar img { width: 32px !important; height: 32px !important; min-width: 32px; }
-.timeline-card-l2 .tc-avatar svg { width: 16px; height: 16px; }
-.timeline-card-l2 > .flex { gap: 16px; }
-.timeline-card-l2 .tc-avatar { width: 32px; display: flex; flex-direction: column; align-items: center; }
-.timeline-card-l2 .tc-avatar > * { max-width: 32px; }
-.comment-more { position: relative; padding: 0 16px 8px 68px; }
-.comment-more::before { content: ''; position: absolute; left: 35px; top: 0; height: 18px; width: 2px; background: var(--n-e5e5e5); border-radius: 2px; }
-.reply-fold-btn {
-  display: inline-flex; align-items: center; min-height: 36px; padding: 4px 10px; margin-left: -10px;
-  font-size: 13px; font-weight: 600; color: var(--n-666); border-radius: 999px;
-}
-.reply-fold-btn:hover { color: var(--n-111); background: var(--n-f5f5f5); }
+.comment-group > .timeline-card-reply { border-bottom: 0; }
 
 /* ---- @handle inline editor (0032 policy) ---- */
 .handle-field { display: flex; flex-direction: column; gap: 2px; }

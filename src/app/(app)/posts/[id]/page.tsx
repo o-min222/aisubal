@@ -23,16 +23,13 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 
 export default async function PostThreadPage({
   params,
-  searchParams,
 }: {
   params: Promise<{ id: string }>
-  searchParams: Promise<{ reply?: string }>
 }) {
   const state = await getUserState()
   if (state.type === 'unauthenticated') redirect('/')
   if (state.type === 'waitlist') redirect('/waitlist')
   const { id } = await params
-  const { reply } = await searchParams
   if (!isFeedId(id)) notFound()
   // A67: the legacy-post read the thread view needs starts now instead of after the thread
   const [thread] = await Promise.all([getFeedThread(id, state.member.id), getPostForRender(id).catch(() => null)])
@@ -46,7 +43,7 @@ export default async function PostThreadPage({
   if (thread.root.id !== id) redirect(`/posts/${thread.root.id}`)
   // A29: a 모임's thread post links back to the 모임 (date · place · 신청 live there)
   const moim = isMoimThreadBody(thread.root.body) ? await moimForThread(thread.root.id).catch(() => null) : null
-  if (!moim) return <PostThreadView thread={thread} member={state.member} reply={reply} />
+  if (!moim) return <PostThreadView thread={thread} member={state.member} />
   return (
     <div className="space-y-3">
       <Link href={`/moim/${moim.id}`} className="moim-thread-link card">
@@ -54,7 +51,7 @@ export default async function PostThreadPage({
         <span className="truncate">{moim.title}</span>
         <span className="ml-auto inline-flex items-center flex-shrink-0 text-n-666"><T>이 모임 보기</T> <ChevronRight className="w-4 h-4" /></span>
       </Link>
-      <PostThreadView thread={thread} member={state.member} reply={reply} />
+      <PostThreadView thread={thread} member={state.member} />
     </div>
   )
 }

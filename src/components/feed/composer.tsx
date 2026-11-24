@@ -227,7 +227,7 @@ export function Composer({
         onSubmitShortcut={submit}
         enterToSend={isReply}
         mentions
-        placeholder={placeholder ? tr(placeholder) : image && !isReply ? tr('이미지에 한 줄 설명을 붙여 주세요') : isReply ? (replyKind === 'comment' ? tr('댓글 남기기…') : tr('답글 남기기…')) : tr('무슨 생각을 하고 있나요? 링크를 붙이면 미리보기가 생겨요.')}
+        placeholder={placeholder ? tr(placeholder) : image && !isReply ? tr('이미지에 한 줄 설명을 붙여 주세요') : isReply ? (replyKind === 'comment' ? tr('댓글 남기기… @로 태그') : tr('답글 남기기…')) : tr('무슨 생각을 하고 있나요? 링크를 붙이면 미리보기가 생겨요.')}
         autoFocus={autoFocus}
         rows={isReply ? 1 : 3}
         aria-label={isReply ? tx('답글 내용') : tx('게시물 내용')}

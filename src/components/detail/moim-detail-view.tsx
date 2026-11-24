@@ -14,7 +14,7 @@ import { T } from '@/i18n/t'
 import { getT } from '@/i18n/server'
 
 /** 모임 detail. Used by /moim/[id] and the 모임 reading pane. */
-export async function MoimDetailView({ m, variant = 'page', reply }: { m: MoimDetail; variant?: 'page' | 'pane'; reply?: string }) {
+export async function MoimDetailView({ m, variant = 'page' }: { m: MoimDetail; variant?: 'page' | 'pane' }) {
   const st = await getT()
   const sameDay = m.endsAt && new Date(m.endsAt).toDateString() === new Date(m.startsAt).toDateString()
   const p = m.private
@@ -127,7 +127,7 @@ export async function MoimDetailView({ m, variant = 'page', reply }: { m: MoimDe
       <MoimApplyPanel moim={m} />
 
       {/* A29: the discussion is where the details get decided — last, with the reply box pinned */}
-      {m.threadPostId && <MoimThread moimId={m.id} postId={m.threadPostId} reply={reply} />}
+      {m.threadPostId && <MoimThread postId={m.threadPostId} />}
     </div>
   )
 }

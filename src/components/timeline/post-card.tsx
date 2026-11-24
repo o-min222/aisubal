@@ -66,7 +66,6 @@ export function PostCard({
   actions,
   adminHide,
   isReply = false,
-  level = 1,
   replyTo,
   afterDeleteHref,
 }: {
@@ -80,9 +79,7 @@ export function PostCard({
   /** A60: 아고라 admins get 숨기기 in the ⋯ menu */
   adminHide?: boolean
   isReply?: boolean
-  /** two-level comments: 2 = 대댓글 (compact, indented by the thread) */
-  level?: 1 | 2
-  /** 대댓글 answering another 대댓글: shown as an @mention before the body */
+  /** A75: a legacy 대댓글 that answered another comment: its name as an @mention before the body */
   replyTo?: string | null
   /** root card in a detail view: where to go after a delete that leaves no tombstone */
   afterDeleteHref?: string
@@ -183,7 +180,7 @@ export function PostCard({
           <T>되돌리기</T>
         </button>
       </div>
-    ) : <article data-post-id={post.id} className={`timeline-card ${isReply ? 'timeline-card-reply' : ''} ${level === 2 ? 'timeline-card-l2' : ''} ${post.isHidden && !anon ? 'opacity-60' : ''}`}>
+    ) : <article data-post-id={post.id} className={`timeline-card ${isReply ? 'timeline-card-reply' : ''} ${post.isHidden && !anon ? 'opacity-60' : ''}`}>
       <div className="flex gap-3">
         <div className="tc-avatar flex-shrink-0">{avatar}</div>
         <div className="min-w-0 flex-1">
@@ -335,7 +332,7 @@ export function PostCard({
                 onShowLikers={() => setLikersOpen(true)}
               />
             )}
-            {replyHref ? (
+            {isReply ? null : replyHref ? (
               <Link
                 href={replyHref}
                 className="tc-act inline-flex items-center gap-1 text-sm text-n-555 hover:text-n-111"

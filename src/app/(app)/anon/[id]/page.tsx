@@ -13,10 +13,8 @@ export async function generateMetadata() {
 
 export default async function AnonThreadPage({
   params,
-  searchParams,
 }: {
   params: Promise<{ id: string }>
-  searchParams: Promise<{ reply?: string }>
 }) {
   const state = await getUserState()
   if (state.type === 'unauthenticated') redirect('/')
@@ -24,10 +22,9 @@ export default async function AnonThreadPage({
   const unlock = await getAnonUnlockState()
   if (!unlock.unlocked) return <AnonLocked threshold={unlock.threshold} activeCount={unlock.activeCount} />
   const { id } = await params
-  const { reply } = await searchParams
   if (!isFeedId(id)) notFound()
   const thread = await getAnonThread(id, state.member.id)
   if (!thread) notFound()
   if (thread.root.id !== id) redirect(`/anon/${thread.root.id}`)
-  return <AnonThreadView thread={thread} reply={reply} />
+  return <AnonThreadView thread={thread} />
 }

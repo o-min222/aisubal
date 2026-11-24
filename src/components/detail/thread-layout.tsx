@@ -4,11 +4,11 @@ import { ArrowLeft } from 'lucide-react'
 import { PostCard } from '@/components/timeline/post-card'
 import type { TimelinePost } from '@/components/timeline/types'
 import { CommentList } from '@/components/comments/comment-list'
-import { twoLevelThread } from '@/lib/thread'
+import { flatThread } from '@/lib/thread'
 import { postApi, type FeedMode } from '@/lib/feed-mode'
 
 /**
- * One thread page for every timeline: the post, a meta line, 댓글 + 대댓글, then the reply box
+ * One thread page for every timeline: the post, a meta line, the flat comment list (A75), then the reply box
  * at the bottom (A44: read what's there before writing; or a note when the viewer may not reply).
  */
 export function ThreadLayout({
@@ -22,8 +22,6 @@ export function ThreadLayout({
   countLabel,
   emptyLabel,
   repliesLabel,
-  openId,
-  replyHref,
   actionsFor,
   adminHide,
   afterDeleteHref,
@@ -40,15 +38,12 @@ export function ThreadLayout({
   countLabel: ReactNode
   emptyLabel: ReactNode
   repliesLabel: string
-  /** ?reply= target: its comment group starts unfolded */
-  openId?: string
-  replyHref?: (post: TimelinePost) => string | undefined
   actionsFor?: (post: TimelinePost) => ReactNode
   /** A60: 아고라 admins hide from the ⋯ menu */
   adminHide?: boolean
   afterDeleteHref: string
 }) {
-  const groups = twoLevelThread(root.id, replies)
+  const comments = flatThread(root.id, replies)
   return (
     <div className={back ? 'space-y-3 thread-page' : 'space-y-3'}>
       {back && (
@@ -64,19 +59,16 @@ export function ThreadLayout({
         <div className="thread-meta flex flex-wrap items-center">{meta}</div>
         <section id="comments" className="thread-replies" aria-label={repliesLabel}>
           <h2 className="thread-count">{countLabel}</h2>
-          {groups.length === 0 ? (
+          {comments.length === 0 ? (
             <p className="px-4 py-6 text-sm text-n-888 text-center">{emptyLabel}</p>
           ) : (
             <CommentList
-              groups={groups}
-              openId={openId}
-              render={(post, { level, replyTo }) => (
+              items={comments}
+              render={(post, { replyTo }) => (
                 <PostCard
                   post={post}
                   isReply
-                  level={level}
                   replyTo={replyTo}
-                  replyHref={replyHref?.(post)}
                   likeEndpoint={postApi(mode, post.id, 'like')}
                   likersEndpoint={postApi(mode, post.id, 'likers')}
                   actions={actionsFor?.(post)}
