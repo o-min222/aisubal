@@ -3133,3 +3133,14 @@ html:has(.landing) { scroll-snap-type: y proximity; background: #111111; }
 .mu-table td { padding: 7px 8px; border-bottom: 1px solid var(--n-eee); color: var(--n-111); font-variant-numeric: tabular-nums; vertical-align: top; }
 .mu-table td.num, .mu-table th.num { text-align: right; white-space: nowrap; }
 .mu-table tr:last-child td { border-bottom: 0; }
+
+/* A66 P4: OAuth consent */
+.oauth-h { font-size: 13px; font-weight: 650; color: var(--n-111); margin-bottom: 4px; }
+.oauth-sub { font-size: 12.5px; color: var(--n-666); }
+.oauth-list { display: grid; gap: 4px; font-size: 14px; color: var(--n-333); padding-left: 0; }
+.oauth-list > li { position: relative; padding-left: 16px; line-height: 1.5; }
+.oauth-list > li::before { content: ''; position: absolute; left: 3px; top: .62em; width: 5px; height: 5px; border-radius: 50%; background: var(--n-888); }
+.oauth-list-no > li::before { width: 7px; height: 1.5px; border-radius: 0; top: .72em; left: 2px; }
+.oauth-choice { display: flex; align-items: flex-start; gap: 10px; font-size: 14px; color: var(--n-333); line-height: 1.45; padding: 6px 0; cursor: pointer; }
+.oauth-choice input { margin-top: 3px; width: 16px; height: 16px; accent-color: var(--n-111); flex: none; }
+.oauth-notes { display: grid; gap: 4px; font-size: 12.5px; color: var(--n-888); line-height: 1.5; border-top: 1px solid var(--n-eee); padding-top: 12px; }

@@ -15,6 +15,8 @@ export type ManagedToken = {
   agentHandle?: string | null
   scopes: string[]
   tokenPrefix?: string | null
+  /** A66 P4: connected through OAuth (the app holds and refreshes its own token) */
+  oauth?: boolean
   createdAt: string
   lastUsedAt: string | null
   pledgeSignedAt?: string | null
@@ -47,7 +49,12 @@ export function TokenManageSheet({
                 <dd>@{t.agentHandle || agentHandleBase(t.agentName)}.ai</dd>
               </>
             )}
-            {t.tokenPrefix && (
+            {t.oauth ? (
+              <>
+                <dt><T>연결 방식</T></dt>
+                <dd><T>앱에서 로그인 (OAuth)</T></dd>
+              </>
+            ) : t.tokenPrefix && (
               <>
                 <dt><T>토큰</T></dt>
                 <dd><code className="pr-mono">{t.tokenPrefix}…</code></dd>
@@ -72,9 +79,15 @@ export function TokenManageSheet({
             )}
           </section>
           <AgentWebhookSection tokenId={t.id} when={when} />
-          <button type="button" className="btn btn-secondary w-full min-h-[44px] rounded-full" onClick={() => onRotate(t)}>
-            <RefreshCw className="w-4 h-4" /> <T>토큰 재발급</T>
-          </button>
+          {t.oauth ? (
+            <p className="text-[12.5px] text-n-777 leading-relaxed">
+              <T>앱이 토큰을 스스로 갱신해요. 다시 연결하려면 앱에서 로그인하면 돼요.</T>
+            </p>
+          ) : (
+            <button type="button" className="btn btn-secondary w-full min-h-[44px] rounded-full" onClick={() => onRotate(t)}>
+              <RefreshCw className="w-4 h-4" /> <T>토큰 재발급</T>
+            </button>
+          )}
         </div>
       )}
     </AdaptiveSheet>

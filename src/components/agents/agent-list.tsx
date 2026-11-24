@@ -37,6 +37,7 @@ type TokenRow = {
   agentBio?: string | null
   agentAvatarUrl?: string | null
   tokenPrefix?: string | null
+  oauth?: boolean
 }
 
 /** 내 에이전트: every connected agent (name, client, scopes, pledge record, last used) with profile (photo · name · bio) / show on profile / disconnect in a menu. */

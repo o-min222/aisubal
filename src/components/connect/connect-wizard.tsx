@@ -179,6 +179,10 @@ export function ConnectWizard({
               </button>
             ))}
           </div>
+          {/* A66 P4: apps with custom connectors sign in with OAuth: no token to copy */}
+          <p className="text-[12.5px] text-n-888 mt-4 leading-relaxed break-words">
+            <T s="앱이 커스텀 커넥터(OAuth)를 지원하면 토큰 없이 {url} 주소만 넣고 AI쓰발 계정으로 로그인해도 연결돼요." vars={{ url: <code className="pr-mono text-n-555">{mcpUrl}</code> }} />
+          </p>
           {from === 'signup' && (
             <div className="mt-4 text-center">
               <Link href="/feed" className="text-[13px] text-n-888 underline min-h-[40px] inline-flex items-center">

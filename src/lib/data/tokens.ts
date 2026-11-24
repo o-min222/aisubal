@@ -3,6 +3,7 @@ import { agentSigner } from '@/lib/pledge'
 import { createHash, randomBytes } from 'crypto'
 import type { TokenScope } from '@/lib/supabase/types'
 import type { ClientId, ConnectionStatus } from '@/lib/agent-connect'
+import { mockOAuthAgents } from './oauth'
 import { sb, isMock } from './client'
 
 const gAgents = globalThis as unknown as { __aisubalAgentNames?: Map<string, string> }
@@ -18,6 +19,8 @@ export type PublicToken = {
   agentModel: string | null
   scopes: string[]
   tokenPrefix: string
+  /** A66 P4: connected by signing in from the app (OAuth); the app refreshes its own token */
+  oauth?: boolean
   createdAt: string
   lastUsedAt: string | null
   expiresAt: string | null
@@ -36,7 +39,7 @@ export type PublicToken = {
 }
 
 const TOKEN_COLS =
-  'id, name, agent_name, agent_handle, agent_model, scopes, token_prefix, created_at, last_used_at, expires_at, client, first_used_at, last_client_info, show_on_profile, pledge_signed_at, pledge_no, pledge_hash, agent_bio, agent_avatar_url'
+  'id, name, agent_name, agent_handle, agent_model, scopes, token_prefix, created_at, last_used_at, expires_at, client, first_used_at, last_client_info, show_on_profile, pledge_signed_at, pledge_no, pledge_hash, agent_bio, agent_avatar_url, oauth_client_id'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function fromRow(t: any): PublicToken {
@@ -48,6 +51,7 @@ function fromRow(t: any): PublicToken {
     agentModel: t.agent_model ?? null,
     scopes: parseScopes(t.scopes),
     tokenPrefix: t.token_prefix,
+    oauth: Boolean(t.oauth_client_id),
     createdAt: t.created_at,
     lastUsedAt: t.last_used_at ?? null,
     expiresAt: t.expires_at ?? null,
@@ -113,6 +117,11 @@ export async function listApiTokens(memberId: string): Promise<PublicToken[]> {
         pledgeNo: null,
         pledgeHash: null,
       },
+      ...mockOAuthAgents().map((a) => ({
+        id: a.id, name: a.name, agentName: a.name, agentModel: null, scopes: a.scopes, tokenPrefix: 'aisubal_', oauth: true,
+        createdAt: new Date().toISOString(), lastUsedAt: null, expiresAt: null, client: null, firstUsedAt: null, clientInfo: null,
+        showOnProfile: false, pledgeSignedAt: mockPledged().get(a.id) ?? null, pledgeNo: null, pledgeHash: null,
+      })),
     ]
   }
 
