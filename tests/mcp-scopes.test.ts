@@ -8,7 +8,9 @@ const all = TOOL_SPECS.map((t) => t.name)
 describe('A66 one tool registry', () => {
   it('names are unique and every tool has scopes, a description and an object schema', () => {
     expect(new Set(all).size).toBe(all.length)
-    expect(all.length).toBeGreaterThanOrEqual(43)
+    expect(all.length).toBe(35)
+    // A66 P2: every name is <domain>_<verb> (gallery submissions live under the gallery_ prefix)
+    for (const t of TOOL_SPECS) expect(t.name.startsWith(`${t.domain === 'submit' ? 'gallery' : t.domain}_`), t.name).toBe(true)
     for (const t of TOOL_SPECS) {
       expect(t.scopes.length, t.name).toBeGreaterThan(0)
       expect(t.description.trim().length, t.name).toBeGreaterThan(3)
@@ -28,7 +30,7 @@ describe('A66 one tool registry', () => {
   })
   it('tools/list keeps the wire shape', () => {
     const t = listTools().find((x) => x.name === 'feed_get')!
-    expect(Object.keys(t).sort()).toEqual(['_meta', 'annotations', 'description', 'inputSchema', 'name'])
+    expect(Object.keys(t).sort()).toEqual(['_meta', 'annotations', 'description', 'inputSchema', 'name', 'title'])
     expect(t.annotations.readOnlyHint).toBe(true)
     expect(listTools().find((x) => x.name === 'agora_post')!.annotations.readOnlyHint).toBe(false)
     expect(t._meta).toEqual({ 'aisubal/domain': 'feed', 'aisubal/scopes': ['posts_read', 'feed:interact'] })
@@ -45,14 +47,14 @@ describe('P-1 tools/list is filtered by token scopes', () => {
     const scopes = ['posts_read', 'meetups_read', 'toolbox_read', 'archive:read', 'agora:read'] as const
     const names = listTools({ scopes, isAdmin: false }).map((t) => t.name)
     expect(names).toContain('feed_list')
-    expect(names).toContain('get_charter')
-    for (const w of ['feed_comment', 'agora_post', 'archive_add', 'submit_tool', 'review_approve']) expect(names).not.toContain(w)
-    // 0058: install_tool only records a once-per-member install, so read tokens may use it
-    expect(names).toContain('install_tool')
+    expect(names).toContain('charter_get')
+    for (const w of ['feed_comment', 'agora_post', 'archive_add', 'gallery_submit', 'review_decide']) expect(names).not.toContain(w)
+    // 0058: gallery_install only records a once-per-member install, so read tokens may use it
+    expect(names).toContain('gallery_install')
   })
   it('review_* only for admin tokens with tools:review', () => {
-    expect(toolAllowed('review_approve', ['tools:review'], false)).toBe(false)
-    expect(toolAllowed('review_approve', ['tools:review'], true)).toBe(true)
+    expect(toolAllowed('review_decide', ['tools:review'], false)).toBe(false)
+    expect(toolAllowed('review_decide', ['tools:review'], true)).toBe(true)
     expect(toolAllowed('review_get', ['toolbox_read'], true)).toBe(false)
   })
 })

@@ -171,7 +171,7 @@ describe('agents (MCP) stay read-only for human commitments', () => {
     const names = TOOL_SPECS.map((t) => t.name)
     expect(names).not.toContain('rsvp_meetup')
     expect(names).not.toContain('create_meetup')
-    for (const n of ['list_meetups', 'read_meetup', 'my_groups']) expect(getTool(n)?.untrusted).toBe('human')
+    for (const n of ['meetup_list', 'meetup_get', 'meetup_mine', 'meetup_groups']) expect(getTool(n)?.untrusted).toBe('human')
   })
   it('MCP masks PII on untrusted reads and never exposes the anon board', () => {
     const route = read('src/app/api/mcp/route.ts') + read('src/lib/mcp/dispatch.ts')

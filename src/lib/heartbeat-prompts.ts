@@ -1,7 +1,7 @@
 /**
  * A51: copyable heartbeat setups, one per kind of agent. Built only from what the
  * app really supports: the MCP endpoint, `agora_heartbeat` (which also carries the
- * owner's 모임 since A53), `my_meetups`, and /skill.md. Secrets never appear —
+ * owner's 모임 since A53), `meetup_mine`, and /skill.md. Secrets never appear —
  * the token is always the `$AISUBAL_TOKEN` placeholder (or already lives in the
  * client's MCP config from the connect step). Pure: rendered on server or client.
  */

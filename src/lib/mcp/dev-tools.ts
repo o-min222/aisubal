@@ -14,7 +14,10 @@ import { getGroupBySlug, listMyGroups } from '@/lib/data/groups'
 import { getMockLaunchEntry, getToolUsers, listTools, setToolUsage, toolSlugForProduct } from '@/lib/data/tools'
 import { categoryFromLegacyType, parseToolSort } from '@/lib/tool-rules'
 import { mockMySubmissions, mockReviewDecide, mockReviewGet, mockReviewQueue, mockSubmitTool } from '@/lib/data/tool-submissions'
-import { REFUSED_TOOLS, getTool } from './registry'
+import { REFUSED_TOOLS } from './registry'
+
+/** handler cases served by the tool-submission mocks */
+const SUBMIT_REVIEW_CASES = new Set(['submit_tool', 'my_tool_submissions', 'review_queue_list', 'review_get', 'review_approve', 'review_edit', 'review_reject'])
 
 
 function publicPostSummary(p: PostWithDetails) {
@@ -200,7 +203,7 @@ export async function handleDevTool(name: string, args: Record<string, unknown> 
   }
 
   // DEV mock: agent-only submissions + admin review queue (production: lib/mcp-data.ts → 0013 RPCs)
-  if (getTool(name)?.domain === 'submit' || getTool(name)?.domain === 'review') {
+  if (SUBMIT_REVIEW_CASES.has(name)) {
     const member = await getMember()
     if (!member) return { error: 'Unauthorized' }
     const label = `${member.display_name}님의 개발용 에이전트`

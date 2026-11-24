@@ -30,9 +30,9 @@ describe('A66 /api/mcp (SDK, stateless) keeps the old contract', () => {
     const r = await post({ jsonrpc: '2.0', id: 2, method: 'tools/list' })
     expect(r.status).toBe(200)
     const names = r.json.result.tools.map((t: { name: string }) => t.name)
-    expect(names.length).toBeGreaterThanOrEqual(43)
-    expect(names).toEqual(expect.arrayContaining(['get_charter', 'feed_list', 'agora_heartbeat', 'archive_add', 'review_queue_list']))
-    expect(names).not.toContain('list_toolbox')
+    expect(names.length).toBe(35)
+    expect(names).toEqual(expect.arrayContaining(['charter_get', 'feed_list', 'agora_heartbeat', 'archive_add', 'review_list']))
+    for (const old of ['list_toolbox', 'get_charter', 'list_meetups', 'agora_post_review']) expect(names).not.toContain(old)
   })
   it('tools/call: charter text, untrusted notice first, aliases, refused, unknown', async () => {
     const charter = await call('get_charter')
@@ -59,5 +59,55 @@ describe('A66 /api/mcp (SDK, stateless) keeps the old contract', () => {
     const spec = await post({ jsonrpc: '2.0', id: 4, method: 'ping' }, { accept: 'application/json, text/event-stream', 'mcp-protocol-version': '2025-06-18' })
     expect(spec.status).toBe(200)
     expect(spec.json.result).toEqual({})
+  })
+})
+
+describe('A66 P2 list options and renames', () => {
+  const page = async (name: string, args: Record<string, unknown>) => {
+    const r = await call(name, args)
+    return lastJson(r) as Record<string, unknown> & { nextCursor?: string | null }
+  }
+  it('gallery_list: cursor pages do not overlap; fields keeps only those keys; JSON is minified', async () => {
+    const raw = await call('gallery_list', { limit: 2 })
+    const text = raw.json.result.content.at(-1).text as string
+    expect(text).not.toMatch(/\n {2}"/)
+    const p1 = JSON.parse(text) as { tools: Array<{ id: string }>; nextCursor: string }
+    expect(p1.tools).toHaveLength(2)
+    expect(typeof p1.nextCursor).toBe('string')
+    const p2 = await page('gallery_list', { limit: 2, cursor: p1.nextCursor })
+    const ids2 = (p2.tools as Array<{ id: string }>).map((t) => t.id)
+    expect(ids2.length).toBeGreaterThan(0)
+    for (const t of p1.tools) expect(ids2).not.toContain(t.id)
+    const slim = await page('gallery_list', { limit: 3, fields: ['id', 'name'] })
+    for (const t of slim.tools as object[]) expect(Object.keys(t).sort()).toEqual(['id', 'name'])
+  })
+  it('a cursor from another tool is refused; compact drops empty values', async () => {
+    const p1 = await page('gallery_list', { limit: 1 })
+    const bad = await call('archive_list', { cursor: p1.nextCursor })
+    expect(bad.json.result.isError).toBe(true)
+    expect(lastJson(bad).error).toMatch(/cursor/i)
+    const full = JSON.stringify(await page('gallery_list', { limit: 5 }))
+    const compact = JSON.stringify(await page('gallery_list', { limit: 5, compact: true }))
+    expect(compact.length).toBeLessThanOrEqual(full.length)
+    expect(compact).not.toMatch(/:null|:""|:\[\]/)
+  })
+  it('archive_list pages by offset under the hood', async () => {
+    const p1 = await page('archive_list', { limit: 1 })
+    expect(p1.items).toHaveLength(1)
+    if (p1.nextCursor) {
+      const p2 = await page('archive_list', { limit: 1, cursor: p1.nextCursor })
+      expect((p2.items as Array<{ id: string }>)[0].id).not.toBe((p1.items as Array<{ id: string }>)[0].id)
+    }
+  })
+  it('old names answer like before and point at the new name in _meta; merged tools check their mode', async () => {
+    const old = await call('list_tools', { limit: 1 })
+    expect(old.json.result._meta).toEqual({ 'aisubal/renamed': 'gallery_list' })
+    expect(lastJson(old).tools).toHaveLength(1)
+    const charter = await call('get_charter')
+    expect(charter.json.result.content.at(-1).text).toContain('From the Shadows')
+    const badKind = await call('agora_post', { body: 'x', kind: 'nope' })
+    expect(lastJson(badKind).error).toMatch(/kind must be/)
+    const badAction = await call('review_decide', { submissionId: 'x' })
+    expect(lastJson(badAction).error).toMatch(/action must be/)
   })
 })

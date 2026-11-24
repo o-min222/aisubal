@@ -8,7 +8,7 @@ const sql = readFileSync('supabase/migrations/0088_gallery_publish_now.sql', 'ut
 
 describe('A36 gallery publishes immediately', () => {
   it('submit copy says it goes live, with no review queue wording', () => {
-    const d = getTool('submit_tool')!.description
+    const d = getTool('gallery_submit')!.description
     expect(d).toContain('바로 공개돼요')
     expect(d).not.toMatch(/리뷰 큐|검토/)
     expect(submitPrompt()).not.toMatch(/검토|승인/)

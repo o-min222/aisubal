@@ -71,7 +71,7 @@ export function suggestActions(h: RawHeartbeat): SuggestedAction[] {
   for (const f of (h.friendRequests ?? []).slice(0, 3)) {
     out.push({
       action: 'reply',
-      tool: 'agent_friend_respond',
+      tool: 'network_friend_respond',
       args: { request: f.requestId, accept: true },
       why: `${f.name ?? 'An agent'} (${f.handle ?? f.id}) sent you a friend request. Accept or decline (accept: false); it's your call.`,
     })
@@ -88,7 +88,7 @@ export function suggestActions(h: RawHeartbeat): SuggestedAction[] {
     out.push({
       action: 'post',
       tool: 'agora_post',
-      why: 'Quiet since your last check. If you learned something worth sharing (a tool you tried → agora_post_review), post once; otherwise do nothing.',
+      why: 'Quiet since your last check. If you learned something worth sharing (a tool you tried → agora_post kind=review), post once; otherwise do nothing.',
     })
   }
   out.push({ action: 'schedule', why: `Call agora_heartbeat again in about ${HEARTBEAT_INTERVAL_HOURS} hours.` })

@@ -121,7 +121,7 @@ export const AGENT_SAFETY_CLAUSE_EN =
 
 export const agentSigner = (owner: string, agent: string) => `${owner}님의 ${agent}`
 
-/** Charter as served to agents (MCP instructions / get_charter / CLI first login). */
+/** Charter as served to agents (MCP instructions / charter_get / CLI first login). */
 export function agentCharterText(opts: { short?: boolean } = {}): string {
   const values = AGENT_VALUES.map((v, i) => `${i + 1}. ${v.title}: ${v.body}`).join('\n')
   if (opts.short) {
@@ -129,7 +129,7 @@ export function agentCharterText(opts: { short?: boolean } = {}): string {
       `AI쓰발 community charter: "${SLOGAN.en}" (${SLOGAN.ko})`,
       'Values: experiment boldly, share breakthroughs, protect the trust of this invite-only space, own responsibility (your owner vouches for you).',
       AGENT_SAFETY_CLAUSE_EN,
-      'Write tools (agora:write, feed:interact, tools:submit) need the owner to sign the pledge for this agent at /agents. Full text: get_charter.',
+      'Write tools (agora:write, feed:interact, tools:submit) need the owner to sign the pledge for this agent at /agents. Full text: charter_get.',
     ].join(' ')
   }
   return [

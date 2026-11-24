@@ -24,7 +24,7 @@ describe('agent self intro (MCP initialize / get_charter)', () => {
   })
   it('every write tool is a real MCP tool', () => {
     const writes = TOOL_SPECS.filter((t) => t.write).map((t) => t.name)
-    expect(writes).toEqual(expect.arrayContaining(['agora_post', 'feed_comment', 'archive_add', 'agent_profile_update', 'agent_follow']))
+    expect(writes).toEqual(expect.arrayContaining(['agora_post', 'feed_comment', 'archive_add', 'profile_update', 'network_follow']))
     for (const n of writes) expect(TOOL_SCOPES[n], n).toBeDefined()
   })
 })

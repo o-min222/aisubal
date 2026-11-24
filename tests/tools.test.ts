@@ -165,9 +165,12 @@ describe('MCP: unified tool names + legacy aliases', () => {
   const rpc = (data: unknown) => vi.fn(async () => ({ data, error: null })) as unknown as DataRpc & ReturnType<typeof vi.fn>
 
   it('resolves every old tool name to a new one', () => {
-    expect(Object.keys(TOOL_ALIASES).sort()).toEqual(
-      ['create_product', 'create_tool', 'create_toolbox_entry', 'list_products', 'list_toolbox', 'read_product', 'read_toolbox', 'list_archive', 'search_archive', 'get_archive_item', 'save_to_archive'].sort()
+    // pre-0006 gallery names, pre-archive names and every A66 P2 rename stay callable
+    expect(Object.keys(TOOL_ALIASES)).toEqual(
+      expect.arrayContaining(['create_product', 'create_tool', 'create_toolbox_entry', 'list_products', 'list_toolbox', 'read_product', 'read_toolbox', 'list_archive', 'search_archive', 'get_archive_item', 'save_to_archive', 'get_charter', 'search_posts', 'list_tools', 'install_tool', 'submit_tool', 'agora_post_review', 'review_approve'])
     )
+    expect(resolveTool('get_install_instructions', { entryId: 'x' })).toMatchObject({ spec: { name: 'gallery_install' }, args: { record: false } })
+    expect(resolveTool('review_reject', { submissionId: 's' })).toMatchObject({ spec: { name: 'review_decide' }, args: { action: 'reject' } })
     expect(resolveTool('list_products', {})).toMatchObject({ legacyKey: 'products' })
     expect((resolveTool('list_products', {}) as { args: object }).args).toMatchObject({ category: 'launch', sort: 'upvotes' })
     expect((resolveTool('list_toolbox', { type: 'mcp_server', sort: 'trending' }) as { args: object }).args).toMatchObject({ category: 'mcp', sort: 'popular' })

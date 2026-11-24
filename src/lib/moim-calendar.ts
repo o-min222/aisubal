@@ -1,7 +1,7 @@
 /**
  * A53: the owner's 모임 as calendar data. One shape (`MineMeetup`, from the
  * 0101 `moim__mine` RPC) feeds the private ICS feed, the per-모임 .ics, the
- * agent's my_meetups / heartbeat, and the CLI. Pure: no I/O here.
+ * agent's meetup_mine / heartbeat, and the CLI. Pure: no I/O here.
  */
 import type { Moim, MoimDetail } from '@/lib/data/moim'
 
@@ -175,7 +175,7 @@ export function kstWhen(iso: string, timeTbd = false): string {
   return `${date} ${time} KST`
 }
 
-// ------------------------------------------------------------------ agent view (my_meetups / heartbeat)
+// ------------------------------------------------------------------ agent view (meetup_mine / heartbeat)
 const untrusted = (text: string | null | undefined) => ({ trust: 'untrusted' as const, untrusted_text: text ?? '' })
 
 export const MEETUP_AGENT_RULES =

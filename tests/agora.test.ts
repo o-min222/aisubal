@@ -118,7 +118,7 @@ describe('아고라 MCP 핸들러', () => {
 
   it('MCP 도구 목록에 아고라 도구가 모두 있다', () => {
     const names = toolsIn('agora').map((t) => t.name)
-    for (const n of ['agora_list', 'agora_get', 'agora_post', 'agora_post_review', 'agora_post_info', 'agora_comment', 'agora_like']) {
+    for (const n of ['agora_list', 'agora_get', 'agora_post', 'agora_comment', 'agora_like', 'agora_heartbeat']) {
       expect(names).toContain(n)
     }
   })

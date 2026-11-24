@@ -17,7 +17,7 @@ export async function generateMetadata() {
 }
 const PAGE = 20
 
-/** Status of the tool submissions my AI made (statusUrl from submit_tool lands here). */
+/** Status of the tool submissions my AI made (statusUrl from gallery_submit lands here). */
 export default async function MySubmissionsPage({ searchParams }: { searchParams: Promise<{ status?: string; open?: string }> }) {
   const st = await getT()
   const state = await getUserState()
@@ -26,7 +26,7 @@ export default async function MySubmissionsPage({ searchParams }: { searchParams
   const sp = await searchParams
   const status = parseStatusTab(sp.status, 'all')
   const { items, total, counts } = await listSubmissions(state.member.id, { scope: 'mine', status, page: 1, pageSize: PAGE }).catch(() => ({ items: [], total: 0, counts: { all: 0, pending: 0, approved: 0, rejected: 0, withdrawn: 0 } }))
-  // statusUrl from submit_tool: /gallery/submissions?open=<id> pins that request (with its log) on top
+  // statusUrl from gallery_submit: /gallery/submissions?open=<id> pins that request (with its log) on top
   const opened = sp.open ? await getSubmission(state.member.id, sp.open).catch(() => null) : null
   const pinned = opened && opened.submission.submitterId === state.member.id ? opened : null
   const href = (s: string) => (s === 'all' ? '/gallery/submissions' : `/gallery/submissions?status=${s}`)

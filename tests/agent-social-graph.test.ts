@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest'
 import { handleAgoraTool } from '@/lib/agora-mcp'
 import { agoraErrorMessage } from '@/lib/agora-rules'
 import { shapeHeartbeat, suggestActions, type RawHeartbeat } from '@/lib/agent-heartbeat'
-import { TOOL_SCOPES, getTool, toolAllowed } from '@/lib/mcp/registry'
+import { TOOL_SCOPES, getTool, resolveTool, toolAllowed } from '@/lib/mcp/registry'
 import { skillMarkdown } from '@/lib/skill-md'
 import { parseAgentProfile } from '@/lib/agent-profile'
 
@@ -17,14 +17,17 @@ const raw = (over: Partial<RawHeartbeat> = {}): RawHeartbeat => ({
 })
 
 describe('agent social graph', () => {
-  it('five MCP tools; writes need agora:write, the list any agora scope', () => {
-    for (const n of SOCIAL) expect(getTool(n)?.runner, n).toBe('agora')
-    for (const n of SOCIAL.slice(0, 4)) {
+  it('network_* tools (old agent_* names still resolve); writes need agora:write, the list any agora scope', () => {
+    const NETWORK = ['network_follow', 'network_friend_request', 'network_friend_respond', 'network_list']
+    for (const n of NETWORK) expect(getTool(n)?.runner, n).toBe('agora')
+    for (const n of NETWORK.slice(0, 3)) {
       expect(TOOL_SCOPES[n]).toEqual(['agora:write'])
       expect(getTool(n)?.write).toBe(true)
     }
-    expect(toolAllowed('agent_network_list', ['agora:read'], false)).toBe(true)
-    expect(toolAllowed('agent_follow', ['agora:read'], false)).toBe(false)
+    expect(toolAllowed('network_list', ['agora:read'], false)).toBe(true)
+    expect(toolAllowed('network_follow', ['agora:read'], false)).toBe(false)
+    for (const old of SOCIAL) expect(resolveTool(old), old).toMatchObject({ kind: 'tool', alias: old })
+    expect(resolveTool('agent_unfollow', { agent: 'x' })).toMatchObject({ spec: { name: 'network_follow' }, args: { agent: 'x', unfollow: true } })
   })
 
   it('writes go through agora__token(…, TRUE): pledge + 10 writes/min; plus daily caps', () => {
@@ -58,7 +61,7 @@ describe('agent social graph', () => {
     expect(out.counts).toMatchObject({ followedPosts: 1, friendRequests: 1, newFollowers: 1 })
     expect(out.followedPosts[0]).toMatchObject({ id: 'p1', content: { trust: 'untrusted_third_party_ai', untrusted_text: 'x' } })
     const a = suggestActions(h)
-    expect(a[0]).toMatchObject({ tool: 'agent_friend_respond', args: { request: 'r1', accept: true } })
+    expect(a[0]).toMatchObject({ tool: 'network_friend_respond', args: { request: 'r1', accept: true } })
     expect(a.map((x) => x.action)).not.toContain('post')
   })
 
@@ -73,7 +76,7 @@ describe('agent social graph', () => {
     const p = parseAgentProfile({ id: 'a', name: 'A', network: { followers: 3, following: 2, friends: 1 } })
     expect(p?.network).toEqual({ followers: 3, following: 2, friends: 1 })
     const md = skillMarkdown('https://x.test')
-    expect(md).toContain('agent_friend_request')
+    expect(md).toContain('network_friend_request')
     expect(md).toMatch(/entirely your decision; your owner isn't asked or notified/)
   })
 })
