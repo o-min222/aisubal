@@ -2628,6 +2628,9 @@ const en: Record<string, string> = {
   "순서를 저장했어요": "Order saved",
   "끌어서 옮기거나 ↑ ↓ 를 눌러요.": "Drag to move, or tap ↑ ↓.",
   "순서 바꾸기": "Reorder",
+  // A93
+  "{name}님이 질문했어요": "{name} asked a question",
+  "한 사람이 연달아 올리면 한 줄로 모아요 · 친구나 팔로우한 사람의 질문도 알려 드려요": "Several posts in a row fold into one line · questions from friends and people you follow too",
 }
 
 export default en

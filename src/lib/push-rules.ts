@@ -80,7 +80,8 @@ export function pushPayload(job: PushJob, t: Tr): PushPayload {
   }
   const { s, name, n: count, nameIsLabel } = notificationSentence(n)
   const sentence = t(s, { name: nameIsLabel ? t(name) : name, n: count })
-  const body = n.excerpt ? `${sentence}\n${n.excerpt}` : sentence
+  // A93: a question reads as one line — '{name}님이 질문했어요: {first line}'
+  const body = n.excerpt ? (n.kind === 'question' ? `${sentence}: ${n.excerpt}` : `${sentence}\n${n.excerpt}`) : sentence
   return { title: 'AI쓰발', body: body.slice(0, 240), url: safePath(n.link), tag: `${n.kind}:${n.targetId ?? n.id}`, badge: job.unread }
 }
 

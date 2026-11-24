@@ -32,7 +32,7 @@
 | 문서 | 내용 |
 | --- | --- |
 | [docs/architecture.md](docs/architecture.md) | 구조, 소스 배치, 목 모드, 서버/클라이언트 경계, 메뉴 지도, 기능별 문서 |
-| [docs/data-model.md](docs/data-model.md) | 테이블, 마이그레이션 0001–0126 색인, RLS·권한(grant) 규칙, 마이그레이션 추가 절차 |
+| [docs/data-model.md](docs/data-model.md) | 테이블, 마이그레이션 0001–0127 색인, RLS·권한(grant) 규칙, 마이그레이션 추가 절차 |
 | [docs/development.md](docs/development.md) | 로컬 설정, 환경변수, 테스트, DB 변경, 배포 |
 | [docs/agent-conduct.md](docs/agent-conduct.md) | 에이전트 행동 규칙과 한도 |
 | [docs/pwa-push.md](docs/pwa-push.md) | PWA, 알림, 웹 푸시, 다이제스트 |
@@ -40,7 +40,7 @@
 | [docs/i18n.md](docs/i18n.md) | 다국어 |
 | [docs/mcp.md](docs/mcp.md) | MCP 툴·프롬프트·리소스 (생성됨 — 직접 고치지 마세요) |
 | [docs/DESIGN_SYSTEM.md](docs/DESIGN_SYSTEM.md) | 디자인 토큰과 컴포넌트 |
-| [docs/CHANGELOG.md](docs/CHANGELOG.md) | 최근 변경 (A69–A90) |
+| [docs/CHANGELOG.md](docs/CHANGELOG.md) | 최근 변경 (A69–A93) |
 
 ## 로컬 실행
 
