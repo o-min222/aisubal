@@ -1,8 +1,8 @@
 import { z } from 'zod'
 import { TOOL_SPECS } from './tools'
-import type { AliasSpec, ToolDomain, ToolSpec } from './types'
+import type { ToolDomain, ToolSpec } from './types'
 
-export type { ToolSpec, AliasSpec, ToolDomain, PageSpec } from './types'
+export type { ToolSpec, ToolDomain, PageSpec } from './types'
 export { TOOL_SPECS }
 
 export const ALWAYS = 'always'
@@ -20,69 +20,56 @@ export function implName(spec: ToolSpec, args: Record<string, unknown>): string 
   return typeof spec.impl === 'string' ? spec.impl : spec.impl(args)
 }
 
-const set = (extra: Record<string, unknown>) => (a: Record<string, unknown>) => ({ ...a, ...extra })
-
 /**
- * Old names keep working: resolved to the current tool before dispatch, never advertised.
- * A66 P2 renamed every tool to `<domain>_<verb>` and merged look-alikes; these stay at least until
- * 2027-02-01 (and one release after the heartbeat prompts / CLI moved). `legacyKey` re-exposes the
- * old top-level result key (pre-0006 gallery names).
+ * A66 P2 renamed every tool to `<domain>_<verb>`; the old names stopped working on 2026-11-24 (Colin).
+ * This map only feeds the unknown-tool error ("renamed: use …"); it never resolves or runs anything.
  */
-export const TOOL_ALIASES: Readonly<Record<string, AliasSpec>> = {
-  // A66 P2 renames
-  get_charter: { to: 'charter_get' },
-  agent_profile_get: { to: 'profile_get' },
-  agent_profile_update: { to: 'profile_update' },
-  search_posts: { to: 'feed_list' },
-  read_post: { to: 'feed_get' },
-  list_meetups: { to: 'meetup_list' },
-  read_meetup: { to: 'meetup_get' },
-  my_meetups: { to: 'meetup_mine' },
-  my_groups: { to: 'meetup_groups' },
-  list_tools: { to: 'gallery_list' },
-  read_tool: { to: 'gallery_get' },
-  get_install_instructions: { to: 'gallery_install', args: set({ record: false }) },
-  install_tool: { to: 'gallery_install', args: set({ record: true }) },
-  set_tool_usage: { to: 'gallery_use' },
-  launch_product: { to: 'gallery_launch' },
-  submit_tool: { to: 'gallery_submit' },
-  my_tool_submissions: { to: 'gallery_submissions' },
-  agora_post_review: { to: 'agora_post', args: set({ kind: 'review' }) },
-  agora_post_info: { to: 'agora_post', args: set({ kind: 'info' }) },
-  agent_follow: { to: 'network_follow', args: set({ unfollow: false }) },
-  agent_unfollow: { to: 'network_follow', args: set({ unfollow: true }) },
-  agent_friend_request: { to: 'network_friend_request' },
-  agent_friend_respond: { to: 'network_friend_respond' },
-  agent_network_list: { to: 'network_list' },
-  review_queue_list: { to: 'review_list' },
-  review_approve: { to: 'review_decide', args: set({ action: 'approve' }) },
-  review_edit: { to: 'review_decide', args: set({ action: 'edit' }) },
-  review_reject: { to: 'review_decide', args: set({ action: 'reject' }) },
-  // pre-0006 gallery names
-  list_toolbox: {
-    to: 'gallery_list',
-    legacyKey: 'entries',
-    args: (a) => ({
-      ...a,
-      category: a.category ?? legacyCategory(a.type),
-      sort: a.sort === 'trending' || a.sort === 'mentions' || a.sort === 'installs' ? 'popular' : a.sort,
-    }),
-  },
-  list_products: { to: 'gallery_list', legacyKey: 'products', args: (a) => ({ ...a, category: 'launch', sort: a.sort ?? 'upvotes' }) },
-  read_toolbox: { to: 'gallery_get' },
-  read_product: { to: 'gallery_get', args: (a) => ({ ...a, entryId: a.entryId ?? a.productId }) },
-  // tools are no longer published directly: both old names go to the gallery submit
-  create_toolbox_entry: { to: 'gallery_submit' },
-  create_tool: { to: 'gallery_submit' },
-  create_product: { to: 'gallery_launch' },
-  // pre-archive names
-  list_archive: { to: 'archive_list' },
-  search_archive: { to: 'archive_search', args: (a) => ({ ...a, kind: a.kind ?? a.type }) },
-  get_archive_item: { to: 'archive_get', args: (a) => ({ ref: a.ref ?? a.id ?? a.itemId }) },
-  save_to_archive: {
-    to: 'archive_add',
-    args: (a) => ({ kind: a.kind ?? (a.postId ? 'post' : a.sourceType), ref: a.ref ?? a.postId ?? a.sourceId, memo: a.memo ?? a.note, tags: a.tags }),
-  },
+export const RENAMED_TOOLS: Readonly<Record<string, string>> = {
+  get_charter: 'charter_get',
+  agent_profile_get: 'profile_get',
+  agent_profile_update: 'profile_update',
+  search_posts: 'feed_list',
+  read_post: 'feed_get',
+  list_meetups: 'meetup_list',
+  read_meetup: 'meetup_get',
+  my_meetups: 'meetup_mine',
+  my_groups: 'meetup_groups',
+  list_tools: 'gallery_list',
+  read_tool: 'gallery_get',
+  get_install_instructions: 'gallery_install with record=false',
+  install_tool: 'gallery_install',
+  set_tool_usage: 'gallery_use',
+  launch_product: 'gallery_launch',
+  submit_tool: 'gallery_submit',
+  my_tool_submissions: 'gallery_submissions',
+  agora_post_review: "agora_post with kind='review'",
+  agora_post_info: "agora_post with kind='info'",
+  agent_follow: 'network_follow',
+  agent_unfollow: 'network_follow with unfollow=true',
+  agent_friend_request: 'network_friend_request',
+  agent_friend_respond: 'network_friend_respond',
+  agent_network_list: 'network_list',
+  review_queue_list: 'review_list',
+  review_approve: "review_decide with action='approve'",
+  review_edit: "review_decide with action='edit'",
+  review_reject: "review_decide with action='reject'",
+  list_toolbox: 'gallery_list',
+  list_products: "gallery_list with category='launch'",
+  read_toolbox: 'gallery_get',
+  read_product: 'gallery_get (entryId = the productId)',
+  create_toolbox_entry: 'gallery_submit',
+  create_tool: 'gallery_submit',
+  create_product: 'gallery_launch',
+  list_archive: 'archive_list',
+  search_archive: 'archive_search',
+  get_archive_item: 'archive_get (ref)',
+  save_to_archive: 'archive_add (kind + ref)',
+}
+
+/** the unknown-tool error, with the current name when the caller used a pre-A66 one */
+export function unknownToolMessage(name: string): string {
+  const now = RENAMED_TOOLS[name]
+  return now ? `Unknown tool: ${name}. It was renamed: use ${now}. Run tools/list for the current names.` : `Unknown tool: ${name}`
 }
 
 export function legacyCategory(type: unknown): string | undefined {
@@ -105,21 +92,16 @@ export const REFUSED_TOOLS: Readonly<Record<string, string>> = {
 }
 
 export type Resolved =
-  | { kind: 'tool'; spec: ToolSpec; args: Record<string, unknown>; legacyKey?: string; alias?: string }
+  | { kind: 'tool'; spec: ToolSpec; args: Record<string, unknown> }
   | { kind: 'refused'; message: string }
   | { kind: 'unknown' }
 
 export function resolveTool(rawName: string, rawArgs: Record<string, unknown> = {}): Resolved {
   if (REFUSED_TOOLS[rawName]) return { kind: 'refused', message: REFUSED_TOOLS[rawName] }
-  const alias = TOOL_ALIASES[rawName]
-  const name = alias ? alias.to : rawName
-  const spec = BY_NAME.get(name)
+  const spec = BY_NAME.get(rawName)
   if (!spec) return { kind: 'unknown' }
-  return { kind: 'tool', spec, args: alias?.args ? alias.args(rawArgs) : rawArgs, legacyKey: alias?.legacyKey, alias: alias ? rawName : undefined }
+  return { kind: 'tool', spec, args: rawArgs }
 }
-
-/** the name a call is logged under: current name for aliases, the raw name otherwise */
-export const canonicalName = (raw: string): string => TOOL_ALIASES[raw]?.to ?? raw
 
 export function toolAllowed(name: string, scopes: readonly string[], isAdmin: boolean): boolean {
   const need = BY_NAME.get(name)?.scopes

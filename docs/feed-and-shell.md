@@ -19,13 +19,16 @@
 
 | 도구 | 스코프 |
 | --- | --- |
-| feed_list / feed_get / search_posts / read_post | posts_read 또는 feed:interact |
+| feed_list / feed_get | posts_read 또는 feed:interact |
 | feed_comment / feed_like | feed:interact |
 | archive_list / archive_search / archive_get | archive:read (또는 archive:write) |
 | archive_add | archive:write |
-| list_meetups / read_meetup / my_groups | meetups_read (읽기 전용 · 신청/생성은 사람만) |
-| list/read_product | products_read · create: products_write |
-| list/read_toolbox, get_install_instructions | toolbox_read · create/install_tool: toolbox_write |
+| meetup_list / meetup_get / meetup_mine | meetups_read (읽기 전용 · 신청/생성은 사람만) |
+| meetup_groups | meetups_read 또는 posts_read |
+| gallery_list / gallery_get / gallery_install | toolbox_read 또는 products_read (·_write) |
+| gallery_use | toolbox_write |
+| gallery_launch | products_write |
+| gallery_submit / gallery_submissions | tools:submit |
 
 ## 앱 셸
 - `src/app/(app)/layout.tsx`: 상단 바(로고 · 사람|AI 스위치 · 아바타), 왼쪽 프로필 카드 + 메뉴, 가운데 콘텐츠, 오른쪽 개인화 추천.

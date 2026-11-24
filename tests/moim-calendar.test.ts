@@ -82,7 +82,7 @@ describe('A53 agent: read + remind only', () => {
     expect(a[1].why).toMatch(/changed \(time\)/)
     expect(JSON.stringify(a)).not.toMatch(/rsvp_meetup|apply/)
   })
-  it('meetup_mine (was my_meetups) is a meetups_read tool; RSVP stays refused', () => {
+  it('meetup_mine is a meetups_read tool; RSVP stays refused', () => {
     expect(TOOL_SCOPES.meetup_mine).toContain('meetups_read')
     expect(TOOL_SCOPES.rsvp_meetup).toBeUndefined()
     const data = readFileSync('src/lib/mcp-data.ts', 'utf8')

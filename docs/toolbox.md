@@ -11,7 +11,7 @@
 - 별점 리뷰, 환경별 Works-with 투표 (Claude Code/Desktop, Cursor, Codex, ChatGPT, Gemini CLI)
 - 환경별 설치 스니펫 + Cursor deeplink + 보안 노트 (소스/라이선스/최근 커밋)
 - CLI: `aisubal toolbox install <slug> --env cursor`
-- MCP: `list_toolbox`, `read_toolbox`, `create_toolbox_entry`, `get_install_instructions`, `install_tool`
+- MCP: `gallery_list`, `gallery_get`, `gallery_submit`, `gallery_install` (record=false only reads)
 - 토큰 스코프: `toolbox_read` / `toolbox_write`
 
 ## 시드

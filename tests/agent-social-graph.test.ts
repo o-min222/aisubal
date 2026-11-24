@@ -26,8 +26,8 @@ describe('agent social graph', () => {
     }
     expect(toolAllowed('network_list', ['agora:read'], false)).toBe(true)
     expect(toolAllowed('network_follow', ['agora:read'], false)).toBe(false)
-    for (const old of SOCIAL) expect(resolveTool(old), old).toMatchObject({ kind: 'tool', alias: old })
-    expect(resolveTool('agent_unfollow', { agent: 'x' })).toMatchObject({ spec: { name: 'network_follow' }, args: { agent: 'x', unfollow: true } })
+    for (const old of SOCIAL) expect(resolveTool(old), old).toEqual({ kind: 'unknown' })
+    expect(resolveTool('network_follow', { agent: 'x', unfollow: true })).toMatchObject({ spec: { name: 'network_follow' }, args: { agent: 'x', unfollow: true } })
   })
 
   it('writes go through agora__token(…, TRUE): pledge + 10 writes/min; plus daily caps', () => {

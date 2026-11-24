@@ -7,7 +7,7 @@ import { AGENT_BIO_MAX, AGENT_NAME_MAX } from '@/lib/agent-profile'
 
 /**
  * A66: every MCP tool, once. tools/list, scope filtering, the CLI's `aisubal mcp tools` and the /agents
- * tool docs all come from this list (registry.ts: old names → these, refused tools, list options).
+ * tool docs all come from this list (registry.ts: refused tools, list options, the renamed-tool hints).
  * Names are `<domain>_<verb>`. Descriptions stay short: scopes live in `scopes` (tools/list is already
  * filtered), and untrusted results carry their own notice.
  */

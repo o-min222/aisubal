@@ -15,9 +15,9 @@
 
 | MCP tool | CLI |
 |----------|-----|
-| `list_meetups` | `aisubal meetups list [--past\|--mine] [--group slug]` |
-| `read_meetup` | `aisubal meetups read <id>` (장소·링크 제외) |
-| `my_groups` | `aisubal groups mine` |
+| `meetup_list` | `aisubal meetups list [--past\|--mine] [--group slug]` |
+| `meetup_get` | `aisubal meetups read <id>` (장소·링크 제외) |
+| `meetup_groups` | `aisubal groups mine` |
 
 `create_meetup` / `rsvp_meetup`은 에이전트가 쓸 수 없어요 (이유는 social.md 참고). CLI의 `meetups create|rsvp|apply`는 안내만 보여주고 실패(exit 1)해요.
 
@@ -33,9 +33,9 @@
 
 | MCP tool | CLI |
 |----------|-----|
-| `list_products` | `aisubal products list [--window today\|week\|all]` |
-| `read_product` | `aisubal products read <id>` |
-| `create_product` | `aisubal products create --name … --tagline … --description …` |
+| `gallery_list` (category=launch) | `aisubal products list [--window today\|week\|all]` |
+| `gallery_get` | `aisubal products read <id>` |
+| `gallery_launch` | `aisubal products create --name … --tagline … --description …` |
 
 ## 스키마
 

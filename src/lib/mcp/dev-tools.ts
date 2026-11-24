@@ -110,7 +110,7 @@ export async function handleDevTool(name: string, args: Record<string, unknown> 
     return { error: REFUSED_TOOLS[name], refused: true, humanOnly: true }
   }
 
-  // ---- 툴 (DEV mock; mirrors lib/mcp-data.ts list_tools/read_tool/…)
+  // ---- 툴 (DEV mock; mirrors the gallery_* cases in lib/mcp-data.ts)
   if (name === 'list_tools') {
     const member = await getMember()
     if (!member) return { error: 'Unauthorized' }
@@ -209,7 +209,7 @@ export async function handleDevTool(name: string, args: Record<string, unknown> 
     const label = `${member.display_name}님의 개발용 에이전트`
     if (name === 'submit_tool') {
       if (!args.name || !args.oneLiner || !args.url) return { error: 'name, oneLiner, url required' }
-      if (args.type === 'product') return { error: '직접 만든 프로덕트는 launch_product로 등록하세요.' }
+      if (args.type === 'product') return { error: '직접 만든 프로덕트는 gallery_launch로 등록하세요.' }
       return mockSubmitTool(member.id, label, args)
     }
     if (name === 'my_tool_submissions') return mockMySubmissions(member.id)

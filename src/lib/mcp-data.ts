@@ -230,12 +230,6 @@ export function groupForAgent(gr: { slug: string; name: string; description: str
 /** Sorts accepted by mcp_tools_list. */
 export const MCP_TOOL_SORTS = ['popular', 'newest', 'ai', 'rated', 'users', 'upvotes']
 
-/** Copies the unified list under the legacy key (entries / products) for alias callers. */
-export function withLegacyKey(result: Record<string, unknown>, legacyKey: string | undefined) {
-  if (!legacyKey || !Array.isArray(result.tools)) return result
-  return { ...result, [legacyKey]: result.tools }
-}
-
 function toolSummary(e: Record<string, unknown>) {
   return {
     id: e.id,
@@ -448,7 +442,7 @@ export async function handleDataTool(
           return { error: 'url이 올바르지 않습니다.' }
         }
         const requested = str(args.type) as ToolboxType | null
-        if (requested === 'product') return { error: '직접 만든 프로덕트는 launch_product로 등록하세요.' }
+        if (requested === 'product') return { error: '직접 만든 프로덕트는 gallery_launch로 등록하세요.' }
         const type = requested || inferToolboxType(url, nm)
         const res = (await call('mcp_tool_submit', {
           p_payload: {

@@ -15,8 +15,8 @@ import {
   typesForCategory,
 } from '@/lib/tool-rules'
 import { rankToolsForMember, toolReason } from '@/lib/recommend-rules'
-import { handleDataTool, withLegacyKey, type DataRpc } from '@/lib/mcp-data'
-import { TOOL_ALIASES, resolveTool } from '@/lib/mcp/registry'
+import { handleDataTool, type DataRpc } from '@/lib/mcp-data'
+import { RENAMED_TOOLS, resolveTool, unknownToolMessage } from '@/lib/mcp/registry'
 import { SIDE_NAV } from '@/components/shell/nav-items'
 import { ADMIN_SECTIONS, SETTINGS_SECTIONS, subNavActive } from '@/components/shell/account-nav'
 
@@ -161,22 +161,18 @@ describe('사용 중 (mock store)', () => {
   })
 })
 
-describe('MCP: unified tool names + legacy aliases', () => {
+describe('MCP: unified tool names (old names removed 2026-11-24)', () => {
   const rpc = (data: unknown) => vi.fn(async () => ({ data, error: null })) as unknown as DataRpc & ReturnType<typeof vi.fn>
 
-  it('resolves every old tool name to a new one', () => {
-    // pre-0006 gallery names, pre-archive names and every A66 P2 rename stay callable
-    expect(Object.keys(TOOL_ALIASES)).toEqual(
+  it('old tool names are unknown; the error names the current tool', () => {
+    // pre-0006 gallery names, pre-archive names and every A66 P2 rename: hint only, never resolved
+    expect(Object.keys(RENAMED_TOOLS)).toEqual(
       expect.arrayContaining(['create_product', 'create_tool', 'create_toolbox_entry', 'list_products', 'list_toolbox', 'read_product', 'read_toolbox', 'list_archive', 'search_archive', 'get_archive_item', 'save_to_archive', 'get_charter', 'search_posts', 'list_tools', 'install_tool', 'submit_tool', 'agora_post_review', 'review_approve'])
     )
-    expect(resolveTool('get_install_instructions', { entryId: 'x' })).toMatchObject({ spec: { name: 'gallery_install' }, args: { record: false } })
-    expect(resolveTool('review_reject', { submissionId: 's' })).toMatchObject({ spec: { name: 'review_decide' }, args: { action: 'reject' } })
-    expect(resolveTool('list_products', {})).toMatchObject({ legacyKey: 'products' })
-    expect((resolveTool('list_products', {}) as { args: object }).args).toMatchObject({ category: 'launch', sort: 'upvotes' })
-    expect((resolveTool('list_toolbox', { type: 'mcp_server', sort: 'trending' }) as { args: object }).args).toMatchObject({ category: 'mcp', sort: 'popular' })
-    expect(resolveTool('read_product', { productId: 'p1' })).toMatchObject({ args: { entryId: 'p1' } })
-    expect(resolveTool('feed_list', { q: 1 })).toMatchObject({ kind: 'tool', spec: { name: 'feed_list' }, legacyKey: undefined })
-    expect(withLegacyKey({ tools: [1] }, 'entries')).toEqual({ tools: [1], entries: [1] })
+    for (const old of ['get_install_instructions', 'review_reject', 'list_products', 'list_toolbox', 'read_product']) expect(resolveTool(old, {})).toEqual({ kind: 'unknown' })
+    expect(unknownToolMessage('review_reject')).toBe("Unknown tool: review_reject. It was renamed: use review_decide with action='reject'. Run tools/list for the current names.")
+    expect(unknownToolMessage('nope')).toBe('Unknown tool: nope')
+    expect(resolveTool('feed_list', { q: 1 })).toEqual({ kind: 'tool', spec: expect.objectContaining({ name: 'feed_list' }), args: { q: 1 } })
   })
 
   it('list_tools calls mcp_tools_list with category / sort / mine', async () => {
@@ -193,10 +189,15 @@ describe('MCP: unified tool names + legacy aliases', () => {
     expect(r).toHaveBeenCalledWith('mcp_tool_usage', expect.objectContaining({ p_entry: 'claude-code', p_using: false }))
   })
 
-  it('submit_tool refuses product type (launches use launch_product)', async () => {
+  it('0117: the duplicate-submit hint names gallery_use, not the removed set_tool_usage', () => {
+    const sql = readFileSync('supabase/migrations/0117_tool_submit_hint.sql', 'utf8')
+    expect(sql).toMatch(/replace\(d, 'set_tool_usage로', 'gallery_use로'\)/)
+  })
+
+  it('gallery_submit refuses product type (launches use gallery_launch)', async () => {
     const r = rpc(null)
     const out = await handleDataTool('submit_tool', { name: 'x', oneLiner: 'y', url: 'https://x.dev', type: 'product' }, 'tok_1234567890abcdef', r)
-    expect(String(out.error)).toMatch(/launch_product/)
+    expect(String(out.error)).toMatch(/gallery_launch/)
     expect(r).not.toHaveBeenCalled()
   })
 

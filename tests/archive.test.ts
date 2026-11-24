@@ -96,8 +96,8 @@ describe('archive MCP tools', () => {
     expect(await handleArchiveTool('archive_add', { kind: 'nope', ref: 'x' }, backend, 'https://o')).toHaveProperty('error')
     expect(await handleArchiveTool('archive_add', { kind: 'link', ref: 'https://e.com' }, backend, 'https://o')).toMatchObject({ ok: true, id: 'new' })
   })
-  it('legacy names map to new tools', () => {
-    expect(resolveTool('save_to_archive', { postId: 'p9', tags: ['a'] })).toMatchObject({ kind: 'tool', spec: { name: 'archive_add' }, args: { kind: 'post', ref: 'p9', memo: undefined, tags: ['a'] } })
-    expect(resolveTool('get_archive_item', { itemId: 'z' })).toMatchObject({ args: { ref: 'z' } })
+  it('pre-archive names are gone', () => {
+    expect(resolveTool('save_to_archive', { postId: 'p9' })).toEqual({ kind: 'unknown' })
+    expect(resolveTool('get_archive_item', { itemId: 'z' })).toEqual({ kind: 'unknown' })
   })
 })

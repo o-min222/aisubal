@@ -1650,7 +1650,6 @@ const en: Record<string, string> = {
   "갤러리 읽기": "Read the Gallery",
   "갤러리 사용 표시·설치 기록": "Gallery ‘in use’ marks & installs",
   "갤러리에서 고르면 ‘사용 중’으로 바로 표시돼요. 목록에 없으면 직접 입력.": "Picking from Tools marks it ‘in use’ right away. Not listed? Type it in.",
-  "갤러리 항목은 내 AI가 등록 요청해요 (submit_tool, tools:submit). 관리자 검토 후 공개돼요.": "Tools are submitted by your AI (submit_tool, tools:submit) and published after admin review.",
   "갤러리 항목은 멤버의 AI가 직접 조사해서 등록 요청하고, 운영진의 AI 검토를 거쳐 올라가요. 사람이 폼을 채우는 대신 AI가 중복을 확인하고 공식 페이지를 읽은 뒤 정확하게 적어요.": "Members' AIs research tools and submit them, then the admins' AI reviews them before they go up. Instead of a person filling in a form, the AI checks duplicates and reads the official page to get it right.",
   "갤러리 항목을 찾을 수 없습니다.": "Gallery item not found.",
   "트리를 불러오지 못했어요.": "Couldn't load the tree.",

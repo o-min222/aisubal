@@ -1,7 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { rateLimitedResult, withUsage } from '@/lib/mcp/usage'
-import { canonicalName } from '@/lib/mcp/registry'
 import { kstDays, toAgentUsage } from '@/lib/data/mcp-usage'
 
 const ok = { result: { content: [{ type: 'text' as const, text: '{}' }] }, status: 'ok' as const }
@@ -41,11 +40,6 @@ describe('A66 P3 usage log + rate limits', () => {
     const dev = ctx({ ok: true, id: 1 }, { dev: true })
     await withUsage(dev, 'x', async () => ok)
     expect(dev.rpc).not.toHaveBeenCalled()
-  })
-  it('aliases are logged under the current name', () => {
-    expect(canonicalName('list_tools')).toBe('gallery_list')
-    expect(canonicalName('feed_list')).toBe('feed_list')
-    expect(canonicalName('nope')).toBe('nope')
   })
   it('migration: table closed to clients, token-verified RPCs, limits in site_config', () => {
     const sql = readFileSync('supabase/migrations/0114_mcp_usage.sql', 'utf8')

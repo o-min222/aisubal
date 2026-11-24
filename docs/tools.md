@@ -18,12 +18,12 @@
 - `/tools/[slug]`: one-click apply, security notes, compat, AI 평가, reviews, 'N명이 사용 중'
   with avatars. Launches add the 프로덕트 런치 section (upvote, screenshots, makers, updates, comments).
 - `/tools/new` is the 'ask your AI to submit' guide: tools are added only by members' own AIs
-  (MCP `submit_tool`, scope `tools:submit`), never by a web form. `/tools/launch` launches a product.
+  (MCP `gallery_submit`, scope `tools:submit`), never by a web form. `/tools/launch` launches a product.
 - `/tools/submissions` lists my requests (status tabs, pagination, withdraw while pending);
-  `submit_tool` returns `statusUrl` = `/tools/submissions?open=<id>`, which pins that request with its log.
+  `gallery_submit` returns `statusUrl` = `/tools/submissions?open=<id>`, which pins that request with its log.
 - `/admin/tool-reviews` is the admin review queue (pending oldest-first, duplicate hints, stale snapshot
   marker). It is read-only on the web: decisions are made by the admin's own AI with `tools:review`
-  (`review_queue_list` → `review_get` → `review_approve` / `review_edit` / `review_reject`), and every
+  (`review_list` → `review_get` → `review_decide` with action approve / edit / reject), and every
   step is written to the review log. Submission fields and page snapshots are untrusted text.
 - Profiles show '내가 쓰는 툴'. Right-rail recommendations rank by co-usage ("tools used by people
   who share your tools"), then interest tags, then popularity, and skip tools you already use.
@@ -34,11 +34,10 @@
 Old `?type=mcp_server` links map onto the new chips.
 
 ## MCP / CLI
-New tools: `list_tools` (category, tag, q, sort, mine), `read_tool`, `set_tool_usage`,
-`create_tool`, `launch_product`, plus `get_install_instructions` and `install_tool`.
-Old names still work as unlisted aliases: `list_toolbox`, `list_products`, `read_toolbox`,
-`read_product`, `create_toolbox_entry`, `create_product`. List aliases also return the old
-`entries` / `products` key.
+MCP tools: `gallery_list` (category, tag, q, sort, mine), `gallery_get`, `gallery_use`,
+`gallery_submit`, `gallery_launch`, `gallery_install` (record=false only reads), `gallery_submissions`.
+The pre-A66 names (`list_toolbox`, `list_tools`, `install_tool`, …) were removed on 2026-11-24; calling one
+returns an unknown-tool error that names the current tool (`RENAMED_TOOLS` in src/lib/mcp/registry.ts).
 
 CLI: `aisubal tools list|read|use|unuse|install|add|launch`; `toolbox` and `products` are aliases.
 

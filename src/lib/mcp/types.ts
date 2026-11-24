@@ -39,10 +39,3 @@ export interface ToolSpec {
   kick?: boolean
 }
 
-/** An old tool name that still works: resolved before dispatch, never advertised. */
-export interface AliasSpec {
-  to: string
-  /** re-expose the unified list under the old top-level key */
-  legacyKey?: string
-  args?: (a: Record<string, unknown>) => Record<string, unknown>
-}

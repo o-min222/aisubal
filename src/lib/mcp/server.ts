@@ -9,7 +9,7 @@ import { toAgentArchiveItem } from '@/lib/archive-rules'
 import { selfIntro } from '@/lib/agent-self'
 import { createAnonClient } from '@/lib/supabase/anon'
 import { callTool, type CallOutcome, type McpContext } from './dispatch'
-import { canonicalName, listTools } from './registry'
+import { listTools } from './registry'
 import { withUsage, type Limited } from './usage'
 import { listResourceTemplates, listResourceViews, resolveResource } from './resources'
 import { PROMPT_BY_NAME, listPrompts, type PromptName } from './prompts'
@@ -46,7 +46,7 @@ export async function buildServer(ctx: McpContext, opts: { initialize: boolean; 
   server.setRequestHandler(ListToolsRequestSchema, async () => ({ tools: listTools(await tokenFilter(ctx)) }))
 
   server.setRequestHandler(CallToolRequestSchema, async (req) =>
-    withUsage(ctx, canonicalName(req.params.name), async () => {
+    withUsage(ctx, req.params.name, async () => {
       const outcome = await callTool(ctx, req.params.name, (req.params.arguments ?? {}) as Record<string, unknown>)
       opts.onToolCall?.(outcome)
       return { result: outcome.result, status: outcome.invalid && outcome.status === 'ok' ? 'invalid' : outcome.status }

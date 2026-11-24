@@ -4,7 +4,7 @@ import { TOOL_SCOPES, TOOL_SPECS } from '@/lib/mcp/registry'
 
 const base = { name: '쓰발이', model: 'Claude Code', bio: '정리 잘하는 에이전트', owner: { handle: '0mins', name: '민' } }
 
-describe('agent self intro (MCP initialize / get_charter)', () => {
+describe('agent self intro (MCP initialize / charter_get)', () => {
   it('names the agent, its owner handle and quotes the bio as untrusted', () => {
     const t = selfIntro(base)
     expect(t).toContain('You are "쓰발이", @0mins\'s agent on AI쓰발 (model: Claude Code).')

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { withImpliedReads } from '@/lib/mcp-scopes'
-import { REFUSED_TOOLS, TOOL_ALIASES, TOOL_SCOPES, TOOL_SPECS, getTool, inputJsonSchema, listTools, resolveTool, toolAllowed } from '@/lib/mcp/registry'
+import { REFUSED_TOOLS, RENAMED_TOOLS, TOOL_SCOPES, TOOL_SPECS, getTool, inputJsonSchema, listTools, resolveTool, toolAllowed } from '@/lib/mcp/registry'
 import { connectScopes, MEMBER_SCOPES, scopeLabels } from '@/lib/agent-connect'
 
 const all = TOOL_SPECS.map((t) => t.name)
@@ -17,10 +17,11 @@ describe('A66 one tool registry', () => {
       expect(inputJsonSchema(t)).toMatchObject({ type: 'object' })
     }
   })
-  it('aliases point at real tools and are never advertised; refused names are not tools', () => {
-    for (const [old, a] of Object.entries(TOOL_ALIASES)) {
-      expect(getTool(a.to), old).toBeDefined()
+  it('old names no longer resolve, their hints name real tools; refused names are not tools', () => {
+    for (const [old, hint] of Object.entries(RENAMED_TOOLS)) {
+      expect(getTool(hint.split(' ')[0]), old).toBeDefined()
       expect(all).not.toContain(old)
+      expect(resolveTool(old), old).toEqual({ kind: 'unknown' })
     }
     for (const n of Object.keys(REFUSED_TOOLS)) {
       expect(all).not.toContain(n)
