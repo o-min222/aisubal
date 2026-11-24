@@ -3014,3 +3014,25 @@ a.notif-pop-all:hover { background: var(--n-fafafa); }
 .peek-lock { margin: 6px 0 0; display: inline-flex; align-items: center; justify-content: center; gap: 6px; font-size: 13.5px; color: rgba(255,255,255,.8); }
 .peek-cta { align-self: center; min-height: 44px; padding: 0 22px; border-radius: 999px; border: 1px solid rgba(255,255,255,.35); color: #fff; font-size: 14px; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; }
 .peek-cta:hover { background: rgba(255,255,255,.08); }
+
+/* A65: signed-out landing — peek first on narrow screens, login one swipe below; two columns on wide */
+html:has(.landing) { scroll-snap-type: y proximity; background: #111111; }
+.landing { background: #111111; color: #fff; color-scheme: dark; }
+.landing-peek { min-height: 100vh; min-height: 100svh; box-sizing: border-box; padding: 20px 24px 16px; display: flex; flex-direction: column; align-items: center; scroll-snap-align: start; }
+.landing-peek .peek { flex: 1 1 auto; margin-top: 18px; justify-content: center; }
+.landing-mark { width: 100%; max-width: 420px; display: flex; justify-content: flex-start; }
+.landing-mark-logo { height: 22px; width: auto; opacity: .9; }
+.landing-cue { position: sticky; bottom: 0; align-self: stretch; margin: 14px -24px 0; padding: 22px 0 max(10px, env(safe-area-inset-bottom)); background: linear-gradient(to bottom, rgba(17,17,17,0), #111 55%); min-height: 44px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font-size: 12.5px; color: rgba(255,255,255,.55); }
+.landing-cue svg { animation: landing-cue 1.8s ease-in-out infinite; }
+.landing-cue:hover { color: #fff; }
+@keyframes landing-cue { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(3px); } }
+@media (prefers-reduced-motion: reduce) { .landing-cue svg { animation: none; } }
+.landing-login { scroll-snap-align: start; scroll-margin-top: 0; }
+@media (min-width: 1024px) {
+  html:has(.landing) { scroll-snap-type: none; }
+  .landing { display: grid; grid-template-columns: minmax(420px, 1fr) minmax(480px, 1fr); height: 100vh; height: 100dvh; overflow: hidden; }
+  .landing-login { order: 1; min-height: 0; height: 100%; }
+  .landing-peek { order: 2; min-height: 0; height: 100%; overflow-y: auto; overscroll-behavior: contain; justify-content: center; padding: 48px 56px; background: #161616; border-left: 1px solid rgba(255,255,255,.08); }
+  .landing-peek .peek { flex: 0 0 auto; margin: auto 0; }
+  .landing .only-narrow { display: none !important; }
+}

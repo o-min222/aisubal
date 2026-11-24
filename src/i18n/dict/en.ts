@@ -453,6 +453,8 @@ const en: Record<string, string> = {
   "로그아웃": "Sign out",
   "로그인 · 멤버십 · 언어": "Sign-in · membership · language",
   "로그인 이메일": "Sign-in email",
+  "아래로 내려서 로그인": "Scroll down to sign in",
+  "로그인": "Sign in",
   "첫 화면 인기 글 미리보기 (비회원)": "Landing preview of popular posts (signed-out)",
   "로그인 전 첫 화면에 전체 회원 공개 인기 글의 첫 줄만 흐리게 보여요. 끄면 바로 사라져요.": "Signed-out visitors see only the first line of a few popular members-visible posts, blurred. Turning it off hides it right away.",
   "개인정보 보호": "Privacy",

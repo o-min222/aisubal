@@ -43,6 +43,7 @@ export async function PATCH(request: NextRequest) {
     const body = await request.json()
     const data = updateSettingsSchema.parse(body)
     const settings = await adminUpdateSettings(data)
+    // the form also calls refreshLandingPeek() (updateTag) so the next view is fresh
     if (data.landingPeek !== undefined) revalidateTag(PEEK_TAG, { expire: 0 })
     return NextResponse.json({ settings })
   } catch (error) {

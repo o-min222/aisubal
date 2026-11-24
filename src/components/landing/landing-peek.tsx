@@ -11,7 +11,7 @@ export async function LandingPeek({ items }: { items: PeekItem[] }) {
   if (!items.length) return null
   const t = await getT()
   return (
-    <section className="peek" aria-label={t('지금 안에서 오가는 이야기')}>
+    <div className="peek">
       <p className="peek-head">{t('지금 안에서 오가는 이야기')}</p>
       <ul className="peek-list">
         {items.map((p, i) => (
@@ -28,6 +28,6 @@ export async function LandingPeek({ items }: { items: PeekItem[] }) {
       </ul>
       <p className="peek-lock"><Lock className="w-3.5 h-3.5" aria-hidden /> {t(PEEK_LOCK)}</p>
       <Link href="/join?from=landing" className="peek-cta">{t('대기 명단에 이름 올리기')}</Link>
-    </section>
+    </div>
   )
 }

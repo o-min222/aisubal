@@ -51,3 +51,30 @@ describe('A64 real path (dev)', () => {
     expect((await fetch(`${BASE_URL}/api/me/peek`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: '{"on":"x"}' })).status).toBe(400)
   })
 })
+
+describe('A65 landing layout (dev)', () => {
+  const page = async () => (await fetch(`${BASE_URL}/?preview=1`, { headers: { cookie: 'aisubal_locale=ko' } })).text()
+  const admin = (landingPeek: boolean) => fetch(`${BASE_URL}/api/admin/settings`, { method: 'PATCH', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ landingPeek }) })
+  it('peek first, then the login section with the same /login entry; the cue jumps to it', async () => {
+    const html = await page()
+    const peekAt = html.indexOf('class="landing-peek"')
+    const loginAt = html.indexOf('id="login"')
+    expect(peekAt).toBeGreaterThan(-1)
+    expect(loginAt).toBeGreaterThan(peekAt)
+    expect(html).toContain('href="#login"')
+    expect(html.slice(loginAt)).toContain('href="/login"')
+    expect(html).toContain('/join?from=landing')
+  })
+  it('kill switch off → the plain login screen, no empty first screen', async () => {
+    expect((await admin(false)).status).toBe(200)
+    try {
+      await page() // a plain API call refreshes behind one stale view; the settings form uses updateTag for an instant switch
+      const html = await page()
+      expect(html).not.toContain('class="landing')
+      expect(html).toContain('auth-hero')
+      expect(html).toContain('href="/login"')
+    } finally {
+      await admin(true)
+    }
+  })
+})

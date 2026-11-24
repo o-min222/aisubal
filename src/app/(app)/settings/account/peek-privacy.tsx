@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { toast } from 'sonner'
 import { EyeOff } from 'lucide-react'
 import { ToggleSwitch } from '@/components/ui/toggle-switch'
+import { refreshLandingPeek } from '@/app/actions/landing-peek'
 import { tn, useT } from '@/i18n/client'
 
 /** A64: whether my 전체 회원 posts may appear (blurred, without my name) in the signed-out landing preview. */
@@ -17,6 +18,7 @@ export function PeekPrivacy({ initial }: { initial: boolean }) {
     try {
       const res = await fetch('/api/me/peek', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ on: v }) })
       if (!res.ok) throw new Error()
+      await refreshLandingPeek().catch(() => {})
     } catch {
       setOn(!v)
       toast.error(tn('저장하지 못했어요.'))

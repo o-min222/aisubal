@@ -3,6 +3,7 @@ import { getUserState } from '@/lib/auth'
 import Image from 'next/image'
 import { Slogan } from '@/components/slogan'
 import Link from 'next/link'
+import { ChevronDown } from 'lucide-react'
 import { getT } from '@/i18n/server'
 import { LocaleSwitch } from '@/components/i18n/locale-switch'
 import { LandingPeek } from '@/components/landing/landing-peek'
@@ -24,10 +25,9 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
 
   const t = await getT()
   const peek = await getLandingPeek().catch(() => [])
-  // Landing page for unauthenticated users
-  return (
-    <div className="auth-hero">
-      {/* Logo */}
+
+  const login = (
+    <>
       <div className="auth-hero-brand">
         <Image
           src="/images/logo-white.png"
@@ -39,20 +39,36 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
         />
         <Slogan />
       </div>
-
-      {/* CTA */}
-      <Link
-        href="/login"
-        className="auth-hero-btn auth-hero-btn-inline"
-      >
+      <Link href="/login" className="auth-hero-btn auth-hero-btn-inline">
         <GoogleIcon />
         {t('Google로 시작하기')}
       </Link>
-      {/* A64: a blurred peek of what's inside */}
-      <LandingPeek items={peek} />
       <div className="auth-hero-locale locale-on-dark">
         <LocaleSwitch />
       </div>
+    </>
+  )
+
+  // nothing to peek at (or the admin switch is off): the plain login screen, as before
+  if (!peek.length) return <div className="auth-hero">{login}</div>
+
+  // A65: mobile — the peek fills the first screen, the login is one swipe below (gentle snap, no scroll-jacking);
+  // wide — login on the left (stays put), the peek on the right (scrolls on its own)
+  return (
+    <div className="landing">
+      <section className="landing-peek" aria-label={st('지금 안에서 오가는 이야기')}>
+        <div className="landing-mark only-narrow">
+          <Image src="/images/logo-white.png" alt={st('AI쓰발')} width={80} height={24} priority className="landing-mark-logo" />
+        </div>
+        <LandingPeek items={peek} />
+        <a href="#login" className="landing-cue only-narrow">
+          {t('아래로 내려서 로그인')}
+          <ChevronDown className="w-4 h-4" aria-hidden />
+        </a>
+      </section>
+      <section id="login" className="landing-login auth-hero" aria-label={st('로그인')}>
+        {login}
+      </section>
     </div>
   )
 }

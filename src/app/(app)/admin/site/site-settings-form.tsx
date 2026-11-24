@@ -5,6 +5,7 @@ import { toast } from 'sonner'
 import { T } from '@/i18n/t'
 import { tn, tx } from '@/i18n/client'
 import { ToggleSwitch } from '@/components/ui/toggle-switch'
+import { refreshLandingPeek } from '@/app/actions/landing-peek'
 
 type S = {
   siteName: string
@@ -31,6 +32,7 @@ export function SiteSettingsForm({ initial }: { initial: S }) {
       const data = await res.json().catch(() => ({}))
       if (!res.ok) throw new Error(data.error || '저장하지 못했어요.')
       setS(data.settings)
+      if (data.settings?.landingPeek !== initial.landingPeek) await refreshLandingPeek().catch(() => {})
       toast.success(tn('저장했어요.'))
     } catch (err) {
       toast.error(err instanceof Error ? err.message : tn('저장하지 못했어요.'))
