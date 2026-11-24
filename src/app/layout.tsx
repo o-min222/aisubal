@@ -14,6 +14,7 @@ import { DICTS } from "@/i18n/dict";
 import { getLocale } from "@/i18n/server";
 import { getTheme } from "@/lib/theme-server";
 import { THEME_BOOT_SCRIPT, THEME_COLOR } from "@/lib/theme";
+import { OG_DEFAULT } from "@/lib/og";
 
 const mono = JetBrains_Mono({
   variable: "--font-mono",
@@ -39,7 +40,8 @@ export async function generateMetadata(): Promise<Metadata> {
   // replaces every page title. og:title / twitter:title / canonical are untouched.
   title: { default: "AI쓰발", template: "AI쓰발" },
   description: `${SLOGAN.en} ${SLOGAN.ko}`,
-  openGraph: { title: "AI쓰발", description: `${SLOGAN.en} ${SLOGAN.ko}`, siteName: "AI쓰발", locale: LOCALE_META[locale].og, type: "website" },
+  openGraph: { title: "AI쓰발", description: `${SLOGAN.en} ${SLOGAN.ko}`, siteName: "AI쓰발", locale: LOCALE_META[locale].og, type: "website", images: [OG_DEFAULT] },
+  twitter: { card: "summary_large_image", title: "AI쓰발", description: `${SLOGAN.en} ${SLOGAN.ko}`, images: [OG_DEFAULT.url] },
   applicationName: "AI쓰발",
   icons: {
     icon: "/favicon.png",

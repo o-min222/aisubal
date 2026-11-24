@@ -8,6 +8,7 @@ import { joinSource } from '@/lib/join-rules'
 import { SITE_INTRO } from '@/lib/invite-share'
 import { getT } from '@/i18n/server'
 import { JoinForm } from './join-form'
+import { OG_DEFAULT } from '@/lib/og'
 
 type Props = { searchParams: Promise<{ from?: string; preview?: string }> }
 
@@ -15,7 +16,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const t = await getT()
   const title = t('AI쓰발 대기 명단')
   const description = t(SITE_INTRO)
-  return { title, description, openGraph: { title, description, siteName: 'AI쓰발', type: 'website' } }
+  return { title, description, openGraph: { title, description, siteName: 'AI쓰발', type: 'website', images: [OG_DEFAULT] }, twitter: { card: 'summary_large_image', title, description, images: [OG_DEFAULT.url] } }
 }
 
 /** A57: public waitlist. Email + an optional line about why; admins invite from /admin/waitlist. */
