@@ -165,6 +165,38 @@ export async function removeFollower(viewerId: string, memberId: string): Promis
   return relationFromRow(data as Record<string, unknown>)
 }
 
+/**
+ * A76: members a suggestion must never be: the viewer, anyone they follow, and anyone they have a
+ * friend request with in either direction (pending) or are friends with. Declined requests don't count.
+ */
+export async function connectedMemberIds(viewerId: string): Promise<Set<string>> {
+  if (isMock()) {
+    const v = mockViewer(viewerId)
+    const s = mockSocial()
+    return new Set([
+      viewerId, v,
+      ...s.follows.filter((f) => f.follower === v).map((f) => f.followee),
+      ...s.friendships.filter((f) => f.status !== 'declined' && (f.requester === v || f.addressee === v)).map((f) => (f.requester === v ? f.addressee : f.requester)),
+    ])
+  }
+  const supabase = await sb()
+  const [{ data: follows, error: e1 }, { data: friends, error: e2 }] = await Promise.all([
+    supabase.from('follows').select('followee_id').eq('follower_id', viewerId).limit(5000),
+    supabase
+      .from('friendships')
+      .select('requester_id, addressee_id')
+      .in('status', ['pending', 'accepted'])
+      .or(`requester_id.eq.${viewerId},addressee_id.eq.${viewerId}`)
+      .limit(5000),
+  ])
+  if (e1 || e2) throw new Error((e1 ?? e2)!.message)
+  return new Set([
+    viewerId,
+    ...((follows || []) as Array<{ followee_id: string }>).map((r) => r.followee_id),
+    ...((friends || []) as Array<{ requester_id: string; addressee_id: string }>).map((r) => (r.requester_id === viewerId ? r.addressee_id : r.requester_id)),
+  ])
+}
+
 /** Author ids for the feed's 팔로잉 / 친구 tabs. */
 export async function socialAuthorIds(viewerId: string, scope: 'following' | 'friends'): Promise<string[]> {
   if (isMock()) {

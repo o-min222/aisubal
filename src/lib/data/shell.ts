@@ -12,6 +12,7 @@ import { getT } from '@/i18n/server'
 import { msg } from '@/i18n/translate'
 import { withAgentCards } from './agent-profiles'
 import { listDismissed } from './rec-dismissals'
+import { connectedMemberIds } from './social'
 
 export type ProfileStats = { posts: number; likes: number; invitesLeft: number }
 
@@ -64,10 +65,14 @@ export const getRailData = cache(async (member: Member): Promise<RailData> => {
 
   if (isMock()) {
     archiveTags = [['mcp', 'agent'], ['cursor', 'mcp'], ['prompt']]
+    // member-2 is a friend and member-3 sent a request: A76 filters them out like real rows
+    const skip = await connectedMemberIds(member.id)
     people = [
       { id: 'member-2', name: '프롬프트수집가', avatarUrl: null, reason: msg('내가 좋아한 글의 작성자') },
       { id: 'member-3', name: 'MCP장인', avatarUrl: null, reason: msg('최근 활발히 글을 써요') },
-    ]
+      { id: 'member-7', name: '노코드요정', avatarUrl: null, reason: msg('내가 좋아한 글의 작성자') },
+      { id: 'member-8', name: 'Swift러버', avatarUrl: null, reason: msg('최근 활발히 글을 써요') },
+    ].filter((p) => !skip.has(p.id) && !dismissed?.member.has(p.id))
   } else {
     const supabase = await sb()
     const [{ data: arch }, { data: reviews }, { data: likes }] = await personal!
@@ -82,7 +87,9 @@ export const getRailData = cache(async (member: Member): Promise<RailData> => {
     archiveTags.push(...toolbox.filter((t) => usedToolIds.has(t.id)).map((t) => t.tags))
 
     const likedIds = ((likes || []) as Array<{ post_id: string }>).map((l) => l.post_id)
-    const seen = new Set<string>([member.id, ...(dismissed?.member ?? [])])
+    // A76: never the viewer, people they follow, or anyone with a pending/accepted friend request
+    const connected = await connectedMemberIds(member.id).catch(() => new Set<string>([member.id]))
+    const seen = new Set<string>([member.id, ...connected, ...(dismissed?.member ?? [])])
     // both sources at once; 'liked' authors still come first, 'recent' only fills up to 3
     const [{ data: authors }, { data: recent }] = await Promise.all([
       likedIds.length
