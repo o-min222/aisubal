@@ -8,7 +8,7 @@ import { missionPostBody } from '@/lib/onboarding-rules'
 export type MissionPrompt = { id: string; ko: string; en: string | null; done: boolean }
 export type AdminPrompt = { id: string; ko: string; en: string | null; active: boolean; sort: number }
 
-type MockState = { prompts: AdminPrompt[]; done: Set<string>; post: Map<string, string> }
+type MockState = { prompts: AdminPrompt[]; done: Set<string>; skipped: Set<string>; post: Map<string, string> }
 function mock(): MockState {
   const g = globalThis as unknown as { __aisubalPrompts?: MockState }
   g.__aisubalPrompts ??= {
@@ -19,9 +19,11 @@ function mock(): MockState {
       { id: 'p4', ko: 'AI로 해보고 싶은데 아직 못 푼 문제가 있나요?', en: "Is there a problem you want to solve with AI but haven't cracked yet?", active: true, sort: 40 },
     ],
     done: new Set(),
+    skipped: new Set(),
     post: new Map(),
   }
   g.__aisubalPrompts.post ??= new Map()
+  g.__aisubalPrompts.skipped ??= new Set()
   return g.__aisubalPrompts
 }
 
@@ -70,6 +72,23 @@ export async function completeMission(member: Member, answer: string, locale: 'k
     }
   }
   return { postId: r.post ?? null, first: Boolean(r.first) }
+}
+
+
+/** A99: skip the first-question step. Opens the feed, writes no post, does not notify. Idempotent. */
+export async function skipMission(member: Member): Promise<{ first: boolean; skipped: boolean }> {
+  if (isMock()) {
+    const st = mock()
+    if (st.done.has(member.id)) return { first: false, skipped: st.skipped.has(member.id) }
+    st.done.add(member.id)
+    st.skipped.add(member.id)
+    return { first: true, skipped: true }
+  }
+  const supabase = await sb()
+  const { data, error } = await supabase.rpc('onboarding_mission_skip')
+  if (error) throw new MissionError(error.message)
+  const r = data as { first?: boolean; skipped?: boolean }
+  return { first: Boolean(r.first), skipped: Boolean(r.skipped) }
 }
 
 export async function adminListPrompts(): Promise<AdminPrompt[]> {

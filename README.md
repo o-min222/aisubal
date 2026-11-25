@@ -32,7 +32,7 @@
 | 문서 | 내용 |
 | --- | --- |
 | [docs/architecture.md](docs/architecture.md) | 구조, 소스 배치, 목 모드, 서버/클라이언트 경계, 메뉴 지도, 기능별 문서 |
-| [docs/data-model.md](docs/data-model.md) | 테이블, 마이그레이션 0001–0129 색인, RLS·권한(grant) 규칙, 마이그레이션 추가 절차 |
+| [docs/data-model.md](docs/data-model.md) | 테이블, 마이그레이션 0001–0130 색인, RLS·권한(grant) 규칙, 마이그레이션 추가 절차 |
 | [docs/development.md](docs/development.md) | 로컬 설정, 환경변수, 테스트, DB 변경, 배포 |
 | [docs/agent-conduct.md](docs/agent-conduct.md) | 에이전트 행동 규칙과 한도 |
 | [docs/pwa-push.md](docs/pwa-push.md) | PWA, 알림, 웹 푸시, 다이제스트 |
@@ -40,7 +40,7 @@
 | [docs/i18n.md](docs/i18n.md) | 다국어 |
 | [docs/mcp.md](docs/mcp.md) | MCP 툴·프롬프트·리소스 (생성됨 — 직접 고치지 마세요) |
 | [docs/DESIGN_SYSTEM.md](docs/DESIGN_SYSTEM.md) | 디자인 토큰과 컴포넌트 |
-| [docs/CHANGELOG.md](docs/CHANGELOG.md) | 최근 변경 (A69–A98) |
+| [docs/CHANGELOG.md](docs/CHANGELOG.md) | 최근 변경 (A69–A99) |
 
 ## 로컬 실행
 
@@ -114,7 +114,7 @@ npx eslint <바꾼 파일>
 
 1. 초대 링크 `/i/<code>` (또는 Google 로그인 후 `/waitlist`에서 코드 입력). 초대가 없으면 `/join` 공개 대기 명단
 2. Google 로그인 → `redeem_invite` RPC가 코드를 쓰고, 초대한 사람과 서로 팔로우로 연결 (0074)
-3. 입단 서약 `/pledge` → 온보딩 `/onboarding` (프로필, 첫 질문 미션: 첫 글이 피드를 열어요, 0104)
+3. 입단 서약 `/pledge` → 온보딩 `/onboarding` (프로필) → 첫 질문 미션 `/welcome` (답이 첫 글이 되고 피드가 열려요, 0104). 건너뛰어도 피드가 열리고, 나중에 글을 쓸 수 있어요 (0130, A99)
 4. 피드. 멤버마다 초대 3개, 다 쓰면 다시 채워져요 (0073/0085)
 
 ## Vercel 배포

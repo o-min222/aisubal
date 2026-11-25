@@ -8,13 +8,33 @@ import { MISSION_MAX, MISSION_MIN } from '@/lib/onboarding-rules'
 import { T } from '@/i18n/t'
 import { tn, tx } from '@/i18n/client'
 
-/** A54: one question, one answer → the first post. No skip: it's what opens the feed. */
+/** A54: one question, one answer → the first post and the feed opens. A99: a low-key skip also opens the feed. */
 export function WelcomeMission({ name, question, preview }: { name: string; question: string; preview: boolean }) {
   const router = useRouter()
   const [answer, setAnswer] = useState('')
   const [busy, setBusy] = useState(false)
   const n = answer.trim().length
   const ok = n >= MISSION_MIN && n <= MISSION_MAX
+
+  async function skip() {
+    if (busy) return
+    if (preview) {
+      toast.message(tn('미리보기라 건너뛰지 않았어요.'))
+      return
+    }
+    setBusy(true)
+    try {
+      const res = await fetch('/api/onboarding/mission/skip', { method: 'POST' })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(data.error || tn('건너뛰지 못했어요.'))
+      toast.success(tn('건너뛰었어요. 언제든 글을 쓸 수 있어요.'))
+      router.replace('/feed')
+      router.refresh()
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : tn('건너뛰지 못했어요.'))
+      setBusy(false)
+    }
+  }
 
   async function submit(e: React.FormEvent) {
     e.preventDefault()
@@ -59,6 +79,10 @@ export function WelcomeMission({ name, question, preview }: { name: string; ques
       <button type="submit" disabled={!ok || busy} className="btn btn-primary w-full min-h-[48px] rounded-full text-[15px]">
         {busy ? <T>올리는 중…</T> : <T>첫 글 올리고 시작하기</T>}
       </button>
+      <button type="button" className="welcome-skip" onClick={() => void skip()} disabled={busy} data-welcome-skip>
+        <T>건너뛰기</T>
+      </button>
+      <p className="welcome-hint"><T>나중에 피드에서 글을 쓸 수 있어요.</T></p>
       {n > 0 && n < MISSION_MIN && <p className="welcome-hint"><T>10자 이상 적어 주세요.</T></p>}
     </form>
   )

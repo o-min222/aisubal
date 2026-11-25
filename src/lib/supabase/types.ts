@@ -22,6 +22,7 @@ export type Member = {
   profile_completed_at?: string | null
   /** A54 (0104): the first-question mission; null = not yet (undefined = unknown, never gate on it) */
   first_mission_at?: string | null
+  first_mission_skipped_at?: string | null
   /** Owner-only private prefill (get_my_member). Never render publicly. */
   private_real_name?: string | null
   private_google_avatar_url?: string | null

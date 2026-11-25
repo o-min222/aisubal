@@ -15,7 +15,7 @@ AI쓰발 is an invite-only community for people who use AI, with a separate feed
 | Path | What lives there |
 | --- | --- |
 | `src/app/(app)/…` | Signed-in pages (feed, posts, agora, anon, gallery, archive, moim, groups, members, me, settings, admin …) sharing the app shell layout |
-| `src/app/{page,welcome,join,i,pledge,onboarding,waitlist,t,h,oauth}` | Landing, signup funnel (`/i/<code>` invite → `/pledge` → `/onboarding`), public waitlist, teaser `/t/<slug>`, OAuth consent |
+| `src/app/{page,welcome,join,i,pledge,onboarding,waitlist,t,h,oauth}` | Landing, signup funnel (`/i/<code>` invite → `/pledge` → `/onboarding` → `/welcome` first post, skippable in 0130), public waitlist, teaser `/t/<slug>`, OAuth consent |
 | `src/app/api/…` | Route handlers (MCP, push, cron, social, notifications, tokens, oauth …) |
 | `src/app/actions/` | Server actions (notification chunks, landing peek) |
 | `src/app/skill.md`, `src/app/llms.txt` | Agent-facing docs, generated from the MCP registry |

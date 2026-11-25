@@ -76,3 +76,43 @@ describe('A55 first-reaction guarantee', () => {
     expect(sql).toContain("'meetups', 'newcomers') then raise exception 'bad_pref'")
   })
 })
+
+describe('A99 skip the first-question mission (0130)', () => {
+  const skipSql = readFileSync('supabase/migrations/0130_mission_skip.sql', 'utf8')
+  it('an RPC marks the mission done without a post or a first_post alert', () => {
+    expect(skipSql).toContain('alter table public.members add column if not exists first_mission_skipped_at timestamptz;')
+    expect(skipSql).toMatch(/onboarding_mission_skip\(\) returns jsonb/)
+    expect(skipSql).toMatch(/security definer/)
+    expect(skipSql).toContain('revoke all on function public.onboarding_mission_skip() from public, anon;')
+    expect(skipSql).toContain('grant execute on function public.onboarding_mission_skip() to authenticated;')
+    expect(skipSql).not.toMatch(/grant (select|update).*(first_mission_skipped_at)/)
+    expect(skipSql).toContain('set first_mission_at = now(), first_mission_skipped_at = now()')
+    expect(skipSql).not.toMatch(/insert into public\.posts/)
+    expect(skipSql).not.toMatch(/onboarding__alert_first_post|notify__push|insert into public\.posts/)
+    expect(skipSql).toMatch(/if m\.first_mission_at is not null then\s+return jsonb_build_object\('ok', true, 'first', false, 'skipped', m\.first_mission_skipped_at is not null\)/)
+  })
+
+  it('the welcome form has a low-key skip; the /welcome gate still only keys on a known-null first_mission_at', () => {
+    const ui = readFileSync('src/app/welcome/welcome-mission.tsx', 'utf8')
+    expect(ui).toContain("className=\"welcome-skip\"")
+    expect(ui).toContain('<T>건너뛰기</T>')
+    expect(ui).toContain("fetch('/api/onboarding/mission/skip'")
+    expect(ui).toContain("router.replace('/feed')")
+    expect(ui).toContain('<T>나중에 피드에서 글을 쓸 수 있어요.</T>')
+    expect(readFileSync('src/app/api/onboarding/mission/skip/route.ts', 'utf8')).toContain('skipMission')
+    expect(readFileSync('src/lib/data/onboarding.ts', 'utf8')).toContain("rpc('onboarding_mission_skip')")
+    // skip sets first_mission_at, so the existing layout gate lets them in; an unknown value still never locks anyone out
+    expect(readFileSync('src/app/(app)/layout.tsx', 'utf8')).toMatch(/member\.first_mission_at === null\) redirect\('\/welcome'\)/)
+  })
+
+  it('invite network and first_post alerts do not require a mission post', () => {
+    const graph = readFileSync('src/lib/data/graph.ts', 'utf8')
+    expect(graph).toMatch(/parent_id/)
+    expect(graph).not.toMatch(/first_mission_post|first_mission_at/)
+    expect(readFileSync('supabase/migrations/0008_social_graph.sql', 'utf8')).toMatch(/invited_by_id/)
+    // A55 still fires only when the mission post is written, not when skipped
+    expect(readFileSync('supabase/migrations/0105_mission_atomic.sql', 'utf8')).toContain("onboarding__alert_first_post")
+    expect(skipSql).not.toMatch(/onboarding__alert_first_post|notify__push/)
+  })
+
+})
