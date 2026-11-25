@@ -3,8 +3,7 @@ import { NextResponse, type NextRequest } from 'next/server'
 import { hardenAuthCookie } from '@/lib/supabase/cookie-options'
 import { loginReturnPath } from '@/lib/handoff-rules'
 import { verifiedUser } from '@/lib/supabase/verified-user'
-import { isLinkPreviewBot, SHARE_PATH_HEADER } from '@/lib/share-teaser'
-import { sharedPostKind } from '@/lib/handoff-rules'
+import { isSharePreviewFetch, SHARE_PATH_HEADER, sharePreviewKind } from '@/lib/share-teaser'
 import { INVITE_COOKIE, INVITE_COOKIE_MAX_AGE, normalizeInviteCode } from '@/lib/invite-share'
 
 export async function middleware(request: NextRequest) {
@@ -58,7 +57,7 @@ export async function middleware(request: NextRequest) {
   const user = await verifiedUser(supabase)
   
   // Public routes that don't require auth
-  const publicRoutes = ['/', '/h', '/auth/callback', '/waitlist', '/i', '/t', '/join', '/api/auth', '/api/setup', '/api/mcp', '/skill.md', '/llms.txt', '/.well-known']
+  const publicRoutes = ['/', '/h', '/auth/callback', '/waitlist', '/i', '/t', '/join', '/og', '/api/auth', '/api/setup', '/api/mcp', '/skill.md', '/llms.txt', '/.well-known']
   const isPublicRoute = publicRoutes.some(route => 
     pathname === route || pathname.startsWith(route + '/')
   )
@@ -76,10 +75,14 @@ export async function middleware(request: NextRequest) {
     url.search = ''
     const back = loginReturnPath(pathname, request.nextUrl.search)
     if (back) url.searchParams.set('next', back)
-    // AI-8 follow-up: link-preview scrapers (KakaoTalk, Slack, …) get the sign-in page's shared-post
-    // meta at the post URL itself; people still go to / with ?next=. Same page either way: nothing
-    // beyond the teaser is rendered for a signed-out request.
-    if (back && sharedPostKind(back) && isLinkPreviewBot(request.headers.get('user-agent'))) {
+    // A100: link-preview scrapers (KakaoTalk, Slack, Applebot, curl, …) get the sign-in page's
+    // share meta at the original URL itself; people still go to / with ?next=. Same page either
+    // way: nothing beyond the teaser is rendered for a signed-out request.
+    if (back && sharePreviewKind(back) && isSharePreviewFetch({
+      ua: request.headers.get('user-agent'),
+      secFetchMode: request.headers.get('sec-fetch-mode'),
+      secFetchDest: request.headers.get('sec-fetch-dest'),
+    })) {
       const headers = new Headers(request.headers)
       headers.set(SHARE_PATH_HEADER, back) // a rewrite doesn't hand ?next to the page's searchParams
       return NextResponse.rewrite(url, { request: { headers } })

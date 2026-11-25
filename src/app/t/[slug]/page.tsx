@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { SITE_ORIGIN } from '@/lib/invite-share'
 import Image from 'next/image'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
@@ -33,7 +34,7 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
     title,
     description,
     robots: { index: false, follow: false },
-    openGraph: { title, description, siteName: 'AI쓰발', type: 'article', locale: LOCALE_META[locale].og, images: [image] },
+    openGraph: { title, description, url: `${SITE_ORIGIN}/t/${encodeURIComponent(slug)}`, siteName: 'AI쓰발', type: 'article', locale: LOCALE_META[locale].og, images: [image] },
     twitter: { card: 'summary_large_image', title, description, images: [image.url] },
   }
 }

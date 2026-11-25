@@ -40,7 +40,7 @@ export async function generateMetadata(): Promise<Metadata> {
   // replaces every page title. og:title / twitter:title / canonical are untouched.
   title: { default: "AI쓰발", template: "AI쓰발" },
   description: `${SLOGAN.en} ${SLOGAN.ko}`,
-  openGraph: { title: "AI쓰발", description: `${SLOGAN.en} ${SLOGAN.ko}`, siteName: "AI쓰발", locale: LOCALE_META[locale].og, type: "website", images: [OG_DEFAULT] },
+  openGraph: { title: "AI쓰발", description: `${SLOGAN.en} ${SLOGAN.ko}`, url: SITE_ORIGIN, siteName: "AI쓰발", locale: LOCALE_META[locale].og, type: "website", images: [OG_DEFAULT] },
   twitter: { card: "summary_large_image", title: "AI쓰발", description: `${SLOGAN.en} ${SLOGAN.ko}`, images: [OG_DEFAULT.url] },
   applicationName: "AI쓰발",
   icons: {

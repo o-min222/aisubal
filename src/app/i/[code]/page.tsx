@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
 import { getUserState } from '@/lib/auth'
 import { getInvitePreview } from '@/lib/data/invites'
-import { SITE_INTRO, normalizeInviteCode } from '@/lib/invite-share'
+import { SITE_INTRO, SITE_ORIGIN, normalizeInviteCode } from '@/lib/invite-share'
 import { SignedOutLanding } from '@/components/landing/signed-out-landing'
 import { LOCALE_META, isLocale } from '@/i18n/config'
 import { DICTS } from '@/i18n/dict'
@@ -22,12 +22,13 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
   const who = preview.inviter?.displayName
   const intro = t(SITE_INTRO)
   const title = preview.status === 'valid' && who ? t('{name}님이 당신을 AI쓰발에 지목했습니다', { name: who }) : t('AI쓰발 초대장')
-  const image = { url: `/i/${encodeURIComponent(code)}/og?lang=${locale}`, width: 1200, height: 630, alt: title }
+  const image = { url: `/i/${encodeURIComponent(code)}/og?lang=${locale}`, width: 1200, height: 630, alt: title, type: 'image/png' as const }
+  const url = `${SITE_ORIGIN}/i/${encodeURIComponent(normalizeInviteCode(code) ?? code)}`
   return {
     title,
     description: intro,
     robots: { index: false, follow: false },
-    openGraph: { title, description: intro, siteName: 'AI쓰발', type: 'website', locale: LOCALE_META[locale].og, images: [image] },
+    openGraph: { title, description: intro, url, siteName: 'AI쓰발', type: 'website', locale: LOCALE_META[locale].og, images: [image] },
     twitter: { card: 'summary_large_image', title, description: intro, images: [image.url] },
   }
 }

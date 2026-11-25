@@ -15,7 +15,20 @@ describe('share card', () => {
   it('every page that sets its own openGraph also lists an image (a page openGraph replaces the layout one)', () => {
     for (const p of ['src/app/layout.tsx', 'src/app/page.tsx', 'src/app/join/page.tsx', 'src/app/t/[slug]/page.tsx', 'src/app/i/[code]/page.tsx']) {
       const src = readFileSync(join(root, p), 'utf8')
-      for (const m of src.matchAll(/openGraph: \{.*$/gm)) expect(m[0], p).toMatch(/images: \[/)
+      if (src.includes('shareMeta(')) {
+        expect(src, p).toMatch(/shareMeta\(/)
+        continue
+      }
+      const hits = [...src.matchAll(/openGraph: \{.*$/gm)]
+      expect(hits.length, p).toBeGreaterThan(0)
+      for (const m of hits) expect(m[0], p).toMatch(/images: \[/)
+    }
+  })
+
+  it('share and invite pages set an absolute og:url', () => {
+    for (const p of ['src/app/layout.tsx', 'src/app/page.tsx', 'src/app/join/page.tsx', 'src/app/t/[slug]/page.tsx', 'src/app/i/[code]/page.tsx']) {
+      const src = readFileSync(join(root, p), 'utf8')
+      expect(src, p).toMatch(/url: |shareCanonicalUrl\(|shareMeta\(/)
     }
   })
 })
