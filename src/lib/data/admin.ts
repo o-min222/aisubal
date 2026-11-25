@@ -1,5 +1,6 @@
 import { MOCK_MEMBERS, MOCK_POSTS, MOCK_SITE_SETTINGS } from '@/lib/mock-data'
 import { mockPeekSite } from './landing-peek'
+import { mockSharePreviewSite } from './share-teaser'
 import type { Member } from '@/lib/supabase/types'
 import { sb, isMock } from './client'
 import { AGENT_CAPS, AGENT_CAP_KEYS, parseAgentCaps, type AgentCaps } from '@/lib/agent-conduct'
@@ -167,6 +168,7 @@ export async function adminGetSettings() {
       anonUnlockThreshold: MOCK_SITE_SETTINGS.anon_unlock_threshold,
       newcomerAlertMax: mockNewcomerMax(),
       landingPeek: mockPeekSite(),
+      sharePreview: mockSharePreviewSite(),
       agentCaps: mockAgentCaps(),
     }
   }
@@ -186,6 +188,8 @@ export async function adminGetSettings() {
     newcomerAlertMax: map.newcomer_alert_max != null && map.newcomer_alert_max !== '' ? Number(map.newcomer_alert_max) : 100,
     // A64: blurred peek of popular posts on the signed-out landing page (kill switch)
     landingPeek: map.landing_peek !== 'false',
+    // A101: share-link OG teaser (default on; independent of landing_peek)
+    sharePreview: map.share_preview !== 'false',
     agentCaps: parseAgentCaps(map),
   }
 }
@@ -204,12 +208,14 @@ export async function adminUpdateSettings(input: {
   anonUnlockThreshold?: number
   newcomerAlertMax?: number
   landingPeek?: boolean
+  sharePreview?: boolean
   agentCaps?: Partial<AgentCaps>
 }) {
   if (isMock()) {
     if (input.anonUnlockThreshold !== undefined) MOCK_SITE_SETTINGS.anon_unlock_threshold = input.anonUnlockThreshold
     if (input.newcomerAlertMax !== undefined) mockNewcomerMax(input.newcomerAlertMax)
     if (input.landingPeek !== undefined) mockPeekSite(input.landingPeek)
+    if (input.sharePreview !== undefined) mockSharePreviewSite(input.sharePreview)
     if (input.agentCaps) mockAgentCaps(input.agentCaps)
     return {
       siteName: input.siteName ?? 'AI쓰발',
@@ -219,6 +225,7 @@ export async function adminUpdateSettings(input: {
       anonUnlockThreshold: MOCK_SITE_SETTINGS.anon_unlock_threshold,
       newcomerAlertMax: mockNewcomerMax(),
       landingPeek: mockPeekSite(),
+      sharePreview: mockSharePreviewSite(),
       agentCaps: mockAgentCaps(),
     }
   }
@@ -241,6 +248,7 @@ export async function adminUpdateSettings(input: {
   if (input.newcomerAlertMax !== undefined) upserts.push({ key: 'newcomer_alert_max', value: String(Math.max(0, Math.floor(input.newcomerAlertMax))) })
 
   if (input.landingPeek !== undefined) upserts.push({ key: 'landing_peek', value: String(input.landingPeek) })
+  if (input.sharePreview !== undefined) upserts.push({ key: 'share_preview', value: String(input.sharePreview) })
   for (const [k, v] of Object.entries(input.agentCaps ?? {}) as [keyof AgentCaps, number | undefined][]) {
     if (v !== undefined && AGENT_CAP_KEYS[k]) upserts.push({ key: AGENT_CAP_KEYS[k], value: String(Math.max(0, Math.floor(v))) })
   }

@@ -24,8 +24,8 @@ type Props = { searchParams: Promise<{ preview?: string; next?: string; error?: 
 /**
  * A25 / A100: a shared link opened signed out (and KakaoTalk / Slack / Applebot scrapers, which
  * have no session) lands here with ?next=/posts/…. Members-only content stays behind the teaser
- * rules: an eligible 전체-회원 real-name post (0131) gets a ~100-char preview with the author's
- * name and a generated card; everything else gets a generic site card with no content leak.
+ * rules: an eligible 전체-회원 real-name post (0132) gets a ~100-char preview titled 'AI쓰발'
+ * (no author name) and a generated card; everything else gets a generic site card with no content leak.
  * Link-preview bots get this page at the original URL itself (middleware rewrite, no redirect).
  */
 export async function generateMetadata({ searchParams }: Props): Promise<Metadata> {
@@ -48,7 +48,7 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
   let image = OG_DEFAULT
   if (teaser && id) {
     const m = teaserMeta(teaser, t(TEASER_HOOK))
-    if (m.title) title = m.title
+    title = m.title
     description = m.description
     image = { url: `${SITE_ORIGIN}${postOgPath(id)}`, width: 1200, height: 630, alt: title }
   }

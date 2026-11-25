@@ -17,6 +17,7 @@ type S = {
   anonUnlockThreshold: number
   newcomerAlertMax: number
   landingPeek: boolean
+  sharePreview: boolean
   agentCaps: AgentCaps
 }
 
@@ -101,12 +102,19 @@ export function SiteSettingsForm({ initial }: { initial: S }) {
         <span className="text-sm text-n-333"><T>가입에 초대 코드 필요</T></span>
         <ToggleSwitch checked={s.inviteRequired} onChange={(v) => setS({ ...s, inviteRequired: v })} label={tx('가입에 초대 코드 필요')} />
       </div>
-      <div className="flex items-center justify-between gap-3 min-h-[44px]">
-        <span className="min-w-0">
-          <span className="block text-sm text-n-333"><T>첫 화면 인기 글 미리보기 (비회원)</T></span>
-          <span className="block text-xs text-n-888"><T>로그인 전 첫 화면에 전체 회원 공개 인기 글의 첫 줄만 흐리게 보여요. 끄면 바로 사라져요.</T></span>
-        </span>
-        <ToggleSwitch checked={s.landingPeek} onChange={(v) => setS({ ...s, landingPeek: v })} label={tx('첫 화면 인기 글 미리보기 (비회원)')} />
+      <div className="flex flex-col gap-1.5">
+        <div className="flex items-center justify-between gap-3 min-h-[44px]">
+          <span className="text-sm text-n-333 min-w-0"><T>첫 화면 인기 글 미리보기 (비회원)</T></span>
+          <ToggleSwitch checked={s.landingPeek} onChange={(v) => setS({ ...s, landingPeek: v })} label={tx('첫 화면 인기 글 미리보기 (비회원)')} />
+        </div>
+        <p className="text-xs text-n-888"><T>로그인 전 첫 화면에만 적용돼요. 전체 회원 공개·실명 인기 글의 첫 줄만 흐리게 보이고, 이름·사진·핸들은 나오지 않아요. 이미지·연락처가 있는 글과, 멤버가 미리보기를 끈 글은 빠져요. 메신저 공유 미리보기는 아래 스위치로 따로 꺼져요.</T></p>
+      </div>
+      <div className="flex flex-col gap-1.5">
+        <div className="flex items-center justify-between gap-3 min-h-[44px]">
+          <span className="text-sm text-n-333 min-w-0"><T>공유 링크 미리보기</T></span>
+          <ToggleSwitch checked={s.sharePreview} onChange={(v) => setS({ ...s, sharePreview: v })} label={tx('공유 링크 미리보기')} />
+        </div>
+        <p className="text-xs text-n-888"><T>카카오톡·슬랙·아이메시지 등에 글을 공유하면, 전체 회원 공개·실명 글은 ‘AI쓰발’과 본문 앞 약 100자만 미리보기로 보여요. 이름·닉네임·핸들·사진은 넣지 않아요. 친구·팔로워·나만 보기, 그룹, 부캐 글은 서비스 이름만 있는 기본 카드가 나와요. 기본은 켜져 있고, 끄면 모든 공유 링크가 기본 카드만 보여요. 멤버가 설정에서 미리보기를 끄면 그 사람의 글도 기본 카드만 나와요. 첫 화면 미리보기와는 별개예요.</T></p>
       </div>
       <div className="flex justify-end">
         <button type="submit" disabled={busy} className="btn btn-primary min-h-[44px]">

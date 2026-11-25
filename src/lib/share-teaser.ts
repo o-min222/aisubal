@@ -5,16 +5,18 @@ import { OG_DEFAULT } from '@/lib/og'
 import type { Metadata } from 'next'
 
 /**
- * A100 / AI-8 follow-up: a shared link's preview teases an eligible 전체-회원 real-name post.
- * post_share_preview() (0131) decides eligibility with the A64 landing-peek rules (plus posts that
- * have an image — the card never uses the photo) and sanitizes title/body (links/@mentions stripped,
- * ≤ 100 chars). Author display name is included; friends/followers/private/group/부캐 posts return
- * null and keep the generic site card.
+ * A101: a shared link's preview teases an eligible 전체-회원 real-name post with the service name
+ * 'AI쓰발' and the first ~100 characters only — never the author's name, nickname, handle or avatar.
+ * post_share_preview() (0132) decides eligibility with the A64 landing-peek rules (plus posts that
+ * have an image — the card never uses the photo) and sanitizes title/body (links/@mentions stripped).
+ * friends/followers/private/group/부캐 posts return null and keep the generic site card.
+ * Admin kill switch: site_config.share_preview (default on), separate from landing_peek.
  */
-export type ShareTeaser = { title: string | null; body: string | null; name: string | null }
+export type ShareTeaser = { title: string | null; body: string | null }
 
 export const TEASER_MAX = 100
-export const TEASER_NAME_MAX = 24
+export const SHARE_OG_TITLE = 'AI쓰발'
+export const SHARE_TEASER_TAG = 'share-teaser'
 /** set by the middleware on a bot rewrite; selects which shared path's preview to render (same as ?next=) */
 export const SHARE_PATH_HEADER = 'x-aisubal-share-path'
 export const TEASER_HOOK = msg('이어서 보려면 AI쓰발에서')
@@ -80,33 +82,21 @@ export function clipLine(v: unknown, max = TEASER_MAX): string | null {
   return s.length >= 4 ? s : null
 }
 
-export function clipName(v: unknown): string | null {
-  if (typeof v !== 'string') return null
-  let s = v.replace(/[\u0000-\u001f\u007f]+/g, ' ').replace(/\s+/g, ' ').trim()
-  if (s.length > TEASER_NAME_MAX) s = s.slice(0, TEASER_NAME_MAX - 1)
-  s = s.replace(/[\s.…]+$/u, '')
-  return s.length >= 1 ? s : null
-}
-
 export function parseTeaser(v: unknown): ShareTeaser | null {
   if (!v || typeof v !== 'object' || Array.isArray(v)) return null
   const o = v as Record<string, unknown>
-  const title = clipLine(o.title), body = clipLine(o.body), name = clipName(o.name)
-  return title || body ? { title, body, name } : null
+  const title = clipLine(o.title), body = clipLine(o.body)
+  // A101: ignore a leftover `name` from 0131 if a cached or mid-deploy payload still has one
+  return title || body ? { title, body } : null
 }
 
 /**
- * og:title / og:description for an eligible post: author name (and title, if it has one and there's
- * a body line to tease) as og:title; the body's first line (or the title) cut with an ellipsis, then
- * the hook.
+ * og:title is always the service name; og:description is the teaser line plus the hook.
+ * Never includes an author name, nickname, handle or avatar.
  */
-export function teaserMeta(teaser: ShareTeaser, hook: string): { title: string | null; description: string } {
+export function teaserMeta(teaser: ShareTeaser, hook: string): { title: string; description: string } {
   const line = teaser.body ?? teaser.title!
-  const who = teaser.name
-  let title: string | null = null
-  if (teaser.body && teaser.title) title = who ? `${who} · ${teaser.title}` : teaser.title
-  else if (who) title = `${who}님의 글`
-  return { title, description: `${line}… ${hook}` }
+  return { title: SHARE_OG_TITLE, description: `${line}… ${hook}` }
 }
 
 /** Consistent OG + Twitter tags, including the absolute og:url scrapers need to attach a card. */

@@ -1,20 +1,27 @@
 import { unstable_cache } from 'next/cache'
 import { createAnonClient } from '@/lib/supabase/anon'
 import { isMock } from './client'
-import { parseTeaser, type ShareTeaser } from '@/lib/share-teaser'
+import { parseTeaser, SHARE_TEASER_TAG, type ShareTeaser } from '@/lib/share-teaser'
 
 const MOCK: Record<string, ShareTeaser> = {
   '11111111-1111-4111-8111-111111111111': {
     title: 'Claude Code로 사내 배포 자동화한 후기',
     body: '처음엔 반신반의했는데 일주일 써 보니 배포 스크립트 절반이 사라졌어요',
-    name: '구름',
   },
 }
 
-/** A100: the share-preview teaser for one post (null if not eligible), cached 5 min per post, no cookies. */
+let mockSharePreviewOn = true
+
+/** mock-only: the admin share-preview kill switch (default on). */
+export function mockSharePreviewSite(on?: boolean) {
+  if (on !== undefined) mockSharePreviewOn = on
+  return mockSharePreviewOn
+}
+
+/** A101: the share-preview teaser for one post (null if not eligible), cached 5 min per post, no cookies. Never includes an author name. */
 export const getShareTeaser = unstable_cache(
   async (id: string): Promise<ShareTeaser | null> => {
-    if (isMock()) return MOCK[id] ?? null
+    if (isMock()) return mockSharePreviewOn ? (MOCK[id] ?? null) : null
     const { data, error } = await createAnonClient().rpc('post_share_preview', { p_id: id })
     if (error) {
       console.error('[share-teaser] failed', error.message)
@@ -22,6 +29,6 @@ export const getShareTeaser = unstable_cache(
     }
     return parseTeaser(data)
   },
-  ['share-teaser-v2'],
-  { revalidate: 300, tags: ['share-teaser'] }
+  ['share-teaser-v3'],
+  { revalidate: 300, tags: [SHARE_TEASER_TAG] }
 )

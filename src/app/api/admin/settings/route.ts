@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { revalidateTag } from 'next/cache'
 import { PEEK_TAG } from '@/lib/landing-peek-rules'
+import { SHARE_TEASER_TAG } from '@/lib/share-teaser'
 import { requireAdmin } from '@/lib/auth'
 import { adminGetSettings, adminUpdateSettings } from '@/lib/data/admin'
 import { z } from 'zod'
@@ -30,6 +31,7 @@ const updateSettingsSchema = z.object({
   anonUnlockThreshold: z.number().min(1).max(100000).optional(),
   newcomerAlertMax: z.number().int().min(0).max(100000).optional(),
   landingPeek: z.boolean().optional(),
+  sharePreview: z.boolean().optional(),
   // A72/A77: agent reaction caps
   agentCaps: z
     .object({
@@ -55,6 +57,7 @@ export async function PATCH(request: NextRequest) {
     const settings = await adminUpdateSettings(data)
     // the form also calls refreshLandingPeek() (updateTag) so the next view is fresh
     if (data.landingPeek !== undefined) revalidateTag(PEEK_TAG, { expire: 0 })
+    if (data.sharePreview !== undefined) revalidateTag(SHARE_TEASER_TAG, { expire: 0 })
     return NextResponse.json({ settings })
   } catch (error) {
     if (error instanceof z.ZodError) {

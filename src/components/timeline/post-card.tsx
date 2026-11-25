@@ -10,7 +10,7 @@ import { postRecDismiss } from '@/lib/rec-dismiss'
 import Link from 'next/link'
 import { MessageCircle, Star, Wrench, ExternalLink, Share2, VenetianMask, Sparkles, Repeat2 } from 'lucide-react'
 import { toast } from 'sonner'
-import { postShareData, postShareUrl, shareClipboardText, shareSafeTitle } from '@/lib/share-rules'
+import { postShareData, postShareUrl, shareClipboardText, shareSafeTeaser } from '@/lib/share-rules'
 import { LinkPreviewBlock } from '@/components/link-preview-block'
 import { LiveLinkPreviews } from '@/components/live-link-previews'
 import { stripPreviewedUrls } from '@/lib/link-strip'
@@ -167,11 +167,11 @@ export function PostCard({
   async function share() {
     const url = postShareUrl(href, window.location)
     try {
-      const title = anon ? null : shareSafeTitle(post)
+      const teaser = anon ? null : shareSafeTeaser(post)
       if (navigator.share) {
-        await navigator.share(postShareData(url, title))
+        await navigator.share(postShareData(url, teaser))
       } else {
-        await navigator.clipboard.writeText(shareClipboardText(url, title))
+        await navigator.clipboard.writeText(shareClipboardText(url, teaser))
         toast.success(tn('링크를 복사했어요'))
       }
     } catch {

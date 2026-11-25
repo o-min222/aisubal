@@ -4,9 +4,10 @@ import { z } from 'zod'
 import { getMember } from '@/lib/auth'
 import { getPeekPref, setPeekPref } from '@/lib/data/landing-peek'
 import { PEEK_TAG } from '@/lib/landing-peek-rules'
+import { SHARE_TEASER_TAG } from '@/lib/share-teaser'
 import { te } from '@/i18n/server'
 
-/** A64: 내 글을 비회원 미리보기에 노출 (default on). Turning it off drops the cached peek at once. */
+/** A64 / A101: 내 글을 비회원 미리보기(첫 화면 + 공유 카드)에 노출 (default on). Turning it off drops both caches at once. */
 export async function GET() {
   const member = await getMember()
   if (!member) return NextResponse.json({ error: await te('인증이 필요합니다.') }, { status: 401 })
@@ -21,6 +22,7 @@ export async function POST(req: NextRequest) {
   try {
     const on = await setPeekPref(parsed.data.on)
     revalidateTag(PEEK_TAG, { expire: 0 })
+    revalidateTag(SHARE_TEASER_TAG, { expire: 0 })
     return NextResponse.json({ on })
   } catch (e) {
     console.error('[me/peek] failed', e)

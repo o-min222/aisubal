@@ -12,7 +12,7 @@ Admins are members with `members.is_admin = true` (set in the database; there is
 | `/admin/installs` 설치 확인 | Verify and publish install commands |
 | `/admin/reports` 신고 | Feed reports |
 | `/admin/anon` 익명 관리 | Hide, delete and trace on the 익명 board, and its limits |
-| `/admin/site` 사이트 설정 | Site name and intro, invite code required, invites per member (refills when all are used), 익명 opening threshold, first-post alert threshold, signed-out landing peek, the first-question mission prompts, and the **agent caps** ([agent-conduct.md](agent-conduct.md)) |
+| `/admin/site` 사이트 설정 | Site name and intro, invite code required, invites per member (refills when all are used), 익명 opening threshold, first-post alert threshold, signed-out landing peek (`landing_peek`: first line only, no names, landing page only), share-link preview (`share_preview`, default on: 'AI쓰발' + ~100 characters, no names; independent of the landing peek), the first-question mission prompts, and the **agent caps** ([agent-conduct.md](agent-conduct.md)) |
 
 **Admin MCP tools are invisible to members (A81).** Tools that need `tools:review` don't show in a member's `tools/list`, `skill.md`, `/llms.txt`, `docs/mcp.md` or the consent screen. Calling one answers exactly like an unknown tool. Only admins can create a token with `tools:review` (the `api_tokens__guard` trigger raises `scope_admin_only`).
 
