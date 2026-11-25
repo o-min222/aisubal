@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { readFileSync } from 'node:fs'
-import { SUB_SUGGESTIONS, mergeSkillOrder, moveItem, skillsPayload, sortUsage } from '@/lib/profile-stack'
+import { SUB_SUGGESTIONS, SUB_SUGGESTION_ALIASES, suggestionMatches, mergeSkillOrder, moveItem, skillsPayload, sortUsage } from '@/lib/profile-stack'
 
 const read = (p: string) => readFileSync(p, 'utf8')
 const used = (id: string): It => ({ label: id.toUpperCase(), entry: { id } })
@@ -71,5 +71,48 @@ describe('A90 · subscription options', () => {
     const p = read('src/components/profile/stack-editor.tsx')
     expect(p).toMatch(/slice\(0, inline \? undefined : 6\)/)
     expect(read('src/app/globals.css')).toMatch(/\.stack-pick-list \{[^}]*overflow-y: auto/)
+  })
+})
+
+describe('A103 · subscription catalogue', () => {
+  const list = [...SUB_SUGGESTIONS]
+  it('lists current official individual plans, grouped by vendor, and keeps ZCRE and Claude Ultra', () => {
+    expect(list).toEqual([
+      'ChatGPT Go', 'ChatGPT Plus', 'ChatGPT Pro',
+      'Claude Pro', 'Claude Max', 'Claude Ultra',
+      'X Subscription Plus', 'X Subscription Premium', 'X Subscription Super', 'X Subscription Ultra',
+      'Cursor Pro', 'Cursor Pro+', 'Cursor Ultra',
+      'Google AI Plus', 'Google AI Pro', 'Google AI Ultra',
+      'SuperGrok', 'SuperGrok Heavy',
+      'Perplexity Pro', 'Perplexity Max',
+      'GitHub Copilot Pro', 'GitHub Copilot Pro+', 'GitHub Copilot Max',
+      'Midjourney Basic', 'Midjourney Standard', 'Midjourney Pro', 'Midjourney Mega',
+      'Devin Pro', 'Devin Max',
+      'ZCRE (지크)',
+    ])
+    expect(list).not.toContain('Midjourney')
+    expect(list).not.toContain('ChatGPT Business')
+    expect(list).not.toContain('GitHub Copilot Business')
+    expect(list).not.toContain('Claude Team')
+  })
+  it('search aliases surface the official chip (renames, Korean, Windsurf → Devin)', () => {
+    const hits = (term: string) => list.filter((s) => suggestionMatches(s, term))
+    expect(hits('chatgpt go')).toEqual(['ChatGPT Go'])
+    expect(hits('챗지피티 고')).toEqual(['ChatGPT Go'])
+    expect(hits('cursor plus')).toEqual(['X Subscription Plus'])
+    expect(hits('지크')).toEqual(['ZCRE (지크)'])
+    expect(hits('gemini advanced')).toEqual(['Google AI Pro'])
+    expect(hits('windsurf pro')).toEqual(['Devin Pro'])
+    expect(hits('claude max 20x')).toEqual(['Claude Ultra'])
+    expect(hits('copilot pro+')).toEqual(['GitHub Copilot Pro+'])
+    expect(hits('midjourney')).toEqual(['Midjourney Basic', 'Midjourney Standard', 'Midjourney Pro', 'Midjourney Mega'])
+    // every listed plan has alias coverage or is findable by its own name
+    for (const label of list) {
+      expect(suggestionMatches(label, label)).toBe(true)
+      expect(SUB_SUGGESTION_ALIASES[label]?.length).toBeGreaterThan(0)
+    }
+  })
+  it('the picker uses suggestionMatches so aliases work in the 추가 sheet', () => {
+    expect(read('src/components/profile/stack-editor.tsx')).toMatch(/suggestionMatches\(s, term\)/)
   })
 })

@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Check, Plus, Search, X } from 'lucide-react'
 import { toast } from 'sonner'
 import { LINK_VISIBILITY, type LinkVisibility } from '@/lib/profile-rules'
-import { AI_SUGGESTIONS, STACK_GROUP_LABEL, STACK_LIMIT, SUB_SUGGESTIONS, SKILL_TYPES, type StackGroup } from '@/lib/profile-stack'
+import { AI_SUGGESTIONS, STACK_GROUP_LABEL, STACK_LIMIT, SUB_SUGGESTIONS, SKILL_TYPES, suggestionMatches, type StackGroup } from '@/lib/profile-stack'
 import { T } from '@/i18n/t'
 import { ServiceIcon } from '@/components/service-chip'
 import { tx, tn } from '@/i18n/client'
@@ -20,7 +20,7 @@ const norm = (s: string) => s.toLowerCase().replace(/\s+/g, '')
  * `inline` (A90, the 추가 sheet): one flat surface — the search stays on top, every quick pick
  * is listed and the list scrolls inside; items already added show a check.
  */
-export function Picker({ onPick, suggestions, skillsOnly, placeholder, disabled, inline, taken }: { onPick: (i: Item) => void; suggestions: string[]; skillsOnly?: boolean; placeholder: string; disabled?: boolean; inline?: boolean; taken?: string[] }) {
+export function Picker({ onPick, suggestions, skillsOnly, placeholder, disabled, inline, taken }: { onPick: (i: Item) => void; suggestions: readonly string[]; skillsOnly?: boolean; placeholder: string; disabled?: boolean; inline?: boolean; taken?: string[] }) {
   const [q, setQ] = useState('')
   const [hits, setHits] = useState<CatalogHit[]>([])
   const [open, setOpen] = useState(false)
@@ -42,7 +42,7 @@ export function Picker({ onPick, suggestions, skillsOnly, placeholder, disabled,
     return () => document.removeEventListener('mousedown', close)
   }, [])
   const term = q.trim()
-  const quick = suggestions.filter((s) => !term || norm(s).includes(norm(term))).slice(0, inline ? undefined : 6)
+  const quick = suggestions.filter((s) => !term || suggestionMatches(s, term)).slice(0, inline ? undefined : 6)
   const isTaken = (label: string) => (taken ?? []).some((t) => norm(t) === norm(label))
   const show = inline || open
   const shownHits = term ? hits : []

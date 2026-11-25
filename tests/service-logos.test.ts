@@ -10,6 +10,13 @@ describe('service logos', () => {
     expect(serviceLogo('SuperGrok')?.key).toBe('grok')
     expect(serviceLogo('GitHub MCP Server')?.key).toBe('copilot')
     expect(serviceLogo('Gemini Advanced')?.domain).toBe('gemini.google.com')
+    expect(serviceLogo('ChatGPT Go')?.key).toBe('chatgpt')
+    expect(serviceLogo('Google AI Plus')?.key).toBe('gemini')
+    expect(serviceLogo('X Subscription Plus')?.key).toBe('grok')
+    expect(serviceLogo('GitHub Copilot Pro+')?.key).toBe('copilot')
+    expect(serviceLogo('Midjourney Mega')?.key).toBe('midjourney')
+    expect(serviceLogo('Devin Pro')?.key).toBe('devin')
+    expect(serviceDomain('devin')).toBe('devin.ai')
   })
   it('unknown labels fall back to a letter mark (no URL)', () => {
     expect(serviceLogo('우리 회사 사내봇')).toBeNull()
