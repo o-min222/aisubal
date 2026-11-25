@@ -20,11 +20,6 @@ export function applyStarter(body: string, starter: string, all: string[]): stri
   return starter + rest.replace(/^\s+/, '')
 }
 
-/** one-line mode posts on Enter; Shift+Enter (or IME composition) never posts */
-export function quickShouldSubmit(e: { key: string; shiftKey: boolean; isComposing?: boolean }, body: string): boolean {
-  return e.key === 'Enter' && !e.shiftKey && !e.isComposing && body.trim().length > 0
-}
-
 // ---- 스크린샷 한 장 ----------------------------------------------------------------------
 export const POST_IMAGE_TYPES: Record<string, string> = { 'image/png': 'png', 'image/jpeg': 'jpg', 'image/webp': 'webp', 'image/gif': 'gif' }
 export const POST_IMAGE_MAX_BYTES = 4 * 1024 * 1024

@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
-import { applyStarter, isPostImagePath, quickShouldSubmit, QUICK_STARTERS } from '@/lib/quick-post-rules'
+import { applyStarter, isPostImagePath, QUICK_STARTERS } from '@/lib/quick-post-rules'
 
 const BASE_URL = process.env.TEST_BASE_URL || 'http://127.0.0.1:43256'
 const starters = QUICK_STARTERS.filter((s) => s.prefill).map((s) => s.prefill!)
@@ -16,12 +16,6 @@ describe('A62 quick post rules', () => {
     expect(applyStarter('', tried, starters)).toBe(tried)
     expect(applyStarter('클로드 좋아요', tried, starters)).toBe(`${tried}클로드 좋아요`)
     expect(applyStarter(`${tried}클로드 좋아요`, chat, starters)).toBe(`${chat}클로드 좋아요`)
-  })
-  it('Enter posts; Shift+Enter, IME composition and empty text never do', () => {
-    expect(quickShouldSubmit({ key: 'Enter', shiftKey: false }, 'hi')).toBe(true)
-    expect(quickShouldSubmit({ key: 'Enter', shiftKey: true }, 'hi')).toBe(false)
-    expect(quickShouldSubmit({ key: 'Enter', shiftKey: false, isComposing: true }, '한글')).toBe(false)
-    expect(quickShouldSubmit({ key: 'Enter', shiftKey: false }, '   ')).toBe(false)
   })
   it('image paths must be in your own folder', () => {
     const me = '11111111-1111-1111-1111-111111111111'

@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { ArrowUp, ImagePlus, Maximize2 } from 'lucide-react'
@@ -11,12 +11,13 @@ import { T } from '@/i18n/t'
 import { piiWarning } from '@/lib/pii'
 import { postedHref } from '@/lib/posted-rules'
 import { uploadPickedImage, type PickedImage } from '@/lib/post-image-client'
-import { applyStarter, quickShouldSubmit, QUICK_PLACEHOLDER, QUICK_STARTERS } from '@/lib/quick-post-rules'
+import { COMPOSER_ENTER_KEY_HINT, composerKeySubmits, isCoarsePointer } from '@/lib/composer-keys'
+import { applyStarter, QUICK_PLACEHOLDER, QUICK_STARTERS } from '@/lib/quick-post-rules'
 
 /**
- * A62: the feed-top one-liner. Type a line, Enter posts it (전체 회원 or your usual 공유범위).
- * Starter chips prefill a sentence (no category is forced), 스크린샷 한 장 picks an image,
- * ⤢ opens the full composer with what's typed.
+ * A62: the feed-top composer. Starter chips prefill a sentence (no category is forced),
+ * 스크린샷 한 장 picks an image, ⤢ opens the full composer with what's typed.
+ * A102: Enter is a newline (the field grows); posting is the button, or Cmd/Ctrl+Enter on a keyboard.
  */
 export function QuickComposer({ me }: { me: ComposerIdentity }) {
   const router = useRouter()
@@ -29,10 +30,16 @@ export function QuickComposer({ me }: { me: ComposerIdentity }) {
   // A97: the 질문해요 chip is a switch: the post is saved as a question (a 질문 tag before the text), no sentence is typed for you
   const [question, setQuestion] = useState(false)
   const [piiAckFor, setPiiAckFor] = useState<string | null>(null)
-  const input = useRef<HTMLInputElement>(null)
+  const input = useRef<HTMLTextAreaElement>(null)
   const file = useRef<HTMLInputElement>(null)
   const pii = useMemo(() => piiWarning(body), [body])
   const starters = useMemo(() => QUICK_STARTERS.filter((s) => s.prefill).map((s) => tr(s.prefill!)), [tr])
+
+  function grow(el: HTMLTextAreaElement) {
+    el.style.height = 'auto'
+    el.style.height = `${Math.min(el.scrollHeight, 160)}px`
+  }
+  useEffect(() => { if (input.current) grow(input.current) }, [body])
 
   function starter(id: string) {
     const s = QUICK_STARTERS.find((x) => x.id === id)
@@ -114,19 +121,21 @@ export function QuickComposer({ me }: { me: ComposerIdentity }) {
         <UserAvatar id={me.id} name={me.displayName} avatarUrl={me.avatarUrl} size="sm" />
         <div className="qc-field">
           {question && <span className="q-tag"><T>질문</T></span>}
-          <input
+          <textarea
             ref={input}
             className="qc-input"
             value={body}
+            rows={1}
             maxLength={2000}
-            onChange={(e) => setBody(e.target.value)}
+            onChange={(e) => { setBody(e.target.value); grow(e.currentTarget) }}
             onKeyDown={(e) => {
-              if (quickShouldSubmit({ key: e.key, shiftKey: e.shiftKey, isComposing: e.nativeEvent.isComposing }, body)) { e.preventDefault(); void submit() }
-              else if (e.key === 'Enter' && e.shiftKey) { e.preventDefault(); setBody((b) => b + '\n'); setExpanded(true) }
+              if (!composerKeySubmits(e, isCoarsePointer())) return
+              e.preventDefault()
+              void submit()
             }}
             placeholder={tr(QUICK_PLACEHOLDER)}
             aria-label={tx('게시물 내용')}
-            enterKeyHint="send"
+            enterKeyHint={COMPOSER_ENTER_KEY_HINT}
           />
         </div>
         <button type="button" className="qc-icon" onClick={() => setExpanded(true)} aria-label={tx('크게 쓰기')} title={tx('크게 쓰기')}>
