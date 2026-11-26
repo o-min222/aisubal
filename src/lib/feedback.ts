@@ -80,15 +80,23 @@ export function feedbackWebhookConfig(env: Record<string, string | undefined>): 
   return { url, key, header: /^[A-Za-z0-9-]{1,64}$/.test(header) ? header : null }
 }
 
+/** `Authorization: Bearer <key>`. If the key already starts with `Bearer `, do not prefix again. */
+export function feedbackAuthorizationValue(key: string): string {
+  const rest = key.replace(/^Bearer\s+/i, '').trim()
+  return `Bearer ${rest}`
+}
+
 /**
  * Default: both `Authorization: Bearer <key>` and `X-Automation-Key: <key>` (what a Grok Bot
- * webhook routine accepts). FEEDBACK_WEBHOOK_HEADER=<name> sends only that header instead
- * (`Bearer <key>` when the name is Authorization, the bare key otherwise).
+ * webhook routine accepts). FEEDBACK_WEBHOOK_HEADER=<name> sends only that header instead.
+ * When the name is Authorization (any case), the header is sent as `Authorization: Bearer <key>`
+ * and X-Automation-Key is omitted.
  */
 export function feedbackWebhookHeaders(c: FeedbackWebhookConfig): Record<string, string> {
   const h: Record<string, string> = { 'Content-Type': 'application/json', 'User-Agent': 'aisubal-feedback/1' }
-  if (!c.header) return { ...h, Authorization: `Bearer ${c.key}`, 'X-Automation-Key': c.key }
-  return { ...h, [c.header]: c.header.toLowerCase() === 'authorization' ? `Bearer ${c.key}` : c.key }
+  if (!c.header) return { ...h, Authorization: feedbackAuthorizationValue(c.key), 'X-Automation-Key': c.key }
+  if (c.header.toLowerCase() === 'authorization') return { ...h, Authorization: feedbackAuthorizationValue(c.key) }
+  return { ...h, [c.header]: c.key }
 }
 
 export type FeedbackWebhookBody = {

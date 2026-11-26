@@ -43,7 +43,7 @@ Authorization: Bearer {FEEDBACK_WEBHOOK_KEY}
 X-Automation-Key: {FEEDBACK_WEBHOOK_KEY}
 ```
 
-With `FEEDBACK_WEBHOOK_HEADER=<Name>` only that header carries the key (`Bearer <key>` if the name is `Authorization`, the bare key otherwise).
+With `FEEDBACK_WEBHOOK_HEADER=<Name>` only that header carries the key. If the name is `Authorization` (any case), the header is sent as `Authorization: Bearer <key>` (the key is not prefixed again if it already starts with `Bearer `) and `X-Automation-Key` is omitted; any other name gets the bare key.
 
 ```json
 {

@@ -112,8 +112,17 @@ describe('dev-request webhook', () => {
     const x = feedbackWebhookHeaders({ url: 'u', key: 'k', header: 'X-Webhook-Key' })
     expect(x['X-Webhook-Key']).toBe('k')
     expect(x.Authorization).toBeUndefined()
-    expect(feedbackWebhookHeaders({ url: 'u', key: 'k', header: 'Authorization' }).Authorization).toBe('Bearer k')
     expect(feedbackWebhookConfig({ FEEDBACK_WEBHOOK_URL: 'https://h.example', FEEDBACK_WEBHOOK_KEY: 'k', FEEDBACK_WEBHOOK_HEADER: 'bad header\n' })!.header).toBeNull()
+  })
+  it('Authorization header is Bearer without a double prefix or X-Automation-Key', () => {
+    for (const name of ['Authorization', 'authorization', 'AUTHORIZATION']) {
+      const h = feedbackWebhookHeaders({ url: 'u', key: 'k', header: name })
+      expect(h.Authorization).toBe('Bearer k')
+      expect(h['X-Automation-Key']).toBeUndefined()
+      expect(Object.keys(h).filter((k) => k.toLowerCase() === 'authorization')).toEqual(['Authorization'])
+    }
+    expect(feedbackWebhookHeaders({ url: 'u', key: 'Bearer already', header: 'Authorization' }).Authorization).toBe('Bearer already')
+    expect(feedbackWebhookHeaders({ url: 'u', key: 'bearer already', header: 'authorization' }).Authorization).toBe('Bearer already')
   })
   it('body carries the context, admin link and screenshot link — no avatar, no secrets', () => {
     const b = feedbackWebhookBody(ITEM, { origin: 'https://aisubal.vercel.app', screenshotUrl: 'https://s.example/sig', screenshotExpiresAt: '2026-11-27T06:00:00.000Z' })
