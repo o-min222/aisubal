@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { Ban, RotateCcw } from 'lucide-react'
+import { Ban, MessageSquareText, RotateCcw } from 'lucide-react'
 import { toast } from 'sonner'
 import { UserAvatar } from '@/components/user-avatar'
 
@@ -28,6 +28,15 @@ export function UsersAdmin({ initial, meId }: { initial: U[]; meId: string }) {
     toast.success(ban ? tn('차단했어요.') : tn('차단을 풀었어요.'))
   }
 
+  // A105: 화면 피드백 testers (admins can always)
+  async function setFeedback(u: U, on: boolean) {
+    const res = await fetch(`/api/admin/users/${u.id}/feedback`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ on }) })
+    const data = await res.json().catch(() => ({}))
+    if (!res.ok) return toast.error(data.error || tn('처리하지 못했어요.'))
+    setUsers((list) => list.map((x) => (x.id === u.id ? { ...x, feedbackEnabled: Boolean(data.feedbackEnabled) } : x)))
+    toast.success(data.feedbackEnabled ? tn('{name}님이 화면 피드백을 쓸 수 있어요.', { name: u.name }) : tn('{name}님의 화면 피드백을 껐어요.', { name: u.name }))
+  }
+
   return (
     <div className="space-y-3">
       <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={tx('닉네임·핸들·실명·이메일 검색')} aria-label={tx('유저 검색')} className="input" />
@@ -41,6 +50,7 @@ export function UsersAdmin({ initial, meId }: { initial: U[]; meId: string }) {
                   <span className="font-medium text-n-111 truncate">{u.name}</span>
                   {u.isAdmin && <span className="badge bg-c-f3e8ff text-c-6b21a8"><T>관리자</T></span>}
                   {u.isBanned && <span className="badge bg-c-fdecec text-c-b42318"><T>차단됨</T></span>}
+                  {u.feedbackEnabled && !u.isAdmin && <span className="badge bg-n-f3f3f3 text-n-555"><T>피드백</T></span>}
                 </span>
                 <span className="block text-xs text-n-888 truncate"><T s="{v} · 게시물 {posts}" vars={{ v: u.handle ? `@${u.handle}` : tx('핸들 미설정'), posts: u.posts }} /></span>
                 <span className="block text-xs text-n-aaa truncate" title={tx('관리자에게만 보여요')}>
@@ -48,6 +58,19 @@ export function UsersAdmin({ initial, meId }: { initial: U[]; meId: string }) {
                 </span>
               </span>
             </Link>
+            {!u.isAdmin && !u.isBanned && (
+              <button
+                type="button"
+                onClick={() => setFeedback(u, !u.feedbackEnabled)}
+                className={`btn btn-sm min-h-[40px] ${u.feedbackEnabled ? 'btn-primary' : 'btn-secondary'}`}
+                aria-pressed={u.feedbackEnabled}
+                aria-label={u.feedbackEnabled ? tx('{name} 화면 피드백 끄기', { name: u.name }) : tx('{name} 화면 피드백 켜기', { name: u.name })}
+                title={tx('화면 피드백 테스터')}
+              >
+                <MessageSquareText className="w-4 h-4" />
+                <span className="only-desktop"><T>피드백</T></span>
+              </button>
+            )}
             {!u.isAdmin && u.id !== meId && (
               <button
                 type="button"

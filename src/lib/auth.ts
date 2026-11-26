@@ -5,6 +5,7 @@ import type { Member, WaitlistEntry, UserState } from '@/lib/supabase/types'
 import { isMock } from '@/lib/data/client'
 import { getAnonUnlockFromConfig } from '@/lib/data/members'
 import { mockProfileOf } from '@/lib/data/profile'
+import { mockFeedbackPicker } from '@/lib/data/feedback-flag'
 import { mockAgentInteractionDefault, mockPostVisibilityDefault } from '@/lib/data/agent-interaction-default'
 
 const DEV_MEMBER: Member = {
@@ -42,7 +43,7 @@ const DEV_MEMBER: Member = {
 export const getUserState = cache(async function getUserState(): Promise<UserState> {
   if (isMock()) {
     const saved = mockProfileOf(DEV_MEMBER.id)
-    const dev = { ...DEV_MEMBER, agent_interaction_default: mockAgentInteractionDefault(), post_visibility_default: mockPostVisibilityDefault() }
+    const dev = { ...DEV_MEMBER, feedback_allowed: mockFeedbackPicker(), agent_interaction_default: mockAgentInteractionDefault(), post_visibility_default: mockPostVisibilityDefault() }
     return {
       type: 'member',
       member: saved
@@ -139,6 +140,12 @@ export async function requireAdmin(): Promise<Member> {
   const member = await requireMember()
   if (!member.is_admin) throw new Error('Admin access required')
   return member
+}
+
+/** A105: may use 화면 피드백 — get_my_member's feedback_allowed (includes the site kill switch); admin as a fallback. */
+export function canGiveFeedback(member: Member): boolean {
+  if (typeof member.feedback_allowed === 'boolean') return member.feedback_allowed
+  return Boolean(member.is_admin || member.feedback_enabled)
 }
 
 export function isDevMode(): boolean {

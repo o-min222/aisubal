@@ -239,7 +239,7 @@ describe('routes, redirects and navigation', () => {
     // A71 (t297u): 내 에이전트 lives in the account menu only
     expect(SETTINGS_SECTIONS.map((s) => s.label)).toEqual(['계정', '프로필 편집', '알림', '모바일 앱'])
     expect(SETTINGS_SECTIONS.map((s) => s.href)).not.toContain('/agents')
-    expect(ADMIN_SECTIONS.map((s) => s.label)).toEqual(['대시보드', '유저', '초대 네트워크 (전체)', '대기 명단', '갤러리 기록', '설치 확인', '신고', '익명 관리', '사이트 설정'])
+    expect(ADMIN_SECTIONS.map((s) => s.label)).toEqual(['대시보드', '유저', '초대 네트워크 (전체)', '대기 명단', '갤러리 기록', '설치 확인', '피드백', '신고', '익명 관리', '사이트 설정'])
     expect(subNavActive('/settings', '/settings/account', '/settings', '/settings/account')).toBe(true)
     expect(subNavActive('/settings/tokens', '/settings/account', '/settings', '/settings/account')).toBe(false)
     expect(read('src/app/(app)/admin/layout.tsx')).toMatch(/is_admin\) redirect/)

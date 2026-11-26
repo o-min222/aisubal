@@ -2,7 +2,8 @@
 
 import Link from 'next/link'
 import { useEffect, useRef, useState, type ReactNode } from 'react'
-import { Bot, Download, LogOut, Settings, Shield, Ticket, Users, LayoutDashboard } from 'lucide-react'
+import { Bot, Download, LogOut, MessageSquareText, Settings, Shield, Ticket, Users, LayoutDashboard } from 'lucide-react'
+import { useFeedbackMode } from '@/components/feedback/feedback-mode'
 import { AdaptiveSheet } from '@/components/adaptive-sheet'
 import { UserAvatar } from '@/components/user-avatar'
 import { useMediaQuery } from '@/hooks/use-media-query'
@@ -37,6 +38,7 @@ function useInvitesLeft(open: boolean, initial: number | null) {
 function MenuBody({ me, invitesLeft, close, onInstall }: { me: ShellMember; invitesLeft: number | null; close: () => void; onInstall: (() => void) | null }) {
   const t = useT()
   const requests = useFriendRequests()
+  const feedback = useFeedbackMode()
   return (
     <nav aria-label={t('계정 메뉴')} className="account-menu-body">
       {/* A89: '앱 설치' sits beside the profile row until the app is installed (hidden where install isn't possible) */}
@@ -78,6 +80,20 @@ function MenuBody({ me, invitesLeft, close, onInstall }: { me: ShellMember; invi
         <Link href="/admin" onClick={close} className="account-row">
           <Shield className="w-[18px] h-[18px]" /> {t('관리')}
         </Link>
+      )}
+      {feedback.allowed && (
+        <button
+          type="button"
+          className="account-row w-full text-left"
+          aria-pressed={feedback.on}
+          onClick={() => {
+            close()
+            feedback.setOn(!feedback.on)
+          }}
+        >
+          <MessageSquareText className="w-[18px] h-[18px]" /> {t('화면 피드백')}
+          <span className={feedback.on ? 'account-badge is-alert' : 'account-badge'}>{feedback.on ? t('켜짐') : t('꺼짐')}</span>
+        </button>
       )}
       <div className="account-sep" />
       <LocaleSwitch variant="row" />

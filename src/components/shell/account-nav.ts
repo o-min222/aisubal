@@ -12,6 +12,7 @@ import {
   Users,
   VenetianMask,
   Hourglass,
+  MessageSquareText,
   type LucideIcon,
 } from 'lucide-react'
 import { msg } from '@/i18n/translate'
@@ -37,6 +38,7 @@ export const ADMIN_SECTIONS: SubNavItem[] = [
   { href: '/admin/waitlist', label: msg('대기 명단'), icon: Hourglass, hint: msg('/join 신청 · 초대 코드') },
   { href: '/admin/tool-reviews', label: msg('갤러리 기록'), icon: ListChecks, hint: msg('바로 공개된 항목 · 자동으로 합친 중복') },
   { href: '/admin/installs', label: msg('설치 확인'), icon: PackageCheck, hint: msg('설치 명령 확인 · 공개') },
+  { href: '/admin/feedback', label: msg('피드백'), icon: MessageSquareText, hint: msg('화면 피드백 · 개발 요청') },
   { href: '/admin/reports', label: msg('신고'), icon: Flag, hint: msg('피드 신고 처리') },
   { href: '/admin/anon', label: msg('익명 관리'), icon: VenetianMask, hint: msg('숨김 · 삭제 · 추적') },
   { href: '/admin/site', label: msg('사이트 설정'), icon: SlidersHorizontal, hint: msg('초대 · 별명 언락') },

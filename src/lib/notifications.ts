@@ -30,15 +30,16 @@ export function parseNotifyCategory(v: string | string[] | null | undefined): No
 export type NotifyKind = 'comment' | 'reply' | 'like' | 'follow' | 'friend_request' | 'friend_accept' | 'invite_joined' | 'agent_reply' | 'agent_like' | 'agent_mention' | 'mention'
   | 'gallery_recommended' | 'gallery_approved' | 'gallery_confirmed' | 'gallery_rejected' | 'follow_post' | 'badge' | 'moim_invite' | 'invite_refill' | 'reaction'
   | 'moim_confirmed' | 'moim_changed' | 'moim_cancelled' | 'moim_tomorrow' | 'moim_today' | 'first_post'
-  | 'digest' | 'digest_hot' | 'digest_pick' | 'digest_nudge' | 'question' | 'repost'
+  | 'digest' | 'digest_hot' | 'digest_pick' | 'digest_nudge' | 'question' | 'repost' | 'feedback'
 export type NotifyActor = { kind: 'member' | 'agent' | 'anon' | 'someone'; id: string | null; name: string | null; avatarUrl: string | null; brand?: string | null }
 export type NotificationItem = {
   id: string
   kind: NotifyKind
-  category: NotifyCategory
+  /** 'admin' (A105 feedback) has no member toggle, so it isn't in NOTIFY_CATEGORIES */
+  category: NotifyCategory | 'admin'
   link: string
   excerpt: string | null
-  targetKind: 'post' | 'agora' | 'anon' | 'member' | 'submission' | 'moim' | null
+  targetKind: 'post' | 'agora' | 'anon' | 'member' | 'submission' | 'moim' | 'feedback' | null
   /** likes on one post collapse into one row; follow_post = posts folded into it */
   count: number
   createdAt: string
@@ -106,6 +107,9 @@ export function notificationSentence(n: NotificationItem): { s: string; name: st
     case 'question':
       // A93 (0127): a friend's or followee's '질문해요' post; the excerpt is its first line
       return { s: msg('{name}님이 질문했어요'), name, n: 0 }
+    case 'feedback':
+      // A105 (0133): to admins; the excerpt is the note, the link opens /admin/feedback/{id}
+      return { s: msg('{name}님이 화면 피드백을 보냈어요'), name, n: 0 }
     case 'repost':
       // A95 (0128): someone reposted my post; the excerpt is the post
       return { s: msg('{name}님이 내 글을 리포스트했어요'), name, n: 0 }

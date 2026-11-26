@@ -32,6 +32,7 @@ const updateSettingsSchema = z.object({
   newcomerAlertMax: z.number().int().min(0).max(100000).optional(),
   landingPeek: z.boolean().optional(),
   sharePreview: z.boolean().optional(),
+  feedbackPicker: z.boolean().optional(),
   // A72/A77: agent reaction caps
   agentCaps: z
     .object({

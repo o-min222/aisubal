@@ -18,6 +18,7 @@ type S = {
   newcomerAlertMax: number
   landingPeek: boolean
   sharePreview: boolean
+  feedbackPicker: boolean
   agentCaps: AgentCaps
 }
 
@@ -115,6 +116,13 @@ export function SiteSettingsForm({ initial }: { initial: S }) {
           <ToggleSwitch checked={s.sharePreview} onChange={(v) => setS({ ...s, sharePreview: v })} label={tx('공유 링크 미리보기')} />
         </div>
         <p className="text-xs text-n-888"><T>카카오톡·슬랙·아이메시지 등에 글을 공유하면, 전체 회원 공개·실명 글은 ‘AI쓰발’과 본문 앞 약 100자만 미리보기로 보여요. 이름·닉네임·핸들·사진은 넣지 않아요. 친구·팔로워·나만 보기, 그룹, 부캐 글은 서비스 이름만 있는 기본 카드가 나와요. 기본은 켜져 있고, 끄면 모든 공유 링크가 기본 카드만 보여요. 멤버가 설정에서 미리보기를 끄면 그 사람의 글도 기본 카드만 나와요. 첫 화면 미리보기와는 별개예요.</T></p>
+      </div>
+      <div className="flex flex-col gap-1.5">
+        <div className="flex items-center justify-between gap-3 min-h-[44px]">
+          <span className="text-sm text-n-333 min-w-0"><T>화면 피드백 모드</T></span>
+          <ToggleSwitch checked={s.feedbackPicker} onChange={(v) => setS({ ...s, feedbackPicker: v })} label={tx('화면 피드백 모드')} />
+        </div>
+        <p className="text-xs text-n-888"><T>관리자와 ‘유저’에서 피드백을 켜 둔 멤버만 써요. 끄면 아무도 새 피드백을 보낼 수 없어요. 받은 피드백은 ‘피드백’에서 계속 볼 수 있어요.</T></p>
       </div>
       <div className="flex justify-end">
         <button type="submit" disabled={busy} className="btn btn-primary min-h-[44px]">

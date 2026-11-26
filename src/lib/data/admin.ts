@@ -5,6 +5,8 @@ import type { Member } from '@/lib/supabase/types'
 import { sb, isMock } from './client'
 import { AGENT_CAPS, AGENT_CAP_KEYS, parseAgentCaps, type AgentCaps } from '@/lib/agent-conduct'
 import { getSiteSettings } from './members'
+import { mockFeedbackPicker } from './feedback-flag'
+import { mockFeedbackEnabled } from './feedback'
 
 export type AdminUserRow = {
   id: string
@@ -17,6 +19,8 @@ export type AdminUserRow = {
   posts: number
   isAdmin: boolean
   isBanned: boolean
+  /** A105: may use 화면 피드백 (admins always can) */
+  feedbackEnabled: boolean
 }
 
 export async function adminListUsers(): Promise<AdminUserRow[]> {
@@ -30,6 +34,7 @@ export async function adminListUsers(): Promise<AdminUserRow[]> {
       posts: MOCK_POSTS.filter((p) => p.author_id === m.id).length,
       isAdmin: m.is_admin,
       isBanned: m.is_banned,
+      feedbackEnabled: mockFeedbackEnabled(m.id),
     }))
   }
 
@@ -45,6 +50,7 @@ export async function adminListUsers(): Promise<AdminUserRow[]> {
     posts: Number(u.posts ?? 0),
     isAdmin: Boolean(u.isAdmin),
     isBanned: Boolean(u.isBanned),
+    feedbackEnabled: Boolean(u.feedbackEnabled),
   }))
 }
 
@@ -169,6 +175,7 @@ export async function adminGetSettings() {
       newcomerAlertMax: mockNewcomerMax(),
       landingPeek: mockPeekSite(),
       sharePreview: mockSharePreviewSite(),
+      feedbackPicker: mockFeedbackPicker(),
       agentCaps: mockAgentCaps(),
     }
   }
@@ -190,6 +197,8 @@ export async function adminGetSettings() {
     landingPeek: map.landing_peek !== 'false',
     // A101: share-link OG teaser (default on; independent of landing_peek)
     sharePreview: map.share_preview !== 'false',
+    // A105: 화면 피드백 kill switch (default on; admins and allowlisted testers only)
+    feedbackPicker: map.feedback_picker !== 'false',
     agentCaps: parseAgentCaps(map),
   }
 }
@@ -209,6 +218,7 @@ export async function adminUpdateSettings(input: {
   newcomerAlertMax?: number
   landingPeek?: boolean
   sharePreview?: boolean
+  feedbackPicker?: boolean
   agentCaps?: Partial<AgentCaps>
 }) {
   if (isMock()) {
@@ -216,6 +226,7 @@ export async function adminUpdateSettings(input: {
     if (input.newcomerAlertMax !== undefined) mockNewcomerMax(input.newcomerAlertMax)
     if (input.landingPeek !== undefined) mockPeekSite(input.landingPeek)
     if (input.sharePreview !== undefined) mockSharePreviewSite(input.sharePreview)
+    if (input.feedbackPicker !== undefined) mockFeedbackPicker(input.feedbackPicker)
     if (input.agentCaps) mockAgentCaps(input.agentCaps)
     return {
       siteName: input.siteName ?? 'AI쓰발',
@@ -226,6 +237,7 @@ export async function adminUpdateSettings(input: {
       newcomerAlertMax: mockNewcomerMax(),
       landingPeek: mockPeekSite(),
       sharePreview: mockSharePreviewSite(),
+      feedbackPicker: mockFeedbackPicker(),
       agentCaps: mockAgentCaps(),
     }
   }
@@ -249,6 +261,7 @@ export async function adminUpdateSettings(input: {
 
   if (input.landingPeek !== undefined) upserts.push({ key: 'landing_peek', value: String(input.landingPeek) })
   if (input.sharePreview !== undefined) upserts.push({ key: 'share_preview', value: String(input.sharePreview) })
+  if (input.feedbackPicker !== undefined) upserts.push({ key: 'feedback_picker', value: String(input.feedbackPicker) })
   for (const [k, v] of Object.entries(input.agentCaps ?? {}) as [keyof AgentCaps, number | undefined][]) {
     if (v !== undefined && AGENT_CAP_KEYS[k]) upserts.push({ key: AGENT_CAP_KEYS[k], value: String(Math.max(0, Math.floor(v))) })
   }

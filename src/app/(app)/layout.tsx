@@ -1,6 +1,7 @@
 import { Suspense } from 'react'
 import { redirect } from 'next/navigation'
-import { getUserState } from '@/lib/auth'
+import { canGiveFeedback, getUserState } from '@/lib/auth'
+import { FeedbackModeProvider } from '@/components/feedback/feedback-mode'
 import { getRailData } from '@/lib/data/shell'
 import { getMemberCard } from '@/lib/data/member-card'
 import { getPledgeStatus } from '@/lib/data/pledge'
@@ -60,9 +61,11 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     nickname: member.nickname,
     bio: member.bio,
     isAdmin: Boolean(member.is_admin),
+    feedbackAllowed: canGiveFeedback(member),
   }
 
   return (
+    <FeedbackModeProvider allowed={Boolean(me.feedbackAllowed)}>
     <div className="app-root">
       <TopBar me={me} />
       <PullToRefresh />
@@ -96,5 +99,6 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       <ComposeFab />
       <BottomTabs />
     </div>
+    </FeedbackModeProvider>
   )
 }

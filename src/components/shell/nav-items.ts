@@ -46,4 +46,6 @@ export type ShellMember = {
   nickname: string | null
   bio: string | null
   isAdmin: boolean
+  /** A105: may use 화면 피드백 (admin or tester, and the site switch is on) */
+  feedbackAllowed?: boolean
 }

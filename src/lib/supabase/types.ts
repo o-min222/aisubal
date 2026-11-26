@@ -1,4 +1,7 @@
 export type Member = {
+  /** A105 (0133): 화면 피드백 tester flag (admins can always) and the effective permission from get_my_member */
+  feedback_enabled?: boolean
+  feedback_allowed?: boolean
   /** UI language preference (0019); read via get_my_member, set via member_set_locale */
   locale?: string | null
   /** color theme (0028): system | light | dark; set via member_set_theme */
