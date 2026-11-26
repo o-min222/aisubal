@@ -34,6 +34,11 @@ describe('notifications', () => {
     expect(badgeLabel(7)).toBe('7')
     expect(badgeLabel(140)).toBe('99+')
   })
+  it('feedback points admins at the inbox item', () => {
+    const n = notificationSentence({ ...base, kind: 'feedback', category: 'admin', targetKind: 'feedback', link: '/admin/feedback/abc', excerpt: '[테스트] 승인 연결 확인' })
+    expect(n.s).toBe('{name}님이 화면 피드백을 보냈어요')
+    expect(n.name).toBe('콜린')
+  })
   it('parses categories', () => {
     expect(parseNotifyCategory('likes')).toBe('likes')
     expect(parseNotifyCategory('nope')).toBeNull()

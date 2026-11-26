@@ -56,6 +56,13 @@ export type FeedbackMeta = z.infer<typeof feedbackMetaSchema>
 
 export const FEEDBACK_SHOT_MAX_BYTES = 6_000_000 // raw upload; the server re-encodes to WebP ≤ 1.5 MB
 export const FEEDBACK_SHOT_TYPES = ['image/jpeg', 'image/png', 'image/webp']
+
+/** A106: every active admin gets an in-app row; web push skips the author (don't buzz yourself). */
+export function feedbackNotifyRecipients(adminIds: readonly string[], authorId: string): { inApp: string[]; push: string[] } {
+  const inApp = [...adminIds]
+  return { inApp, push: inApp.filter((id) => id !== authorId) }
+}
+
 export const feedbackShotPath = (authId: string, id: string) => `${authId}/${id}.webp`
 /** The webhook's screenshot link lives this long (seconds). */
 export const FEEDBACK_SHOT_URL_TTL = 6 * 60 * 60

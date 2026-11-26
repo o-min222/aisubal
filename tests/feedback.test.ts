@@ -6,6 +6,7 @@ import {
   feedbackWebhookBody,
   feedbackWebhookConfig,
   feedbackWebhookHeaders,
+  feedbackNotifyRecipients,
   progressSignature,
   verifyProgressSignature,
   type FeedbackItem,
@@ -204,6 +205,20 @@ describe('0133 contract', () => {
     }
     expect(sql).toMatch(/'feedback-shots', 'feedback-shots', false/)
     expect(sql).toMatch(/feedback_rate_limited/)
+  })
+})
+
+
+describe('A106 admin notify policy', () => {
+  it('gives every admin an in-app row and skips push only for the author', () => {
+    expect(feedbackNotifyRecipients(['admin', 'other-admin'], 'admin')).toEqual({ inApp: ['admin', 'other-admin'], push: ['other-admin'] })
+    expect(feedbackNotifyRecipients(['admin'], 'admin')).toEqual({ inApp: ['admin'], push: [] })
+    expect(feedbackNotifyRecipients(['admin'], 'member')).toEqual({ inApp: ['admin'], push: ['admin'] })
+    const sql = read('supabase/migrations/0134_feedback_admin_notify.sql')
+    expect(sql).toMatch(/where m\.is_admin and m\.signup_completed_at is not null and not m\.is_banned/)
+    expect(sql).not.toMatch(/m\.id\s*<>\s*new\.author_id/)
+    expect(sql).toMatch(/new\.kind = 'feedback' and new\.actor_member_id is not distinct from new\.recipient_id/)
+    expect(sql).toMatch(/\/admin\/feedback\/' \|\| new\.id/)
   })
 })
 
