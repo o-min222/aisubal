@@ -264,6 +264,29 @@ https://www.youtube.com/watch?v=zjkBMFhNj_g`,
       },
     ],
   }),
+  // A104: a stored Instagram OG URL that will 404 (signed/expired CDN). The sheet
+  // used to show a broken-image glyph in WebKit; it must hide the container instead.
+  buildPost({
+    id: 'post-ig',
+    title: '이 릴스 짧게 잘 정리돼 있어요',
+    content: '이 릴스 짧게 잘 정리돼 있어요.\nhttps://www.instagram.com/p/DgJ6fRqI3vr/',
+    source_note: null,
+    url: 'https://www.instagram.com/p/DgJ6fRqI3vr/',
+    link_title: 'Instagram 게시물',
+    link_description: 'SNS에서 공유된 게시물입니다.',
+    link_image: 'https://aisubal.vercel.app/__missing-og-a104.jpg',
+    link_site_name: 'Instagram',
+    link_favicon: 'https://www.instagram.com/favicon.ico',
+    link_type: 'other',
+    author_id: 'member-1',
+    posted_as: 'real',
+    nickname_profile_id: null,
+    is_agent_posted: false,
+    agent_token_name: null,
+    created_at: '2026-11-25T09:11:00Z',
+    archive_count: 4,
+    assets: [],
+  }),
 ]
 
 export const MOCK_TRENDING = MOCK_POSTS.slice()

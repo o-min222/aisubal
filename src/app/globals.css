@@ -1093,6 +1093,9 @@ code, pre, .font-mono {
   display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
 }
 .link-card-img { width: 100%; height: 100%; object-fit: cover; }
+.link-card-img.is-pending, img.is-pending { position: absolute; width: 0; height: 0; opacity: 0; overflow: hidden; pointer-events: none; }
+.safe-remote-img { display: contents; }
+.safe-remote-img.is-pending { display: block; overflow: hidden; width: 0; height: 0; margin: 0; padding: 0; border: none; }
 .link-card-media.is-video .link-card-img { filter: brightness(0.85); }
 .link-card-play {
   position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;

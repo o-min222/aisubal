@@ -6,6 +6,8 @@ import type { LinkCardData } from '@/components/link-card'
 import { videoEmbed } from '@/lib/video-embed'
 import { T } from '@/i18n/t'
 import { tx } from '@/i18n/client'
+import { previewImageAlt, previewDisplaySrc } from '@/lib/preview-image'
+import { SafeRemoteImage, useSafeRemoteImage } from '@/components/safe-remote-image'
 
 const hostOf = (url: string) => {
   try {
@@ -18,14 +20,18 @@ const safeImg = (src: string | null | undefined) => (src && /^https:\/\//.test(s
 
 /** Compact link card: thumbnail, 2-line title, domain. Opens the link in a new tab. */
 function RowLink({ link, more }: { link: LinkCardData; more: number }) {
-  const [imgOk, setImgOk] = useState(true)
   const host = hostOf(link.url)
-  const img = safeImg(link.image) ?? safeImg(link.favicon)
+  const src = previewDisplaySrc(link.url, link.image) ?? safeImg(link.favicon)
+  const og = useSafeRemoteImage(src)
   const isX = link.link_type === 'x'
   return (
     <a href={link.url} target="_blank" rel="noopener noreferrer nofollow ugc" className="rp-link">
       <span className="rp-thumb" aria-hidden>
-        {img && imgOk ? <img src={img} alt="" loading="lazy" onError={() => setImgOk(false)} /> : <span className="rp-thumb-fallback">{isX ? '𝕏' : host.slice(0, 1).toUpperCase()}</span>}
+        {og.active && og.imgProps && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img {...og.imgProps} alt="" className={og.visible ? undefined : 'is-pending'} />
+        )}
+        {!og.visible && <span className="rp-thumb-fallback">{isX ? '𝕏' : host.slice(0, 1).toUpperCase()}</span>}
       </span>
       <span className="rp-body">
         <span className="rp-title">{link.title || host}</span>
@@ -61,7 +67,12 @@ function RowVideo({ link, more }: { link: LinkCardData; more: number }) {
   return (
     <div className="rp-video-wrap">
       <button type="button" className="rp-video" onClick={() => setPlaying(true)} aria-label={tx('{title} 재생', { title })}>
-        {thumb ? <img src={thumb} alt="" loading="lazy" /> : <span className="rp-video-blank" />}
+        {thumb ? (
+          <SafeRemoteImage
+            src={link.image ? previewDisplaySrc(link.url, link.image) : thumb}
+            alt={previewImageAlt(title, link.site_name, link.url)}
+          />
+        ) : <span className="rp-video-blank" />}
         <span className="rp-play" aria-hidden>
           <Play className="w-5 h-5" />
         </span>
@@ -81,6 +92,7 @@ function RowX({ link, more }: { link: LinkCardData; more: number }) {
   const [open, setOpen] = useState(false)
   const [height, setHeight] = useState(360)
   const frame = useRef<HTMLIFrameElement>(null)
+  const og = useSafeRemoteImage(previewDisplaySrc(link.url, link.image))
   useEffect(() => {
     if (!open) return
     const onMsg = (e: MessageEvent) => {
@@ -108,11 +120,14 @@ function RowX({ link, more }: { link: LinkCardData; more: number }) {
       </div>
     )
   }
-  const img = safeImg(link.image)
   return (
     <button type="button" className="rp-link" onClick={() => setOpen(true)} aria-label={tx('X 게시물 펼치기')}>
       <span className="rp-thumb" aria-hidden>
-        {img ? <img src={img} alt="" loading="lazy" /> : <span className="rp-thumb-fallback">𝕏</span>}
+        {og.active && og.imgProps && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img {...og.imgProps} alt="" className={og.visible ? undefined : 'is-pending'} />
+        )}
+        {!og.visible && <span className="rp-thumb-fallback">𝕏</span>}
         <span className="rp-play rp-play-sm"><Play className="w-3.5 h-3.5" /></span>
       </span>
       <span className="rp-body">

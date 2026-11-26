@@ -6,6 +6,8 @@ import { AdaptiveSheet } from '@/components/adaptive-sheet'
 import { LinkCard, type LinkCardData } from '@/components/link-card'
 import { embedOf } from '@/lib/link-embed'
 import { youtubeThumbnail } from '@/lib/link-preview'
+import { previewImageAlt, previewDisplaySrc } from '@/lib/preview-image'
+import { SafeRemoteImage } from '@/components/safe-remote-image'
 import { T } from '@/i18n/t'
 import { tx } from '@/i18n/client'
 
@@ -45,8 +47,13 @@ export function LinkPreviewBlock({ link }: { link: LinkCardData }) {
             />
           ) : (
             <button type="button" className="link-embed-facade" onClick={() => setPlaying(true)} aria-label={tx('영상 불러오기: {title}', { title: link.title || hostOf(link.url) })}>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              {thumb && <img src={thumb} alt="" className="link-embed-thumb" loading="lazy" />}
+              {thumb && (
+                <SafeRemoteImage
+                  src={link.image ? previewDisplaySrc(link.url, link.image) : thumb}
+                  alt={previewImageAlt(link.title, link.site_name, link.url)}
+                  className="link-embed-thumb"
+                />
+              )}
               <span className="link-embed-play" aria-hidden><Play className="w-6 h-6 fill-white text-white" /></span>
             </button>
           )}
@@ -66,8 +73,13 @@ export function LinkPreviewBlock({ link }: { link: LinkCardData }) {
       <LinkCard compact link={link} onOpen={() => setOpen(true)} />
       <AdaptiveSheet open={open} onOpenChange={setOpen} title={link.site_name || hostOf(link.url)}>
         <div className="link-sheet" onClick={(e) => e.stopPropagation()}>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          {link.image && <img src={link.image} alt="" className="link-sheet-img" />}
+          {link.image && (
+            <SafeRemoteImage
+              src={previewDisplaySrc(link.url, link.image)}
+              alt={previewImageAlt(link.title, link.site_name, link.url)}
+              className="link-sheet-img"
+            />
+          )}
           <p className="link-sheet-title">{link.title || link.url}</p>
           {link.description && <p className="link-sheet-desc">{link.description}</p>}
           <p className="link-sheet-host">{hostOf(link.url)}</p>

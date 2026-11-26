@@ -4,6 +4,8 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { Play } from 'lucide-react'
 import type { LinkType } from '@/lib/supabase/types'
 import { T } from '@/i18n/t'
+import { previewImageAlt, previewDisplaySrc } from '@/lib/preview-image'
+import { useSafeRemoteImage } from '@/components/safe-remote-image'
 
 export type LinkCardData = {
   url: string
@@ -48,18 +50,18 @@ export function LinkCard({
   const isYoutube = link.link_type === 'youtube'
   const target = href || link.url
   const host = useMemo(() => hostnameOf(link.url), [link.url])
-  const [imgFailed, setImgFailed] = useState(false)
   const [faviconFailed, setFaviconFailed] = useState(false)
   const favRef = useRef<HTMLImageElement>(null)
-  const imgRef = useRef<HTMLImageElement>(null)
+  const imageSrc = previewDisplaySrc(link.url, link.image)
+  const imageAlt = previewImageAlt(link.title, link.site_name, link.url)
+  const og = useSafeRemoteImage(imageSrc)
   useEffect(() => {
     // a server-rendered <img> can fail before hydration attaches onError: fall back to the letter then too
     const broken = (el: HTMLImageElement | null) => Boolean(el?.complete && el.naturalWidth === 0)
     if (broken(favRef.current)) setFaviconFailed(true)
-    if (broken(imgRef.current)) setImgFailed(true)
-  }, [link.favicon, link.image])
+  }, [link.favicon])
 
-  const showImage = Boolean(link.image) && !imgFailed
+  const showImage = og.visible
   const showFavicon = Boolean(link.favicon) && !faviconFailed
   const label = (link.site_name || host).slice(0, 10).toUpperCase()
 
@@ -77,48 +79,48 @@ export function LinkCard({
         }
       }}
     >
-      {showImage ? (
-        <div className={`link-card-media ${isYoutube ? 'is-video' : ''}`}>
-          <img
-            ref={imgRef}
-            src={link.image!}
-            alt=""
-            className="link-card-img"
-            onError={() => setImgFailed(true)}
-          />
-          {isYoutube && (
-            <span className="link-card-play" aria-hidden>
-              <Play className="w-5 h-5 fill-white text-white" />
-            </span>
-          )}
-        </div>
-      ) : (
-        <div
-          className="link-card-media link-card-media-fallback"
-          style={{ background: tileColor(host) }}
-          aria-hidden
-        >
-          {showFavicon ? (
-            <img
-              src={link.favicon!}
-              alt=""
-              className="link-card-fallback-favicon"
-              onError={() => setFaviconFailed(true)}
-            />
-          ) : (
-            <span className="link-card-fallback-label">{label.slice(0, 2)}</span>
-          )}
-          <span className="link-card-fallback-site"><T>{label}</T></span>
-        </div>
-      )}
+      <div
+        className={`link-card-media ${showImage && isYoutube ? 'is-video' : ''} ${showImage ? '' : 'link-card-media-fallback'}`}
+        style={showImage ? undefined : { background: tileColor(host) }}
+        aria-hidden={!showImage}
+      >
+        {og.active && og.imgProps && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img {...og.imgProps} alt={imageAlt} className={`link-card-img${showImage ? '' : ' is-pending'}`} />
+        )}
+        {showImage && isYoutube && (
+          <span className="link-card-play" aria-hidden>
+            <Play className="w-5 h-5 fill-white text-white" />
+          </span>
+        )}
+        {!showImage && (
+          <>
+            {showFavicon ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={link.favicon!}
+                alt=""
+                className="link-card-fallback-favicon"
+                referrerPolicy="no-referrer"
+                onError={() => setFaviconFailed(true)}
+              />
+            ) : (
+              <span className="link-card-fallback-label">{label.slice(0, 2)}</span>
+            )}
+            <span className="link-card-fallback-site"><T>{label}</T></span>
+          </>
+        )}
+      </div>
       <div className="link-card-body">
         <div className="link-card-site">
           {showFavicon ? (
+            // eslint-disable-next-line @next/next/no-img-element
             <img
               ref={favRef}
               src={link.favicon!}
               alt=""
               className="link-card-favicon"
+              referrerPolicy="no-referrer"
               onError={() => setFaviconFailed(true)}
             />
           ) : (

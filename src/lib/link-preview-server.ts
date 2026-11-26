@@ -199,19 +199,23 @@ async function dbPut(url: string, value: LinkPreview, ok: boolean): Promise<void
   }
 }
 
-export async function fetchLinkPreview(url: string): Promise<LinkPreview> {
+export async function fetchLinkPreview(url: string, opts?: { bypassCache?: boolean }): Promise<LinkPreview> {
   const now = Date.now()
-  const hit = cache.get(url)
-  if (hit && now - hit.at < hit.ttl) {
-    cache.delete(url)
-    cache.set(url, hit) // refresh LRU position
-    return hit.value
+  if (!opts?.bypassCache) {
+    const hit = cache.get(url)
+    if (hit && now - hit.at < hit.ttl) {
+      cache.delete(url)
+      cache.set(url, hit) // refresh LRU position
+      return hit.value
+    }
+    const pending = inflight.get(url)
+    if (pending) return pending
   }
-  const pending = inflight.get(url)
-  if (pending) return pending
   const p = (async () => {
-    const shared = await dbGet(url)
-    if (shared) return { value: shared, ok: true, fromDb: true }
+    if (!opts?.bypassCache) {
+      const shared = await dbGet(url)
+      if (shared) return { value: shared, ok: true, fromDb: true }
+    }
     return { ...(await load(url)), fromDb: false }
   })()
     .then(({ value, ok, fromDb }) => {
