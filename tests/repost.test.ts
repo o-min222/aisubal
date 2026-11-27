@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { readFileSync } from 'node:fs'
-import { canRepost, repostLabel } from '@/lib/repost-rules'
+import { canRepost, mergePostsWithReposts, repostActivityAt, repostLabel } from '@/lib/repost-rules'
 import { notificationSentence, type NotificationItem } from '@/lib/notifications'
 
 const read = (p: string) => readFileSync(p, 'utf8')
@@ -62,13 +62,15 @@ describe('A95 · 0128 migration', () => {
 })
 
 describe('A95 · surfaces', () => {
-  it('the feed reads repost_count and carries reposts only in 팔로잉 / 친구', () => {
+  it('the feed reads repost_count and carries reposts in 팔로잉 / 친구 and on a member profile', () => {
     const f = read('src/lib/data/feed.ts')
     expect(f).toContain('reaction_count, repost_count, is_question, visibility')
     expect(f).toMatch(/\(scope === 'following' \|\| scope === 'friends'\) && !opts\.groupId && !opts\.authorId && !opts\.q/)
+    expect(f).toContain('Boolean(opts.authorId) && !opts.groupId && !opts.q')
+    expect(f).toContain('mergePostsWithReposts')
     // the post is read under its own RLS and only plain real-name root posts qualify
     expect(f).toMatch(/\.is\('parent_id', null\)\s*\.is\('group_id', null\)\s*\.eq\('posted_as', 'real'\)\s*\.eq\('is_hidden', false\)\s*\.is\('deleted_at', null\)/)
-    expect(f).toContain('skipAuthors.has(')
+    expect(f).not.toContain('skipAuthors')
   })
   it('POST/DELETE /api/feed/{id}/repost', () => {
     const r = read('src/app/api/feed/[id]/repost/route.ts')
@@ -87,5 +89,36 @@ describe('A95 · surfaces', () => {
     const css = read('src/app/globals.css')
     expect(css).not.toMatch(/\.tc-slot \{[^}]*min-width/)
     expect(css).not.toMatch(/@media \(min-width: 640px\) \{ \.tc-slot/)
+  })
+})
+
+describe('A113 · repost surfaces', () => {
+  it('a repost on the same page replaces the original and sorts by repost time', () => {
+    type Row = { id: string; createdAt: string; repostedBy?: { at: string } | null }
+    const original: Row = { id: 'p1', createdAt: '2026-11-01T00:00:00Z', repostedBy: null }
+    const older: Row = { id: 'p0', createdAt: '2026-10-01T00:00:00Z', repostedBy: null }
+    const newer: Row = { id: 'p2', createdAt: '2026-11-20T00:00:00Z', repostedBy: null }
+    const repost: Row = { id: 'p1', createdAt: '2026-11-01T00:00:00Z', repostedBy: { at: '2026-11-27T00:00:00Z' } }
+    const onlyRepost: Row = { id: 'p9', createdAt: '2026-01-01T00:00:00Z', repostedBy: { at: '2026-11-26T12:00:00Z' } }
+    const merged = mergePostsWithReposts([newer, original, older], [repost, onlyRepost])
+    expect(merged.map((p) => p.id)).toEqual(['p1', 'p9', 'p2', 'p0'])
+    expect(merged[0].repostedBy?.at).toBe('2026-11-27T00:00:00Z')
+    expect(merged.filter((p) => p.id === 'p1')).toHaveLength(1)
+    expect(repostActivityAt(repost)).toBe('2026-11-27T00:00:00Z')
+    expect(repostActivityAt(older)).toBe('2026-10-01T00:00:00Z')
+  })
+
+  it('the toast links to the profile, and the dashboard marks a mixed-in repost', () => {
+    const b = read('src/components/timeline/repost-button.tsx')
+    expect(b).toContain("tn('내 프로필에 리포스트했어요')")
+    expect(b).toContain("tn('프로필 보기')")
+    expect(b).toContain("router.push('/members/me')")
+    const me = read('src/app/(app)/me/page.tsx')
+    expect(me).toContain('<T>리포스트함</T>')
+    expect(me).toContain('p.repostedBy?.at ?? p.createdAt')
+    expect(me).toContain('reposted: Boolean(p.repostedBy)')
+    const t = read('src/i18n/dict/en.ts')
+    expect(t).toContain('"내 프로필에 리포스트했어요": "Reposted to your profile"')
+    expect(t).toContain('"리포스트함": "Reposted"')
   })
 })

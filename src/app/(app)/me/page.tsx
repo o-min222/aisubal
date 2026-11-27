@@ -72,6 +72,7 @@ function PostRows({ items, empty }: { items: DashItem[]; empty: string }) {
           href={p.href}
           meta={
             <>
+              {p.reposted && <span className="text-n-555"><T>리포스트함</T></span>}
               {p.authorName && <span className="text-n-555">{p.authorName}</span>}
               {p.isNickname && <span className="badge"><T>부캐</T></span>}
               <RelativeTime date={p.createdAt} />
@@ -130,14 +131,15 @@ async function dashboardListChunk(meId: string, tab: DashboardTab, page: number)
       <PostRows
         empty={t('아직 쓴 글이 없어요.')}
         items={r.posts.map((p) => ({
-          id: p.id,
+          id: p.repostedBy ? `repost:${p.repostedBy.id}:${p.id}` : p.id,
           href: `/posts/${p.id}`,
           title: p.title ?? null,
           body: p.body || p.linkPreview?.title || p.linkUrl || '',
-          createdAt: p.createdAt,
+          createdAt: p.repostedBy?.at ?? p.createdAt,
           likeCount: p.likeCount,
           replyCount: p.replyCount,
           isNickname: Boolean(p.isNickname),
+          reposted: Boolean(p.repostedBy),
         }))}
       />
     )

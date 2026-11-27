@@ -15,7 +15,7 @@ import { enrichAll, markLiked, type Enricher } from './enrich'
 import { getRelations, socialAuthorIds } from './social'
 import { listDismissed } from './rec-dismissals'
 import { pickInterestTags, rankFeedPosts } from '@/lib/recommend-rules'
-import { canRepost } from '@/lib/repost-rules'
+import { canRepost, mergePostsWithReposts } from '@/lib/repost-rules'
 
 import { moimCardsForThreads, promotedGroupMoimThreads } from './moim'
 import { listFeedArticleCards, type ArticleCard } from './articles'
@@ -334,10 +334,9 @@ export async function setMemberRepost(postId: string, memberId: string, on: bool
 
 /**
  * Reposts by `reposterIds` created between `lower` and `upper` (exclusive), newest first, one entry per post.
- * The post is read under its own RLS, so a post that has since been restricted, hidden or deleted never shows;
- * posts by `skipAuthors` are left out because the feed already carries them.
+ * The post is read under its own RLS, so a post that has since been restricted, hidden or deleted never shows.
  */
-async function listRepostEntries(viewerId: string, reposterIds: string[], skipAuthors: Set<string>, lower: string | null, upper: string | null, extra: Enricher[]): Promise<TimelinePost[]> {
+async function listRepostEntries(viewerId: string, reposterIds: string[], lower: string | null, upper: string | null, extra: Enricher[]): Promise<TimelinePost[]> {
   if (!reposterIds.length) return []
   const inWindow = (at: string) => (!lower || at > lower) && (!upper || at < upper)
   type Entry = { postId: string; at: string; who: { id: string; name: string } }
@@ -348,8 +347,8 @@ async function listRepostEntries(viewerId: string, reposterIds: string[], skipAu
     entries = mockReposts
       .filter((r) => reposterIds.includes(r.memberId) && inWindow(r.at))
       .sort((a, b) => b.at.localeCompare(a.at))
-      .map((r) => ({ postId: r.postId, at: r.at, who: { id: r.memberId, name: MOCK_MEMBERS.find((m) => m.id === r.memberId)?.display_name ?? '멤버' } }))
-    posts = st.posts.filter((p) => !p.parentId && !p.groupId && !p.isNickname && !p.isDeleted && !skipAuthors.has(p.author.id)).map((p) => ({ ...p, isMine: p.author.id === viewerId }))
+      .map((r) => ({ postId: r.postId, at: r.at, who: { id: r.memberId, name: MOCK_MEMBERS.find((m) => m.id === r.memberId)?.display_name ?? (r.memberId === 'dev-user-id' ? '개발자' : '멤버') } }))
+    posts = st.posts.filter((p) => !p.parentId && !p.groupId && !p.isNickname && !p.isDeleted).map((p) => ({ ...p, isMine: p.author.id === viewerId }))
   } else {
     const supabase = await sb()
     let q = supabase
@@ -380,7 +379,7 @@ async function listRepostEntries(viewerId: string, reposterIds: string[], skipAu
       .is('deleted_at', null)
     if (e2) throw e2
     const nickId = await myNicknameId()
-    posts = ((rows || []) as unknown as FeedRow[]).filter((r) => !skipAuthors.has(r.public_author_id ?? r.author?.id ?? '')).map((r) => feedRowToTimeline(r, new Set(), viewerId, nickId))
+    posts = ((rows || []) as unknown as FeedRow[]).map((r) => feedRowToTimeline(r, new Set(), viewerId, nickId))
     posts = markLiked(posts, await likedSet(viewerId, posts.map((p) => p.id)))
   }
   const byId = new Map(posts.map((p) => [p.id, p]))
@@ -397,27 +396,29 @@ async function listRepostEntries(viewerId: string, reposterIds: string[], skipAu
 }
 
 /**
- * 팔로잉 / 친구 also carry the reposts of the people in that list, at the time they reposted, with a
- * 'reposted by' header. The page keeps its normal 20 posts; reposts that fall between this page's
- * newest and oldest post are added to it, so none is lost or doubled across pages.
+ * 팔로잉 / 친구, and a member's profile / 내 글 dashboard, also carry that person's (or those
+ * people's) reposts, at the time they reposted, with a 'reposted by' header. The page keeps its
+ * normal size; reposts that fall between this page's newest and oldest post are merged in.
+ * If the original is already on the page, the repost replaces it so the thread appears once.
  */
 async function queryFeed(viewerId: string, opts: FeedListOpts, withCount: boolean, extra: Enricher[] = []): Promise<{ posts: TimelinePost[]; total: number | null }> {
   const scope = opts.scope ?? 'all'
-  if (!((scope === 'following' || scope === 'friends') && !opts.groupId && !opts.authorId && !opts.q)) return queryFeedBase(viewerId, opts, withCount, extra)
+  const following = (scope === 'following' || scope === 'friends') && !opts.groupId && !opts.authorId && !opts.q
+  const profile = Boolean(opts.authorId) && !opts.groupId && !opts.q
+  if (!following && !profile) return queryFeedBase(viewerId, opts, withCount, extra)
   const limit = Math.min(opts.limit ?? 30, 100)
   const offset = Math.max(0, opts.offset ?? 0)
   const lead = offset > 0 ? 1 : 0 // the row just before this page: its time bounds the page from above
   const [base, authorIds] = await Promise.all([
     queryFeedBase(viewerId, { ...opts, offset: offset - lead, limit: limit + lead }, withCount, extra),
-    socialAuthorIds(viewerId, scope).catch(() => [] as string[]),
+    following ? socialAuthorIds(viewerId, scope).catch(() => [] as string[]) : Promise.resolve([opts.authorId as string]),
   ])
   const rows = base.posts.slice(lead)
   const upper = lead ? (base.posts[0]?.createdAt ?? null) : (opts.before ?? null)
   const lower = rows.length >= limit ? rows[rows.length - 1].createdAt : null
-  const reposts = await listRepostEntries(viewerId, authorIds, new Set(authorIds), lower, upper, extra).catch(() => [] as TimelinePost[])
+  const reposts = await listRepostEntries(viewerId, authorIds, lower, upper, extra).catch(() => [] as TimelinePost[])
   if (!reposts.length) return { posts: rows, total: base.total }
-  const at = (p: TimelinePost) => p.repostedBy?.at ?? p.createdAt
-  return { posts: [...rows, ...reposts].sort((a, b) => at(b).localeCompare(at(a))), total: base.total }
+  return { posts: mergePostsWithReposts(rows, reposts), total: base.total }
 }
 
 async function queryFeedBase(viewerId: string, opts: FeedListOpts, withCount: boolean, extra: Enricher[] = []): Promise<{ posts: TimelinePost[]; total: number | null }> {

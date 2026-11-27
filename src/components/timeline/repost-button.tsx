@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { Repeat2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { publishRepost, useRepost } from '@/lib/repost-store'
@@ -13,6 +14,7 @@ import { tx, tn } from '@/i18n/client'
  * cards line up, quiet; tapping it says why. POST/DELETE /api/feed/{id}/repost.
  */
 export function RepostButton({ postId, initialCount, initialMine, blockedReason }: { postId: string; initialCount: number; initialMine: boolean; blockedReason?: string | null }) {
+  const router = useRouter()
   const s = useRepost(postId, { count: initialCount, mine: initialMine })
   const [busy, setBusy] = useState(false)
   const blocked = Boolean(blockedReason) && !s.mine
@@ -29,7 +31,11 @@ export function RepostButton({ postId, initialCount, initialMine, blockedReason 
       const data = await res.json().catch(() => ({}))
       if (!res.ok) throw new Error(data.error || tn('리포스트하지 못했어요.'))
       if (typeof data.repostCount === 'number') publishRepost(postId, data.repostCount, next)
-      if (next) toast.success(tn('리포스트했어요'))
+      if (next) {
+        toast.success(tn('내 프로필에 리포스트했어요'), {
+          action: { label: tn('프로필 보기'), onClick: () => router.push('/members/me') },
+        })
+      }
     } catch (e) {
       publishRepost(postId, s.count, s.mine)
       toast.error(e instanceof Error ? e.message : tn('리포스트하지 못했어요.'))

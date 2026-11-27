@@ -16,6 +16,8 @@ export type DashItem = {
   isNickname: boolean
   /** liked posts: who wrote it */
   authorName?: string | null
+  /** A113: this row is a post the member reposted */
+  reposted?: boolean
 }
 
 export type DashboardStats = {

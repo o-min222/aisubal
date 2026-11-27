@@ -2665,6 +2665,8 @@ const en: Record<string, string> = {
   "리포스트 취소": "Undo repost",
   "리포스트 {n}": "Repost, {n}",
   "리포스트했어요": "Reposted",
+  "내 프로필에 리포스트했어요": "Reposted to your profile",
+  "리포스트함": "Reposted",
   "리포스트하지 못했어요.": "Couldn't repost.",
   "내 글은 리포스트할 수 없어요.": "You can't repost your own post.",
   "전체 회원에게 공개된 글만 리포스트할 수 있어요.": "Only posts visible to all members can be reposted.",
