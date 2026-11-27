@@ -44,6 +44,8 @@ export type Member = {
   invited_by_id: string | null
   invite_code_used: string | null
   signup_completed_at: string | null
+  /** 0020: set when the member signs the 입단 서약. Layout gates on this instead of a second RPC. */
+  pledge_signed_at?: string | null
   created_at: string
   updated_at: string
 }

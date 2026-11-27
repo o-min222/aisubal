@@ -4,9 +4,10 @@ import { canGiveFeedback, getUserState } from '@/lib/auth'
 import { FeedbackModeProvider } from '@/components/feedback/feedback-mode'
 import { getRailData } from '@/lib/data/shell'
 import { getMemberCard } from '@/lib/data/member-card'
-import { getPledgeStatus } from '@/lib/data/pledge'
 import { recordVisit } from '@/lib/data/badges'
+import { memberNeedsPledge } from '@/lib/pledge-gate'
 import type { Member } from '@/lib/supabase/types'
+import { after } from 'next/server'
 import { TopBar } from '@/components/shell/top-bar'
 import { SideNav } from '@/components/shell/side-nav'
 import { ProfileCard } from '@/components/shell/profile-card'
@@ -48,9 +49,10 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   // Self-made profile (handle + name + avatar) is required before entering; Google data is never the public identity.
   if (!member.profile_completed_at) redirect('/onboarding')
   // Signup is complete only after the 입단 서약 (existing members sign once too).
-  // E1 streak badge: one visit row per Seoul day (a no-op after the first load of the day), alongside the pledge read.
-  const [pledge] = await Promise.all([getPledgeStatus(member).catch(() => null), recordVisit().catch(() => undefined)])
-  if (pledge && !pledge.signedAt) redirect('/pledge')
+  // The signed timestamp is already on the get_my_member row; no extra pledge_status RPC here.
+  if (memberNeedsPledge(member)) redirect('/pledge')
+  // E1 streak badge: one visit row per Seoul day. Do not block the shell on it.
+  after(() => { void recordVisit().catch(() => undefined) })
   // A54: then one first question — the answer is their first post. Strict null: an unknown value never gates.
   if (member.first_mission_at === null) redirect('/welcome')
   // Only public-safe fields cross into client components (no email).
