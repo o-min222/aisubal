@@ -31,6 +31,7 @@ import { NameChip } from '@/components/social/name-chip'
 import { AgentAttribution } from './agent-attribution'
 import { AgentAvatar } from '@/components/agents/agent-avatar'
 import { MentionText } from './mention-text'
+import { ExpandableImage } from './image-lightbox'
 import { PostMenu, type PostMenuKind } from './post-menu'
 import { useCounts } from '@/lib/count-store'
 import { ArchiveButton, archiveKindForEndpoint } from '@/components/archive/archive-button'
@@ -70,6 +71,7 @@ export function PostCard({
   isReply = false,
   replyTo,
   afterDeleteHref,
+  expandImage = false,
 }: {
   post: TimelinePost
   href?: string
@@ -85,6 +87,8 @@ export function PostCard({
   replyTo?: string | null
   /** root card in a detail view: where to go after a delete that leaves no tombstone */
   afterDeleteHref?: string
+  /** A115: on a thread page, tap the image to open a view-only lightbox */
+  expandImage?: boolean
 }) {
   const [likersOpen, setLikersOpen] = useState(false)
   const a = post.author
@@ -108,6 +112,7 @@ export function PostCard({
   const anon = a.kind === 'anon'
   const archiveKind = archiveKindForEndpoint(likeEndpoint)
   const gone = Boolean(post.isDeleted || (anon && post.isHidden))
+  const bodyLinked = Boolean(href && !(post.moim && !isReply && !gone))
   const counts = useCounts(post.id, { likeCount: post.likeCount, liked: post.likedByMe, replyCount: post.replyCount })
   const quiet = counts.likeCount + counts.replyCount + (post.reactionCount ?? 0) + (post.repostCount ?? 0) === 0
   const menuKind: PostMenuKind | null = likeEndpoint.startsWith('/api/feed/') ? 'feed' : likeEndpoint.startsWith('/api/agora/') ? 'agora' : likeEndpoint.startsWith('/api/anon/') ? 'anon' : null
@@ -157,7 +162,7 @@ export function PostCard({
           <CollapsibleText lines={href ? 8 : 400} className="mt-1 text-[15px] leading-relaxed text-n-111 whitespace-pre-wrap break-words">
             {post.isQuestion && !isReply && <span className="q-tag"><T>질문</T></span>}
             {replyTo && <span className="reply-mention">@{replyTo}</span>}
-            {anon ? shownBody : <MentionText text={shownBody} />}
+            {anon ? shownBody : <MentionText text={shownBody} link={!bodyLinked} />}
           </CollapsibleText>
         )
       )}
@@ -251,7 +256,7 @@ export function PostCard({
           )}
 
           {/* a 모임 card has its own links + 참여하기, so it can't sit inside the post link */}
-          {href && !(post.moim && !isReply && !gone) ? (
+          {bodyLinked && href ? (
             <Link href={href} className="block">
               {body}
             </Link>
@@ -312,7 +317,12 @@ export function PostCard({
             </a>
           )}
 
-          {post.imageUrl && (
+          {post.imageUrl && (expandImage ? (
+            <ExpandableImage
+              src={post.imageUrl}
+              className={`tc-image mt-2 rounded-xl border border-n-eee w-auto object-cover${isReply ? ' tc-image-reply' : ''}`}
+            />
+          ) : (
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={post.imageUrl}
@@ -321,7 +331,7 @@ export function PostCard({
               referrerPolicy="no-referrer"
               className={`tc-image mt-2 rounded-xl border border-n-eee w-auto object-cover${isReply ? ' tc-image-reply' : ''}`}
             />
-          )}
+          ))}
 
           {(menuKind === 'feed' || menuKind === 'agora') && (
             <ReactionChips postId={post.id} surface={menuKind} initialLiked={post.likedByMe} initialCount={post.likeCount} reactionCount={post.reactionCount} disabled={!canLike || gone} />

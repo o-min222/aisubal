@@ -55,7 +55,7 @@ export function ThreadLayout({
       )}
       <article className="thread-surface">
         {rootNode ?? (
-          <PostCard post={root} afterDeleteHref={afterDeleteHref} likeEndpoint={postApi(mode, root.id, 'like')} likersEndpoint={postApi(mode, root.id, 'likers')} actions={actionsFor?.(root)} adminHide={adminHide} />
+          <PostCard post={root} expandImage afterDeleteHref={afterDeleteHref} likeEndpoint={postApi(mode, root.id, 'like')} likersEndpoint={postApi(mode, root.id, 'likers')} actions={actionsFor?.(root)} adminHide={adminHide} />
         )}
         {meta ? <div className="thread-meta flex flex-wrap items-center">{meta}</div> : null}
         <section id="comments" className="thread-replies" aria-label={repliesLabel}>
@@ -69,6 +69,7 @@ export function ThreadLayout({
                 <PostCard
                   post={post}
                   isReply
+                  expandImage
                   replyTo={replyTo}
                   likeEndpoint={postApi(mode, post.id, 'like')}
                   likersEndpoint={postApi(mode, post.id, 'likers')}

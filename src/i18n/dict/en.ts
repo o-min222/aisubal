@@ -409,6 +409,8 @@ const en: Record<string, string> = {
   "다음 업데이트에서 열려요": "Opens in the next update",
   "다음 페이지": "Next page",
   "닫기": "Close",
+  "이미지 크게 보기": "View image",
+  "이미지 보기 닫기": "Close image",
   "닫기 (Esc)": "Close (Esc)",
   "답글": "Reply",
   "답글 {length}": "{length} replies",
