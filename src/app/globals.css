@@ -3652,22 +3652,23 @@ html[data-feedback-on] body * { -webkit-touch-callout: none; }
 }
 .article-editor-body { width: 100%; min-height: 50vh; border: 1px solid var(--n-eee, #eee); border-radius: 8px; padding: 14px; resize: vertical; background: transparent; color: inherit; font: inherit; line-height: 1.7; }
 .article-editor-preview { border: 1px solid var(--n-eee, #eee); border-radius: 8px; padding: 14px; min-height: 50vh; }
-.article-page-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 10px 16px; margin-bottom: 1rem; }
-.article-page-lead { flex: 1 1 14rem; min-width: 0; }
+.article-page-head { display: flex; flex-direction: column; align-items: stretch; gap: 10px; margin-bottom: 1rem; }
+.article-page-lead { min-width: 0; }
 .article-page-dek { font-size: 0.875rem; color: var(--n-888); margin: 0.25rem 0 0; word-break: keep-all; overflow-wrap: break-word; }
 .article-page-actions { display: flex; flex-wrap: nowrap; gap: 8px; flex: none; }
 .article-page-actions .btn { white-space: nowrap; }
 .article-read-cta .btn { white-space: nowrap; }
 @media (max-width: 639px) {
-  .article-page-head { flex-direction: column; align-items: stretch; }
-  .article-page-lead { flex-basis: auto; }
-  .article-page-actions { justify-content: flex-start; }
   .article-card-cover, .article-card-fallback { width: 88px; height: 88px; }
   .article-card-link { min-height: 88px; }
   .article-series-head { flex-direction: column; }
   .article-series-cover { width: 100%; max-width: 160px; height: auto; aspect-ratio: 1; }
   .article-editor-meta { flex-direction: column; align-items: stretch; }
   .article-comment-replies { margin-left: 20px; }
+}
+@media (min-width: 640px) {
+  .article-page-head { flex-direction: row; flex-wrap: nowrap; align-items: flex-end; justify-content: space-between; gap: 10px 16px; }
+  .article-page-lead { flex: 1; min-width: 0; }
 }
 @media (prefers-color-scheme: dark) {
   .article-read-fade { background: linear-gradient(to bottom, transparent, var(--n-fff) 55%); }

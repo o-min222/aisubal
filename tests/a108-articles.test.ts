@@ -82,7 +82,8 @@ describe('A108 header and title layout', () => {
     expect(mine).toContain('article-page-head')
     expect(mine).toContain('article-page-actions')
     expect(css).toMatch(/\.article-page-actions \.btn \{[^}]*white-space: nowrap/)
-    expect(css).toMatch(/@media \(max-width: 639px\)[\s\S]*\.article-page-head \{[^}]*flex-direction: column/)
+    expect(css).toMatch(/\.article-page-head \{[^}]*flex-direction: column/)
+    expect(css).toMatch(/@media \(min-width: 640px\)[\s\S]*\.article-page-head \{[^}]*flex-direction: row/)
   })
 
   it('sets the reader document title absolutely so the tab shows the article title', () => {
