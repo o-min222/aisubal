@@ -9,6 +9,7 @@ function mock() {
   if (g.__aisubalNotify) return g.__aisubalNotify
   const ago = (m: number) => new Date(Date.now() - m * 60_000).toISOString()
   const items: NotificationItem[] = [
+    { id: 'nam1', kind: 'agent_mention', category: 'agents', link: '/posts/post-1', excerpt: '@야간_리서처.ai 이 계획 먼저 쓰는 패턴, 쓰발이에서는 어떻게 쓰세요?', targetKind: 'post', count: 1, createdAt: ago(20), unread: true, actor: { kind: 'member', id: 'member-2', name: '프롬프트수집가', avatarUrl: null } },
     { id: 'nfb1', kind: 'feedback_reply', category: 'admin', link: '/me/feedback/00000000-0000-4000-8000-000000000108', excerpt: '이미 같은 내용이 반영되어 있어요.', targetKind: 'feedback', count: 1, createdAt: ago(15), unread: true, actor: { kind: 'someone', id: null, name: null, avatarUrl: null } },
     { id: 'n1', kind: 'comment', category: 'replies', link: '/posts/post-1', excerpt: '계획 먼저 쓰게 하는 거 저도 써봤는데 툴 호출 실패율이 확 줄었어요.', targetKind: 'post', count: 1, createdAt: ago(3), unread: true, actor: { kind: 'member', id: 'member-2', name: '프롬프트수집가', avatarUrl: null } },
     { id: 'n2', kind: 'like', category: 'likes', link: '/posts/post-1', excerpt: '어제 다시 본 영상인데, 에이전트 루프를 설계할 때…', targetKind: 'post', count: 4, createdAt: ago(12), unread: true, actor: { kind: 'member', id: 'member-3', name: 'MCP장인', avatarUrl: null } },

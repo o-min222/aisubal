@@ -21,6 +21,7 @@ import { moimCardsForThreads, promotedGroupMoimThreads } from './moim'
 import { listFeedArticleCards, type ArticleCard } from './articles'
 import { articleHref } from '@/lib/article-rules'
 import { isMoimThreadBody } from '@/lib/moim-thread-rules'
+import { applyOwnerPendingMarks, listOwnerPendingMentions } from './agent-mentions'
 const FEED_SELECT =
   'id, parent_id, root_id, reply_to_id, title, content, url, link_title, link_description, link_image, link_site_name, link_favicon, link_type, link_previews, image_path, posted_as, author_kind, agent_name, agent_model, agent_token_id, agent_interaction, like_count, reaction_count, repost_count, is_question, visibility, reply_count, is_hidden, created_at, group_id, deleted_at, edited_at, public_author_id, author:members!posts_public_author_id_fkey(id, display_name, handle, avatar_url), nick:nickname_profiles!posts_nickname_id_fkey(id, nickname, avatar_url), as_group_id, grp:groups!posts_as_group_id_fkey(id, slug, name)'
 
@@ -85,6 +86,22 @@ function mockState(): MockState {
           likedByMe: false,
           replyCount: 5,
           createdAt: '2026-11-21T09:02:00Z',
+          agentsAllowed: false,
+          isNickname: false,
+        },
+        {
+          ...root,
+          id: 'reply-am1',
+          parentId: root.id,
+          rootId: root.id,
+          author: { kind: 'member', id: 'member-2', name: '프롬프트수집가', handle: 'prompt_jar' },
+          body: '@야간_리서처.ai 이 계획 먼저 쓰는 패턴, 쓰발이에서는 어떻게 쓰세요?',
+          linkUrl: null,
+          linkPreview: null,
+          likeCount: 0,
+          likedByMe: false,
+          replyCount: 0,
+          createdAt: new Date(Date.now() - 20 * 60_000).toISOString(),
           agentsAllowed: false,
           isNickname: false,
         },
@@ -566,8 +583,13 @@ async function queryForYou(viewerId: string, opts: FeedListOpts): Promise<{ post
 }
 
 /** 0050: agent authors get their photo + /agents/{id} link; cards show comment previews. */
+async function withOwnerPendingMentions(posts: TimelinePost[]): Promise<TimelinePost[]> {
+  const marks = await listOwnerPendingMentions().catch(() => [])
+  return applyOwnerPendingMarks(posts, marks)
+}
+
 function listExtras(viewerId: string): Enricher[] {
-  return [(p) => withAgentCards(p), (p) => withCommentPreviews(viewerId, p)]
+  return [(p) => withAgentCards(p), (p) => withCommentPreviews(viewerId, p), (p) => withOwnerPendingMentions(p)]
 }
 
 export async function listFeedTimeline(viewerId: string, opts: FeedListOpts = {}): Promise<TimelinePost[]> {
@@ -675,7 +697,7 @@ async function getFeedThread__raw(
 /** Group identity on the root (B14) and agent photos/links (0050) for a thread. */
 function enrichThread(viewerId: string, posts: TimelinePost[]): Promise<TimelinePost[]> {
   // A82: the relationship chip shows on the post and its comments too
-  return enrichAll(posts, [(p) => withFollowState(viewerId, p), (p) => withGroupIdentity(viewerId, p.slice(0, 1)).then((g) => [...g, ...p.slice(1)]), (p) => withAgentCards(p), (p) => withRepostState(viewerId, p)])
+  return enrichAll(posts, [(p) => withFollowState(viewerId, p), (p) => withGroupIdentity(viewerId, p.slice(0, 1)).then((g) => [...g, ...p.slice(1)]), (p) => withAgentCards(p), (p) => withRepostState(viewerId, p), (p) => withOwnerPendingMentions(p)])
 }
 
 async function listFeedLikers__raw(postId: string): Promise<TimelineLiker[]> {

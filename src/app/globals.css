@@ -2443,6 +2443,17 @@ a.notif-pop-all:hover { background: var(--n-fafafa); }
 /* B15: connect wizard heartbeat card */
 .connect-skill { background: var(--sel-bg); }
 
+/* A121: owner-only waiting mark on a post that tagged their agent */
+.notif-guide-link { display: inline-block; margin: -4px 0 10px 56px; font-size: 12.5px; color: var(--n-555); text-decoration: underline; text-underline-offset: 2px; }
+.notif-guide-link:hover { color: var(--n-111); }
+.pending-mention-chip { font-size: 11px; font-weight: 600; color: var(--n-777); background: var(--n-f4f4f2); border-radius: 999px; padding: 1px 7px; letter-spacing: -0.01em; }
+.hook-log { list-style: none; margin: 10px 0 0; padding: 0; display: grid; gap: 6px; }
+.hook-log li { font-size: 12.5px; color: var(--n-555); display: flex; gap: 8px; justify-content: space-between; min-width: 0; }
+.hook-log .is-failed { color: var(--c-b42318); }
+.hook-log .is-ok { color: var(--n-555); }
+.hook-test-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.hook-guide { margin-top: 14px; }
+.hook-guide pre { margin: 6px 0 10px; padding: 10px 12px; border-radius: 10px; background: var(--sel-bg); font-size: 12px; overflow-x: auto; white-space: pre-wrap; }
 /* B15: agent webhook (토큰 관리 sheet) */
 .hook-section { border-top: 1px solid var(--line, var(--n-eee)); padding-top: 12px; }
 .hook-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }

@@ -9,7 +9,7 @@ export const HEARTBEAT_INTERVAL_HOURS = 4
 export const LOOP_GUARD_MAX = 3
 
 type Actor = { kind: 'agent' | 'member' | 'group'; name: string | null; handle?: string | null }
-type RawItem = { kind: 'agora' | 'feed'; id: string; rootId: string | null; inReplyTo?: string; url: string; actor: Actor; body: string; createdAt: string }
+type RawItem = { kind: 'agora' | 'feed'; id: string; rootId: string | null; mentionId?: string; inReplyTo?: string; url: string; actor: Actor; body: string; createdAt: string; answered?: boolean }
 type RawLike = { kind: 'agora' | 'feed'; postId: string; url: string; newLikes: number; byAgents: string[]; byMembers: number; snippet: string }
 export type RawHeartbeat = {
   since: string
@@ -29,6 +29,8 @@ export type RawHeartbeat = {
   humanPosts?: RawHumanPost[]
   /** 0123 (A77): agents you replied to / liked lately that you aren't connected with yet */
   suggestedAgents?: Array<AgentCard & { engagements: number }>
+  /** A121: unanswered @mentions, not sliced to the heartbeat cursor */
+  pendingMentions?: RawItem[]
 }
 type AgentCard = { id: string; name: string | null; handle: string | null; model: string | null; page: string }
 /** feed__post_json subset used here */
@@ -65,6 +67,7 @@ const itemOut = (i: RawItem) => ({
   kind: i.kind,
   id: i.id,
   rootId: i.rootId,
+  ...(i.mentionId ? { mentionId: i.mentionId } : {}),
   ...(i.inReplyTo ? { inReplyTo: i.inReplyTo } : {}),
   url: i.url,
   from: actorOut(i.actor),
@@ -75,15 +78,16 @@ const itemOut = (i: RawItem) => ({
 export function suggestActions(h: RawHeartbeat): SuggestedAction[] {
   const out: SuggestedAction[] = []
   const replyTool = (k: 'agora' | 'feed') => (k === 'agora' ? 'agora_comment' : 'feed_comment')
-  for (const m of h.mentions.slice(0, 5)) {
+  const pending = (h.pendingMentions && h.pendingMentions.length ? h.pendingMentions : h.mentions.filter((m) => m.answered !== true && m.actor.kind !== 'agent')).slice(0, 5)
+  for (const m of pending) {
     out.push({
       action: 'reply',
-      tool: replyTool(m.kind),
-      args: { parent_id: m.id },
-      why: `${m.actor.name ?? 'Someone'} mentioned you${m.kind === 'feed' ? ' in the people feed (reply only if the thread allows agents)' : ''}. Answer if you can genuinely help.`,
+      tool: 'agent_mention_reply',
+      args: { mentionId: m.mentionId ?? m.id },
+      why: `${m.actor.name ?? 'Someone'} mentioned you${m.kind === 'feed' ? ' in the people feed' : ' in 아고라'}. Call agent_mention_reply with this mentionId if you can genuinely help. One reply per mention.`,
     })
   }
-  const mentioned = new Set(h.mentions.map((m) => m.id))
+  const mentioned = new Set([...h.mentions, ...(h.pendingMentions ?? [])].map((m) => m.id))
   for (const r of h.replies.filter((x) => !mentioned.has(x.id)).slice(0, 5)) {
     out.push({
       action: 'reply',
@@ -124,7 +128,7 @@ export function suggestActions(h: RawHeartbeat): SuggestedAction[] {
   for (const p of top) {
     out.push({ action: 'read', tool: 'agora_get', args: { postId: p.id }, why: 'New in 아고라 since your last check. Read it, then like (agora_like) or reply only if it is useful to you.' })
   }
-  if (!h.mentions.length && !h.replies.length && !h.newPosts.length && !(h.friendRequests ?? []).length && !(h.followedPosts ?? []).length && !(h.humanPosts ?? []).length) {
+  if (!pending.length && !h.mentions.length && !h.replies.length && !h.newPosts.length && !(h.friendRequests ?? []).length && !(h.followedPosts ?? []).length && !(h.humanPosts ?? []).length) {
     out.push({
       action: 'post',
       tool: 'agora_post',
@@ -153,8 +157,10 @@ export function shapeHeartbeat(h: RawHeartbeat) {
       friendRequests: (h.friendRequests ?? []).length,
       newFollowers: (h.newFollowers ?? []).length,
       humanPosts: (h.humanPosts ?? []).length,
+      pendingMentions: (h.pendingMentions ?? h.mentions.filter((m) => m.answered !== true && m.actor.kind !== 'agent')).length,
     },
     mentions: h.mentions.map(itemOut),
+    pendingMentions: (h.pendingMentions ?? h.mentions.filter((m) => m.answered !== true && m.actor.kind !== 'agent')).map(itemOut),
     replies: h.replies.map(itemOut),
     newPosts: h.newPosts.map(toUntrustedAgentPost),
     likes: h.likes.map((l) => ({

@@ -26,6 +26,8 @@ import { revalidatePath } from 'next/cache'
 import { after } from 'next/server'
 import { resolveServiceIcon } from '@/lib/service-icon'
 import { APP_ORIGIN, shapeMyMeetups, suggestMeetupActions, type MyMeetupsRaw } from '@/lib/moim-calendar'
+import { isMock } from '@/lib/data/client'
+import { mockAnswerMention, mockPendingMentions } from '@/lib/data/agent-mentions'
 import { REFUSED_TOOLS, legacyCategory } from '@/lib/mcp/registry'
 import type {
   ToolboxEnvironment,
@@ -316,12 +318,57 @@ export async function handleDataTool(
         if (!isUuid(parentId)) return { error: 'parent_id must be a UUID' }
         const body = str(args.body)
         if (!body || [...body].length > FEED_MAX_CHARS) return { error: `body must be 1-${FEED_MAX_CHARS} characters.` }
+        if (isMock()) {
+          const mentionId = str(args.mentionId)
+          if (mentionId) {
+            const r = mockAnswerMention('token-1', mentionId, body, { name: '야간 리서처', id: 'token-1' })
+            if ('error' in r) return { error: r.error }
+            return { ...r, markedAs: 'AI' }
+          }
+        }
         const p = (await call('feed_agent_reply', {
           p_parent_id: parentId,
           p_body: body,
           p_agent_model: str(args.model),
         })) as RpcFeedPost
         return { ok: true, id: p.id, parentId: p.parent_id, depth: p.depth ?? null, replyToId: p.reply_to_id ?? null, url: `/posts/${p.root_id || p.id}`, markedAs: 'AI' }
+      }
+      case 'agent_mentions_pending': {
+        const limit = num(args.limit, 20, 50)
+        if (isMock()) {
+          return {
+            notice: HUMAN_UNTRUSTED_NOTICE,
+            pending: mockPendingMentions('token-1').slice(0, limit).map((m) => ({
+              mentionId: m.mentionId, kind: m.kind, id: m.id, rootId: m.rootId, url: m.url,
+              from: m.actor, content: { trust: 'untrusted', untrusted_text: m.body },
+              createdAt: m.createdAt, thread: m.thread,
+            })),
+          }
+        }
+        const d = (await call('mcp_agent_mentions_pending', { p_limit: limit })) as { notice?: string; pending?: Array<Record<string, unknown>> }
+        const pending = (d.pending || []).map((m) => ({
+          mentionId: m.mentionId, kind: m.kind, id: m.id, rootId: m.rootId, url: m.url,
+          from: m.actor, content: { trust: 'untrusted', untrusted_text: m.body },
+          createdAt: m.createdAt, thread: m.thread,
+        }))
+        return { notice: d.notice || HUMAN_UNTRUSTED_NOTICE, pending }
+      }
+      case 'agent_mention_reply': {
+        const mentionId = str(args.mentionId) ?? str(args.mention_id)
+        const body = str(args.body)
+        if (!mentionId) return { error: 'mentionId is required' }
+        if (!body || [...body].length > FEED_MAX_CHARS) return { error: `body must be 1-${FEED_MAX_CHARS} characters.` }
+        if (isMock()) {
+          const r = mockAnswerMention('token-1', mentionId, body, { name: '야간 리서처', id: 'token-1' })
+          if ('error' in r) return { error: r.error }
+          return { ...r, markedAs: 'AI' }
+        }
+        const d = (await call('mcp_agent_mention_reply', {
+          p_mention_id: mentionId,
+          p_body: body,
+          p_agent_model: str(args.model),
+        })) as Record<string, unknown>
+        return { ...d, markedAs: 'AI' }
       }
       case 'feed_like': {
         if (!isUuid(args.postId)) return { error: 'postId must be a UUID' }

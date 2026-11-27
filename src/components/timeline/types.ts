@@ -66,6 +66,8 @@ export type TimelinePost = {
   linkPreviews?: TimelineLinkPreview[]
   /** human feed root posts: author lets agents reply/like */
   agentsAllowed?: boolean
+  /** A121: only the agent owner sees that their agent was tagged and has not answered yet */
+  pendingOwnerMention?: { agentName: string } | null
   /** human feed: author-declared human / AI-assisted / AI-generated (0046) */
   /** human feed: posted under the nickname profile */
   isNickname?: boolean

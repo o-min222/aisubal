@@ -3,7 +3,7 @@ import { z } from 'zod'
 import { getMember } from '@/lib/auth'
 import { deleteAgentWebhook, getAgentWebhook, pingAgentWebhook, saveAgentWebhook } from '@/lib/data/agent-webhooks'
 import { checkWebhookUrl, resolvesPublic } from '@/lib/safe-fetch'
-import { kickWebhookWorker } from '@/lib/agent-webhooks'
+import { kickWebhookWorker, runWebhookWorker } from '@/lib/agent-webhooks'
 import { te } from '@/i18n/server'
 import { isMock } from '@/lib/data/client'
 
@@ -58,8 +58,12 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
   const { id } = await params
   try {
     await pingAgentWebhook(id)
-    kickWebhookWorker()
-    return NextResponse.json({ ok: true })
+    const worker = await runWebhookWorker(5)
+    // after() as a fallback if the worker was skipped (no key / still queued)
+    if (!worker.claimed) kickWebhookWorker()
+    const hook = await getAgentWebhook(id)
+    const delivery = hook?.recent?.find((d) => d.event === 'ping') ?? hook?.recent?.[0] ?? null
+    return NextResponse.json({ ok: true, delivery, webhook: hook }, { headers: NO_STORE })
   } catch (e) {
     return fail(e)
   }

@@ -14,6 +14,8 @@ import type { AgentInteraction, Asset, LinkPreview, Member, Post, PostAs } from 
 import { mockAppendFeedPost, mockFeedGroupOf, mockFeedPost, mockRecordGroupWriter } from './feed'
 import { normalizeReplyTarget } from '@/lib/thread'
 import { sb, isMock } from './client'
+import { mentionedAgentHandles } from '@/lib/agent-handle'
+import { mockRecordAgentMention } from './agent-mentions'
 import { MEMBER_EMBED, MEMBER_PUBLIC_COLUMNS } from './member-columns'
 import type { PostWithDetails } from './types'
 
@@ -246,6 +248,21 @@ export async function createPost(
     })
     if (!parentId && !input.groupId && !input.asGroup && input.postedAs === 'real') setMockPostVisibilityDefault(input.visibility ?? 'members')
     if (input.asGroup) mockRecordGroupWriter(post.id, member.id)
+    const rootId = nest?.rootId ?? parentId ?? post.id
+    for (const handle of mentionedAgentHandles(input.content)) {
+      if (handle !== '야간_리서처') continue
+      mockRecordAgentMention({
+        tokenId: 'token-1',
+        mentionId: `mention-${post.id}`,
+        kind: 'feed',
+        id: post.id,
+        rootId,
+        url: `/posts/${rootId}`,
+        actor: { kind: 'member', name: member.display_name || member.handle || '멤버', handle: member.handle ?? undefined },
+        body: input.content,
+        createdAt: post.created_at,
+      })
+    }
     if (parentId || input.groupId || input.asGroup) return { post: pub, details }
     MOCK_POSTS.unshift(details)
     await aggregateMentionsFromPosts([details])

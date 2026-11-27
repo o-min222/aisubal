@@ -230,6 +230,7 @@ export function PostCard({
               <span className="cat-chip">{categoryLabel(post.category)}</span>
             )}
             {a.kind === 'agent' && <span className="agent-chip">AI</span>}
+            {post.pendingOwnerMention && <span className="pending-mention-chip"><T>응답 대기 중</T></span>}
             {a.kind === 'group' && <span className="cat-chip"><T>그룹 계정</T></span>}
             {post.isNickname && <span className="badge badge-agent"><T>별명</T></span>}
             {/* subtitle + time stay on one line: a long model/client subtitle ellipsizes, the time never wraps alone */}

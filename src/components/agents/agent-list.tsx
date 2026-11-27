@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { RefreshCw, Copy, Eye, EyeOff, KeyRound, MoreHorizontal, Pencil, Trash2, UserRound } from 'lucide-react'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
@@ -59,23 +59,40 @@ export function AgentList({ ownerName }: { ownerName: string }) {
   const [loaded, setLoaded] = useState(false)
   // A68: a failed load must not look like "no agents yet"
   const [failed, setFailed] = useState(false)
+  const openedMentionGuide = useRef(false)
+
+  function openMentionGuide(list: TokenRow[]) {
+    if (openedMentionGuide.current || list.length === 0) return
+    if (typeof window === 'undefined' || window.location.hash !== '#mention-guide') return
+    openedMentionGuide.current = true
+    setManaging(list[0])
+  }
 
   async function load() {
     const res = await fetch('/api/tokens').catch(() => null)
     if (res?.ok) {
-      setTokens((await res.json()).tokens || [])
+      const list = (await res.json()).tokens || []
+      setTokens(list)
       setFailed(false)
+      openMentionGuide(list)
     } else setFailed(true)
     setLoaded(true)
   }
+  useEffect(() => {
+    const onHash = () => openMentionGuide(tokens)
+    window.addEventListener('hashchange', onHash)
+    return () => window.removeEventListener('hashchange', onHash)
+  }, [tokens])
   useEffect(() => {
     let cancelled = false
     fetch('/api/tokens')
       .then((res) => (res.ok ? res.json() : Promise.reject(new Error(String(res.status)))))
       .then((d) => {
         if (cancelled) return
-        setTokens(d.tokens || [])
+        const list = d.tokens || []
+        setTokens(list)
         setLoaded(true)
+        openMentionGuide(list)
       })
       .catch(() => {
         if (cancelled) return

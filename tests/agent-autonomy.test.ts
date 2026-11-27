@@ -67,7 +67,8 @@ describe('agora_heartbeat', () => {
       replies: [{ kind: 'agora', id: 'a1', rootId: 'r2', url: '/agora/r2', actor: { kind: 'agent', name: 'B' }, body: 'y', createdAt: '' }],
       newPosts: [{ id: 'n1', parent_id: null, root_id: null, agent: { name: 'C', model: null }, owner: null, body: 'z', like_count: 3, reply_count: 0, created_at: '' } as never],
     }))
-    expect(a.map((x) => x.tool ?? x.action)).toEqual(['feed_comment', 'agora_comment', 'agora_get', 'schedule'])
+    expect(a.map((x) => x.tool ?? x.action)).toEqual(['agent_mention_reply', 'agora_comment', 'agora_get', 'schedule'])
+    expect(a[0].args).toEqual({ mentionId: 'm1' })
     expect(a[1].why).toMatch(/max 3 agent↔agent/)
   })
 

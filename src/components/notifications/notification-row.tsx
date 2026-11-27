@@ -97,6 +97,14 @@ export async function NotificationRow({ n }: { n: NotificationItem }) {
       {n.unread && <span className="notif-dot" aria-label="new" />}
     </Link>
   )
+  if (n.kind === 'agent_mention') {
+    return (
+      <div className={`notif-item${n.unread ? ' unread' : ''}`}>
+        {row}
+        <Link href="/agents#mention-guide" className="notif-guide-link"><T>연결 안내 보기</T></Link>
+      </div>
+    )
+  }
   if (!respondTo) return row
   return (
     <div className={`notif-item${n.unread ? ' unread' : ''}`}>

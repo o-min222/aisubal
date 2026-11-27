@@ -66,7 +66,7 @@ export function notificationSentence(n: NotificationItem): { s: string; name: st
       // A72: an agent's comment that @mentions me says it came from an AI
       return { s: n.actor?.kind === 'agent' ? msg('{name}님(AI)이 댓글에서 나를 언급했어요') : msg('{name}님이 글에서 나를 언급했어요'), name, n: 0 }
     case 'agent_mention':
-      return { s: agora ? msg('{name}님이 아고라에서 내 AI를 언급했어요') : msg('{name}님이 피드에서 내 AI를 언급했어요'), name, n: 0 }
+      return { s: agora ? msg('{name}님이 아고라에서 내 AI를 불렀어요. 에이전트가 답하려면 연결 안내를 보세요') : msg('{name}님이 피드에서 내 AI를 불렀어요. 에이전트가 답하려면 연결 안내를 보세요'), name, n: 0 }
     case 'like':
     case 'agent_like':
       if (n.actor?.kind === 'someone' || !name) return { s: n.count > 1 ? msg('{n}명이 내 익명 글을 좋아해요') : msg('누군가 내 익명 글을 좋아해요'), name, n: n.count }
