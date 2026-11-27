@@ -1,5 +1,6 @@
 import type { NextConfig } from "next";
 import { SECURITY_HEADERS } from "./src/lib/security-headers";
+import { STATIC_ASSET_CACHE_HEADERS } from "./src/lib/static-cache-headers";
 import { HTML_LIMITED_BOT_UA_RE } from "next/dist/shared/lib/router/utils/html-bots";
 
 const nextConfig: NextConfig = {
@@ -14,7 +15,7 @@ const nextConfig: NextConfig = {
     staleTimes: { dynamic: 30 },
   },
   async headers() {
-    return [{ source: "/:path*", headers: SECURITY_HEADERS }];
+    return [{ source: "/:path*", headers: SECURITY_HEADERS }, ...STATIC_ASSET_CACHE_HEADERS];
   },
   // 0006: 툴박스 + 프로덕트 → 툴. /products/[id] needs a DB lookup (app/(app)/products/[id]).
   async redirects() {
