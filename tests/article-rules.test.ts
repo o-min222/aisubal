@@ -13,6 +13,7 @@ import {
   isPublicArticlePath,
   isReservedArticleSlug,
   sanitizeArticleShareLine,
+  articleDocumentTitle,
 } from '@/lib/article-rules'
 
 describe('isPublicArticlePath', () => {
@@ -78,5 +79,15 @@ describe('canPublishArticle', () => {
     expect(canPublishArticle({ is_admin: true, article_can_publish: false })).toBe(false)
     expect(canPublishArticle({ article_can_publish: true, article_writer: false })).toBe(true)
     expect(canPublishArticle(null)).toBe(false)
+  })
+})
+
+describe('articleDocumentTitle', () => {
+  it('sets an absolute tab title so the root layout template cannot replace it', () => {
+    expect(articleDocumentTitle('짧은 글의 앞부분만 공개됩니다')).toEqual({
+      absolute: '짧은 글의 앞부분만 공개됩니다 · AI쓰발',
+    })
+    expect(articleDocumentTitle('  ')).toEqual({ absolute: '아티클 · AI쓰발' })
+    expect(articleDocumentTitle(null)).toEqual({ absolute: '아티클 · AI쓰발' })
   })
 })

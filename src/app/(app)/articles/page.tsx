@@ -18,12 +18,12 @@ export default async function ArticlesBrowsePage({ searchParams }: { searchParam
   const writer = canPublishArticle(member)
   return (
     <div className="page-col">
-      <header className="flex items-end justify-between gap-3 mb-4">
-        <div>
+      <header className="article-page-head">
+        <div className="article-page-lead">
           <h1 className="text-xl font-semibold text-n-111"><T>아티클</T></h1>
-          <p className="text-sm text-n-888 mt-1"><T>긴 글을 천천히 읽고, 연재로 이어 갑니다.</T></p>
+          <p className="article-page-dek"><T>긴 글을 천천히 읽고, 연재로 이어 갑니다.</T></p>
         </div>
-        <div className="flex gap-2">
+        <div className="article-page-actions">
           <Link href="/articles/mine" className="btn btn-secondary btn-sm"><T>내 아티클</T></Link>
           {writer ? (
             <Link href="/articles/new" className="btn btn-primary btn-sm"><T>새 아티클</T></Link>

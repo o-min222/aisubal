@@ -12,20 +12,20 @@ import { ArticleComments } from '@/components/articles/article-comments'
 import { T } from '@/i18n/t'
 import { getT } from '@/i18n/server'
 import { UserAvatar } from '@/components/user-avatar'
-import { articleHref, articleSeriesHref, formatReadingTime, isReservedArticleSlug, isPublicArticlePath, articleImageSrc } from '@/lib/article-rules'
+import { articleHref, articleSeriesHref, formatReadingTime, isReservedArticleSlug, isPublicArticlePath, articleImageSrc, articleDocumentTitle } from '@/lib/article-rules'
 
 type Props = { params: Promise<{ slug: string }> }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params
-  if (!slug || isReservedArticleSlug(slug)) return { title: '아티클' }
+  if (!slug || isReservedArticleSlug(slug)) return { title: articleDocumentTitle('아티클') }
   const preview = await getArticleSharePreview(slug).catch(() => null)
-  if (!preview) return { title: '아티클 · AI쓰발' }
+  if (!preview) return { title: articleDocumentTitle('아티클') }
   const url = shareCanonicalUrl(articleHref(preview.slug || slug))
   const title = preview.title || '아티클'
   const description = preview.body || title
   return {
-    title: `${title} · AI쓰발`,
+    title: articleDocumentTitle(title),
     description,
     ...shareMeta({
       title,

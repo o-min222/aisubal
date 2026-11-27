@@ -14,9 +14,13 @@ export default async function MyArticlesPage() {
   const writer = canPublishArticle(state.member)
   return (
     <div className="page-col">
-      <header className="flex items-end justify-between gap-3 mb-4">
-        <h1 className="text-xl font-semibold text-n-111"><T>내 아티클</T></h1>
-        <Link href="/articles/new" className="btn btn-primary btn-sm"><T>새 아티클</T></Link>
+      <header className="article-page-head">
+        <div className="article-page-lead">
+          <h1 className="text-xl font-semibold text-n-111"><T>내 아티클</T></h1>
+        </div>
+        <div className="article-page-actions">
+          <Link href="/articles/new" className="btn btn-primary btn-sm"><T>새 아티클</T></Link>
+        </div>
       </header>
       {!writer && <p className="text-sm text-n-888 mb-4"><T>초고는 저장할 수 있어요. 발행하려면 작가 권한이 필요해요.</T></p>}
       {mine.articles.length === 0 && mine.series.length === 0 ? (
@@ -36,7 +40,7 @@ export default async function MyArticlesPage() {
                   {a.series ? ` · ${a.series.title}` : ''}
                 </p>
               </div>
-              <Link href={articleEditHref(a.id)} className="btn btn-secondary btn-sm"><T>수정</T></Link>
+              <Link href={articleEditHref(a.id)} className="btn btn-secondary btn-sm whitespace-nowrap"><T>수정</T></Link>
             </li>
           ))}
         </ul>

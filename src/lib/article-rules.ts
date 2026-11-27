@@ -157,3 +157,9 @@ export function articleImageSrc(path: string | null | undefined): string | null 
   if (!path) return null
   return `/api/article-image?p=${encodeURIComponent(path)}`
 }
+
+/** Browser tab title. Root layout uses a template without %s, so this must be absolute. */
+export function articleDocumentTitle(title: string | null | undefined): { absolute: string } {
+  const t = (title ?? '').trim() || '아티클'
+  return { absolute: `${t} · AI쓰발` }
+}

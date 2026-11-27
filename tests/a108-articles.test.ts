@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs'
 import { beforeAll, describe, expect, it } from 'vitest'
 import { isPublicArticlePath, articleTeaserBody, canPublishArticle } from '@/lib/article-rules'
 import { sharePreviewKind } from '@/lib/share-teaser'
@@ -68,5 +69,25 @@ describe('signed-out teaser', () => {
     })
     expect(s.s).toContain('새 아티클')
     expect(s.name).toBe('프롬프트수집가')
+  })
+})
+
+describe('A108 header and title layout', () => {
+  it('puts browse and mine actions on a nowrap row that stacks under the title on small screens', () => {
+    const browse = readFileSync('src/app/(app)/articles/page.tsx', 'utf8')
+    const mine = readFileSync('src/app/(app)/articles/mine/page.tsx', 'utf8')
+    const css = readFileSync('src/app/globals.css', 'utf8')
+    expect(browse).toContain('article-page-head')
+    expect(browse).toContain('article-page-actions')
+    expect(mine).toContain('article-page-head')
+    expect(mine).toContain('article-page-actions')
+    expect(css).toMatch(/\.article-page-actions \.btn \{[^}]*white-space: nowrap/)
+    expect(css).toMatch(/@media \(max-width: 639px\)[\s\S]*\.article-page-head \{[^}]*flex-direction: column/)
+  })
+
+  it('sets the reader document title absolutely so the tab shows the article title', () => {
+    const page = readFileSync('src/app/articles/[slug]/page.tsx', 'utf8')
+    expect(page).toContain('articleDocumentTitle')
+    expect(page).not.toMatch(/title: `\$\{title\} · AI쓰발`/)
   })
 })
