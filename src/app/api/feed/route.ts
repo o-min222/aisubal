@@ -76,7 +76,7 @@ export async function POST(request: NextRequest) {
         .filter((u, i, a) => a.indexOf(u) === i && checkFetchUrl(u).ok)
         .slice(0, EXPANDED_LINKS)
   const url = previewUrls[0] ?? null
-  if (raw.imagePath && (raw.parentId || !isPostImagePath(raw.imagePath, member.auth_id))) {
+  if (raw.imagePath && !isPostImagePath(raw.imagePath, member.auth_id)) {
     return NextResponse.json({ error: await te('이미지를 다시 올려 주세요.') }, { status: 400 })
   }
   const v = validateFeedInput({ ...raw, url })
@@ -121,7 +121,7 @@ export async function POST(request: NextRequest) {
       url: v.value.url || undefined,
       linkPreview,
       linkPreviews: linkPreviews.length ? linkPreviews : undefined,
-      imagePath: raw.parentId ? null : raw.imagePath ?? null,
+      imagePath: raw.imagePath ?? null,
       isQuestion: raw.isQuestion === true && canAskQuestion({ isReply: Boolean(raw.parentId), groupId: raw.groupId, asGroup: Boolean(asGroup), postedAs: v.value.postedAs }),
     })
     kickWebhookWorker() // an @name.ai mention or a reply to an agent may have queued a webhook

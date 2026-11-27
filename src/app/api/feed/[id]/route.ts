@@ -42,7 +42,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     const body = edit.data.body.trim()
     if (!body) return NextResponse.json({ error: await te('내용을 입력해 주세요.') }, { status: 400 })
     const setImage = edit.data.setImage === true
-    if (setImage && (edit.data.isReply || (edit.data.imagePath && !isPostImagePath(edit.data.imagePath, member.auth_id)))) {
+    if (setImage && edit.data.imagePath && !isPostImagePath(edit.data.imagePath, member.auth_id)) {
       return NextResponse.json({ error: await te('이미지를 다시 올려 주세요.') }, { status: 400 })
     }
     const urls = edit.data.isReply

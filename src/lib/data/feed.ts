@@ -798,10 +798,10 @@ export async function editFeedPost(postId: string, viewerId: string, input: Feed
       p.linkUrl = input.url
       p.linkPreviews = (input.previews ?? []).map((x) => ({ url: x.url, title: x.title, description: x.description, image: x.image, siteName: x.site_name, favicon: x.favicon, linkType: x.link_type }))
       p.linkPreview = p.linkPreviews[0] ?? null
-      if (input.setImage) {
-        p.imagePath = input.imagePath ?? undefined
-        p.imageUrl = input.imagePath ? `/api/post-image/${encodeURIComponent(p.id)}` : null
-      }
+    }
+    if (input.setImage) {
+      p.imagePath = input.imagePath ?? undefined
+      p.imageUrl = input.imagePath ? `/api/post-image/${encodeURIComponent(p.id)}` : null
     }
     return new Date().toISOString()
   }
@@ -867,8 +867,8 @@ async function withCommentPreviews(viewerId: string, posts: TimelinePost[]): Pro
     }
     return posts.map((p) => {
       const items = (byRoot.get(p.id) ?? [])
-        .map((c) => ({ id: c.id, name: c.author.name, body: previewLine(c.body, c.linkUrl) }))
-        .filter((c) => c.body)
+        .map((c) => ({ id: c.id, name: c.author.name, body: previewLine(c.body, c.linkUrl), hasImage: Boolean(c.imageUrl) }))
+        .filter((c) => c.body || c.hasImage)
       return items.length ? { ...p, commentPreviews: items } : p
     })
   } catch (e) {

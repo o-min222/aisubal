@@ -142,4 +142,4 @@ export type TimelineLiker = {
 }
 
 /** A46: one line under a feed card; name is the alias (익명/익명N) on the 익명 board */
-export type CommentPreview = { id: string; name: string; body: string }
+export type CommentPreview = { id: string; name: string; body: string; hasImage?: boolean }

@@ -52,7 +52,7 @@ export function PostMenu({ post, kind, afterDeleteHref, adminHide = false }: { p
   // A85 (queue): the author changes 공유범위 / 에이전트 반응 here (the row under the post is gone)
   const ownRoot = mine && kind === 'feed' && !post.parentId && post.author.kind === 'member' && !post.groupId
   const canVis = ownRoot && canRestrict({ isReply: false, groupId: post.groupId, postedAs: post.isNickname ? 'nickname' : 'real' })
-  const canEditImage = canEdit && kind === 'feed' && !post.parentId
+  const canEditImage = canEdit && kind === 'feed'
 
   /** 추천 feed only: hide this post now and keep it out of future 추천 (0068). */
   async function notInterested() {

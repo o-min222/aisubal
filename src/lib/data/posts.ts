@@ -226,8 +226,8 @@ export async function createPost(
       title: post.title || null,
       body: post.content,
       linkUrl: post.url,
-      imageUrl: input.imagePath && !input.parentId ? postImageSrc(post.id) : null,
-      imagePath: input.imagePath && !input.parentId ? input.imagePath : undefined,
+      imageUrl: input.imagePath ? postImageSrc(post.id) : null,
+      imagePath: input.imagePath ? input.imagePath : undefined,
       linkPreview: lp ? { url: lp.url, title: lp.title, description: lp.description, image: lp.image, siteName: lp.site_name, favicon: lp.favicon, linkType: lp.link_type } : null,
       linkPreviews: (input.linkPreviews ?? []).map((x) => ({ url: x.url, title: x.title, description: x.description, image: x.image, siteName: x.site_name, favicon: x.favicon, linkType: x.link_type })),
       tool: null,
@@ -271,7 +271,7 @@ export async function createPost(
       posted_as: input.asGroup && !input.parentId ? 'group' : input.postedAs,
       as_group_id: input.asGroup && !input.parentId ? input.asGroup.id : null,
       ...(input.visibility && input.visibility !== 'members' && !input.parentId ? { visibility: input.visibility } : {}),
-      ...(input.imagePath && !input.parentId ? { image_path: input.imagePath } : {}),
+      ...(input.imagePath ? { image_path: input.imagePath } : {}),
       ...(input.isQuestion && !input.parentId ? { is_question: true } : {}),
     })
     .select(POST_COLUMNS)

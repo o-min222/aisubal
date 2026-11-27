@@ -319,7 +319,7 @@ export function PostCard({
               alt=""
               loading="lazy"
               referrerPolicy="no-referrer"
-              className="mt-2 rounded-xl border border-n-eee max-h-[420px] w-auto object-cover"
+              className={`tc-image mt-2 rounded-xl border border-n-eee w-auto object-cover${isReply ? ' tc-image-reply' : ''}`}
             />
           )}
 

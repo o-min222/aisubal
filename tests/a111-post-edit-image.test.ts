@@ -42,8 +42,8 @@ describe('A111 migration', () => {
 })
 
 describe('A111 UI and API', () => {
-  it('the feed edit sheet reuses the A110 upload pipeline and only offers one image on root posts', () => {
-    expect(menu).toMatch(/canEditImage = canEdit && kind === 'feed' && !post\.parentId/)
+  it('the feed edit sheet reuses the A110 upload pipeline for the single post image', () => {
+    expect(menu).toMatch(/canEditImage = canEdit && kind === 'feed'/)  
     expect(menu).toMatch(/PostEditImage/)
     expect(menu).toMatch(/uploadPickedImage|post-edit-image/)
     expect(menu).toMatch(/postEditImagePayload/)
@@ -53,10 +53,10 @@ describe('A111 UI and API', () => {
     expect(readFileSync('src/components/timeline/post-edit-image.tsx', 'utf8')).toMatch(/이미지 바꾸기/)
   })
 
-  it('PATCH /api/feed/:id accepts setImage, checks the path, and refuses it on replies', () => {
+  it('PATCH /api/feed/:id accepts setImage and checks the path', () => {
     expect(route).toMatch(/setImage: z\.boolean\(\)\.optional\(\)/)
     expect(route).toMatch(/isPostImagePath\(edit\.data\.imagePath, member\.auth_id\)/)
-    expect(route).toMatch(/setImage && \(edit\.data\.isReply/)
+    expect(route).toMatch(/setImage && edit\.data\.imagePath && !isPostImagePath/)
     expect(route).toMatch(/post_image_invalid/)
   })
 

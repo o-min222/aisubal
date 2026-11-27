@@ -1005,6 +1005,7 @@ const en: Record<string, string> = {
   "사유: {reason}": "Reason: {reason}",
   "사이트 설정": "Site settings",
   "사이트 이름": "Site name",
+  "사진": "Photo",
   "사진 올리기": "Upload photo",
   "사진을 올리거나 기본 아바타를 골라주세요.": "Upload a photo or pick a default avatar.",
   "삭제": "Delete",

@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { Image as ImageIcon } from 'lucide-react'
 import { AnonName } from '@/components/anon/anon-name'
 import type { CommentPreview } from '@/components/timeline/types'
 import { T } from '@/i18n/t'
@@ -14,7 +15,8 @@ export function CommentPreviews({ items, total, href, anon }: { items: CommentPr
       {items.map((c) => (
         <span key={c.id} className="cmt-preview-row">
           <span className="cmt-preview-name">{anon ? <AnonName name={c.name} /> : c.name}</span>
-          <span className="cmt-preview-body">{c.body}</span>
+          <span className="cmt-preview-body">{c.body || (c.hasImage ? <T>사진</T> : null)}</span>
+          {c.hasImage && <ImageIcon className="cmt-preview-photo" aria-hidden />}
         </span>
       ))}
       {total > items.length && (

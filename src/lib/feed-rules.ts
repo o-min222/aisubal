@@ -249,6 +249,14 @@ export function previewLine(body: string, linkUrl?: string | null): string {
   return (line || linkUrl || '').slice(0, 200)
 }
 
+/** A112: bell excerpt for a reply — language-neutral photo mark when an image is attached. */
+export function replyImageExcerpt(content: string, hasImage: boolean): string {
+  const text = (content || '').replace(/\s+/g, ' ').trim()
+  if (!hasImage) return text.slice(0, 140)
+  if (!text) return '📷'
+  return `${text.slice(0, 130)} · 📷`.slice(0, 140)
+}
+
 export function pickCommentPreviews<T extends { id: string; parentId: string | null; likeCount: number; reactionCount?: number; createdAt: string; isHidden?: boolean; isDeleted?: boolean }>(
   rootId: string,
   replies: T[],

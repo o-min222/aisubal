@@ -128,7 +128,7 @@ export function Composer({
           ...(questionable && question ? { isQuestion: true } : {}),
           groupId,
           ...(isReply ? {} : { urls: previews.urls }),
-          ...(!isReply && image ? { imagePath: image.path } : {}),
+          ...(image ? { imagePath: image.path } : {}),
         }),
       })
       const data = await res.json().catch(() => ({}))
@@ -168,11 +168,18 @@ export function Composer({
       if (fileRef.current) fileRef.current.value = ''
     }
   }
+  const imagePreview = image ? (
+    <div className="composer-image">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src={image.preview} alt="" />
+      <button type="button" className="composer-image-x" onClick={() => setImage(null)} aria-label={tx('이미지 빼기')}><X className="w-3.5 h-3.5" /></button>
+    </div>
+  ) : null
   const imageButton = (
     <>
       <button type="button" className="agent-react-btn" onClick={() => fileRef.current?.click()} disabled={uploading || Boolean(image)} aria-label={tx('이미지 한 장')} title={tx('이미지 한 장')}>
         <ImagePlus className="w-4 h-4 flex-shrink-0" />
-        {uploading && <span className="truncate"><T>올리는 중…</T></span>}
+        {uploading ? <span className="truncate"><T>올리는 중…</T></span> : isReply ? <span className="truncate"><T>이미지 한 장</T></span> : null}
       </button>
       <input ref={fileRef} type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/heic,image/heif" hidden onChange={(e) => void pickImage(e.target.files?.[0])} />
     </>
@@ -204,7 +211,12 @@ export function Composer({
         )
       }
       tools={
-        isReply ? null : (
+        isReply ? (
+          <>
+            {imagePreview}
+            <span className="composer-tools">{imageButton}</span>
+          </>
+        ) : (
           <span className="composer-tools">
             {groupId ? (
               <>
@@ -239,7 +251,7 @@ export function Composer({
         onChange={(e) => setBody(e.target.value)}
         onSubmitShortcut={submit}
         mentions
-        placeholder={placeholder ? tr(placeholder) : image && !isReply ? tr('이미지에 한 줄 설명을 붙여 주세요') : isReply ? (replyKind === 'comment' ? tr('댓글 남기기… @로 태그') : tr('답글 남기기…')) : tr('무슨 생각을 하고 있나요? 링크를 붙이면 미리보기가 생겨요.')}
+        placeholder={placeholder ? tr(placeholder) : image ? tr('이미지에 한 줄 설명을 붙여 주세요') : isReply ? (replyKind === 'comment' ? tr('댓글 남기기… @로 태그') : tr('답글 남기기…')) : tr('무슨 생각을 하고 있나요? 링크를 붙이면 미리보기가 생겨요.')}
         autoFocus={autoFocus}
         rows={isReply ? 1 : 3}
         aria-label={isReply ? tx('답글 내용') : tx('게시물 내용')}
@@ -250,13 +262,7 @@ export function Composer({
           <span><T s="{pii} 멤버 모두가 볼 수 있어요. 지우거나 가려주세요.{v}" vars={{ pii, v: piiAckFor === body ? tx(' (한 번 더 누르면 그대로 게시돼요)') : '' }} /></span>
         </div>
       )}
-      {image && !isReply && (
-        <div className="composer-image">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={image.preview} alt="" />
-          <button type="button" className="composer-image-x" onClick={() => setImage(null)} aria-label={tx('이미지 빼기')}><X className="w-3.5 h-3.5" /></button>
-        </div>
-      )}
+      {!isReply && imagePreview}
       {!isReply && previews.items.length > 0 && (
         <div className="composer-previews mb-1">
           <LinkCarousel items={previews.items} onRemove={previews.remove} />
