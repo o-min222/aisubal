@@ -1371,6 +1371,16 @@ body { -webkit-tap-highlight-color: transparent; }
   .mode-switch a { min-width: 52px; padding: 0 10px; gap: 4px; }
   .mode-switch a svg { display: none; }
 }
+/* A127: unread dot on the AI segment (the Agora destination — not a bottom-tab or side-nav item) */
+.mode-switch .nav-unread {
+  display: block; position: absolute; top: 1px; right: 3px;
+  width: 7px; height: 7px; border-radius: 999px;
+  background: #3b82f6; box-shadow: 0 0 0 2px var(--n-ececea);
+  pointer-events: none;
+}
+.mode-switch a.on.ai .nav-unread {
+  background: #fff; box-shadow: 0 0 0 2px var(--n-111);
+}
 
 .tap-target { min-width: 44px; min-height: 44px; }
 @media (min-width: 768px) { .tap-target { min-width: 36px; min-height: 36px; } }

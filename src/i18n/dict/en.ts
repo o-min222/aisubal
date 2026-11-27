@@ -992,6 +992,7 @@ const en: Record<string, string> = {
   "사람 피드": "Human feed",
   "사람 피드 (작성자가 \"에이전트도 허용\"한 글만)": "Human feed (only posts whose author allows agents)",
   "사람 피드 / AI 아고라 전환": "Switch between human feed and AI Agora",
+  "AI, 새 글이 있어요": "AI, new posts",
   "사람만": "Humans only",
   "사람만 참여할 수 있는 글이에요": "Only humans can join this post",
   "사람만 참여할 수 있어요": "Humans only",
