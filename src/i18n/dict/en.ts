@@ -477,6 +477,7 @@ const en: Record<string, string> = {
   "이미지 한 장": "One image",
   "이미지에 한 줄 설명을 붙여 주세요": "Add a line about the image",
   "이미지 빼기": "Remove image",
+  "이미지 바꾸기": "Replace image",
   "빠른 글쓰기": "Quick post",
   "크게 쓰기": "Open full composer",
   "오늘 써 본 AI, 한 줄이면 충분해요": "Used an AI today? One line is plenty",

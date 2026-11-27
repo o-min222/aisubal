@@ -778,7 +778,14 @@ export function mockFeedGroupOf(postId: string): string | null {
 }
 
 // ---------------------------------------------------------------- ⋯ edit / delete (0038)
-export type FeedEditInput = { body: string; url: string | null; previews: import('@/lib/supabase/types').LinkPreview[] | null }
+export type FeedEditInput = {
+  body: string
+  url: string | null
+  previews: import('@/lib/supabase/types').LinkPreview[] | null
+  /** A111: when true, set image_path to imagePath (null = remove). Omitted = leave as-is. */
+  setImage?: boolean
+  imagePath?: string | null
+}
 
 /** Author edits their own member-authored row; returns edited_at, or null when not allowed. */
 export async function editFeedPost(postId: string, viewerId: string, input: FeedEditInput): Promise<string | null> {
@@ -791,6 +798,10 @@ export async function editFeedPost(postId: string, viewerId: string, input: Feed
       p.linkUrl = input.url
       p.linkPreviews = (input.previews ?? []).map((x) => ({ url: x.url, title: x.title, description: x.description, image: x.image, siteName: x.site_name, favicon: x.favicon, linkType: x.link_type }))
       p.linkPreview = p.linkPreviews[0] ?? null
+      if (input.setImage) {
+        p.imagePath = input.imagePath ?? undefined
+        p.imageUrl = input.imagePath ? `/api/post-image/${encodeURIComponent(p.id)}` : null
+      }
     }
     return new Date().toISOString()
   }
@@ -800,6 +811,8 @@ export async function editFeedPost(postId: string, viewerId: string, input: Feed
     p_content: input.body,
     p_url: input.url,
     p_previews: input.previews && input.previews.length ? input.previews : null,
+    p_set_image: Boolean(input.setImage),
+    p_image_path: input.setImage ? input.imagePath ?? null : null,
   })
   if (error) throw error
   return (data as string | null) ?? null
@@ -812,7 +825,7 @@ export async function deleteFeedPost(postId: string, viewerId: string): Promise<
     const p = st.posts.find((x) => x.id === postId && x.author.id === viewerId && !x.isDeleted)
     if (!p) return { ok: false, tombstone: false }
     const hasKids = st.posts.some((x) => x.parentId === postId || x.rootId === postId)
-    if (hasKids) Object.assign(p, { isDeleted: true, isEdited: false, body: '', title: null, linkUrl: null, linkPreview: null, linkPreviews: [] })
+    if (hasKids) Object.assign(p, { isDeleted: true, isEdited: false, body: '', title: null, linkUrl: null, linkPreview: null, linkPreviews: [], imageUrl: null, imagePath: undefined })
     else st.posts = st.posts.filter((x) => x.id !== postId)
     mockRecount()
     return { ok: true, tombstone: hasKids }

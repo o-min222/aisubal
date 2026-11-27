@@ -15,6 +15,7 @@ import type { TimelinePost } from './types'
 import { setRecHidden } from './rec-hidden'
 import { postRecDismiss } from '@/lib/rec-dismiss'
 import { canOfferTeaser, teaserPath } from '@/lib/teaser-rules'
+import { PostEditImage, initialPostEditImage, postEditImageChanged, postEditImagePayload, type PostEditImageValue } from './post-edit-image'
 import { T } from '@/i18n/t'
 import { tx, tn } from '@/i18n/client'
 
@@ -32,6 +33,7 @@ export function PostMenu({ post, kind, afterDeleteHref, adminHide = false }: { p
   const [open, setOpen] = useState(false)
   const [step, setStep] = useState<Step>('menu')
   const [text, setText] = useState(post.body)
+  const [image, setImage] = useState<PostEditImageValue>(() => initialPostEditImage(post.imageUrl))
   const [reason, setReason] = useState('')
   const [detail, setDetail] = useState('')
   const [busy, setBusy] = useState(false)
@@ -50,6 +52,7 @@ export function PostMenu({ post, kind, afterDeleteHref, adminHide = false }: { p
   // A85 (queue): the author changes 공유범위 / 에이전트 반응 here (the row under the post is gone)
   const ownRoot = mine && kind === 'feed' && !post.parentId && post.author.kind === 'member' && !post.groupId
   const canVis = ownRoot && canRestrict({ isReply: false, groupId: post.groupId, postedAs: post.isNickname ? 'nickname' : 'real' })
+  const canEditImage = canEdit && kind === 'feed' && !post.parentId
 
   /** 추천 feed only: hide this post now and keep it out of future 추천 (0068). */
   async function notInterested() {
@@ -82,8 +85,10 @@ export function PostMenu({ post, kind, afterDeleteHref, adminHide = false }: { p
   function close(v: boolean) {
     setOpen(v)
     if (!v) {
+      if (image.kind === 'new') URL.revokeObjectURL(image.preview)
       setStep('menu')
       setText(post.body)
+      setImage(initialPostEditImage(post.imageUrl))
       setReason('')
       setDetail('')
     }
@@ -98,10 +103,12 @@ export function PostMenu({ post, kind, afterDeleteHref, adminHide = false }: { p
 
   async function save() {
     const body = text.trim()
+    const imagePatch = canEditImage ? postEditImagePayload(image) : null
     if (!body || busy) return
+    if (body === post.body.trim() && !imagePatch) return
     setBusy(true)
     try {
-      await call(base, { method: 'PATCH', body: JSON.stringify({ body, isReply: Boolean(post.parentId) }) }, tn('수정하지 못했어요.'))
+      await call(base, { method: 'PATCH', body: JSON.stringify({ body, isReply: Boolean(post.parentId), ...imagePatch }) }, tn('수정하지 못했어요.'))
       toast.success(tn('수정했어요'))
       close(false)
       router.refresh()
@@ -226,7 +233,7 @@ export function PostMenu({ post, kind, afterDeleteHref, adminHide = false }: { p
         {step === 'menu' && (
           <div className="flex flex-col py-1">
             {canEdit && (
-              <button type="button" onClick={() => setStep('edit')} className="sheet-row">
+              <button type="button" onClick={() => { setImage(initialPostEditImage(post.imageUrl)); setStep('edit') }} className="sheet-row">
                 <Pencil className="w-5 h-5" /> <T>수정하기</T>
               </button>
             )}
@@ -302,10 +309,11 @@ export function PostMenu({ post, kind, afterDeleteHref, adminHide = false }: { p
               aria-label={tx('글 내용')}
               className="input w-full text-[15px] leading-relaxed"
             />
+            {canEditImage && <PostEditImage value={image} onChange={setImage} disabled={busy} />}
             <p className="text-xs text-n-888">
               <T>수정하면 글에 ‘수정됨’이 표시돼요.</T>
             </p>
-            <button type="button" onClick={save} disabled={busy || !text.trim() || text.trim() === post.body.trim()} className="btn btn-primary w-full min-h-[44px] rounded-full">
+            <button type="button" onClick={save} disabled={busy || !text.trim() || (text.trim() === post.body.trim() && !postEditImageChanged(post.imageUrl, image))} className="btn btn-primary w-full min-h-[44px] rounded-full whitespace-nowrap">
               {busy ? <T>저장 중…</T> : <T>저장</T>}
             </button>
           </div>

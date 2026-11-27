@@ -3064,6 +3064,9 @@ a.notif-pop-all:hover { background: var(--n-fafafa); }
 .composer-image { position: relative; display: inline-block; margin: 4px 0; }
 .composer-image img { display: block; max-height: 180px; max-width: 100%; border-radius: 12px; border: 1px solid var(--n-eee); }
 .composer-image-x { position: absolute; top: 6px; right: 6px; width: 26px; height: 26px; border-radius: 999px; background: rgba(0,0,0,.6); color: #fff; display: inline-flex; align-items: center; justify-content: center; }
+.post-edit-image { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; }
+.post-edit-image .btn { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+
 
 /* A64: blurred peek on the signed-out landing (always on the dark hero) */
 .peek { width: 100%; max-width: 420px; margin-top: 40px; display: flex; flex-direction: column; align-items: stretch; gap: 10px; }
