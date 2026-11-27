@@ -493,6 +493,7 @@ async function queryFeedBase(viewerId: string, opts: FeedListOpts, withCount: bo
     let rows = st.posts.filter(
       (p) =>
         !p.parentId &&
+        !p.isHidden &&
         (opts.groupId ? p.groupId === opts.groupId : !p.groupId || promoted.has(p.id)) &&
         (!opts.authorId || p.author.id === opts.authorId) &&
         (!authorIds || (authorIds.includes(p.author.id) && !p.isNickname)) &&
@@ -510,6 +511,7 @@ async function queryFeedBase(viewerId: string, opts: FeedListOpts, withCount: bo
     .select(FEED_SELECT, withCount ? { count: 'exact' } : undefined)
     .is('parent_id', null)
     .eq('is_hidden', false)
+    .eq('onboarding_test', false)
     .is('deleted_at', null)
   q = popular
     ? q.gte('created_at', since).order('engage_count', { ascending: false }).order('reply_count', { ascending: false }).order('created_at', { ascending: false })

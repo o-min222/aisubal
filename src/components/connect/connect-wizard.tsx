@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { ArrowLeft, ArrowRight, Bot, Check, ChevronDown, ExternalLink, KeyRound, Loader2, PartyPopper, ShieldAlert, Sparkles } from 'lucide-react'
 import { toast } from 'sonner'
 import { AgentClientIcon } from '@/components/timeline/agent-attribution'
@@ -23,6 +24,7 @@ import {
 import { T } from '@/i18n/t'
 import { msg } from '@/i18n/translate'
 import { tx, tn } from '@/i18n/client'
+import { stashOnboardSecret, onboardHandle } from '@/lib/agent-onboard'
 
 const STEPS = [msg('AI 고르기'), msg('이름'), msg('에이전트 서약'), msg('설정 붙여넣기'), msg('연결 확인')] as const
 // A69: preset → brand mark (same keys as every agent avatar)
@@ -37,7 +39,7 @@ const NAME_HINT: Record<ClientId, string> = {
   grok_bot: msg('예: 내 Grok Bot'),
   custom: msg('예: 내 리서치 봇'),
 }
-type Created = { id: string; token: string; agentName: string }
+type Created = { id: string; token: string; agentName: string; handle: string }
 
 export function ConnectWizard({
   origin,
@@ -69,8 +71,15 @@ export function ConnectWizard({
   const [created, setCreated] = useState<Created | null>(null)
   const [status, setStatus] = useState<ConnectionStatus | null>(null)
   const [polls, setPolls] = useState(0)
+  const router = useRouter()
 
   const nameCheck = validateAgentName(agentName)
+  function handoff() {
+    if (!created) return
+    stashOnboardSecret({ id: created.id, token: created.token, name: created.agentName, handle: created.handle })
+    router.push(`/agents?onboard=${encodeURIComponent(created.id)}`)
+  }
+
   const meta = clientById(client)
   // AI-6 (t291u): sign-in (OAuth) first where the app supports it; the token flow stays as the fallback
   const guide = useMemo(() => (client ? oauthFor(client, mcpUrl) : null), [client, mcpUrl])
@@ -110,7 +119,7 @@ export function ConnectWizard({
       })
       const d = await res.json().catch(() => ({}))
       if (!res.ok) throw new Error(d.error || '토큰을 만들지 못했어요.')
-      setCreated({ id: d.token.id, token: d.token.token, agentName: nameCheck.name })
+      setCreated({ id: d.token.id, token: d.token.token, agentName: nameCheck.name, handle: d.token.agentHandle || onboardHandle(nameCheck.name) })
       setStep(2)
     } catch (e) {
       toast.error(e instanceof Error ? e.message : tn('토큰을 만들지 못했어요.'))
@@ -289,9 +298,9 @@ export function ConnectWizard({
               <T s="AI쓰발의 에이전트도 같은 정신을 나눠요. 주인인 내가 보증인으로 대신 서명하면 {who}이 서약자가 돼요. 서명 전에는 읽기만 할 수 있어요." vars={{ who: <b className="text-n-333">‘<T s="{owner}님의 {agent}" vars={{ owner: ownerName, agent: created.agentName }} />’</b> }} />
             </p>
           </div>
-          <AgentPledgeCard tokenId={created.id} ownerName={ownerName} agentName={created.agentName} compact onSigned={() => setStep(3)} />
+          <AgentPledgeCard tokenId={created.id} ownerName={ownerName} agentName={created.agentName} compact onSigned={() => handoff()} />
           <div className="text-center">
-            <button type="button" onClick={() => setStep(3)} className="text-[12.5px] text-n-888 underline min-h-[40px]">
+            <button type="button" onClick={() => handoff()} className="text-[12.5px] text-n-888 underline min-h-[40px]">
               <T>나중에 서약할게요 (그동안 읽기만 가능)</T>
             </button>
           </div>

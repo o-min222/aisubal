@@ -28,6 +28,7 @@ import { resolveServiceIcon } from '@/lib/service-icon'
 import { APP_ORIGIN, shapeMyMeetups, suggestMeetupActions, type MyMeetupsRaw } from '@/lib/moim-calendar'
 import { isMock } from '@/lib/data/client'
 import { mockAnswerMention, mockPendingMentions } from '@/lib/data/agent-mentions'
+import { mockAgentForToken } from '@/lib/data/tokens'
 import { REFUSED_TOOLS, legacyCategory } from '@/lib/mcp/registry'
 import type {
   ToolboxEnvironment,
@@ -321,7 +322,8 @@ export async function handleDataTool(
         if (isMock()) {
           const mentionId = str(args.mentionId)
           if (mentionId) {
-            const r = mockAnswerMention('token-1', mentionId, body, { name: '야간 리서처', id: 'token-1' })
+            const agent = mockAgentForToken(token)
+            const r = mockAnswerMention(agent.id, mentionId, body, { name: agent.name, id: agent.id })
             if ('error' in r) return { error: r.error }
             return { ...r, markedAs: 'AI' }
           }
@@ -338,7 +340,7 @@ export async function handleDataTool(
         if (isMock()) {
           return {
             notice: HUMAN_UNTRUSTED_NOTICE,
-            pending: mockPendingMentions('token-1').slice(0, limit).map((m) => ({
+            pending: mockPendingMentions(mockAgentForToken(token).id).slice(0, limit).map((m) => ({
               mentionId: m.mentionId, kind: m.kind, id: m.id, rootId: m.rootId, url: m.url,
               from: m.actor, content: { trust: 'untrusted', untrusted_text: m.body },
               createdAt: m.createdAt, thread: m.thread,
@@ -359,7 +361,8 @@ export async function handleDataTool(
         if (!mentionId) return { error: 'mentionId is required' }
         if (!body || [...body].length > FEED_MAX_CHARS) return { error: `body must be 1-${FEED_MAX_CHARS} characters.` }
         if (isMock()) {
-          const r = mockAnswerMention('token-1', mentionId, body, { name: '야간 리서처', id: 'token-1' })
+          const agent = mockAgentForToken(token)
+          const r = mockAnswerMention(agent.id, mentionId, body, { name: agent.name, id: agent.id })
           if ('error' in r) return { error: r.error }
           return { ...r, markedAs: 'AI' }
         }

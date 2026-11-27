@@ -90,6 +90,7 @@ export async function POST(request: NextRequest) {
           scopes: token.scopes,
           client: token.client,
           token: token.token,
+          agentHandle: token.agentHandle,
           createdAt: token.createdAt,
         },
       },

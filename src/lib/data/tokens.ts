@@ -6,10 +6,30 @@ import type { TokenScope } from '@/lib/supabase/types'
 import type { ClientId, ConnectionStatus } from '@/lib/agent-connect'
 import { mockOAuthAgents } from './oauth'
 import { sb, isMock } from './client'
+import { agentHandleBase } from '@/lib/agent-handle'
 
-const gAgents = globalThis as unknown as { __aisubalAgentNames?: Map<string, string> }
+const gAgents = globalThis as unknown as {
+  __aisubalAgentNames?: Map<string, string>
+  __aisubalIssuedTokens?: PublicToken[]
+  __aisubalIssuedRaw?: Map<string, string>
+}
 /** DEV mock: agent names of tokens issued in this process */
 const mockAgentNames = (): Map<string, string> => (gAgents.__aisubalAgentNames ??= new Map())
+const mockIssuedTokens = (): PublicToken[] => (gAgents.__aisubalIssuedTokens ??= [])
+const mockIssuedRaw = (): Map<string, string> => (gAgents.__aisubalIssuedRaw ??= new Map())
+
+/** Map a raw bearer token to the mock agent that minted it (never logs the secret). */
+export function mockAgentForToken(raw: string | null | undefined): { id: string; name: string } {
+  if (raw) {
+    for (const [id, secret] of mockIssuedRaw()) {
+      if (secret === raw) {
+        const row = mockIssuedTokens().find((x) => x.id === id)
+        return { id, name: row?.agentName || row?.name || 'AI' }
+      }
+    }
+  }
+  return { id: 'token-1', name: '야간 리서처' }
+}
 /** DEV mock: photos saved through the profile editor (agent-profiles.ts keeps the same map) */
 const mockPhoto = (id: string): string | null | undefined => (globalThis as unknown as { __aisubalAgentProfiles?: Map<string, { avatarUrl?: string | null }> }).__aisubalAgentProfiles?.get(id)?.avatarUrl
 
@@ -90,6 +110,7 @@ const mockDeletedAgents = ((globalThis as unknown as { __aisubalDeletedAgents?: 
 export async function listApiTokens(memberId: string): Promise<PublicToken[]> {
   if (isMock()) {
     return ([
+      ...mockIssuedTokens().map((row) => ({ ...row, pledgeSignedAt: mockPledged().get(row.id) ?? row.pledgeSignedAt })),
       {
         id: 'token-1',
         name: '개인 맥북',
@@ -162,28 +183,30 @@ export async function issueApiToken(
 
   if (isMock()) {
     const id = `token-${Date.now()}`
+    const agentHandle = agentName ? agentHandleBase(agentName) : null
     mockAgentNames().set(id, agentName || name)
-    return {
-      token: {
-        id,
-        name,
-        agentName,
-        agentModel,
-        scopes,
-        tokenPrefix,
-        token: raw,
-        createdAt: new Date().toISOString(),
-        lastUsedAt: null,
-        expiresAt: null,
-        client: agent.client ?? null,
-        firstUsedAt: null,
-        clientInfo: null,
-        showOnProfile: true,
-        pledgeSignedAt: null,
-        pledgeNo: null,
-        pledgeHash: null,
-      },
+    const row: PublicToken = {
+      id,
+      name,
+      agentName,
+      agentHandle,
+      agentModel,
+      scopes,
+      tokenPrefix,
+      createdAt: new Date().toISOString(),
+      lastUsedAt: null,
+      expiresAt: null,
+      client: agent.client ?? null,
+      firstUsedAt: null,
+      clientInfo: null,
+      showOnProfile: true,
+      pledgeSignedAt: null,
+      pledgeNo: null,
+      pledgeHash: null,
     }
+    mockIssuedTokens().unshift(row)
+    mockIssuedRaw().set(id, raw)
+    return { token: { ...row, token: raw } }
   }
 
   const supabase = await sb()
@@ -255,11 +278,17 @@ export async function deleteAgent(memberId: string, tokenId: string): Promise<bo
 /** Wizard step 4: has the client made its first MCP call yet? (own tokens only, via RLS) */
 export async function getTokenStatus(memberId: string, tokenId: string): Promise<ConnectionStatus | null> {
   if (isMock()) {
-    // Local review: tokens minted in mock mode "connect" ~6s after creation.
-    const ts = Number(tokenId.replace(/^token-/, ''))
-    const connected = Number.isFinite(ts) ? Date.now() - ts > 6000 : true
-    const at = connected ? new Date().toISOString() : null
-    return { connected, firstUsedAt: at, lastUsedAt: at, clientInfo: connected ? 'claude-code 2.1.4' : null }
+    const issued = mockIssuedTokens().find((x) => x.id === tokenId)
+    if (issued) {
+      const ts = Number(tokenId.replace(/^token-/, ''))
+      const connected = Number.isFinite(ts) && Date.now() - ts > 6000
+      const at = connected ? new Date().toISOString() : null
+      return { connected, firstUsedAt: at, lastUsedAt: at, clientInfo: connected ? 'claude-code 2.1.4' : null }
+    }
+    const listed = (await listApiTokens(memberId)).find((x) => x.id === tokenId)
+    if (!listed) return null
+    const connected = Boolean(listed.firstUsedAt || listed.lastUsedAt)
+    return { connected, firstUsedAt: listed.firstUsedAt, lastUsedAt: listed.lastUsedAt, clientInfo: listed.clientInfo }
   }
   const supabase = await sb()
   const { data, error } = await supabase

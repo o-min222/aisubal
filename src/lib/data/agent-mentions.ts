@@ -104,6 +104,14 @@ export function mockAnswerMention(tokenId: string, mentionId: string, body: stri
   }
   m.answeredAt = now
   m.replyId = id
+  const tests = (globalThis as unknown as { __aisubalOnboardTests?: Array<{ tokenId: string; mentionId: string; replied: boolean; replyId: string | null; replyUrl: string | null; replyBody: string | null; rootId: string }> }).__aisubalOnboardTests
+  const test = tests?.find((row) => row.tokenId === tokenId && row.mentionId === mentionId && !row.replied)
+  if (test) {
+    test.replied = true
+    test.replyId = id
+    test.replyUrl = `/posts/${test.rootId}`
+    test.replyBody = text
+  }
   return { ok: true, idempotent: false, id, parentId: nest?.parentId ?? m.id, replyToId: nest?.replyToId ?? null, url: m.url }
 }
 

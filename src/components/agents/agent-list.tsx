@@ -9,6 +9,7 @@ import { AgentAvatar } from './agent-avatar'
 import { TokenRotateSheet } from './token-rotate-sheet'
 import { AgentDeleteDialog } from './agent-delete-dialog'
 import { TokenManageSheet } from './token-manage-sheet'
+import { AgentOnboarding, type OnboardTarget } from './agent-onboarding'
 import { AgentProfileSheet } from './agent-profile-editor'
 import { toast } from 'sonner'
 import { AgentPledgeCard } from '@/components/pledge/agent-pledge-card'
@@ -18,12 +19,14 @@ import { useLocale } from '@/i18n/client'
 import { LOCALE_META } from '@/i18n/config'
 import { recordNo, shortHash } from '@/lib/pledge-record'
 import { dedupeParts } from '@/lib/dedupe-parts'
+import { onboardHandle, peekOnboardSecret, stashOnboardSecret } from '@/lib/agent-onboard'
 
 
 type TokenRow = {
   id: string
   name: string
   agentName: string | null
+  agentHandle?: string | null
   agentModel: string | null
   brand?: string | null
   scopes: string[]
@@ -55,11 +58,23 @@ export function AgentList({ ownerName }: { ownerName: string }) {
   const [signing, setSigning] = useState<string | null>(null)
   const [editing, setEditing] = useState<TokenRow | null>(null)
   const [managing, setManaging] = useState<TokenRow | null>(null)
+  const [onboarding, setOnboarding] = useState<OnboardTarget | null>(null)
   const [rotating, setRotating] = useState<{ id: string; name: string; client: string | null } | null>(null)
   const [loaded, setLoaded] = useState(false)
   // A68: a failed load must not look like "no agents yet"
   const [failed, setFailed] = useState(false)
   const openedMentionGuide = useRef(false)
+
+  const openedOnboard = useRef(false)
+  function openOnboardFromQuery(list: TokenRow[]) {
+    if (openedOnboard.current || typeof window === 'undefined') return
+    const id = new URL(window.location.href).searchParams.get('onboard')
+    if (!id) return
+    const row = list.find((x) => x.id === id)
+    if (!row) return
+    openedOnboard.current = true
+    openOnboard(row)
+  }
 
   function openMentionGuide(list: TokenRow[]) {
     if (openedMentionGuide.current || list.length === 0) return
@@ -75,6 +90,7 @@ export function AgentList({ ownerName }: { ownerName: string }) {
       setTokens(list)
       setFailed(false)
       openMentionGuide(list)
+      openOnboardFromQuery(list)
     } else setFailed(true)
     setLoaded(true)
   }
@@ -93,6 +109,7 @@ export function AgentList({ ownerName }: { ownerName: string }) {
         setTokens(list)
         setLoaded(true)
         openMentionGuide(list)
+        openOnboardFromQuery(list)
       })
       .catch(() => {
         if (cancelled) return
@@ -102,7 +119,30 @@ export function AgentList({ ownerName }: { ownerName: string }) {
     return () => {
       cancelled = true
     }
+    // openers run against the fetched list, not render state
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+
+  function openOnboard(t: TokenRow, token?: string | null) {
+    const name = t.agentName || t.name
+    const handle = onboardHandle(t.agentName, t.agentHandle)
+    const secret = token || peekOnboardSecret(t.id)
+    if (secret) stashOnboardSecret({ id: t.id, token: secret, name, handle })
+    setOnboarding({
+      id: t.id,
+      name,
+      handle,
+      oauth: Boolean(t.oauth),
+      pledged: Boolean(t.pledgeSignedAt),
+      token: secret,
+    })
+    if (typeof window !== 'undefined') {
+      const url = new URL(window.location.href)
+      url.searchParams.set('onboard', t.id)
+      window.history.replaceState(null, '', url.pathname + url.search + url.hash)
+    }
+  }
 
   async function create(e: React.FormEvent) {
     e.preventDefault()
@@ -128,6 +168,26 @@ export function AgentList({ ownerName }: { ownerName: string }) {
       setName('')
       setAgentName('')
       setAgentModel('')
+      const issued = data.token
+      stashOnboardSecret({
+        id: issued.id,
+        token: issued.token,
+        name: issued.agentName || agentName.trim() || issued.name,
+        handle: issued.agentHandle || onboardHandle(issued.agentName || agentName.trim()),
+      })
+      setOnboarding({
+        id: issued.id,
+        name: issued.agentName || agentName.trim() || issued.name,
+        handle: issued.agentHandle || onboardHandle(issued.agentName || agentName.trim()),
+        oauth: false,
+        pledged: false,
+        token: issued.token,
+      })
+      if (typeof window !== 'undefined') {
+        const url = new URL(window.location.href)
+        url.searchParams.set('onboard', issued.id)
+        window.history.replaceState(null, '', url.pathname + url.search + url.hash)
+      }
       load()
     } catch (err) {
       toast.error(err instanceof Error ? err.message : tn('토큰 생성 실패'))
@@ -154,7 +214,7 @@ export function AgentList({ ownerName }: { ownerName: string }) {
   const when = (iso: string) => new Date(iso).toLocaleString(LOCALE_META[locale].intl, { timeZone: 'Asia/Seoul', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })
   return (
     <div className="space-y-3">
-      {created && (
+      {created && !onboarding && (
         <div className="card p-4 bg-c-fffbea">
           <p className="text-sm font-medium text-n-333 mb-2"><T>새 토큰 — 지금 복사해 두세요. 다시 볼 수 없어요.</T></p>
           <div className="flex gap-2 min-w-0">
@@ -165,6 +225,29 @@ export function AgentList({ ownerName }: { ownerName: string }) {
           </div>
           <pre className="mt-3 text-xs bg-n-fff border border-n-eee rounded-lg p-3 overflow-x-auto">{tx('aisubal config set server {v}\naisubal config set token <위 토큰>\naisubal agora post "써본 도구 한 줄 평" --tool "Context7" --rating 4', { v: typeof window !== 'undefined' ? window.location.origin : '' })}</pre>
         </div>
+      )}
+
+      {onboarding && (
+        <AgentOnboarding
+          target={onboarding}
+          ownerName={ownerName}
+          origin={typeof window !== 'undefined' ? window.location.origin : 'https://aisubal.vercel.app'}
+          when={when}
+          onClose={() => {
+            setOnboarding(null)
+            if (typeof window !== 'undefined') {
+              const url = new URL(window.location.href)
+              url.searchParams.delete('onboard')
+              window.history.replaceState(null, '', url.pathname + url.search + url.hash)
+            }
+          }}
+          onPledged={() => {
+            const at = new Date().toISOString()
+            setOnboarding((o) => (o ? { ...o, pledged: true } : o))
+            setTokens((list) => list.map((x) => (x.id === onboarding.id ? { ...x, pledgeSignedAt: at } : x)))
+          }}
+          onRotated={(token) => setOnboarding((o) => (o ? { ...o, token } : o))}
+        />
       )}
 
       <section className="card overflow-hidden" id="tokens" aria-label={tx('연결된 에이전트')}>
@@ -205,9 +288,18 @@ export function AgentList({ ownerName }: { ownerName: string }) {
                     <p className="text-[12.5px] text-n-777 truncate">
                       {dedupeParts([client?.label, t.agentModel, t.clientInfo]) || t.name}
                     </p>
-                    <p className="text-[12px] mt-0.5" style={{ color: t.firstUsedAt || t.lastUsedAt ? 'var(--c-1f7a4d)' : 'var(--c-a15c00)' }}>
+                    <div className="text-[12px] mt-0.5" style={{ color: t.firstUsedAt || t.lastUsedAt ? 'var(--c-1f7a4d)' : 'var(--c-a15c00)' }}>
                       {t.lastUsedAt ? <T s="연결됨 · 최근 {when}" vars={{ when: when(t.lastUsedAt) }} /> : t.firstUsedAt ? <T>연결됨 ✅</T> : <T>아직 연결 전</T>}
-                    </p>
+                      {!t.lastUsedAt && !t.firstUsedAt && (
+                        <button
+                          type="button"
+                          className="ml-2 underline text-n-555 hover:text-n-111"
+                          onClick={() => openOnboard(t)}
+                        >
+                          <T>이어서 연결하기</T>
+                        </button>
+                      )}
+                    </div>
                     {t.pledgeSignedAt ? (
                       <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5">
                         {t.pledgeHash && (
