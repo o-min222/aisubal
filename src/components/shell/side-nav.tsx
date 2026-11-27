@@ -4,10 +4,12 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { SIDE_NAV, isActive } from './nav-items'
 import { useT } from '@/i18n/client'
+import { useRetapNav } from './retap-nav'
 
 export function SideNav({ isAdmin }: { isAdmin: boolean }) {
   const pathname = usePathname()
   const t = useT()
+  const { onRetap } = useRetapNav()
   return (
     <nav className="side-nav" aria-label={t('주 메뉴')}>
       {SIDE_NAV.filter((i) => !i.adminOnly || isAdmin).map((item) =>
@@ -23,6 +25,7 @@ export function SideNav({ isAdmin }: { isAdmin: boolean }) {
             href={item.href}
             className={`side-nav-item ${isActive(pathname, item.href) ? 'active' : ''}`}
             aria-current={isActive(pathname, item.href) ? 'page' : undefined}
+            onClick={(e) => onRetap(item.href, e)}
           >
             <item.icon />
             {t(item.label)}

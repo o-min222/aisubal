@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation'
 import { Home, Wrench, PlusSquare, Archive, LayoutDashboard, PenLine } from 'lucide-react'
 import { isActive } from './nav-items'
 import { useT } from '@/i18n/client'
+import { useRetapNav } from './retap-nav'
 import { msg } from '@/i18n/translate'
 
 const TABS = [
@@ -19,12 +20,13 @@ const TABS = [
 export function BottomTabs() {
   const pathname = usePathname()
   const t = useT()
+  const { onRetap } = useRetapNav()
   return (
     <nav className="bottom-tabs md:hidden" aria-label={t('하단 탭')}>
       {TABS.map((tab) => {
         const on = tab.href === '/posts/new' ? pathname === '/posts/new' : tab.href === '/feed' ? pathname === '/feed' || (pathname.startsWith('/posts/') && pathname !== '/posts/new') : isActive(pathname, tab.href)
         return (
-          <Link key={tab.href} href={tab.href} className={on ? 'on' : ''} aria-current={on ? 'page' : undefined}>
+          <Link key={tab.href} href={tab.href} className={on ? 'on' : ''} aria-current={on ? 'page' : undefined} onClick={(e) => onRetap(tab.href, e)}>
             <tab.icon className="w-6 h-6" strokeWidth={on ? 2.4 : 1.8} />
             <span>{t(tab.label)}</span>
           </Link>

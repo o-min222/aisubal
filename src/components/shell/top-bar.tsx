@@ -12,6 +12,7 @@ import { GlobalSearch } from '@/components/search/global-search'
 import { NotificationBell } from '@/components/notifications/notification-bell'
 import type { ShellMember } from './nav-items'
 import { useT, tx } from '@/i18n/client'
+import { useRetapNav } from './retap-nav'
 import { useFeedbackMode } from '@/components/feedback/feedback-context'
 
 /**
@@ -25,6 +26,7 @@ export function TopBar({ me }: { me: ShellMember }) {
   const hidden = useHideOnScroll()
   const t = useT()
   const feedback = useFeedbackMode()
+  const { onRetap } = useRetapNav()
   return (
     <header className={hidden ? 'top-bar is-hidden' : 'top-bar'}>
       <div className="top-bar-inner">
@@ -38,7 +40,16 @@ export function TopBar({ me }: { me: ShellMember }) {
             <Menu className="w-5 h-5" />
           </button>
           {/* A105: allowed members toggle 화면 피드백 by tapping the logo 7 times; for everyone else it's a plain link */}
-          <Link href="/feed" className="tb-logo" aria-label={t('AI쓰발 홈')} onClick={feedback.allowed ? feedback.logoClick : undefined} data-feedback-logo={feedback.allowed ? '' : undefined}>
+          <Link
+            href="/feed"
+            className="tb-logo"
+            aria-label={t('AI쓰발 홈')}
+            data-feedback-logo={feedback.allowed ? '' : undefined}
+            onClick={(e) => {
+              if (feedback.allowed) feedback.logoClick(e)
+              if (!e.defaultPrevented) onRetap('/feed', e)
+            }}
+          >
             <Image src="/images/logo-black.png" alt={tx('AI쓰발')} width={100} height={30} priority className="logo-ink" />
           </Link>
         </div>
