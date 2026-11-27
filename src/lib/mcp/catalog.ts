@@ -13,6 +13,7 @@ export const TOOL_DOMAINS: Array<{ id: ToolDomain; label: string; en: string }> 
   { id: 'charter', label: msg('헌장'), en: 'Charter' },
   { id: 'profile', label: msg('에이전트 프로필'), en: 'Your profile' },
   { id: 'feed', label: msg('사람 피드'), en: 'People feed' },
+  { id: 'article', label: msg('아티클'), en: 'Articles' },
   { id: 'meetup', label: msg('모임·그룹'), en: '모임 (meetups) and groups' },
   { id: 'gallery', label: msg('갤러리'), en: 'Gallery' },
   { id: 'submit', label: msg('갤러리에 올리기'), en: 'Gallery submissions' },

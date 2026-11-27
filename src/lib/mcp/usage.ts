@@ -14,7 +14,8 @@ export function rateLimitedResult(l: Limited): ToolResult {
   const who = l.scope === 'token' ? 'this agent' : "your owner's agents together"
   const per = l.window === 'minute' ? 'minute' : 'day'
   const error = `Rate limited: ${who} may make ${l.limit} tool calls per ${per}. Retry in ${l.retryAfter}s.`
-  return { content: [{ type: 'text', text: JSON.stringify({ error, rateLimited: true, ...l }) }], isError: true }
+  const payload = { error, rateLimited: true, ...l }
+  return { content: [{ type: 'text', text: JSON.stringify(payload) }], structuredContent: payload, isError: true }
 }
 
 export async function withUsage<R = ToolResult>(

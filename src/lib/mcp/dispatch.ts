@@ -20,7 +20,7 @@ import { LIST_OPTIONS, implName, isAdminTool, resolveTool, unknownToolMessage, t
 export type ToolFilter = { scopes: readonly string[]; isAdmin: boolean }
 
 export type McpText = { type: 'text'; text: string }
-export type ToolResult = { content: McpText[]; isError?: boolean; _meta?: Record<string, unknown> }
+export type ToolResult = { content: McpText[]; structuredContent?: Record<string, unknown>; isError?: boolean; _meta?: Record<string, unknown> }
 export type Rpc = (fn: string, args: Record<string, unknown>) => Promise<{ data: unknown; error: { message: string } | null }>
 
 /** Per-request context: the bearer token and lazily fetched facts about its agent. */
@@ -96,9 +96,12 @@ const isFailure = (r: Record<string, unknown>) => 'error' in r
 /** Shape a handler's result the way every client has always received it. */
 function toContent(spec: ToolSpec, result: Record<string, unknown>): ToolResult {
   const failed = isFailure(result)
-  if (failed || !spec.untrusted) return { content: [json(result)], ...(failed ? { isError: true } : {}) }
+  if (failed || !spec.untrusted) {
+    return { content: [json(result)], structuredContent: result, ...(failed ? { isError: true } : {}) }
+  }
   const notice = NOTICE[spec.untrusted](result)
-  return { content: [...(notice ? [{ type: 'text' as const, text: notice }] : []), json(maskPiiDeep(result))] }
+  const payload = maskPiiDeep(result) as Record<string, unknown>
+  return { content: [...(notice ? [{ type: 'text' as const, text: notice }] : []), json(payload)], structuredContent: payload }
 }
 
 export type CallOutcome = {
@@ -190,13 +193,13 @@ function finishList(spec: ToolSpec, result: Record<string, unknown>, p: Paging |
 /** tools/call: resolve refusals / unknown names, run the tool's backend, wrap the result. */
 export async function callTool(ctx: McpContext, rawName: string, rawArgs: Record<string, unknown> = {}): Promise<CallOutcome> {
   const r = resolveTool(rawName, rawArgs)
-  if (r.kind === 'refused') return { tool: rawName, status: 'refused', result: { content: [json({ error: r.message, refused: true, humanOnly: true })], isError: true } }
-  const unknown = (hideAdmin: boolean): CallOutcome => ({ tool: rawName, status: 'unknown', result: { content: [json({ error: unknownToolMessage(rawName, { hideAdmin }) })], isError: true } })
+  if (r.kind === 'refused') { const payload = { error: r.message, refused: true, humanOnly: true }; return { tool: rawName, status: 'refused', result: { content: [json(payload)], structuredContent: payload, isError: true } } }
+  const unknown = (hideAdmin: boolean): CallOutcome => { const payload = { error: unknownToolMessage(rawName, { hideAdmin }) }; return { tool: rawName, status: 'unknown', result: { content: [json(payload)], structuredContent: payload, isError: true } } }
   if (r.kind === 'unknown') return unknown(!(await ctx.seesAdminTools()))
   const { spec } = r
   // A81: to a member, an admin tool does not exist (same answer as any unknown name)
   if (isAdminTool(spec) && !(await ctx.seesAdminTools())) return unknown(true)
-  const fail = (error: string): CallOutcome => ({ tool: spec.name, status: 'error', result: { content: [json({ error })], isError: true } })
+  const fail = (error: string): CallOutcome => ({ tool: spec.name, status: 'error', result: { content: [json({ error })], structuredContent: { error }, isError: true } })
 
   const invalid = !(spec.page ? spec.input.extend(LIST_OPTIONS) : spec.input).safeParse(r.args).success
   const prepared = prepareList(spec, r.args)
@@ -216,12 +219,12 @@ export async function callTool(ctx: McpContext, rawName: string, rawArgs: Record
     result = await handleAgoraTool(impl, args, ctx.bearer, ctx.rpc)
   } else if (spec.runner === 'archive') {
     const backend = await ctx.archive()
-    if (!backend) return { tool: spec.name, status: 'unauthorized', result: { content: [json({ error: 'Unauthorized' })], isError: true } }
+    if (!backend) return { tool: spec.name, status: 'unauthorized', result: { content: [json({ error: 'Unauthorized' })], structuredContent: { error: 'Unauthorized' }, isError: true } }
     result = await handleArchiveTool(impl, args, backend, ctx.origin)
   } else {
     // production: every data tool goes through token-verified SECURITY DEFINER RPCs; the dev server mocks
     // all but the feed / profile tools (those have dev paths inside handleDataTool)
-    const viaRpc = !ctx.dev || impl.startsWith('feed_') || spec.domain === 'profile'
+    const viaRpc = !ctx.dev || impl.startsWith('feed_') || impl.startsWith('article_') || spec.domain === 'profile'
     result = omitHiddenDeep(viaRpc ? await handleDataTool(impl, args, ctx.bearer, ctx.rpc, ctx.origin) : await handleDevTool(impl, args))
   }
 

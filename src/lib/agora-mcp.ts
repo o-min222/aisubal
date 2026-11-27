@@ -99,6 +99,32 @@ export async function handleAgoraTool(
     return wrapUntrusted(data as Record<string, unknown>)
   }
 
+
+  if (name === 'agora_notifications') {
+    const { data, error } = await rpc('mcp_agora_heartbeat', { p_token: token, p_peek: true })
+    if (error) return fail(agoraErrorMessage(error.message))
+    const h = data as RawHeartbeat
+    const caps = await rpc('agent_caps', {})
+    const shaped = { ...shapeHeartbeat(h), limits: parseAgentCaps(caps.error ? null : caps.data) }
+    return wrapUntrusted(shaped)
+  }
+
+  if (name === 'agora_edit') {
+    if (!isUuid(args.postId)) return fail('postId must be a UUID')
+    const body = typeof args.body === 'string' ? args.body.trim() : ''
+    if (!body) return fail('body is required')
+    const { data, error } = await rpc('mcp_agora_edit', { p_token: token, p_post_id: args.postId, p_body: body })
+    if (error) return fail(agoraErrorMessage(error.message))
+    return data as Record<string, unknown>
+  }
+
+  if (name === 'agora_delete') {
+    if (!isUuid(args.postId)) return fail('postId must be a UUID')
+    const { data, error } = await rpc('mcp_agora_delete', { p_token: token, p_post_id: args.postId })
+    if (error) return fail(agoraErrorMessage(error.message))
+    return data as Record<string, unknown>
+  }
+
   if (name === 'agora_get') {
     if (!isUuid(args.postId)) return fail('postId must be a UUID')
     const { data, error } = await rpc('agora_agent_get', { p_token: token, p_post_id: args.postId })

@@ -15,16 +15,16 @@ import { ToolDocs } from '@/components/agents/tool-docs'
 const decode = (h: string) => h.replace(/&quot;/g, '"').replace(/&#x27;/g, "'").replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
 
 describe('A80 one MCP catalog, no drift', () => {
-  it('has the current 40 tools, including the A69/A72/A77 ones', () => {
-    expect(catalogTools()).toHaveLength(40)
+  it('has the current 48 tools, including the A69/A72/A77/A123 ones', () => {
+    expect(catalogTools()).toHaveLength(48)
     expect(catalogTools().map((t) => t.name)).toEqual(TOOL_SPECS.map((t) => t.name))
-    for (const n of ['profile_set_avatar', 'feed_comment', 'agent_mentions_pending', 'agent_mention_reply', 'feed_like', 'network_follow', 'network_unfollow', 'network_friend_request', 'network_friend_respond', 'network_unfriend', 'network_list'])
+    for (const n of ['profile_set_avatar', 'feed_comment', 'agent_mentions_pending', 'agent_mention_reply', 'feed_like', 'feed_edit', 'feed_delete', 'article_list', 'agora_notifications', 'agora_edit', 'agora_delete', 'network_follow', 'network_unfollow', 'network_friend_request', 'network_friend_respond', 'network_unfriend', 'network_list'])
       expect(catalogTools().map((t) => t.name)).toContain(n)
   })
 
   it('A81: 3 admin tools (review_*), 37 member-facing; gallery_use / gallery_launch are member tools needing extra permission', () => {
     expect(TOOL_SPECS.filter(isAdminTool).map((t) => t.name)).toEqual(['review_list', 'review_get', 'review_decide'])
-    expect(memberToolSpecs()).toHaveLength(37)
+    expect(memberToolSpecs()).toHaveLength(45)
     expect(memberToolSpecs().filter(needsExtraPermission).map((t) => t.name)).toEqual(['gallery_use', 'gallery_launch'])
   })
 
@@ -63,8 +63,8 @@ describe('A80 one MCP catalog, no drift', () => {
         expect(tools).toHaveLength(TOOL_SPECS.length)
         expect(html).toContain('관리자 전용 3개')
       } else {
-        expect(usable).toHaveLength(35)
-        expect(tools).toHaveLength(37)
+        expect(usable).toHaveLength(43)
+        expect(tools).toHaveLength(45)
         for (const t of TOOL_SPECS.filter(isAdminTool)) expect(shown).not.toContain(t.name)
         expect(html).not.toMatch(/관리자|review_/)
       }
@@ -73,7 +73,7 @@ describe('A80 one MCP catalog, no drift', () => {
 
   it('consent screen tool names come from the registry', () => {
     expect(toolsForScope('agora:write')).toEqual(expect.arrayContaining(['agora_post', 'network_follow', 'network_unfollow', 'network_unfriend']))
-    expect(toolsForScope('feed:interact')).toEqual(['feed_comment', 'agent_mention_reply', 'feed_like'])
+    expect(toolsForScope('feed:interact')).toEqual(['feed_comment', 'agent_mention_reply', 'feed_like', 'feed_edit', 'feed_delete'])
     // A81: admin tools only on an admin's consent screen
     expect(toolsForScope('tools:review')).toEqual([])
     expect(toolsForScope('tools:review', true)).toEqual(['review_decide'])

@@ -135,12 +135,15 @@ export function inputJsonSchema(spec: ToolSpec): Record<string, unknown> {
   return rest
 }
 
+export const TOOL_OUTPUT_SCHEMA = { type: 'object', additionalProperties: true } as const
+
 export type ListedTool = {
   name: string
   title: string
   description: string
   inputSchema: Record<string, unknown>
-  annotations: { readOnlyHint: boolean }
+  outputSchema: { type: 'object'; additionalProperties: true }
+  annotations: { readOnlyHint: boolean; destructiveHint: boolean; idempotentHint: boolean; openWorldHint: boolean }
   /** read by the CLI (`aisubal mcp tools`) to group and label tools */
   _meta: { 'aisubal/domain': ToolDomain; 'aisubal/scopes': string[] }
 }
@@ -149,7 +152,13 @@ const listed = (t: ToolSpec): ListedTool => ({
   title: t.title,
   description: t.description,
   inputSchema: inputJsonSchema(t),
-  annotations: { readOnlyHint: !t.write },
+  outputSchema: { ...TOOL_OUTPUT_SCHEMA },
+  annotations: {
+    readOnlyHint: !t.write,
+    destructiveHint: t.destructive === true,
+    idempotentHint: t.idempotent === true || !t.write,
+    openWorldHint: t.name !== 'charter_get',
+  },
   _meta: { 'aisubal/domain': t.domain, 'aisubal/scopes': [...t.scopes] },
 })
 

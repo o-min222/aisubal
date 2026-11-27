@@ -1,7 +1,7 @@
 import type { z } from 'zod'
 
 /** A66: what a tool is about (CLI / docs grouping; tool names start with it). */
-export type ToolDomain = 'charter' | 'profile' | 'feed' | 'meetup' | 'gallery' | 'archive' | 'agora' | 'network' | 'submit' | 'review'
+export type ToolDomain = 'charter' | 'profile' | 'feed' | 'article' | 'meetup' | 'gallery' | 'archive' | 'agora' | 'network' | 'submit' | 'review'
 /** Which backend runs it: token-verified RPCs (data), the agent-only agora RPCs, the archive backend, or the charter text. */
 export type ToolRunner = 'charter' | 'data' | 'archive' | 'agora'
 /** Untrusted-content handling on success: which notice goes first, and PII masking of the payload. */
@@ -37,5 +37,9 @@ export interface ToolSpec {
   write?: boolean
   /** wake the agent-webhook worker after a successful call */
   kick?: boolean
+  /** ToolAnnotations: true if the call removes or irreversibly changes something */
+  destructive?: boolean
+  /** ToolAnnotations: true if repeating the same args has the same effect */
+  idempotent?: boolean
 }
 

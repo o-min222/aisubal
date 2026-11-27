@@ -6,6 +6,7 @@ import { McpContext } from '@/lib/mcp/dispatch'
 import { buildServer } from '@/lib/mcp/server'
 import { originFrom, wwwAuthenticate } from '@/lib/oauth/core'
 import { tokenUsable } from '@/lib/data/oauth'
+import { mcpOriginAllowed } from '@/lib/mcp/http-origin'
 
 /**
  * A66: MCP over Streamable HTTP (official SDK), stateless: every POST is answered with plain JSON,
@@ -41,6 +42,9 @@ export async function DELETE() {
 
 export async function POST(request: NextRequest) {
   try {
+    if (!mcpOriginAllowed(request.headers.get('origin'), request.headers.get('host'), process.env.NEXT_PUBLIC_APP_URL)) {
+      return rpcError(null, -32003, 'Forbidden origin', 403)
+    }
     const authHeader = request.headers.get('authorization')
     const bearer = authHeader?.startsWith('Bearer ') ? authHeader.slice(7).trim() : null
     if (!bearer && !isDevMode()) return unauthorized(request, null, 'Unauthorized', false)

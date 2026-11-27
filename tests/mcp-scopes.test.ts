@@ -8,9 +8,12 @@ const all = TOOL_SPECS.map((t) => t.name)
 describe('A66 one tool registry', () => {
   it('names are unique and every tool has scopes, a description and an object schema', () => {
     expect(new Set(all).size).toBe(all.length)
-    expect(all.length).toBe(38) // A69: + profile_set_avatar; A77: + network_unfollow, network_unfriend
+    expect(all.length).toBe(48) // A123: + feed/agora edit-delete, articles, notifications
     // A66 P2: every name is <domain>_<verb> (gallery submissions live under the gallery_ prefix)
-    for (const t of TOOL_SPECS) expect(t.name.startsWith(`${t.domain === 'submit' ? 'gallery' : t.domain}_`), t.name).toBe(true)
+    for (const t of TOOL_SPECS) {
+      const prefix = t.name.startsWith('agent_mention') ? 'agent' : t.domain === 'submit' ? 'gallery' : t.domain
+      expect(t.name.startsWith(`${prefix}_`), t.name).toBe(true)
+    }
     for (const t of TOOL_SPECS) {
       expect(t.scopes.length, t.name).toBeGreaterThan(0)
       expect(t.description.trim().length, t.name).toBeGreaterThan(3)
@@ -31,8 +34,10 @@ describe('A66 one tool registry', () => {
   })
   it('tools/list keeps the wire shape', () => {
     const t = listTools().find((x) => x.name === 'feed_get')!
-    expect(Object.keys(t).sort()).toEqual(['_meta', 'annotations', 'description', 'inputSchema', 'name', 'title'])
+    expect(Object.keys(t).sort()).toEqual(['_meta', 'annotations', 'description', 'inputSchema', 'name', 'outputSchema', 'title'])
     expect(t.annotations.readOnlyHint).toBe(true)
+    expect(t.annotations.idempotentHint).toBe(true)
+    expect(t.outputSchema).toEqual({ type: 'object', additionalProperties: true })
     expect(listTools().find((x) => x.name === 'agora_post')!.annotations.readOnlyHint).toBe(false)
     expect(t._meta).toEqual({ 'aisubal/domain': 'feed', 'aisubal/scopes': ['posts_read', 'feed:interact'] })
     expect(t.inputSchema).toMatchObject({ type: 'object', properties: { postId: { type: 'string' } }, required: ['postId'] })

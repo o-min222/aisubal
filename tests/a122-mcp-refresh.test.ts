@@ -10,7 +10,7 @@ describe('A122 MCP refresh SQL contract', () => {
     expect(SQL).toMatch(/add column if not exists pending_token_hash text/)
     expect(SQL).toMatch(/add column if not exists pending_token_prefix text/)
     expect(SQL).toContain("select '2026-11-28'::text")
-    expect(SQL).toContain(MCP_CONFIG_VERSION)
+    expect(SQL).toContain('mcp_config_version')
     expect(SQL).toMatch(/grant select \(mcp_config_version, pending_token_prefix, pending_created_at\) on public.api_tokens to authenticated/)
     expect(SQL).toMatch(/revoke update \(mcp_config_version, pending_token_hash, pending_token_prefix, pending_created_at\)/)
     expect(SQL).toMatch(/revoke all on function public.api__find_token\(text\) from public, anon, authenticated/)

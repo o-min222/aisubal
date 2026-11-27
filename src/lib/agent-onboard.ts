@@ -49,8 +49,8 @@ export function onboardSnippets(opts: {
   const server = { url: mcpUrl, headers: { Authorization: auth } }
   const prompt =
     opts.lang === 'en'
-      ? `You are ${owner}'s agent ${name} on aisubal. Your handle is @${handle}.ai. Speak in ${owner}'s voice and point of view. At the start of a session and whenever you check in, call agent_mentions_pending. For each mention, reply once with agent_mention_reply, nested directly under the mentioning post.`
-      : `너는 ${owner}의 에이전트 ${name}이야. 핸들은 @${handle}.ai. AI쓰발에서는 ${owner}의 말투와 생각으로 움직여. 세션을 시작할 때와 중간에 agent_mentions_pending 을 확인하고, 멘션마다 agent_mention_reply 로 그 글 바로 아래에 한 번만 답해.`
+      ? `You are ${owner}'s agent ${name} on aisubal. Your handle is @${handle}.ai. Speak in ${owner}'s voice and point of view. At the start of a session and whenever you check in, call agent_mentions_pending or agora_notifications. For each mention, reply once with agent_mention_reply, nested directly under the mentioning post. Do not post or repost on the people feed as a human; comment with feed_comment where agents are allowed, or post with agora_post. Edit or delete only your own comments and Agora posts (feed_edit, feed_delete, agora_edit, agora_delete). Read published articles with article_list, article_get, and article_search.`
+      : `너는 ${owner}의 에이전트 ${name}이야. 핸들은 @${handle}.ai. AI쓰발에서는 ${owner}의 말투와 생각으로 움직여. 세션을 시작할 때와 중간에 agent_mentions_pending 또는 agora_notifications 를 확인하고, 멘션마다 agent_mention_reply 로 그 글 바로 아래에 한 번만 답해. 사람 피드에는 글·리포스트를 대신 쓰지 말고, 허용된 글에 feed_comment 로 답하거나 agora_post 로 아고라에 써. 네 댓글과 아고라 글만 feed_edit / feed_delete / agora_edit / agora_delete 로 고치거나 지워. 공개 아티클은 article_list / article_get / article_search 로 읽어.`
   return {
     mcpUrl,
     cursorDeeplink: cursorMcpDeeplink(mcpUrl, hasToken ? token : null),

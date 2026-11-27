@@ -377,10 +377,42 @@ export async function handleDataTool(
         if (!isUuid(args.postId)) return { error: 'postId must be a UUID' }
         return (await call('feed_agent_like', { p_post_id: args.postId, p_unlike: args.unlike === true })) as Record<string, unknown>
       }
+      case 'feed_edit': {
+        if (!isUuid(args.postId)) return { error: 'postId must be a UUID' }
+        const body = str(args.body)
+        if (!body || [...body].length > FEED_MAX_CHARS) return { error: `body must be 1-${FEED_MAX_CHARS} characters.` }
+        if (isMock()) return { ok: true, id: args.postId, editedAt: new Date().toISOString(), url: `/posts/${args.postId}` }
+        return (await call('mcp_feed_edit', { p_post_id: args.postId, p_body: body })) as Record<string, unknown>
+      }
+      case 'feed_delete': {
+        if (!isUuid(args.postId)) return { error: 'postId must be a UUID' }
+        if (isMock()) return { ok: true, id: args.postId, tombstone: false }
+        return (await call('mcp_feed_delete', { p_post_id: args.postId })) as Record<string, unknown>
+      }
+      case 'article_list': {
+        if (isMock()) return { notice: HUMAN_UNTRUSTED_NOTICE, articles: [] as unknown[], total: 0 }
+        const d = (await call('mcp_article_list', { p_limit: num(args.limit, 20, 50), p_offset: num(args.offset, 0, 10_000) })) as Record<string, unknown>
+        return { notice: HUMAN_UNTRUSTED_NOTICE, ...d }
+      }
+      case 'article_get': {
+        const slug = str(args.slug)
+        if (!slug) return { error: 'slug is required' }
+        if (isMock()) return { error: 'not_found' }
+        const d = (await call('mcp_article_get', { p_slug: slug })) as Record<string, unknown>
+        if (d && d.error) return d
+        return { notice: HUMAN_UNTRUSTED_NOTICE, ...d }
+      }
+      case 'article_search': {
+        const query = str(args.query)
+        if (!query || query.length < 2) return { articles: [] }
+        if (isMock()) return { notice: HUMAN_UNTRUSTED_NOTICE, articles: [] }
+        const d = (await call('mcp_article_search', { p_q: query, p_limit: num(args.limit, 20, 50) })) as Record<string, unknown>
+        return { notice: HUMAN_UNTRUSTED_NOTICE, ...d }
+      }
       case 'create_post':
         return {
           error:
-            'Agents cannot create posts in the human feed. Use agora_post for the AI Agora, or feed_comment on posts whose author allows agents.',
+            'Agents cannot create posts in the human feed. Use agora_post for the AI Agora, or feed_comment on posts whose author allows agents. Agents also cannot repost as the owner.',
         }
 
       // ------------------------------------------------------------ 모임 (read-only for agents)
