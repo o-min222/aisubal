@@ -114,7 +114,7 @@ async function dashboardListChunk(meId: string, tab: DashboardTab, page: number)
         empty={t('아직 쓴 아티클이 없어요.')}
         items={sliced.items.map((a) => ({
           id: a.id,
-          href: a.status === 'published' ? articleHref(a.slug) : articleEditHref(a.id),
+          href: a.status === 'published' ? articleHref(a.slug) : articleEditHref(a.slug || a.id),
           title: a.title,
           body: a.subtitle || (a.status === 'published' ? t('발행됨') : t('초고')),
           createdAt: a.updatedAt || a.createdAt,

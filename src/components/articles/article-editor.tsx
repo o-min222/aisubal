@@ -75,7 +75,7 @@ export function ArticleEditor({
     const updated = { ...next, id: article.id, slug: article.slug, status: article.status, coverPath: article.coverPath }
     setDraft(updated)
     setSaving('saved')
-    if (!next.id && article.id) router.replace(articleEditHref(article.id))
+    if (!next.id && article.id) router.replace(articleEditHref(article.slug || article.id))
     return updated
   }, [router])
 

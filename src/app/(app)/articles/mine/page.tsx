@@ -32,7 +32,7 @@ export default async function MyArticlesPage() {
           {mine.articles.map((a) => (
             <li key={a.id} className="p-3 flex items-center justify-between gap-3">
               <div className="min-w-0">
-                <Link href={a.status === 'published' ? articleHref(a.slug) : articleEditHref(a.id)} className="font-medium text-n-111 truncate block">
+                <Link href={a.status === 'published' ? articleHref(a.slug) : articleEditHref(a.slug || a.id)} className="font-medium text-n-111 truncate block">
                   {a.title}
                 </Link>
                 <p className="text-xs text-n-888">
@@ -40,7 +40,7 @@ export default async function MyArticlesPage() {
                   {a.series ? ` · ${a.series.title}` : ''}
                 </p>
               </div>
-              <Link href={articleEditHref(a.id)} className="btn btn-secondary btn-sm whitespace-nowrap"><T>수정</T></Link>
+              <Link href={articleEditHref(a.slug || a.id)} className="btn btn-secondary btn-sm whitespace-nowrap"><T>수정</T></Link>
             </li>
           ))}
         </ul>

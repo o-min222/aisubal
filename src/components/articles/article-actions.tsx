@@ -72,7 +72,7 @@ export function ArticleActions({
         <ArchiveButton kind="article" refId={articleId} hint={{ title, excerpt: excerpt ?? undefined, url: `/articles/${slug}` }} />
       )}
       {isMine && (
-        <Link href={articleEditHref(articleId)} className="btn btn-secondary btn-sm">
+        <Link href={articleEditHref(slug)} className="btn btn-secondary btn-sm">
           <Pencil className="w-4 h-4" />
           <T>수정</T>
         </Link>

@@ -1,16 +1,17 @@
 import { notFound, redirect } from 'next/navigation'
 import { getUserState } from '@/lib/auth'
-import { canPublishArticle } from '@/lib/article-rules'
-import { getArticleById, listMyArticles } from '@/lib/data/articles'
+import { canPublishArticle, articleEditHref } from '@/lib/article-rules'
+import { getArticle, getArticleById, listMyArticles } from '@/lib/data/articles'
 import { ArticleEditor } from '@/components/articles/article-editor'
 import { T } from '@/i18n/t'
 
-export default async function EditArticlePage({ params }: { params: Promise<{ id: string }> }) {
+export default async function EditArticlePage({ params }: { params: Promise<{ slug: string }> }) {
   const state = await getUserState()
   if (state.type !== 'member') redirect('/')
-  const { id } = await params
-  const article = await getArticleById(id)
+  const { slug } = await params
+  const article = (await getArticle(slug)) ?? (await getArticleById(slug))
   if (!article || !article.isMine) notFound()
+  if (article.slug && article.slug !== slug) redirect(articleEditHref(article.slug))
   const mine = await listMyArticles()
   return (
     <div className="page-col">

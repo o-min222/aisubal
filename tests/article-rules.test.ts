@@ -3,6 +3,7 @@ import {
   ARTICLE_RESERVED_SLUGS,
   ARTICLE_TEASER_MAX,
   articleHref,
+  articleEditHref,
   articleOgTeaser,
   articlePlainText,
   articleReadingSec,
@@ -38,6 +39,7 @@ describe('slug and hrefs', () => {
     expect(isReservedArticleSlug('new')).toBe(true)
     expect(isReservedArticleSlug('why-agents-fail')).toBe(false)
     expect(articleHref('why-agents-fail')).toBe('/articles/why-agents-fail')
+    expect(articleEditHref('why-agents-fail')).toBe('/articles/why-agents-fail/edit')
     expect(ARTICLE_RESERVED_SLUGS).toContain('series')
   })
 })
@@ -89,5 +91,15 @@ describe('articleDocumentTitle', () => {
     })
     expect(articleDocumentTitle('  ')).toEqual({ absolute: '아티클 · AI쓰발' })
     expect(articleDocumentTitle(null)).toEqual({ absolute: '아티클 · AI쓰발' })
+  })
+})
+
+describe('edit route', () => {
+  it('lives at [slug]/edit and redirects a leftover id URL to the slug', () => {
+    const { readFileSync } = require('node:fs') as typeof import('node:fs')
+    const src = readFileSync('src/app/(app)/articles/[slug]/edit/page.tsx', 'utf8')
+    expect(src).toMatch(/getArticle\(slug\)/)
+    expect(src).toMatch(/getArticleById\(slug\)/)
+    expect(src).toMatch(/redirect\(articleEditHref\(article\.slug\)\)/)
   })
 })

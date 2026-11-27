@@ -62,8 +62,9 @@ export function articleSeriesHref(slug: string): string {
   return `/articles/series/${slug}`
 }
 
-export function articleEditHref(id: string): string {
-  return `/articles/${id}/edit`
+/** Edit lives at `/articles/{slug}/edit`. A leftover `/articles/{id}/edit` still resolves and redirects. */
+export function articleEditHref(slug: string): string {
+  return `/articles/${slug}/edit`
 }
 
 /** Markdown-ish body → plain text for reading time (headings/emphasis/links stripped, lightly). */
