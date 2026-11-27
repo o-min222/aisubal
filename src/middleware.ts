@@ -5,13 +5,13 @@ import { loginReturnPath } from '@/lib/handoff-rules'
 import { verifiedUser } from '@/lib/supabase/verified-user'
 import { isSharePreviewFetch, SHARE_PATH_HEADER, sharePreviewKind } from '@/lib/share-teaser'
 import { INVITE_COOKIE, INVITE_COOKIE_MAX_AGE, normalizeInviteCode } from '@/lib/invite-share'
+import { copyResponseCookies } from '@/lib/supabase/forward-auth-cookies'
+
 
 export async function middleware(request: NextRequest) {
-  let response = NextResponse.next({
-    request: {
-      headers: request.headers,
-    },
-  })
+  // Pass the request itself (not a headers snapshot) so cookie writes in setAll
+  // are visible to the Server Components on this same navigation.
+  let response = NextResponse.next({ request })
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -25,11 +25,7 @@ export async function middleware(request: NextRequest) {
           cookiesToSet.forEach(({ name, value }) =>
             request.cookies.set(name, value)
           )
-          response = NextResponse.next({
-            request: {
-              headers: request.headers,
-            },
-          })
+          response = NextResponse.next({ request })
           cookiesToSet.forEach(({ name, value, options }) =>
             response.cookies.set(name, value, hardenAuthCookie(options))
           )
@@ -85,9 +81,9 @@ export async function middleware(request: NextRequest) {
     })) {
       const headers = new Headers(request.headers)
       headers.set(SHARE_PATH_HEADER, back) // a rewrite doesn't hand ?next to the page's searchParams
-      return NextResponse.rewrite(url, { request: { headers } })
+      return copyResponseCookies(response, NextResponse.rewrite(url, { request: { headers } }))
     }
-    return NextResponse.redirect(url)
+    return copyResponseCookies(response, NextResponse.redirect(url))
   }
 
   // /i/{code}: save the code (httpOnly, 30 min) so signup fills it in after the Google round trip

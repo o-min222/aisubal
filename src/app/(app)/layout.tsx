@@ -19,6 +19,7 @@ import { PullToRefresh } from '@/components/shell/pull-to-refresh'
 import { JustPosted } from '@/components/timeline/just-posted'
 import type { ShellMember } from '@/components/shell/nav-items'
 import { SeenPing } from '@/components/shell/seen-ping'
+import { SessionKeepalive } from '@/components/shell/session-keepalive'
 import { getT } from '@/i18n/server'
 
 async function ProfileCardLoader({ member, me }: { member: Member; me: ShellMember }) {
@@ -72,6 +73,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       <TopBar me={me} />
       <PullToRefresh />
       <SeenPing />
+      <SessionKeepalive />
       <div className="app-grid">
         <aside className="app-left">
           <div className="app-sticky">
