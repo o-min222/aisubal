@@ -5,9 +5,9 @@ import { getUserState } from '@/lib/auth'
 import { adminListFeedback } from '@/lib/data/feedback'
 import { isFeedbackStatus, type FeedbackStatus } from '@/lib/feedback'
 import { SubPageHeader } from '@/components/shell/sub-nav-layout'
-import { FEEDBACK_STATUS_LABEL, FeedbackStatusBadge } from '@/components/feedback/feedback-status'
+import { FEEDBACK_STATUS_LABEL } from '@/components/feedback/feedback-status'
 import { FeedbackThanks } from '@/components/feedback/feedback-thanks'
-import { RelativeTime } from '@/components/relative-time'
+import { FeedbackInbox } from '@/components/feedback/feedback-inbox'
 import { T } from '@/i18n/t'
 import { msg } from '@/i18n/translate'
 import { getT } from '@/i18n/server'
@@ -43,30 +43,7 @@ export default async function AdminFeedbackPage({ searchParams }: { searchParams
           <p className="text-sm text-n-888"><T>아직 받은 피드백이 없어요.</T></p>
         </div>
       ) : (
-        <ul className="card divide-y divide-n-eee">
-          {items.map((f) => (
-            <li key={f.id}>
-              <Link href={`/admin/feedback/${f.id}`} className="fb-row">
-                {f.hasShot ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={`/api/feedback-shot/${f.id}`} alt="" className="fb-thumb" loading="lazy" />
-                ) : (
-                  <span className="fb-thumb is-empty" aria-hidden><MessageSquareText className="w-5 h-5" /></span>
-                )}
-                <span className="min-w-0 flex-1">
-                  <span className="flex items-center gap-1.5 mb-0.5">
-                    <FeedbackStatusBadge status={f.status} />
-                    <span className="text-xs text-n-888 truncate">{f.route}</span>
-                  </span>
-                  <span className="block text-sm text-n-111 line-clamp-2">{f.body}</span>
-                  <span className="block text-xs text-n-888 mt-0.5">
-                    {f.author?.name ?? t('멤버')} · <RelativeTime date={f.createdAt} />
-                  </span>
-                </span>
-              </Link>
-            </li>
-          ))}
-        </ul>
+        <FeedbackInbox initial={items} />
       )}
       <FeedbackThanks align="center" />
     </>

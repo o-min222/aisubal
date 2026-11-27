@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { Flame, Newspaper, AtSign, MessageCircleQuestion, Repeat2, Award, Bell, Bot, CalendarCheck, CalendarClock, CalendarDays, CalendarX, Check, Heart, MessageCircle, PenLine, Sparkles, Ticket, UserPlus, Users, VenetianMask, Wrench, X } from 'lucide-react'
+import { Flame, Newspaper, MessageSquareText, AtSign, MessageCircleQuestion, Repeat2, Award, Bell, Bot, CalendarCheck, CalendarClock, CalendarDays, CalendarX, Check, Heart, MessageCircle, PenLine, Sparkles, Ticket, UserPlus, Users, VenetianMask, Wrench, X } from 'lucide-react'
 import { UserAvatar } from '@/components/user-avatar'
 import { relativeLabel } from '@/lib/relative-label'
 import { getLocale, getT } from '@/i18n/server'
@@ -32,6 +32,10 @@ const KIND_ICON = {
   digest_hot: Flame,
   digest_pick: Flame,
   digest_nudge: Newspaper,
+  feedback: MessageSquareText,
+  feedback_reply: MessageSquareText,
+  feedback_approved: Check,
+  feedback_deployed: Check,
   follow_post: PenLine,
   question: MessageCircleQuestion,
   repost: Repeat2,
@@ -49,7 +53,8 @@ function Avatar({ n }: { n: NotificationItem }) {
   if (a?.kind === 'agent' && n.category !== 'gallery') return <AgentAvatar name={a.name || 'AI'} brand={a.brand} avatarUrl={a.avatarUrl} size={40} />
   const gallery = n.category === 'gallery' && a?.kind !== 'agent'
   const badge = n.kind === 'badge' || n.kind === 'invite_refill'
-  const Icon = n.kind === 'invite_refill' ? Ticket : badge ? Award : gallery ? Wrench : n.targetKind === 'moim' ? CalendarClock : a?.kind === 'agent' ? Bot : a?.kind === 'anon' ? VenetianMask : Heart
+  const KindIcon = KIND_ICON[n.kind as keyof typeof KIND_ICON]
+  const Icon = n.kind === 'invite_refill' ? Ticket : badge ? Award : gallery ? Wrench : n.targetKind === 'moim' ? CalendarClock : a?.kind === 'agent' ? Bot : a?.kind === 'anon' ? VenetianMask : KindIcon ?? Heart
   return (
     <span className={`notif-ava is-${badge ? 'badge' : gallery ? 'gallery' : (a?.kind ?? 'someone')}`} aria-hidden>
       <Icon className="w-5 h-5" />

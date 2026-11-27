@@ -1,7 +1,8 @@
 import sharp from 'sharp'
 import { isMock, sb } from './client'
 import { createAnonClient } from '@/lib/supabase/anon'
-import { FEEDBACK_SHOT_TYPES, FEEDBACK_SHOT_MAX_BYTES, feedbackShotPath, type FeedbackItem, type FeedbackMeta, type FeedbackStatus } from '@/lib/feedback'
+import { FEEDBACK_SHOT_TYPES, FEEDBACK_SHOT_MAX_BYTES, feedbackShotPath, myFeedbackPath, type FeedbackItem, type FeedbackMeta, type FeedbackStatus } from '@/lib/feedback'
+import { mockAppendNotification } from './notifications'
 
 /** A105 화면 피드백: everything goes through the 0133 RPCs; screenshots sit in the private feedback-shots bucket. */
 const BUCKET = 'feedback-shots'
@@ -20,6 +21,7 @@ function mock(): MockStore {
     { ...base, id: '00000000-0000-4000-8000-000000000105', status: 'pending', body: '이 버튼 글자가 다크 모드에서 거의 안 보여요. 대비를 올려 주세요.', route: '/feed', viewport: { width: 390, height: 844, dpr: 3 }, theme: 'dark', selector: 'main#main > div.feed-tabs > button:nth-of-type(2)', elementText: '팔로잉', bbox: { x: 140, y: 112, width: 92, height: 36, pageX: 140, pageY: 112 }, createdAt: iso(4), updatedAt: iso(4), author: { id: 'member-2', name: '프롬프트수집가', handle: 'prompt', avatarUrl: null } },
     { ...base, id: '00000000-0000-4000-8000-000000000106', status: 'approved', body: 'Profile card overlaps the rail at 1280px.', route: '/members/me', viewport: { width: 1280, height: 800, dpr: 2 }, locale: 'en', selector: 'aside.app-left > div.app-sticky', elementText: null, bbox: { x: 24, y: 80, width: 260, height: 320, pageX: 24, pageY: 80 }, reviewedAt: iso(30), webhookStatus: 'skipped', webhookNote: 'FEEDBACK_WEBHOOK_URL / FEEDBACK_WEBHOOK_KEY not set', webhookAt: iso(30), createdAt: iso(60), updatedAt: iso(30), author: { id: 'dev-user-id', name: '개발자', handle: 'dev', avatarUrl: null } },
     { ...base, id: '00000000-0000-4000-8000-000000000107', status: 'deployed', body: '모임 카드 날짜가 두 줄로 깨져요', route: '/moim', viewport: { width: 412, height: 915, dpr: 2.6 }, selector: 'li.moim-card:nth-of-type(1) > time', elementText: '11월 28일 (금) 오후 7:30', bbox: { x: 16, y: 240, width: 180, height: 40, pageX: 16, pageY: 240 }, reviewedAt: iso(600), webhookStatus: 'sent', webhookNote: 'HTTP 200', webhookAt: iso(600), progressNote: 'A106 · 3f2c1ab', progressAt: iso(300), createdAt: iso(700), updatedAt: iso(300), author: { id: 'member-3', name: 'MCP장인', handle: 'mcp', avatarUrl: null } },
+    { ...base, id: '00000000-0000-4000-8000-000000000108', status: 'rejected', body: '검색 결과가 비어 있을 때 안내 문장이 너무 작아요.', route: '/feed', viewport: { width: 390, height: 844, dpr: 3 }, theme: 'dark', selector: 'main#main p.empty', elementText: '아직 글이 없어요', bbox: { x: 24, y: 320, width: 340, height: 48, pageX: 24, pageY: 320 }, reviewedAt: iso(20), adminNote: '이미 같은 내용이 반영되어 있어요.', createdAt: iso(80), updatedAt: iso(20), author: { id: 'dev-user-id', name: '개발자', handle: 'dev', avatarUrl: null } },
   ]
   g.__aisubalFeedback = { items: new Map(items.map((i) => [i.id, i])), enabled: new Set() }
   return g.__aisubalFeedback
@@ -115,6 +117,25 @@ export async function signedFeedbackShot(path: string, ttlSeconds: number): Prom
   return error || !data?.signedUrl ? null : data.signedUrl
 }
 
+
+function mockNotifyAuthor(item: FeedbackItem, prevStatus: FeedbackStatus) {
+  if (item.status === prevStatus || !item.author?.id) return
+  if (item.status !== 'rejected' && item.status !== 'approved' && item.status !== 'deployed') return
+  const kind = item.status === 'rejected' ? 'feedback_reply' : item.status === 'approved' ? 'feedback_approved' : 'feedback_deployed'
+  const excerpt = item.status === 'rejected' ? item.adminNote : item.status === 'deployed' ? item.progressNote : null
+  mockAppendNotification({
+    id: `fb-${item.id}-${item.status}`,
+    kind,
+    category: 'admin',
+    link: myFeedbackPath(item.id),
+    excerpt,
+    targetKind: 'feedback',
+    count: 1,
+    createdAt: new Date().toISOString(),
+    unread: true,
+    actor: { kind: 'someone', id: null, name: null, avatarUrl: null },
+  })
+}
 function mockUpdate(id: string, patch: Partial<FeedbackItem>): FeedbackItem {
   const it = mock().items.get(id)
   if (!it) throw new FeedbackError('feedback_not_found')
@@ -129,6 +150,7 @@ export async function adminReviewFeedback(id: string, action: 'approve' | 'rejec
     const okFrom = action === 'approve' ? ['pending', 'rejected'] : ['pending', 'approved']
     if (!cur || !okFrom.includes(cur.status)) throw new FeedbackError('feedback_bad_transition')
     const r = mockUpdate(id, { status: action === 'approve' ? 'approved' : 'rejected', reviewedAt: new Date().toISOString(), adminNote: note || cur.adminNote })
+    mockNotifyAuthor(r, cur.status)
     return { ...r, screenshotPath: cur.shot ? `mock/${id}.webp` : null }
   }
   const supabase = await sb()
@@ -142,7 +164,9 @@ export async function adminSetFeedbackStatus(id: string, status: 'in_progress' |
     const cur = mock().items.get(id)
     const ok = status === 'in_progress' ? ['approved', 'in_progress'] : ['approved', 'in_progress', 'deployed']
     if (!cur || !ok.includes(cur.status)) throw new FeedbackError('feedback_bad_transition')
-    return mockUpdate(id, { status, progressAt: new Date().toISOString(), progressNote: note || cur.progressNote })
+    const r = mockUpdate(id, { status, progressAt: new Date().toISOString(), progressNote: note || cur.progressNote })
+    mockNotifyAuthor(r, cur.status)
+    return r
   }
   const supabase = await sb()
   const { data, error } = await supabase.rpc('admin_feedback_set_status', { p_id: id, p_status: status, p_note: note })
@@ -179,4 +203,52 @@ export async function adminSetFeedbackEnabled(memberId: string, on: boolean): Pr
 }
 export function mockFeedbackEnabled(memberId: string): boolean {
   return mock().enabled.has(memberId)
+}
+
+export type MyFeedback = {
+  id: string
+  status: FeedbackStatus
+  body: string
+  route: string
+  hasShot: boolean
+  adminNote: string | null
+  reviewedAt: string | null
+  progressNote: string | null
+  progressAt: string | null
+  createdAt: string
+  updatedAt: string
+  screenshotPath?: string | null
+}
+
+function toMine(i: FeedbackItem & { screenshotPath?: string | null }): MyFeedback {
+  return {
+    id: i.id, status: i.status, body: i.body, route: i.route, hasShot: i.hasShot,
+    adminNote: i.adminNote, reviewedAt: i.reviewedAt, progressNote: i.progressNote, progressAt: i.progressAt,
+    createdAt: i.createdAt, updatedAt: i.updatedAt, screenshotPath: i.screenshotPath ?? null,
+  }
+}
+
+export async function listMyFeedback(memberId: string): Promise<MyFeedback[]> {
+  if (isMock()) {
+    return [...mock().items.values()]
+      .filter((i) => i.author?.id === memberId)
+      .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+      .map((i) => toMine(i))
+  }
+  const supabase = await sb()
+  const { data, error } = await supabase.rpc('feedback_mine_list', { p_limit: 50 })
+  if (error) throw error
+  return (data ?? []) as MyFeedback[]
+}
+
+export async function getMyFeedback(memberId: string, id: string): Promise<MyFeedback | null> {
+  if (isMock()) {
+    const it = mock().items.get(id)
+    if (!it || it.author?.id !== memberId) return null
+    return toMine({ ...it, screenshotPath: it.shot ? `mock/${id}.webp` : null })
+  }
+  const supabase = await sb()
+  const { data, error } = await supabase.rpc('feedback_mine_get', { p_id: id })
+  if (error) throw error
+  return (data as MyFeedback | null) ?? null
 }

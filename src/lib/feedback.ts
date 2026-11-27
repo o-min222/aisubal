@@ -60,6 +60,16 @@ export const FEEDBACK_SHOT_TYPES = ['image/jpeg', 'image/png', 'image/webp']
 /** A107: credit in the composer / admin footer. Exact English, never translated. */
 export const FEEDBACK_THANKS = 'special thanks to dayoung'
 
+/** A119: optional but encouraged reasons when rejecting. Exact Korean; en.ts has the English. */
+export const FEEDBACK_REJECT_TEMPLATES = [
+  '이미 같은 내용이 반영되어 있어요.',
+  '의도는 이해했지만 지금은 이 방향으로 바꾸기 어려워요.',
+  '조금만 더 구체적으로 알려 주시면 다시 볼게요.',
+  '다른 작업과 겹쳐서 이번에는 보류할게요.',
+] as const
+
+export const myFeedbackPath = (id?: string) => (id ? `/me/feedback/${id}` : '/me/feedback')
+
 /** A106: every active admin gets an in-app row; web push skips the author (don't buzz yourself). */
 export function feedbackNotifyRecipients(adminIds: readonly string[], authorId: string): { inApp: string[]; push: string[] } {
   const inApp = [...adminIds]

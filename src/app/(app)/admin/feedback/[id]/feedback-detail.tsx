@@ -6,6 +6,7 @@ import { toast } from 'sonner'
 import { RelativeTime } from '@/components/relative-time'
 import { FeedbackStatusBadge } from '@/components/feedback/feedback-status'
 import { FeedbackThanks } from '@/components/feedback/feedback-thanks'
+import { FeedbackRejectSheet } from '@/components/feedback/feedback-reject-sheet'
 import type { FeedbackItem } from '@/lib/feedback'
 import { T } from '@/i18n/t'
 import { tn, tx } from '@/i18n/client'
@@ -17,20 +18,22 @@ export function FeedbackDetail({ initial }: { initial: FeedbackItem }) {
   const [f, setF] = useState(initial)
   const [note, setNote] = useState('')
   const [busy, setBusy] = useState<Action | null>(null)
+  const [rejectOpen, setRejectOpen] = useState(false)
 
-  async function act(action: Action) {
-    if (action === 'reject' && !confirm(tn('이 피드백을 거절할까요?'))) return
+  async function act(action: Action, reason?: string | null) {
     setBusy(action)
     try {
-      const res = await fetch(`/api/admin/feedback/${f.id}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action, note: note.trim() || null }) })
+      const res = await fetch(`/api/admin/feedback/${f.id}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action, note: (action === 'reject' ? reason : note.trim()) || null }) })
       const data = await res.json().catch(() => ({}))
       if (!res.ok) throw new Error(data.error || tn('처리하지 못했어요.'))
       if (data.item) setF(data.item)
       setNote('')
+      if (action === 'reject') setRejectOpen(false)
       const w = data.webhook as { status?: string } | undefined
       if (w?.status === 'sent') toast.success(tn('승인했어요 · 개발 요청을 보냈어요'))
       else if (w?.status === 'skipped') toast.success(tn('승인했어요 · 웹훅이 아직 설정되지 않아 개발 요청은 보내지 않았어요'))
       else if (w?.status === 'failed') toast.error(tn('승인했어요 · 개발 요청을 보내지 못했어요'))
+      else if (action === 'reject') toast.success(tn('거절했어요. 상대에게 전했어요.'))
       else toast.success(tn('저장했어요.'))
     } catch (e) {
       toast.error(e instanceof Error ? e.message : tn('처리하지 못했어요.'))
@@ -110,7 +113,7 @@ export function FeedbackDetail({ initial }: { initial: FeedbackItem }) {
         <textarea className="input" rows={2} maxLength={1000} value={note} onChange={(e) => setNote(e.target.value)} placeholder={tx('메모 (선택) — 승인하면 개발 요청에 같이 가요')} aria-label={tx('관리자 메모')} />
         <div className="flex flex-wrap gap-2 justify-end">
           {canReject && (
-            <button type="button" className="btn btn-secondary min-h-[44px]" disabled={busy !== null} onClick={() => act('reject')}>
+            <button type="button" className="btn btn-secondary min-h-[44px]" disabled={busy !== null} onClick={() => setRejectOpen(true)}>
               <T>거절</T>
             </button>
           )}
@@ -136,6 +139,12 @@ export function FeedbackDetail({ initial }: { initial: FeedbackItem }) {
           )}
         </div>
       </div>
+      <FeedbackRejectSheet
+        open={rejectOpen}
+        onOpenChange={(o) => { if (!o && busy !== 'reject') setRejectOpen(false) }}
+        busy={busy === 'reject'}
+        onConfirm={(reason) => act('reject', reason)}
+      />
       <FeedbackThanks align="center" />
     </div>
   )

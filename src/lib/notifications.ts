@@ -31,7 +31,7 @@ export function parseNotifyCategory(v: string | string[] | null | undefined): No
 export type NotifyKind = 'comment' | 'reply' | 'like' | 'follow' | 'friend_request' | 'friend_accept' | 'invite_joined' | 'agent_reply' | 'agent_like' | 'agent_mention' | 'mention'
   | 'gallery_recommended' | 'gallery_approved' | 'gallery_confirmed' | 'gallery_rejected' | 'follow_post' | 'badge' | 'moim_invite' | 'invite_refill' | 'reaction'
   | 'moim_confirmed' | 'moim_changed' | 'moim_cancelled' | 'moim_tomorrow' | 'moim_today' | 'first_post'
-  | 'digest' | 'digest_hot' | 'digest_pick' | 'digest_nudge' | 'question' | 'repost' | 'feedback' | 'article_published'
+  | 'digest' | 'digest_hot' | 'digest_pick' | 'digest_nudge' | 'question' | 'repost' | 'feedback' | 'article_published' | 'feedback_reply' | 'feedback_approved' | 'feedback_deployed'
 export type NotifyActor = { kind: 'member' | 'agent' | 'anon' | 'someone'; id: string | null; name: string | null; avatarUrl: string | null; brand?: string | null }
 export type NotificationItem = {
   id: string
@@ -113,6 +113,13 @@ export function notificationSentence(n: NotificationItem): { s: string; name: st
 case 'feedback':
       // A105 (0133): to admins; the excerpt is the note, the link opens /admin/feedback/{id}
       return { s: msg('{name}님이 화면 피드백을 보냈어요'), name, n: 0 }
+    case 'feedback_reply':
+      // A119: to the author after a reject; excerpt is the reason, link is /me/feedback/{id}
+      return { s: msg('피드백에 답변이 왔어요'), name, n: 0 }
+    case 'feedback_approved':
+      return { s: msg('피드백이 승인됐어요'), name, n: 0 }
+    case 'feedback_deployed':
+      return { s: msg('피드백이 반영되어 배포됐어요'), name, n: 0 }
     case 'repost':
       // A95 (0128): someone reposted my post; the excerpt is the post
       return { s: msg('{name}님이 내 글을 리포스트했어요'), name, n: 0 }

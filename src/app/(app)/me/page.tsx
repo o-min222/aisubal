@@ -334,6 +334,9 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
           <T>내 대시보드</T>
         </h1>
         {/* A79 P2: the profile (and editing it in place) lives on /members/me; this page is activity only */}
+        <Link href="/me/feedback" className="text-[13px] text-link">
+          <T>내 피드백</T>
+        </Link>
         <Link href="/members/me" className="text-[13px] text-link">
           <T>내 프로필 · 편집</T>
         </Link>
