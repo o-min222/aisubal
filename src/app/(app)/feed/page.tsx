@@ -41,8 +41,8 @@ export default async function FeedPage({ searchParams }: { searchParams: Promise
   if (sp.open && isFeedId(sp.open)) redirect(`/posts/${sp.open}`)
   const here = feedHref(scope)
 
-  const [{ posts, totalPages }, groupIdentities, incoming] = await Promise.all([
-    listFeedPage(state.member.id, { scope, page: 1 }),
+  const [{ posts, hasMore }, groupIdentities, incoming] = await Promise.all([
+    listFeedPage(state.member.id, { scope, page: 1, count: false }),
     managedGroupIdentities(state.member.id),
     // A86: incoming friend requests surface here, where people already are (the bell alone went unnoticed)
     listSocial(state.member.id, state.member.id, 'requests', 0, 50).catch(() => []),
@@ -52,8 +52,8 @@ export default async function FeedPage({ searchParams }: { searchParams: Promise
     'use server'
     const s = await getUserState()
     if (s.type !== 'member') return { nodes: null, hasMore: false }
-    const r = await listFeedPage(s.member.id, { scope, page })
-    return { nodes: r.posts.length ? <FeedTimeline mode="feed" initial={r.posts} stream /> : null, hasMore: page < r.totalPages }
+    const r = await listFeedPage(s.member.id, { scope, page, count: false })
+    return { nodes: r.posts.length ? <FeedTimeline mode="feed" initial={r.posts} stream /> : null, hasMore: r.hasMore }
   }
 
   return (
@@ -81,7 +81,7 @@ export default async function FeedPage({ searchParams }: { searchParams: Promise
         mode="feed"
         label={st('피드 글')}
         posts={posts}
-        hasMore={totalPages > 1}
+        hasMore={hasMore}
         load={more}
         storageKey={here}
         empty={EMPTY[scope]}

@@ -1,3 +1,4 @@
+import { Suspense, type ReactNode } from 'react'
 import { getT } from '@/i18n/server'
 import { getLandingPeek } from '@/lib/data/landing-peek'
 import { INVITE_HOW, INVITE_STATUS_TEXT, type InvitePreview } from '@/lib/invite-share'
@@ -11,7 +12,6 @@ import { LoginScreen, type LoginInvite } from './login-panel'
  */
 export async function SignedOutLanding({ error, invite }: { error?: boolean; invite?: { code: string | null; preview: InvitePreview } }) {
   const t = await getT()
-  const peek = error ? [] : await getLandingPeek().catch(() => [])
   let loginInvite: LoginInvite | undefined
   let note: string | null = null
   if (invite) {
@@ -30,5 +30,27 @@ export async function SignedOutLanding({ error, invite }: { error?: boolean; inv
       how: usable ? t(INVITE_HOW) : t('로그인하면 웨이트리스트에 등록돼요. 다른 초대 코드를 받으면 그때 입력할 수 있어요.'),
     }
   }
-  return <LandingLayout peek={peek} note={note} invited={Boolean(invite)} login={<LoginScreen invite={loginInvite} />} />
+  const login = <LoginScreen invite={loginInvite} />
+  return (
+    <Suspense fallback={<div className="auth-hero">{login}</div>}>
+      <SignedOutLandingBody error={Boolean(error)} login={login} note={note} invited={Boolean(invite)} />
+    </Suspense>
+  )
+}
+
+/** Peek is streamed so the login shell is not blocked on landing_peek. */
+async function SignedOutLandingBody({
+  error,
+  login,
+  note,
+  invited,
+}: {
+  error: boolean
+  login: ReactNode
+  note: string | null
+  invited: boolean
+}) {
+  const peek = error ? [] : await getLandingPeek().catch(() => [])
+  if (!peek.length) return <div className="auth-hero">{login}</div>
+  return <LandingLayout peek={peek} note={note} invited={invited} login={login} />
 }

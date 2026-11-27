@@ -2,6 +2,7 @@
 
 exports[`feed loaders, real Supabase branch > feed page: likes, follow chips and group identity together 1`] = `
 {
+  "hasMore": false,
   "page": 1,
   "posts": [
     {

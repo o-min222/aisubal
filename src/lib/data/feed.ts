@@ -538,15 +538,17 @@ export async function listFeedTimeline(viewerId: string, opts: FeedListOpts = {}
   return (await queryFeed(viewerId, opts, false, listExtras(viewerId))).posts
 }
 
-/** One numbered page (20 per page) with the total for the page links. */
+/** One numbered page (20 per page). Pass `count: false` to skip the exact COUNT (hasMore = full page). */
 export async function listFeedPage(
   viewerId: string,
-  opts: Omit<FeedListOpts, 'limit' | 'offset' | 'before'> & { page: number; pageSize?: number }
-): Promise<{ posts: TimelinePost[]; page: number; totalPages: number; total: number }> {
+  opts: Omit<FeedListOpts, 'limit' | 'offset' | 'before'> & { page: number; pageSize?: number; count?: boolean }
+): Promise<{ posts: TimelinePost[]; page: number; totalPages: number; total: number; hasMore: boolean }> {
   const size = opts.pageSize ?? PAGE_SIZE
-  const { posts, total } = await queryFeed(viewerId, { ...opts, limit: size, offset: (opts.page - 1) * size }, true, listExtras(viewerId))
+  const withCount = opts.count !== false
+  const { posts, total } = await queryFeed(viewerId, { ...opts, limit: size, offset: (opts.page - 1) * size }, withCount, listExtras(viewerId))
   const t = total ?? posts.length
-  return { posts, page: opts.page, total: t, totalPages: Math.max(1, Math.ceil(t / size)) }
+  const totalPages = Math.max(1, Math.ceil(t / size))
+  return { posts, page: opts.page, total: t, totalPages, hasMore: withCount ? opts.page < totalPages : posts.length === size }
 }
 
 async function getFeedThread__raw(
