@@ -54,6 +54,8 @@ export function Composer({
   initialBody = '',
   initialImage = null,
   initialQuestion = false,
+  replyToLabel,
+  onCancelReply,
 }: {
   me: ComposerIdentity
   parentId?: string
@@ -68,6 +70,9 @@ export function Composer({
   initialImage?: PickedImage | null
   /** A97: the quick composer's 질문해요 switch was on */
   initialQuestion?: boolean
+  /** A118: 대댓글 — who this reply answers; with onCancelReply, a 취소 control */
+  replyToLabel?: string | null
+  onCancelReply?: () => void
   placeholder?: string
   autoFocus?: boolean
   onPosted?: (id: string) => void
@@ -246,6 +251,17 @@ export function Composer({
       busy={busy}
       submitLabel={busy ? <T>게시 중…</T> : piiAckFor === body && pii ? <T>그래도 게시</T> : <T>게시</T>}
     >
+      {replyToLabel && (
+        <p className="composer-reply-to text-xs text-n-888">
+          <T s="{name}님에게 답글" vars={{ name: replyToLabel }} />
+          {onCancelReply && (
+            <>
+              {' '}
+              <button type="button" className="body-link" onClick={onCancelReply}><T>취소</T></button>
+            </>
+          )}
+        </p>
+      )}
       <ComposerTextarea
         value={body}
         onChange={(e) => setBody(e.target.value)}

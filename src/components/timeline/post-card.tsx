@@ -72,6 +72,7 @@ export function PostCard({
   replyTo,
   afterDeleteHref,
   expandImage = false,
+  onReply,
 }: {
   post: TimelinePost
   href?: string
@@ -83,12 +84,14 @@ export function PostCard({
   /** A60: 아고라 admins get 숨기기 in the ⋯ menu */
   adminHide?: boolean
   isReply?: boolean
-  /** A75: a legacy 대댓글 that answered another comment: its name as an @mention before the body */
+  /** A 대댓글 that answered a sibling: its name as an @mention before the body */
   replyTo?: string | null
   /** root card in a detail view: where to go after a delete that leaves no tombstone */
   afterDeleteHref?: string
   /** A115: on a thread page, tap the image to open a view-only lightbox */
   expandImage?: boolean
+  /** A118: on a feed reply card, open the 대댓글 composer */
+  onReply?: () => void
 }) {
   const [likersOpen, setLikersOpen] = useState(false)
   const a = post.author
@@ -354,7 +357,13 @@ export function PostCard({
                 />
               )}
             </span>
-            {isReply ? null : (
+            {isReply && onReply ? (
+              <span className="tc-slot">
+                <button type="button" className="tc-act tc-reply-btn" onClick={onReply}>
+                  <T>답글</T>
+                </button>
+              </span>
+            ) : isReply ? null : (
               <span className="tc-slot">
                 {replyHref ? (
                   <Link href={replyHref} className="tc-act inline-flex items-center gap-1 text-sm" aria-label={counts.replyCount > 0 ? tx('댓글 {n}개', { n: counts.replyCount }) : tx('답글')}>

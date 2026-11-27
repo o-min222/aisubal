@@ -4,12 +4,15 @@ import { ArrowLeft } from 'lucide-react'
 import { PostCard } from '@/components/timeline/post-card'
 import type { TimelinePost } from '@/components/timeline/types'
 import { CommentList } from '@/components/comments/comment-list'
+import { FeedCommentThread } from '@/components/comments/feed-comment-thread'
 import { flatThread } from '@/lib/thread'
 import { postApi, type FeedMode } from '@/lib/feed-mode'
+import type { ComposerIdentity } from '@/components/feed/composer'
 
 /**
- * One thread page for every timeline: the post, a meta line, the flat comment list (A75), then the reply box
+ * One thread page for every timeline: the post, a meta line, comments, then the reply box
  * at the bottom (A44: read what's there before writing; or a note when the viewer may not reply).
+ * The human feed (A118) nests 대댓글 one indent under each comment; Agora / 익명 stay flat (A75).
  */
 export function ThreadLayout({
   mode,
@@ -25,6 +28,7 @@ export function ThreadLayout({
   actionsFor,
   adminHide,
   afterDeleteHref,
+  commentReply,
 }: {
   mode: FeedMode
   root: TimelinePost
@@ -43,6 +47,8 @@ export function ThreadLayout({
   /** A60: 아고라 admins hide from the ⋯ menu */
   adminHide?: boolean
   afterDeleteHref: string
+  /** A118: feed-only. When set, comments nest and each card gets a 답글 action. */
+  commentReply?: { me: ComposerIdentity; disabled?: boolean }
 }) {
   const comments = flatThread(root.id, replies)
   return (
@@ -62,6 +68,16 @@ export function ThreadLayout({
           <h2 className="thread-count">{countLabel}</h2>
           {comments.length === 0 ? (
             <p className="px-4 py-6 text-sm text-n-888 text-center">{emptyLabel}</p>
+          ) : commentReply ? (
+            <FeedCommentThread
+              rootId={root.id}
+              replies={replies}
+              mode={mode}
+              me={commentReply.me}
+              canReply={!commentReply.disabled && !root.isDeleted}
+              actionsFor={actionsFor}
+              adminHide={adminHide}
+            />
           ) : (
             <CommentList
               items={comments}

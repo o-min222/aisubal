@@ -2186,11 +2186,34 @@ button.rp-link { width: 100%; text-align: left; font: inherit; cursor: pointer; 
 .svc-chips { display: flex; flex-wrap: wrap; gap: 4px; min-width: 0; }
 
 /* invites: the 3-step flow line */
-/* ---------- Comments: one flat list (A75; people answer with @mentions) ---------- */
+/* ---------- Comments ---------- */
 .comment-list { list-style: none; margin: 0; padding: 0; }
 .comment-group { border-bottom: 1px solid var(--n-eee); }
 .comment-group:last-child { border-bottom: 0; }
 .comment-group > .timeline-card-reply { border-bottom: 0; }
+/* A118: one indent under a comment for 대댓글 (deeper replies flatten here) */
+.comment-replies {
+  list-style: none;
+  margin: 0 0 4px 40px;
+  padding: 0 0 6px 4px;
+  border-left: 2px solid var(--n-eee);
+}
+.comment-replies .timeline-card-reply { border-bottom: 0; padding-left: 8px; padding-right: 12px; }
+.comment-reply { min-width: 0; }
+.comment-more {
+  display: inline-flex; align-items: center; min-height: 36px; padding: 0 14px;
+  font-size: 13px; font-weight: 600; color: var(--n-666);
+}
+.comment-more:hover { color: var(--n-111); }
+.comment-inline-compose { padding: 0 12px 10px 8px; }
+.reply-mention { margin-right: 0.35em; color: var(--n-888); }
+
+.composer-reply-to { margin: 0 0 6px; }
+.tc-reply-btn { font-size: 13px; font-weight: 600; color: var(--n-666); min-height: 32px; padding: 0 4px; }
+.tc-reply-btn:hover { color: var(--n-111); }
+@media (max-width: 480px) {
+  .comment-replies { margin-left: 24px; }
+}
 
 /* ---- @handle inline editor (0032 policy) ---- */
 .handle-field { display: flex; flex-direction: column; gap: 2px; }

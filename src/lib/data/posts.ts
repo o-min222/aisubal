@@ -12,6 +12,7 @@ import { aggregateMentionsFromPosts } from '@/lib/data/toolbox'
 import { archiveSaveCounts } from '@/lib/data/archive'
 import type { AgentInteraction, Asset, LinkPreview, Member, Post, PostAs } from '@/lib/supabase/types'
 import { mockAppendFeedPost, mockFeedGroupOf, mockFeedPost, mockRecordGroupWriter } from './feed'
+import { normalizeReplyTarget } from '@/lib/thread'
 import { sb, isMock } from './client'
 import { MEMBER_EMBED, MEMBER_PUBLIC_COLUMNS } from './member-columns'
 import type { PostWithDetails } from './types'
@@ -215,14 +216,16 @@ export async function createPost(
     }
     const parentId = input.parentId || null
     const parentGroup = parentId ? mockFeedGroupOf(parentId) : null
+    const nest = parentId ? normalizeReplyTarget(mockFeedPost(parentId)) : null
     mockAppendFeedPost({
       groupId: parentGroup ?? input.groupId ?? null,
       id: post.id,
-      parentId,
-      rootId: parentId,
+      parentId: nest?.parentId ?? parentId,
+      rootId: nest?.rootId ?? parentId,
+      replyToId: nest?.replyToId ?? undefined,
       author: input.asGroup
         ? { kind: 'group', id: `group_${input.asGroup.id}`, name: input.asGroup.name, profileHref: `/groups/${input.asGroup.slug}` }
-        : { kind: 'member', id: pub.author.id, name: pub.author.kind === 'nickname' ? pub.author.nickname : pub.author.display_name, avatarUrl: pub.author.avatar_url },
+        : { kind: 'member', id: pub.author.id, name: pub.author.kind === 'nickname' ? pub.author.nickname : pub.author.display_name, avatarUrl: pub.author.avatar_url, handle: pub.author.kind === 'real' ? member.handle : undefined },
       title: post.title || null,
       body: post.content,
       linkUrl: post.url,

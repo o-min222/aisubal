@@ -61,10 +61,10 @@ export async function PostThreadView({
         thread.root.isDeleted ? (
           <p className="text-sm text-n-888"><T>삭제된 글에는 새 댓글을 달 수 없어요.</T></p>
         ) : (
-          // A75: every comment answers the post; people address each other with @mentions
           <Composer me={me} parentId={thread.root.id} countIds={[thread.root.id]} replyKind="comment" />
         )
       }
+      commentReply={{ me, disabled: thread.root.isDeleted }}
       repliesLabel={st('댓글')}
       countLabel={<T s="댓글 {count}" vars={{ count: visibleReplyCount(thread.replies) }} />}
       emptyLabel={<T>첫 댓글을 남겨보세요.</T>}
