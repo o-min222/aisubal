@@ -174,7 +174,7 @@ export function Composer({
         <ImagePlus className="w-4 h-4 flex-shrink-0" />
         {uploading && <span className="truncate"><T>올리는 중…</T></span>}
       </button>
-      <input ref={fileRef} type="file" accept="image/png,image/jpeg,image/webp,image/gif" hidden onChange={(e) => void pickImage(e.target.files?.[0])} />
+      <input ref={fileRef} type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/heic,image/heif" hidden onChange={(e) => void pickImage(e.target.files?.[0])} />
     </>
   )
 

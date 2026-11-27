@@ -7,7 +7,8 @@ import { T } from '@/i18n/t'
 import { tn, tx } from '@/i18n/client'
 import type { ArticleCard, ArticleSeriesBrief } from '@/lib/data/articles'
 import { ArticleMarkdown } from './article-markdown'
-import { ARTICLE_BODY_MAX, ARTICLE_SUBTITLE_MAX, ARTICLE_TITLE_MAX, articleEditHref, articleHref, articleImageSrc } from '@/lib/article-rules'
+import { ARTICLE_BODY_MAX, ARTICLE_IMAGE_MAX_BYTES, ARTICLE_IMAGE_TYPES, ARTICLE_SUBTITLE_MAX, ARTICLE_TITLE_MAX, articleEditHref, articleHref, articleImageSrc } from '@/lib/article-rules'
+import { PrepareImageError, prepareImageErrorMessage, prepareUploadImage } from '@/lib/upload-image-client'
 
 type Draft = {
   id?: string | null
@@ -106,17 +107,22 @@ export function ArticleEditor({
   async function onImage(kind: 'cover' | 'inline') {
     const input = document.createElement('input')
     input.type = 'file'
-    input.accept = 'image/jpeg,image/png,image/webp,image/gif'
+    input.accept = 'image/jpeg,image/png,image/webp,image/gif,image/heic,image/heif'
     input.onchange = async () => {
       const file = input.files?.[0]
       if (!file) return
-      const form = new FormData()
-      form.set('file', file)
-      const res = await fetch('/api/article-image', { method: 'POST', body: form })
-      const data = await res.json().catch(() => ({}))
-      if (!res.ok) return toast.error(data.error || tn('이미지를 올리지 못했어요.'))
-      if (kind === 'cover') update('coverPath', data.path as string)
-      else wrap(`![${file.name}](${data.url})`, '')
+      try {
+        const f = await prepareUploadImage(file, { maxBytes: ARTICLE_IMAGE_MAX_BYTES, maxSide: 2000, allow: ARTICLE_IMAGE_TYPES })
+        const form = new FormData()
+        form.set('file', f)
+        const res = await fetch('/api/article-image', { method: 'POST', body: form })
+        const data = await res.json().catch(() => ({}))
+        if (!res.ok) return toast.error(data.error || tn('이미지를 올리지 못했어요.'))
+        if (kind === 'cover') update('coverPath', data.path as string)
+        else wrap(`![${file.name}](${data.url})`, '')
+      } catch (e) {
+        toast.error(e instanceof PrepareImageError ? prepareImageErrorMessage(e.code, (s) => tn(s)) : tn('이미지를 올리지 못했어요.'))
+      }
     }
     input.click()
   }

@@ -79,6 +79,7 @@ const en: Record<string, string> = {
   "MCP·스킬·프롬프트·CLI부터 멤버가 만든 프로덕트까지 한곳에서.": "MCP, skills, prompts, CLIs and products made by members, all in one place.",
   "Mac · Windows 앱": "Mac · Windows app",
   "PNG·JPG·WEBP·GIF만 올릴 수 있어요.": "Only PNG, JPG, WEBP or GIF can be uploaded.",
+  "이 HEIC 이미지는 변환하지 못했어요. PNG나 JPG로 저장해 주세요.": "This HEIC image could not be converted. Please save it as PNG or JPG.",
   "SHA-256으로 봉인하는 중…": "Sealing with SHA-256…",
   "SKILL / MCP / RULES / 프롬프트 첨부": "Attach SKILL / MCP / RULES / prompts",
   "SNS · 링크": "Social · links",

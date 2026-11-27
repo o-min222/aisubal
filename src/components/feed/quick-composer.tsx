@@ -155,7 +155,7 @@ export function QuickComposer({ me }: { me: ComposerIdentity }) {
             {s.id === 'shot' && uploading ? <T>올리는 중…</T> : <T>{s.label}</T>}
           </button>
         ))}
-        <input ref={file} type="file" accept="image/png,image/jpeg,image/webp,image/gif" hidden onChange={(e) => void pick(e.target.files?.[0])} />
+        <input ref={file} type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/heic,image/heif" hidden onChange={(e) => void pick(e.target.files?.[0])} />
       </div>
     </section>
   )
