@@ -3,6 +3,7 @@ import { Image as ImageIcon } from 'lucide-react'
 import { AnonName } from '@/components/anon/anon-name'
 import type { CommentPreview } from '@/components/timeline/types'
 import { T } from '@/i18n/t'
+import { MentionText } from './mention-text'
 
 /**
  * A46: a couple of comments under a feed card ("몇몇 댓글은 피드화면에서 그냥 바로 확인").
@@ -15,7 +16,7 @@ export function CommentPreviews({ items, total, href, anon }: { items: CommentPr
       {items.map((c) => (
         <span key={c.id} className="cmt-preview-row">
           <span className="cmt-preview-name">{anon ? <AnonName name={c.name} /> : c.name}</span>
-          <span className="cmt-preview-body">{c.body || (c.hasImage ? <T>사진</T> : null)}</span>
+          <span className="cmt-preview-body">{c.body ? <MentionText text={c.body} link={false} /> : (c.hasImage ? <T>사진</T> : null)}</span>
           {c.hasImage && <ImageIcon className="cmt-preview-photo" aria-hidden />}
         </span>
       ))}

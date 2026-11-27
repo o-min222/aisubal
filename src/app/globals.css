@@ -488,6 +488,14 @@ a:focus-visible, .icon-btn:focus-visible, .text-link:focus-visible, .row-link:fo
 /* URLs and mentions inside post bodies: told apart by weight, underlined only on hover */
 .body-link, .markdown-body .md-a { color: inherit; font-weight: 500; text-decoration: none; text-underline-offset: 2px; }
 .body-link:hover, .markdown-body .md-a:hover { text-decoration: underline; }
+/* A117: @mentions use the design-system blue so they don't read as plain text in light or dark */
+.mention, a.mention, a.mention.body-link, .markdown-body a.mention {
+  color: var(--c-06c);
+  font-weight: 600;
+  text-decoration: none;
+  text-underline-offset: 2px;
+}
+.mention:hover, a.mention:hover, a.mention.body-link:hover, .markdown-body a.mention:hover { text-decoration: underline; }
 .gsearch-all:hover, .composer-link:hover, .mc-more-row:hover, .mc-empty:hover, .pr-verify-btn:hover, .pe-agents-link:hover { color: var(--link-hover); }
 /* round icon buttons and rows/cards without their own hover background: one neutral tint, the icon keeps its colour */
 .icon-btn { transition: background-color .12s, color .12s; }
@@ -1174,7 +1182,6 @@ code, pre, .font-mono {
 }
 .tc-image { max-height: 420px; }
 .tc-image-reply { max-height: 280px; }
-body.img-lb-open .bottom-tabs, body.img-lb-open .top-bar, body.img-lb-open .compose-fab { visibility: hidden; }
 .tc-image-open { display: block; padding: 0; margin: 0; border: 0; background: none; cursor: zoom-in; max-width: 100%; text-align: left; }
 .tc-image-open .tc-image, .img-lb-img, .tc-image-open img {
   -webkit-touch-callout: none;

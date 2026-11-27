@@ -7,6 +7,7 @@ import { tn, tx } from '@/i18n/client'
 import { UserAvatar } from '@/components/user-avatar'
 import type { ArticleComment } from '@/lib/data/articles'
 import { ARTICLE_COMMENT_MAX } from '@/lib/article-rules'
+import { MentionText } from '@/components/timeline/mention-text'
 
 export function ArticleComments({
   articleId,
@@ -116,7 +117,7 @@ function CommentRow({
       <UserAvatar id={c.author.id} name={c.author.name} avatarUrl={c.author.avatarUrl} size="sm" />
       <div className="min-w-0 flex-1">
         <p className="article-comment-name">{c.author.name}</p>
-        <p className="article-comment-body">{c.deleted ? <T>삭제된 댓글이에요.</T> : c.body}</p>
+        <p className="article-comment-body">{c.deleted ? <T>삭제된 댓글이에요.</T> : <MentionText text={c.body ?? ''} />}</p>
         {!c.deleted && (
           <p className="article-comment-tools">
             {onReply && (

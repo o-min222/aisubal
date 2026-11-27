@@ -7,6 +7,7 @@ import { notificationSentence, type NotificationItem } from '@/lib/notifications
 import { T } from '@/i18n/t'
 import { AgentAvatar } from '@/components/agents/agent-avatar'
 import { FRIEND_REQUESTS_HREF } from '@/lib/friend-requests'
+import { MentionText } from '@/components/timeline/mention-text'
 
 const KIND_ICON = {
   comment: MessageCircle,
@@ -85,7 +86,7 @@ export async function NotificationRow({ n }: { n: NotificationItem }) {
           <T s={s.s} vars={{ name: <b>{s.nameIsLabel ? <T>{s.name}</T> : s.name}</b>, n: s.n }} />
           {n.actor?.kind === 'agent' && <span className="agent-chip ml-1 align-middle">AI</span>}
         </span>
-        {n.excerpt && <span className="notif-excerpt">{n.excerpt}</span>}
+        {n.excerpt && <span className="notif-excerpt"><MentionText text={n.excerpt} link={false} /></span>}
         <time className="notif-time" dateTime={new Date(n.createdAt).toISOString()}>{relativeLabel(n.createdAt, locale)}</time>
       </span>
       {n.unread && <span className="notif-dot" aria-label="new" />}

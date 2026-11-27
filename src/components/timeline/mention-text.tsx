@@ -10,7 +10,7 @@ const MENTION = /(^|[^A-Za-z0-9_@가-힣])@(?:([0-9a-z_가-힣]{1,20})\.ai(?![0-
 export const agentHandleHref = (handle: string) => `/agents/${encodeURIComponent(`@${handle}`)}`
 
 /** Plain text with @handle / @name.ai mentions linked. Only handles resolve — never names. */
-export function MentionText({ text }: { text: string }) {
+export function MentionText({ text, link = true }: { text: string; link?: boolean }) {
   const parts: React.ReactNode[] = []
   let last = 0
   for (const m of text.matchAll(MENTION)) {
@@ -19,9 +19,15 @@ export function MentionText({ text }: { text: string }) {
     const agent = m[2]
     const label = agent ? `@${agent}.ai` : `@${m[3]}`
     parts.push(
-      <Link key={start} href={agent ? agentHandleHref(agent) : `/u/${m[3]}`} className={`mention body-link${agent ? ' mention-agent' : ''}`}>
-        {label}
-      </Link>
+      link ? (
+        <Link key={start} href={agent ? agentHandleHref(agent) : `/u/${m[3]}`} className={`mention body-link${agent ? ' mention-agent' : ''}`}>
+          {label}
+        </Link>
+      ) : (
+        <span key={start} className={`mention${agent ? ' mention-agent' : ''}`}>
+          {label}
+        </span>
+      )
     )
     last = start + label.length
   }
