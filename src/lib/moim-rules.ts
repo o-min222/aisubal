@@ -9,7 +9,7 @@ import { msg as M } from '@/i18n/translate'
  * - Exact place, map link and online link are shown only to managers and confirmed attendees.
  */
 export type MoimMode = 'offline' | 'online'
-export type RsvpStatus = 'pending' | 'confirmed' | 'waitlisted' | 'rejected' | 'cancelled'
+export type RsvpStatus = 'pending' | 'confirmed' | 'waitlisted' | 'rejected' | 'cancelled' | 'interested'
 export type MoimStatus = 'open' | 'closed' | 'cancelled' | 'past'
 export type MoimQuestion = { id: string; label: string; required: boolean }
 export type MoimRsvp = {
@@ -99,6 +99,20 @@ export function applyBlock(
   return null
 }
 
+/** 관심 does not take a seat, so the apply deadline does not block it. */
+export function interestBlock(
+  m: { status: MoimStatus; startsAt: string; isHost: boolean; membersOnly: boolean; groupId: string | null },
+  ctx: { isGroupMember: boolean; myStatus: RsvpStatus | null },
+  now = new Date()
+): ApplyBlock | 'moim_already_applied' | null {
+  if (m.status !== 'open' || Date.parse(m.startsAt) < now.getTime()) return 'moim_closed'
+  if (m.isHost) return 'moim_host_cannot_apply'
+  if (m.membersOnly && m.groupId && !ctx.isGroupMember) return 'moim_members_only'
+  if (ctx.myStatus === 'rejected') return 'moim_rejected'
+  if (ctx.myStatus === 'pending' || ctx.myStatus === 'confirmed' || ctx.myStatus === 'waitlisted') return 'moim_already_applied'
+  return null
+}
+
 export function decideRsvp(
   capacity: number,
   rsvps: MoimRsvp[],
@@ -135,6 +149,7 @@ export const RSVP_LABEL: Record<RsvpStatus, string> = {
   waitlisted: M('대기 중'),
   rejected: M('거절됨'),
   cancelled: M('취소함'),
+  interested: M('관심'),
 }
 
 export const MOIM_ERRORS: Record<string, string> = {
@@ -143,6 +158,7 @@ export const MOIM_ERRORS: Record<string, string> = {
   moim_host_cannot_apply: '내가 연 모임에는 신청할 수 없어요.',
   moim_members_only: '이 그룹 멤버만 신청할 수 있어요.',
   moim_rejected: '호스트가 이 신청을 거절했어요.',
+  moim_already_applied: '이미 참석 신청한 모임이에요. 관심을 표시하려면 먼저 신청을 취소해 주세요.',
   moim_answer_required: '필수 질문에 답해주세요.',
   moim_full: '정원이 가득 찼어요. 정원을 늘리거나 대기열로 두세요.',
   moim_invalid_action: '지금 상태에서는 할 수 없는 작업이에요.',

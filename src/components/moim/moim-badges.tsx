@@ -47,6 +47,7 @@ const RSVP_TONE: Record<RsvpStatus, { bg: string; fg: string }> = {
   waitlisted: { bg: 'var(--c-eef1fb)', fg: 'var(--c-3446a8)' },
   rejected: { bg: 'var(--c-fdecec)', fg: 'var(--c-b42318)' },
   cancelled: { bg: 'var(--n-f2f2f2)', fg: 'var(--n-777)' },
+  interested: { bg: 'var(--c-f3f0ff)', fg: 'var(--c-5b3fc4)' },
 }
 
 export function RsvpBadge({ status, position }: { status: RsvpStatus; position?: number | null }) {

@@ -575,7 +575,7 @@ const en: Record<string, string> = {
   "캘린더 파일(.ics) 받기": "Download calendar file (.ics)",
   "Google 캘린더에 추가": "Add to Google Calendar",
   "내 모임 캘린더 구독…": "Subscribe to my meetups…",
-  "내가 열거나 신청·초대받은 모임이 캘린더 앱에 자동으로 들어와요. 시간·장소가 바뀌면 같이 바뀌어요.": "Meetups you host, joined or were invited to show up in your calendar app, and update when the time or place changes.",
+  "내가 열거나 신청하거나 관심을 표시한 모임이 캘린더 앱에 자동으로 들어와요. 시간·장소가 바뀌면 같이 바뀌어요.": "Meetups you host, join, mark as interested, or are invited to show up in your calendar app, and update when the time or place changes.",
   "Google 캘린더": "Google Calendar",
   "이 링크는 지금만 보여요. 나만 아는 곳에 두세요. 링크를 가진 사람은 내 모임 일정을 볼 수 있어요.": "This link is shown only now. Keep it private: anyone with it can see your meetup schedule.",
   "구독 켜짐": "Subscription on",
@@ -2929,6 +2929,18 @@ const en: Record<string, string> = {
   "전송 대기": "Pending",
   "아티클 공유 미리보기": "Article share preview",
   "아티클 링크를 공유하면 제목·앞줄·커버로 카드가 만들어져요. 끄면 기본 사이트 카드만 나와요.": "Shared article links get a card with the title, opening line, and cover. When off, only the generic site card is shown.",
+  "관심": "Interested",
+  "관심 표시": "Mark interested",
+  "관심 취소": "Remove interest",
+  "관심을 표시했어요. 참석하려면 아래에서 신청하세요.": "Saved as interested. Apply below if you want to attend.",
+  "관심 {n}명": "{n} interested",
+  "관심한 사람 {n}명": "{n} interested",
+  "한 시간 뒤 모임이 시작돼요": "Your meetup starts in an hour",
+  "이미 참석 신청한 모임이에요. 관심을 표시하려면 먼저 신청을 취소해 주세요.": "You already applied. Cancel that first if you want to mark interested instead.",
+  "신청하거나 관심을 표시한 모임이 없어요.": "You have not applied to or marked interest in a meetup yet.",
+  "캘린더 구독": "Subscribe to calendar",
+  "관심을 표시했어요.": "Marked as interested.",
+  "관심을 취소할까요?": "Remove this from interested?",
 }
 
 

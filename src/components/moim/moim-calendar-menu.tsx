@@ -98,7 +98,7 @@ export function IcsFeedPanel() {
   return (
     <div className="cal-feed">
       <p className="cal-hint">
-        <T>내가 열거나 신청·초대받은 모임이 캘린더 앱에 자동으로 들어와요. 시간·장소가 바뀌면 같이 바뀌어요.</T>
+        <T>내가 열거나 신청하거나 관심을 표시한 모임이 캘린더 앱에 자동으로 들어와요. 시간·장소가 바뀌면 같이 바뀌어요.</T>
       </p>
       {!status ? (
         <p className="cal-muted"><T>불러오는 중…</T></p>
@@ -142,5 +142,22 @@ export function IcsFeedPanel() {
         </div>
       )}
     </div>
+  )
+}
+
+
+/** A125: subscribe from the 모임 list, without opening one event. */
+export function MoimCalendarSubscribe() {
+  const t = useT()
+  const [sheet, setSheet] = useState(false)
+  return (
+    <>
+      <button type="button" className="btn btn-secondary btn-sm min-h-[40px] rounded-full" onClick={() => setSheet(true)}>
+        <Rss className="w-4 h-4" /> <T>캘린더 구독</T>
+      </button>
+      <AdaptiveSheet open={sheet} onOpenChange={setSheet} title={t('내 모임 캘린더 구독')}>
+        {sheet && <IcsFeedPanel />}
+      </AdaptiveSheet>
+    </>
   )
 }

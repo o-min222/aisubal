@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { Plus } from 'lucide-react'
+import { MoimCalendarSubscribe } from '@/components/moim/moim-calendar-menu'
 import { getUserState } from '@/lib/auth'
 import { getMoim, listMoim, type MoimTab } from '@/lib/data/moim'
 import { LinkTabs } from '@/components/link-tabs'
@@ -31,7 +32,7 @@ const TABS: Array<{ id: MoimTab; label: string }> = [
 
 const EMPTY: Record<MoimTab, string> = {
   upcoming: msg('예정된 모임이 없어요. 첫 모임을 열어보세요.'),
-  mine: msg('아직 신청한 모임이 없어요.'),
+  mine: msg('신청하거나 관심을 표시한 모임이 없어요.'),
   hosting: msg('운영 중인 모임이 없어요. 개인 또는 내가 운영하는 그룹 이름으로 열 수 있어요.'),
   past: msg('지난 모임이 없어요.'),
 }
@@ -49,7 +50,7 @@ export default async function MoimPage({ searchParams }: { searchParams: Promise
   const [all, detail] = await Promise.all([listMoim(viewer, tab, null, 300).catch(() => []), open ? getMoim(viewer, open).catch(() => null) : Promise.resolve(null)])
 
   // 신청 현황: my status order first so the applicant sees where each application stands
-  const order = ['confirmed', 'waitlisted', 'pending', 'rejected', 'cancelled'] as const
+  const order = ['confirmed', 'waitlisted', 'pending', 'interested', 'rejected', 'cancelled'] as const
   const sorted = tab === 'mine' ? [...all].sort((a, b) => order.indexOf(a.myRsvp?.status ?? 'cancelled') - order.indexOf(b.myRsvp?.status ?? 'cancelled')) : all
   const { items, totalPages } = pageSlice(sorted, 1, PAGE)
   const base = withParams('/moim', { tab: tab === 'upcoming' ? null : tab })
@@ -84,9 +85,12 @@ export default async function MoimPage({ searchParams }: { searchParams: Promise
             <T>온라인·오프라인 모임. 정확한 장소와 링크는 참석이 확정된 사람에게만 보여요.</T>
           </p>
         </div>
-        <Link href="/moim/new" className="btn btn-primary btn-sm min-h-[40px] flex-shrink-0 rounded-full">
-          <Plus className="w-4 h-4" /> <T>모임 열기</T>
-        </Link>
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <MoimCalendarSubscribe />
+          <Link href="/moim/new" className="btn btn-primary btn-sm min-h-[40px] rounded-full">
+            <Plus className="w-4 h-4" /> <T>모임 열기</T>
+          </Link>
+        </div>
       </header>
       <div className="card" style={{ padding: '0 8px' }}>
         <LinkTabs label={msg('모임 보기')} active={tab} tabs={TABS.map((t) => ({ id: t.id, label: t.label, href: t.id === 'upcoming' ? '/moim' : `/moim?tab=${t.id}`, count: t.id === tab ? all.length : undefined }))} />

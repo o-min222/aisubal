@@ -18,6 +18,7 @@ const GROUPS: Array<{ s: RsvpStatus; label: string }> = [
   { s: 'waitlisted', label: msg('대기열') },
   { s: 'rejected', label: msg('거절') },
   { s: 'cancelled', label: msg('취소') },
+  { s: 'interested', label: msg('관심') },
 ]
 
 const ACTIONS: Record<RsvpStatus, Array<{ a: DecideAction; label: string; primary?: boolean }>> = {
@@ -33,6 +34,7 @@ const ACTIONS: Record<RsvpStatus, Array<{ a: DecideAction; label: string; primar
   confirmed: [{ a: 'remove', label: msg('참석 취소시키기') }],
   rejected: [],
   cancelled: [],
+  interested: [],
 }
 
 /** Host / group managers: applicants with answers, decisions, capacity, close/cancel, announcements. */

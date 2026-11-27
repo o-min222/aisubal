@@ -1,6 +1,7 @@
 import { DEV_ID, MOCK_PEOPLE, mockHandle, mockPerson } from '@/lib/mock-social'
 import {
   applyBlock,
+  interestBlock,
   canSeePrivate,
   countStatus,
   decideOnApply,
@@ -59,6 +60,7 @@ export type Moim = {
   confirmed: number
   waitlisted: number
   pending: number
+  interested: number
   isHost: boolean
   canManage: boolean
   isGroupMember: boolean | null
@@ -80,6 +82,7 @@ export type MoimDetail = Moim & {
   attendees: Array<MoimAuthor & { memberId: string }> | null
   announcements: Array<{ id: string; body: string; createdAt: string }>
   applicants: MoimApplicant[] | null
+  interestedPeople: Array<MoimAuthor & { memberId: string }> | null
 }
 export type MoimTab = 'upcoming' | 'mine' | 'hosting' | 'past'
 /** Absent optional fields are not sent: create uses the DB defaults, edit keeps what's stored. */
@@ -132,6 +135,7 @@ function fromRow(r: any): Moim {
     confirmed: Number(r.confirmed ?? 0),
     waitlisted: Number(r.waitlisted ?? 0),
     pending: Number(r.pending ?? 0),
+    interested: Number(r.interested ?? 0),
     isHost: Boolean(r.is_host),
     canManage: Boolean(r.can_manage),
     isGroupMember: r.is_group_member ?? null,
@@ -154,6 +158,7 @@ function detailFromRow(r: any): MoimDetail {
       ? { venueAddress: r.private.venue_address ?? null, mapUrl: r.private.map_url ?? null, meetingUrl: r.private.meeting_url ?? null }
       : null,
     attendees: r.attendees == null ? null : r.attendees.map((a: any) => ({ ...author(a), memberId: a.member_id })),
+    interestedPeople: r.interested_people == null ? null : r.interested_people.map((a: any) => ({ ...author(a), memberId: a.member_id })),
     announcements: (r.announcements || []).map((a: any) => ({ id: a.id, body: a.body, createdAt: a.created_at })),
     applicants: r.applicants
       ? r.applicants.map((a: any) => ({
@@ -435,6 +440,7 @@ function mockToMoim(m: MockMoim, viewerId: string): Moim {
     confirmed: countStatus(m.rsvps, 'confirmed'),
     waitlisted: countStatus(m.rsvps, 'waitlisted'),
     pending: countStatus(m.rsvps, 'pending'),
+    interested: countStatus(m.rsvps, 'interested'),
     isHost: m.hostId === viewer,
     canManage: mockCanManage(m, viewer),
     isGroupMember: m.groupId ? Boolean(mockRoleIn(m.groupId, viewer)) : null,
@@ -445,13 +451,16 @@ function mockToMoim(m: MockMoim, viewerId: string): Moim {
 }
 function mockDetail(m: MockMoim, viewerId: string): MoimDetail {
   const base = mockToMoim(m, viewerId)
-  const order: Record<RsvpStatus, number> = { pending: 0, waitlisted: 1, confirmed: 2, rejected: 3, cancelled: 3 }
+  const order: Record<RsvpStatus, number> = { pending: 0, waitlisted: 1, confirmed: 2, interested: 3, rejected: 4, cancelled: 4 }
   return {
     ...base,
     private: canSeePrivate(base.canManage, base.myRsvp?.status) ? { venueAddress: m.venueAddress, mapUrl: m.mapUrl, meetingUrl: m.meetingUrl } : null,
     // A38: every member who can see the meetup sees who's going (members-only: group members)
     attendees: canSeePrivate(base.canManage, base.myRsvp?.status) || !m.membersOnly || !m.groupId || Boolean(mockRoleIn(m.groupId, me(viewerId)))
       ? m.rsvps.filter((r) => r.status === 'confirmed').map((r) => ({ ...mockHandleAuthor(r.memberId), memberId: r.memberId }))
+      : null,
+    interestedPeople: canSeePrivate(base.canManage, base.myRsvp?.status) || !m.membersOnly || !m.groupId || Boolean(mockRoleIn(m.groupId, me(viewerId)))
+      ? m.rsvps.filter((r) => r.status === 'interested').map((r) => ({ ...mockHandleAuthor(r.memberId), memberId: r.memberId }))
       : null,
     announcements: [...m.announcements].sort((a, b) => b.createdAt.localeCompare(a.createdAt)),
     applicants: base.canManage
@@ -815,7 +824,7 @@ export async function cancelMoimRsvp(viewerId: string, id: string): Promise<{ pr
     const viewer = me(viewerId)
     const m = mockFind(id, viewerId)
     if (m.hostId === viewer) throw new Error('moim_host_seat')
-    const mine = m.rsvps.find((r) => r.memberId === viewer && ['pending', 'confirmed', 'waitlisted'].includes(r.status))
+    const mine = m.rsvps.find((r) => r.memberId === viewer && ['pending', 'confirmed', 'waitlisted', 'interested'].includes(r.status))
     if (!mine) throw new Error('moim_rsvp_not_found')
     const was = mine.status
     m.rsvps = m.rsvps.map((r) => (r.id === mine.id ? { ...r, status: 'cancelled' as const } : r))
@@ -828,6 +837,33 @@ export async function cancelMoimRsvp(viewerId: string, id: string): Promise<{ pr
   if (error) throw new Error(error.message)
   return { promoted: Number((data as { promoted: number }).promoted ?? 0) }
 }
+
+export async function interestMoim(viewerId: string, id: string): Promise<{ status: RsvpStatus }> {
+  if (isMock()) {
+    const viewer = me(viewerId)
+    const m = mockFind(id, viewerId)
+    const mine = m.rsvps.find((r) => r.memberId === viewer)
+    const block = interestBlock(
+      { status: m.status, startsAt: m.startsAt, isHost: m.hostId === viewer, membersOnly: m.membersOnly, groupId: m.groupId },
+      { isGroupMember: Boolean(mockRoleIn(m.groupId, viewer)), myStatus: mine?.status ?? null },
+    )
+    if (block) throw new Error(block)
+    if (mine?.status === 'interested') {
+      m.rsvps = m.rsvps.map((r) => (r.memberId === viewer ? { ...r, status: 'cancelled' as const } : r))
+      return { status: 'cancelled' }
+    }
+    const now = new Date().toISOString()
+    m.rsvps = m.rsvps.filter((r) => r.memberId !== viewer)
+    m.rsvps.push({ id: `r-${Date.now()}`, memberId: viewer, status: 'interested', answers: {}, note: null, createdAt: now, waitlistedAt: null, decidedAt: null })
+    return { status: 'interested' }
+  }
+  const supabase = await sb()
+  const { data, error } = await supabase.rpc('moim_interest', { p_id: id })
+  if (error) throw new Error(error.message)
+  return { status: (data as { status: RsvpStatus }).status }
+}
+
+
 
 export async function decideMoimRsvp(viewerId: string, moimId: string, rsvpId: string, action: DecideAction): Promise<{ status: RsvpStatus; promoted: number }> {
   if (isMock()) {

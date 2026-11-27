@@ -5,7 +5,7 @@
  */
 import type { Moim, MoimDetail } from '@/lib/data/moim'
 
-export type MyMoimRole = 'host' | 'confirmed' | 'pending' | 'waitlisted' | 'invited' | null
+export type MyMoimRole = 'host' | 'confirmed' | 'pending' | 'waitlisted' | 'invited' | 'interested' | null
 export type MoimChange = { fields: string[]; at: string }
 export type MineMeetup = {
   id: string
@@ -30,7 +30,7 @@ export type MyMeetupsRaw = { now: string; since: string; meetups: MineMeetup[]; 
 
 /** A 모임 as the signed-in viewer sees it (web data → calendar shape). */
 export function moimToMine(m: Moim | MoimDetail): MineMeetup {
-  const role: MyMoimRole = m.isHost ? 'host' : m.myRsvp && ['confirmed', 'pending', 'waitlisted'].includes(m.myRsvp.status) ? (m.myRsvp.status as MyMoimRole) : null
+  const role: MyMoimRole = m.isHost ? 'host' : m.myRsvp && ['confirmed', 'pending', 'waitlisted', 'interested'].includes(m.myRsvp.status) ? (m.myRsvp.status as MyMoimRole) : null
   return {
     id: m.id,
     title: m.title,
@@ -48,8 +48,8 @@ export function moimToMine(m: Moim | MoimDetail): MineMeetup {
 
 export type CalLang = 'ko' | 'en'
 const L = {
-  ko: { cal: 'AI쓰발 모임', tbd: '시간 미정', pending: '승인 대기', waitlisted: '대기', invited: '초대됨', cancelled: '취소됨', host: '내가 여는 모임', confirmed: '참석 확정', open: '모임 페이지', online: '온라인', map: '지도' },
-  en: { cal: 'AI쓰발 meetups', tbd: 'time TBD', pending: 'awaiting approval', waitlisted: 'waitlist', invited: 'invited', cancelled: 'cancelled', host: 'You host this', confirmed: 'Confirmed', open: 'Meetup page', online: 'Online', map: 'Map' },
+  ko: { cal: 'AI쓰발 모임', tbd: '시간 미정', pending: '승인 대기', waitlisted: '대기', invited: '초대됨', interested: '관심', cancelled: '취소됨', host: '내가 여는 모임', confirmed: '참석 확정', open: '모임 페이지', online: '온라인', map: '지도' },
+  en: { cal: 'AI쓰발 meetups', tbd: 'time TBD', pending: 'awaiting approval', waitlisted: 'waitlist', invited: 'invited', interested: 'Interested', cancelled: 'cancelled', host: 'You host this', confirmed: 'Confirmed', open: 'Meetup page', online: 'Online', map: 'Map' },
 } as const
 
 export const KST = 'Asia/Seoul'
@@ -98,6 +98,7 @@ function roleLabel(m: MineMeetup, lang: CalLang): string | null {
   if (m.my === 'pending') return t.pending
   if (m.my === 'waitlisted') return t.waitlisted
   if (m.my === 'invited') return t.invited
+  if (m.my === 'interested') return t.interested
   return null
 }
 
@@ -107,13 +108,15 @@ export function summaryOf(m: MineMeetup, lang: CalLang = 'ko'): string {
 }
 
 export function locationOf(m: MineMeetup, lang: CalLang = 'ko'): string | null {
-  if (m.mode === 'online') return m.private?.meetingUrl || m.venueName || L[lang].online
-  const parts = [m.venueName, m.private?.venueAddress].filter((x): x is string => Boolean(x && x.trim()))
+  const priv = m.my === 'host' || m.my === 'confirmed' ? m.private : null
+  if (m.mode === 'online') return priv?.meetingUrl || m.venueName || L[lang].online
+  const parts = [m.venueName, priv?.venueAddress].filter((x): x is string => Boolean(x && x.trim()))
   return parts.length ? [...new Set(parts)].join(' · ') : null
 }
 
 function eventLines(m: MineMeetup, origin: string, lang: CalLang, stamp: string): string[] {
   const t = L[lang]
+  const priv = m.my === 'host' || m.my === 'confirmed' ? m.private : null
   const url = new URL(m.url, origin).toString()
   const lines = ['BEGIN:VEVENT', `UID:${m.id}@aisubal`, `DTSTAMP:${stamp}`, `SEQUENCE:${m.sequence ?? 0}`]
   if (m.updatedAt) lines.push(`LAST-MODIFIED:${icsUtc(m.updatedAt)}`)
@@ -130,8 +133,8 @@ function eventLines(m: MineMeetup, origin: string, lang: CalLang, stamp: string)
   const desc = [
     m.my === 'host' ? t.host : m.my === 'confirmed' ? t.confirmed : roleLabel(m, lang),
     `${t.open}: ${url}`,
-    m.private?.meetingUrl && m.mode === 'online' ? `${t.online}: ${m.private.meetingUrl}` : null,
-    m.private?.mapUrl ? `${t.map}: ${m.private.mapUrl}` : null,
+    priv && priv.meetingUrl && m.mode === 'online' ? `${t.online}: ${priv.meetingUrl}` : null,
+    priv && priv.mapUrl ? `${t.map}: ${priv.mapUrl}` : null,
   ].filter(Boolean).join('\n')
   lines.push(`DESCRIPTION:${icsEscape(desc)}`, `URL:${url}`)
   lines.push(`STATUS:${m.meetupStatus === 'cancelled' ? 'CANCELLED' : m.my === 'host' || m.my === 'confirmed' ? 'CONFIRMED' : 'TENTATIVE'}`)

@@ -27,6 +27,7 @@ const KIND_ICON = {
   moim_cancelled: CalendarX,
   moim_tomorrow: CalendarClock,
   moim_today: CalendarClock,
+  moim_hour: CalendarClock,
   first_post: Sparkles,
   digest: Newspaper,
   digest_hot: Flame,

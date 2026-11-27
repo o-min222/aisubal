@@ -35,6 +35,7 @@ export function MoimPeople({ m }: { m: MoimDetail }) {
         <Users className="w-4 h-4 flex-shrink-0 text-n-777" />
         <CapacityBar confirmed={m.confirmed} capacity={m.capacity} />
         {m.waitlisted > 0 && <span className="text-[12.5px] text-c-3446a8"><T s="대기 {n}명" vars={{ n: m.waitlisted }} /></span>}
+        {m.interested > 0 && <span className="text-[12.5px]" style={{ color: 'var(--c-5b3fc4)' }}><T s="관심 {n}명" vars={{ n: m.interested }} /></span>}
         {m.canManage && m.applicants && (
           <button type="button" className="btn btn-secondary btn-sm min-h-[36px] rounded-full ml-auto" onClick={() => setManage(true)}>
             <UserCog className="w-3.5 h-3.5" /> <T>참석자 관리</T>
@@ -93,6 +94,32 @@ export function MoimPeople({ m }: { m: MoimDetail }) {
               )
             })}
           </ul>
+        )}
+        {m.interestedPeople && m.interestedPeople.length > 0 && (
+          <div className="mt-4 pt-3" style={{ borderTop: '1px solid var(--n-ececec)' }}>
+            <h3 className="text-[13px] font-semibold mb-2" style={{ color: 'var(--n-555)' }}>
+              <T s="관심 {n}명" vars={{ n: m.interestedPeople.length }} />
+            </h3>
+            <ul>
+              {m.interestedPeople.map((a) => {
+                const inner = (
+                  <>
+                    <UserAvatar id={a.id} name={a.name} avatarUrl={a.avatarUrl} size="sm" />
+                    <span className="truncate" style={{ color: 'var(--n-111)' }}>{a.name}</span>
+                  </>
+                )
+                return (
+                  <li key={a.memberId}>
+                    {a.kind === 'real' ? (
+                      <Link href={`/members/${a.id}`} className="sheet-row" onClick={() => setList(false)}>{inner}</Link>
+                    ) : (
+                      <span className="sheet-row">{inner}</span>
+                    )}
+                  </li>
+                )
+              })}
+            </ul>
+          </div>
         )}
       </AdaptiveSheet>
 

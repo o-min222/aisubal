@@ -16,6 +16,7 @@ const STATUS_COPY = {
   waitlisted: msg('정원이 차서 대기 중이에요. 빈자리가 생기면 순서대로 자동 확정돼요.'),
   rejected: msg('이번 모임에는 함께하지 못하게 됐어요.'),
   cancelled: msg('신청을 취소했어요.'),
+  interested: msg('관심을 표시했어요. 참석하려면 아래에서 신청하세요.'),
 } as const
 
 /** The applicant side: apply form with the host's questions, or my status (incl. waitlist position) + cancel. */
@@ -52,6 +53,66 @@ export function MoimApplyPanel({ moim: m }: { moim: MoimDetail }) {
     } finally {
       setBusy(false)
     }
+  }
+
+  async function interest() {
+    if (busy) return
+    if (r?.status === 'interested' && !confirm(tn('관심을 취소할까요?'))) return
+    setBusy(true)
+    try {
+      const res = await fetch(`/api/moim/${m.id}/interest`, { method: 'POST' })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(data.error || '처리하지 못했어요.')
+      toast.success(data.status === 'interested' ? tn('관심을 표시했어요.') : tn('취소했어요'))
+      router.refresh()
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : tn('처리하지 못했어요.'))
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  if (r && r.status === 'interested' && !startedPast && m.status === 'open') {
+    return (
+      <section className="card p-4 space-y-3" aria-label={tx('내 신청 현황')}>
+        <div className="flex items-center justify-between gap-2">
+          <h2 className="text-[15px] font-bold" style={{ color: 'var(--n-111)' }}>
+            <T>내 신청 현황</T>
+          </h2>
+          <RsvpBadge status="interested" />
+        </div>
+        <p className="text-[13.5px]" style={{ color: 'var(--n-444)' }}>{STATUS_COPY.interested}</p>
+        {m.questions.length === 0 ? (
+          <div className="flex flex-col sm:flex-row gap-2">
+            <button type="button" disabled={busy} onClick={() => call('POST')} className="btn btn-primary min-h-[44px] rounded-full flex-1">
+              {m.requiresApproval ? <T>참가 신청 (호스트 승인)</T> : full ? <T>대기 신청</T> : <T>참석하기</T>}
+            </button>
+            <button type="button" disabled={busy} onClick={() => interest()} className="btn btn-secondary min-h-[44px] rounded-full">
+              <T>관심 취소</T>
+            </button>
+          </div>
+        ) : (
+          <form className="space-y-3" onSubmit={(e) => { e.preventDefault(); call('POST') }}>
+            {m.questions.map((q) => (
+              <div key={q.id}>
+                <label htmlFor={`ans-i-${q.id}`} className="block text-[13px] font-semibold mb-1" style={{ color: 'var(--n-111)' }}>
+                  {q.label} {q.required ? <span className="text-c-b42318">*</span> : <span className="font-normal text-n-999"><T>(선택)</T></span>}
+                </label>
+                <textarea id={`ans-i-${q.id}`} rows={2} maxLength={500} required={q.required} className="w-full rounded-xl border border-n-ddd px-3 py-2 text-[15px] focus:outline-none focus:border-n-111" value={answers[q.id] || ''} onChange={(e) => setAnswers({ ...answers, [q.id]: e.target.value })} />
+              </div>
+            ))}
+            <div className="flex flex-col sm:flex-row gap-2">
+              <button type="submit" disabled={busy} className="btn btn-primary min-h-[48px] rounded-full flex-1 text-[15px]">
+                {busy ? <T>신청 중…</T> : m.requiresApproval ? <T>참가 신청 (호스트 승인)</T> : full ? <T>대기 신청</T> : <T>참석하기</T>}
+              </button>
+              <button type="button" disabled={busy} onClick={() => interest()} className="btn btn-secondary min-h-[44px] rounded-full">
+                <T>관심 취소</T>
+              </button>
+            </div>
+          </form>
+        )}
+      </section>
+    )
   }
 
   if (r && r.status !== 'cancelled') {
@@ -142,9 +203,14 @@ export function MoimApplyPanel({ moim: m }: { moim: MoimDetail }) {
             <input id="ans-note" maxLength={300} className="w-full rounded-xl border border-n-ddd px-3 py-2.5 text-[15px] focus:outline-none focus:border-n-111" value={note} onChange={(e) => setNote(e.target.value)} />
           </div>
           <p className="text-[12px] text-n-888">{m.group ? <T>답변은 호스트와 그룹 운영진만 볼 수 있어요.</T> : <T>답변은 호스트만 볼 수 있어요.</T>}</p>
-          <button type="submit" disabled={busy} className="btn btn-primary w-full min-h-[48px] rounded-full text-[15px]">
-            {busy ? <T>신청 중…</T> : m.requiresApproval ? <T>참가 신청 (호스트 승인)</T> : full ? <T>대기 신청</T> : <T>참석하기</T>}
-          </button>
+          <div className="flex flex-col gap-2">
+            <button type="submit" disabled={busy} className="btn btn-primary w-full min-h-[48px] rounded-full text-[15px]">
+              {busy ? <T>신청 중…</T> : m.requiresApproval ? <T>참가 신청 (호스트 승인)</T> : full ? <T>대기 신청</T> : <T>참석하기</T>}
+            </button>
+            <button type="button" disabled={busy} onClick={() => interest()} className="btn btn-secondary w-full min-h-[44px] rounded-full text-[15px]">
+              <T>관심 표시</T>
+            </button>
+          </div>
         </form>
       )}
     </section>
