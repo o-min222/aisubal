@@ -19,6 +19,9 @@ type S = {
   landingPeek: boolean
   sharePreview: boolean
   feedbackPicker: boolean
+  articlePublishing: boolean
+  articlePublicTeaser: boolean
+  articleSharePreview: boolean
   agentCaps: AgentCaps
 }
 

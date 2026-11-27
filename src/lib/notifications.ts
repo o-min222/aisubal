@@ -10,6 +10,7 @@ export const NOTIFY_CATEGORIES = [
   { id: 'following', label: msg('팔로잉 새 글'), title: msg('팔로우한 사람의 새 글'), hint: msg('한 사람이 연달아 올리면 한 줄로 모아요 · 친구나 팔로우한 사람의 질문도 알려 드려요') },
   { id: 'social', label: msg('팔로우·친구'), title: msg('팔로우 · 친구 신청'), hint: msg('새 팔로워 · 친구 신청 · 수락') },
   { id: 'meetups', label: msg('모임'), title: msg('모임 소식'), hint: msg('초대 · 참석 확정 · 시간·장소 변경 · 전날·당일 알림') },
+  { id: 'articles', label: msg('아티클'), title: msg('아티클 · 연재'), hint: msg('구독한 연재의 새 편, 팔로우한 작가의 새 아티클') },
   { id: 'gallery', label: msg('갤러리'), title: msg('갤러리에 올린 항목'), hint: msg('내 AI가 올린 항목이 공개될 때') },
   { id: 'newcomers', label: msg('새 멤버'), title: msg('새 멤버의 첫 글'), hint: msg('내가 초대한 사람이 첫 글을 올렸을 때 (커뮤니티가 작을 땐 운영진에게도)') },
   { id: 'invites', label: msg('초대'), title: msg('초대한 멤버 가입'), hint: msg('내 초대 코드가 쓰였을 때 · 초대장이 다시 채워질 때') },
@@ -20,7 +21,7 @@ export type NotifyCategory = (typeof NOTIFY_CATEGORIES)[number]['id']
 /** digest_weekly: '새 소식' once a week instead of daily (only matters while digest is on) */
 export type NotifyPrefs = Record<NotifyCategory, boolean> & { digest_weekly: boolean }
 export type NotifyPrefKey = NotifyCategory | 'digest_weekly'
-export const DEFAULT_PREFS: NotifyPrefs = { replies: true, likes: true, following: true, social: true, gallery: true, invites: true, agents: true, badges: true, meetups: true, newcomers: true, digest: true, digest_weekly: false }
+export const DEFAULT_PREFS: NotifyPrefs = { replies: true, likes: true, following: true, social: true, gallery: true, invites: true, agents: true, badges: true, meetups: true, newcomers: true, digest: true, digest_weekly: false, articles: true }
 
 export function parseNotifyCategory(v: string | string[] | null | undefined): NotifyCategory | null {
   const s = Array.isArray(v) ? v[0] : v
@@ -30,7 +31,7 @@ export function parseNotifyCategory(v: string | string[] | null | undefined): No
 export type NotifyKind = 'comment' | 'reply' | 'like' | 'follow' | 'friend_request' | 'friend_accept' | 'invite_joined' | 'agent_reply' | 'agent_like' | 'agent_mention' | 'mention'
   | 'gallery_recommended' | 'gallery_approved' | 'gallery_confirmed' | 'gallery_rejected' | 'follow_post' | 'badge' | 'moim_invite' | 'invite_refill' | 'reaction'
   | 'moim_confirmed' | 'moim_changed' | 'moim_cancelled' | 'moim_tomorrow' | 'moim_today' | 'first_post'
-  | 'digest' | 'digest_hot' | 'digest_pick' | 'digest_nudge' | 'question' | 'repost' | 'feedback'
+  | 'digest' | 'digest_hot' | 'digest_pick' | 'digest_nudge' | 'question' | 'repost' | 'feedback' | 'article_published'
 export type NotifyActor = { kind: 'member' | 'agent' | 'anon' | 'someone'; id: string | null; name: string | null; avatarUrl: string | null; brand?: string | null }
 export type NotificationItem = {
   id: string
@@ -39,7 +40,7 @@ export type NotificationItem = {
   category: NotifyCategory | 'admin'
   link: string
   excerpt: string | null
-  targetKind: 'post' | 'agora' | 'anon' | 'member' | 'submission' | 'moim' | 'feedback' | null
+  targetKind: 'post' | 'agora' | 'anon' | 'member' | 'submission' | 'moim' | 'feedback' | 'article' | null
   /** likes on one post collapse into one row; follow_post = posts folded into it */
   count: number
   createdAt: string
@@ -107,7 +108,9 @@ export function notificationSentence(n: NotificationItem): { s: string; name: st
     case 'question':
       // A93 (0127): a friend's or followee's '질문해요' post; the excerpt is its first line
       return { s: msg('{name}님이 질문했어요'), name, n: 0 }
-    case 'feedback':
+        case 'article_published':
+      return { s: n.excerpt ? msg('{name}님이 새 아티클을 발행했어요') : msg('{name}님이 새 아티클을 발행했어요'), name, n: 0 }
+case 'feedback':
       // A105 (0133): to admins; the excerpt is the note, the link opens /admin/feedback/{id}
       return { s: msg('{name}님이 화면 피드백을 보냈어요'), name, n: 0 }
     case 'repost':

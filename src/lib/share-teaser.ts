@@ -54,7 +54,7 @@ export function sharedPostId(path: string | null | undefined): string | null {
   return m ? m[1].toLowerCase() : null
 }
 
-export type SharePreviewKind = 'post' | 'agora' | 'anon' | 'profile' | 'gallery'
+export type SharePreviewKind = 'post' | 'agora' | 'anon' | 'profile' | 'gallery' | 'article'
 
 /** Paths whose unauthenticated crawler visit should 200 with OG at the original URL. */
 export function sharePreviewKind(next: string | null | undefined): SharePreviewKind | null {
@@ -64,6 +64,7 @@ export function sharePreviewKind(next: string | null | undefined): SharePreviewK
   if (new RegExp(`^/members/${UUID}$`, 'i').test(raw)) return 'profile'
   if (/^\/u\/[A-Za-z0-9_.가-힣-]{1,32}$/.test(raw)) return 'profile'
   if (/^\/gallery\/(?!new$|submissions$)[^/]+$/.test(raw)) return 'gallery'
+  if (/^\/articles\/(?!new$|mine$|series\/)[^/]+$/.test(raw)) return 'article'
   return null
 }
 

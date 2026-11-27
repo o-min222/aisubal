@@ -2,6 +2,7 @@ import { msg } from '@/i18n/translate'
 /** '내 대시보드' tabs (?tab=). Pure so it can be unit-tested. */
 export const DASHBOARD_TABS = [
   { id: 'posts', label: msg('내 글') },
+  { id: 'articles', label: msg('내 아티클') },
   { id: 'comments', label: msg('댓글') },
   { id: 'likes', label: msg('좋아요한 글') },
   { id: 'tools', label: msg('내가 쓰는 것') },

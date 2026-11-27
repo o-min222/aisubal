@@ -8,6 +8,8 @@ import { RelationBadge } from '@/components/social/relation-badge'
 import { getUserState } from '@/lib/auth'
 import { getMemberById } from '@/lib/data/members'
 import { listFeedPage } from '@/lib/data/feed'
+import { listAuthorArticles } from '@/lib/data/articles'
+import { ArticleCardView, SeriesCardView } from '@/components/articles/article-card'
 import { InfiniteList } from '@/components/infinite/infinite-list'
 import { networkHref } from '@/lib/dashboard-tabs'
 import { getProfileStats } from '@/lib/data/shell'
@@ -66,7 +68,7 @@ export default async function MemberProfilePage({ params, searchParams }: { para
   const allPosts = sp.all === 'posts'
 
   // Other members' pages only list real-name posts: nickname posts stay unlinkable.
-  const [{ posts, totalPages }, stats, tools, social, agents, stack, badges, made, moimUp, moimPast, inviter] = await Promise.all([
+  const [{ posts, totalPages }, stats, tools, social, agents, stack, badges, made, moimUp, moimPast, inviter, authored] = await Promise.all([
     listFeedPage(viewer.id, { authorId: member.id, includeNickname: isMe, page: 1 }),
     isMe ? getProfileStats(viewer) : Promise.resolve(null),
     listMemberTools(member.id).catch(() => []),
@@ -78,6 +80,7 @@ export default async function MemberProfilePage({ params, searchParams }: { para
     listMoim(viewer.id, 'upcoming').catch(() => []),
     listMoim(viewer.id, 'past', null, 30).catch(() => []),
     member.invited_by_id ? getMemberById(member.invited_by_id).catch(() => null) : Promise.resolve(null),
+    listAuthorArticles(member.id).catch(() => ({ articles: [], series: [] })),
   ])
   const openBadge = sp.badges?.slice(0, 20) ?? null
   const editor = editing ? await loadProfileEditor(viewer) : null
@@ -220,6 +223,30 @@ export default async function MemberProfilePage({ params, searchParams }: { para
                 </div>
               )}
             </>
+          )}
+        </ProfileSection>
+      )}
+
+
+      {(authored.articles.length > 0 || authored.series.length > 0 || owner) && (
+        <ProfileSection id="articles" title={<T>아티클</T>} tools={authored.articles.length > 0 ? <span className="pf-section-note"><T s="{n}편" vars={{ n: authored.articles.length }} /></span> : null}>
+          {authored.articles.length === 0 && authored.series.length === 0 ? (
+            <ProfileEmpty text={<T>아직 발행한 아티클이 없어요.</T>} href="/articles/new" action={<T>새 아티클</T>} />
+          ) : (
+            <div className="space-y-4">
+              {authored.series.length > 0 && (
+                <div className="article-grid">
+                  {authored.series.map((ser) => (
+                    <SeriesCardView key={ser.id} series={ser} />
+                  ))}
+                </div>
+              )}
+              <div className="article-grid">
+                {authored.articles.slice(0, 6).map((a) => (
+                  <ArticleCardView key={a.id} article={a} compact />
+                ))}
+              </div>
+            </div>
           )}
         </ProfileSection>
       )}

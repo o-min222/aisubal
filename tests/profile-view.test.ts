@@ -17,15 +17,15 @@ describe('A91 · LinkedIn-style profile view', () => {
 
   it('page: top card, section cards in order, owner-only pencils and prompts, ?edit=1 keeps the in-place editor', () => {
     const s = read(PAGE)
-    const order = ['className="card pf-top"', 'id="about"', 'id="activity"', 'id="uses"', '<AgentsSection', 'id="made"', 'id="moim"'].map((k) => s.indexOf(k))
+    const order = ['className="card pf-top"', 'id="about"', 'id="articles"', 'id="activity"', 'id="uses"', '<AgentsSection', 'id="made"', 'id="moim"'].map((k) => s.indexOf(k))
     expect(order.every((i) => i > 0)).toBe(true)
     expect([...order].sort((a, b) => a - b)).toEqual(order)
     expect(s).toMatch(/const owner = isMe && sp\.preview !== '1'/)
     expect(s).toMatch(/const editing = isMe && sp\.edit === '1'/)
     expect(s).toMatch(/<ProfileCardEditor \{\.\.\.editor\}/)
     // empty sections stay hidden for others; the owner gets a prompt
-    for (const cond of ['(links.length > 0 || badges.length > 0 || owner)', '(posts.length > 0 || owner)', '(!usesEmpty || owner)', '(agents.length > 0 || owner)', '(made.length > 0 || owner)', '(hosted.length > 0 || owner)']) expect(s).toContain(cond)
-    expect(s.match(/<ProfileEmpty /g)?.length).toBe(5)
+    for (const cond of ['(links.length > 0 || badges.length > 0 || owner)', '(authored.articles.length > 0 || authored.series.length > 0 || owner)', '(posts.length > 0 || owner)', '(!usesEmpty || owner)', '(agents.length > 0 || owner)', '(made.length > 0 || owner)', '(hosted.length > 0 || owner)']) expect(s).toContain(cond)
+    expect(s.match(/<ProfileEmpty /g)?.length).toBe(6)
     // MECE: skill-type gallery tools are already skill chips; the old 'AI 스택' card and the AgentList duplicate are gone
     expect(s).toContain('tools.filter((t) => !SKILL_TYPES.includes(t.type))')
     expect(s).not.toMatch(/AgentList|AI 스택/)

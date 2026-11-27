@@ -1,6 +1,7 @@
 'use client'
 
 import { PostCard } from '@/components/timeline/post-card'
+import { ArticleFeedCard } from '@/components/articles/article-feed-card'
 import type { TimelinePost } from '@/components/timeline/types'
 import { postApi, postHref, type FeedMode } from '@/lib/feed-mode'
 import { tx } from '@/i18n/client'
@@ -35,7 +36,10 @@ export function FeedTimeline({
     )
   return (
     <div className={`timeline-list${stream ? ' timeline-stream' : ''}`}>
-      {initial.map((p) => (
+      {initial.map((p) =>
+        p.timelineKind === 'article' && p.article ? (
+          <ArticleFeedCard key={p.id} post={p} />
+        ) : (
         <PostCard
           key={p.id}
           post={p}
@@ -45,7 +49,8 @@ export function FeedTimeline({
           likersEndpoint={postApi(mode, p.id, 'likers')}
           adminHide={mode === 'agora' && isAdmin}
         />
-      ))}
+        ),
+      )}
     </div>
   )
 }

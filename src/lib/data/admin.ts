@@ -7,6 +7,7 @@ import { AGENT_CAPS, AGENT_CAP_KEYS, parseAgentCaps, type AgentCaps } from '@/li
 import { getSiteSettings } from './members'
 import { mockFeedbackPicker } from './feedback-flag'
 import { mockFeedbackEnabled } from './feedback'
+import { mockArticlePublishing, mockArticlePublicTeaser, mockArticleSharePreview } from './articles'
 
 export type AdminUserRow = {
   id: string
@@ -21,6 +22,8 @@ export type AdminUserRow = {
   isBanned: boolean
   /** A105: may use 화면 피드백 (admins always can) */
   feedbackEnabled: boolean
+  /** A108: may publish articles (admins always can) */
+  articleWriter: boolean
 }
 
 export async function adminListUsers(): Promise<AdminUserRow[]> {
@@ -35,6 +38,7 @@ export async function adminListUsers(): Promise<AdminUserRow[]> {
       isAdmin: m.is_admin,
       isBanned: m.is_banned,
       feedbackEnabled: mockFeedbackEnabled(m.id),
+      articleWriter: Boolean(m.is_admin),
     }))
   }
 
@@ -51,6 +55,7 @@ export async function adminListUsers(): Promise<AdminUserRow[]> {
     isAdmin: Boolean(u.isAdmin),
     isBanned: Boolean(u.isBanned),
     feedbackEnabled: Boolean(u.feedbackEnabled),
+    articleWriter: Boolean(u.articleWriter),
   }))
 }
 
@@ -176,6 +181,9 @@ export async function adminGetSettings() {
       landingPeek: mockPeekSite(),
       sharePreview: mockSharePreviewSite(),
       feedbackPicker: mockFeedbackPicker(),
+      articlePublishing: mockArticlePublishing(),
+      articlePublicTeaser: mockArticlePublicTeaser(),
+      articleSharePreview: mockArticleSharePreview(),
       agentCaps: mockAgentCaps(),
     }
   }
@@ -199,6 +207,9 @@ export async function adminGetSettings() {
     sharePreview: map.share_preview !== 'false',
     // A105: 화면 피드백 kill switch (default on; admins and allowlisted testers only)
     feedbackPicker: map.feedback_picker !== 'false',
+    articlePublishing: map.article_publishing !== 'false',
+    articlePublicTeaser: map.article_public_teaser !== 'false',
+    articleSharePreview: map.article_share_preview !== 'false',
     agentCaps: parseAgentCaps(map),
   }
 }
@@ -219,6 +230,9 @@ export async function adminUpdateSettings(input: {
   landingPeek?: boolean
   sharePreview?: boolean
   feedbackPicker?: boolean
+  articlePublishing?: boolean
+  articlePublicTeaser?: boolean
+  articleSharePreview?: boolean
   agentCaps?: Partial<AgentCaps>
 }) {
   if (isMock()) {
@@ -227,6 +241,9 @@ export async function adminUpdateSettings(input: {
     if (input.landingPeek !== undefined) mockPeekSite(input.landingPeek)
     if (input.sharePreview !== undefined) mockSharePreviewSite(input.sharePreview)
     if (input.feedbackPicker !== undefined) mockFeedbackPicker(input.feedbackPicker)
+    if (input.articlePublishing !== undefined) mockArticlePublishing(input.articlePublishing)
+    if (input.articlePublicTeaser !== undefined) mockArticlePublicTeaser(input.articlePublicTeaser)
+    if (input.articleSharePreview !== undefined) mockArticleSharePreview(input.articleSharePreview)
     if (input.agentCaps) mockAgentCaps(input.agentCaps)
     return {
       siteName: input.siteName ?? 'AI쓰발',
@@ -238,6 +255,9 @@ export async function adminUpdateSettings(input: {
       landingPeek: mockPeekSite(),
       sharePreview: mockSharePreviewSite(),
       feedbackPicker: mockFeedbackPicker(),
+      articlePublishing: mockArticlePublishing(),
+      articlePublicTeaser: mockArticlePublicTeaser(),
+      articleSharePreview: mockArticleSharePreview(),
       agentCaps: mockAgentCaps(),
     }
   }
@@ -262,6 +282,9 @@ export async function adminUpdateSettings(input: {
   if (input.landingPeek !== undefined) upserts.push({ key: 'landing_peek', value: String(input.landingPeek) })
   if (input.sharePreview !== undefined) upserts.push({ key: 'share_preview', value: String(input.sharePreview) })
   if (input.feedbackPicker !== undefined) upserts.push({ key: 'feedback_picker', value: String(input.feedbackPicker) })
+  if (input.articlePublishing !== undefined) upserts.push({ key: 'article_publishing', value: String(input.articlePublishing) })
+  if (input.articlePublicTeaser !== undefined) upserts.push({ key: 'article_public_teaser', value: String(input.articlePublicTeaser) })
+  if (input.articleSharePreview !== undefined) upserts.push({ key: 'article_share_preview', value: String(input.articleSharePreview) })
   for (const [k, v] of Object.entries(input.agentCaps ?? {}) as [keyof AgentCaps, number | undefined][]) {
     if (v !== undefined && AGENT_CAP_KEYS[k]) upserts.push({ key: AGENT_CAP_KEYS[k], value: String(Math.max(0, Math.floor(v))) })
   }

@@ -4,6 +4,7 @@ import {
   CalendarDays,
   Users,
   VenetianMask,
+  BookOpen,
   type LucideIcon,
 } from 'lucide-react'
 import { msg } from '@/i18n/translate'
@@ -25,6 +26,7 @@ export type NavItem = {
  * behind the avatar / profile card — see account-menu.tsx.
  */
 export const SIDE_NAV: NavItem[] = [
+  { href: '/articles', label: msg('아티클'), icon: BookOpen },
   { href: '/gallery', label: msg('갤러리'), icon: Wrench },
   { href: '/archive', label: msg('아카이브'), icon: Archive },
   { href: '/moim', label: msg('모임'), icon: CalendarDays },

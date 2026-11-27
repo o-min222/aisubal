@@ -44,7 +44,7 @@ const DEV_MEMBER: Member = {
 export const getUserState = cache(async function getUserState(): Promise<UserState> {
   if (isMock()) {
     const saved = mockProfileOf(DEV_MEMBER.id)
-    const dev = { ...DEV_MEMBER, feedback_allowed: mockFeedbackPicker(), agent_interaction_default: mockAgentInteractionDefault(), post_visibility_default: mockPostVisibilityDefault() }
+    const dev = { ...DEV_MEMBER, feedback_allowed: mockFeedbackPicker(), article_writer: true, article_can_publish: true, agent_interaction_default: mockAgentInteractionDefault(), post_visibility_default: mockPostVisibilityDefault() }
     return {
       type: 'member',
       member: saved

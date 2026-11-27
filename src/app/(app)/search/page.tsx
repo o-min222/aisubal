@@ -21,6 +21,7 @@ const SECTION: Record<Exclude<SearchTab, 'all'>, string> = {
   feed: msg('피드'),
   agora: msg('아고라'),
   gallery: msg('갤러리'),
+  articles: msg('아티클'),
 }
 
 /** Full results for the top-bar search. Same sources and visibility rules as the quick dialog. */
@@ -34,8 +35,8 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
   const tab = parseSearchTab(sp.tab)
   const res = q ? await search(state.member.id, q, tab === 'all' ? 5 : 30) : null
   const href = (id: SearchTab) => `/search?q=${encodeURIComponent(q ?? '')}${id === 'all' ? '' : `&tab=${id}`}`
-  const sections = (tab === 'all' ? (['people', 'feed', 'agora', 'gallery'] as const) : [tab]) as Array<Exclude<SearchTab, 'all'>>
-  const total = res ? res.people.length + res.feed.length + res.agora.length + res.gallery.length : 0
+  const sections = (tab === 'all' ? (['people', 'feed', 'agora', 'gallery', 'articles'] as const) : [tab]) as Array<Exclude<SearchTab, 'all'>>
+  const total = res ? res.people.length + res.feed.length + res.agora.length + res.gallery.length + res.articles.length : 0
 
   return (
     <div className="space-y-3">

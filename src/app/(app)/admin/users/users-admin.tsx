@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { Ban, MessageSquareText, RotateCcw } from 'lucide-react'
+import { Ban, BookOpen, MessageSquareText, RotateCcw } from 'lucide-react'
 import { toast } from 'sonner'
 import { UserAvatar } from '@/components/user-avatar'
 
@@ -37,6 +37,14 @@ export function UsersAdmin({ initial, meId }: { initial: U[]; meId: string }) {
     toast.success(data.feedbackEnabled ? tn('{name}님이 화면 피드백을 쓸 수 있어요.', { name: u.name }) : tn('{name}님의 화면 피드백을 껐어요.', { name: u.name }))
   }
 
+  async function setWriter(u: U, on: boolean) {
+    const res = await fetch(`/api/admin/users/${u.id}/writer`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ on }) })
+    const data = await res.json().catch(() => ({}))
+    if (!res.ok) return toast.error(data.error || tn('처리하지 못했어요.'))
+    setUsers((list) => list.map((x) => (x.id === u.id ? { ...x, articleWriter: Boolean(data.articleWriter) } : x)))
+    toast.success(data.articleWriter ? tn('{name}님을 작가로 지정했어요.', { name: u.name }) : tn('{name}님의 작가 권한을 해제했어요.', { name: u.name }))
+  }
+
   return (
     <div className="space-y-3">
       <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={tx('닉네임·핸들·실명·이메일 검색')} aria-label={tx('유저 검색')} className="input" />
@@ -51,6 +59,7 @@ export function UsersAdmin({ initial, meId }: { initial: U[]; meId: string }) {
                   {u.isAdmin && <span className="badge bg-c-f3e8ff text-c-6b21a8"><T>관리자</T></span>}
                   {u.isBanned && <span className="badge bg-c-fdecec text-c-b42318"><T>차단됨</T></span>}
                   {u.feedbackEnabled && !u.isAdmin && <span className="badge bg-n-f3f3f3 text-n-555"><T>피드백</T></span>}
+                  {u.articleWriter && !u.isAdmin && <span className="badge bg-n-f3f3f3 text-n-555"><T>작가</T></span>}
                 </span>
                 <span className="block text-xs text-n-888 truncate"><T s="{v} · 게시물 {posts}" vars={{ v: u.handle ? `@${u.handle}` : tx('핸들 미설정'), posts: u.posts }} /></span>
                 <span className="block text-xs text-n-aaa truncate" title={tx('관리자에게만 보여요')}>
@@ -58,6 +67,19 @@ export function UsersAdmin({ initial, meId }: { initial: U[]; meId: string }) {
                 </span>
               </span>
             </Link>
+            {!u.isAdmin && !u.isBanned && (
+              <button
+                type="button"
+                onClick={() => setWriter(u, !u.articleWriter)}
+                className={`btn btn-sm min-h-[40px] ${u.articleWriter ? 'btn-primary' : 'btn-secondary'}`}
+                aria-pressed={u.articleWriter}
+                aria-label={u.articleWriter ? tx('{name} 작가 권한 끄기', { name: u.name }) : tx('{name} 작가 권한 켜기', { name: u.name })}
+                title={tx('아티클을 발행할 수 있는 작가')}
+              >
+                <BookOpen className="w-4 h-4" />
+                <span className="only-desktop"><T>작가</T></span>
+              </button>
+            )}
             {!u.isAdmin && !u.isBanned && (
               <button
                 type="button"

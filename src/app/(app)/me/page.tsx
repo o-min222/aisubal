@@ -10,6 +10,8 @@ import { getPledgeStatus } from '@/lib/data/pledge'
 import { recordNo, shortHash } from '@/lib/pledge-record'
 import { getDashboardStats, listMyComments, listMyLikedPosts, type DashItem } from '@/lib/data/dashboard'
 import { listFeedPage } from '@/lib/data/feed'
+import { listMyArticles } from '@/lib/data/articles'
+import { articleEditHref, articleHref } from '@/lib/article-rules'
 import { listMemberTools } from '@/lib/data/tools'
 import { listMoim, type Moim } from '@/lib/data/moim'
 import { listMyGroups } from '@/lib/data/groups'
@@ -102,7 +104,26 @@ async function dashboardListChunk(meId: string, tab: DashboardTab, page: number)
   const locale = await getLocale()
   let body: ReactNode = null
   let totalPages = 1
-  if (tab === 'posts') {
+  if (tab === 'articles') {
+    const mine = await listMyArticles()
+    const sliced = pageSlice(mine.articles, page, PAGE_SIZE)
+    totalPages = sliced.totalPages
+    body = (
+      <PostRows
+        empty={t('아직 쓴 아티클이 없어요.')}
+        items={sliced.items.map((a) => ({
+          id: a.id,
+          href: a.status === 'published' ? articleHref(a.slug) : articleEditHref(a.id),
+          title: a.title,
+          body: a.subtitle || (a.status === 'published' ? t('발행됨') : t('초고')),
+          createdAt: a.updatedAt || a.createdAt,
+          likeCount: a.likeCount,
+          replyCount: a.commentCount,
+          isNickname: false,
+        }))}
+      />
+    )
+  } else if (tab === 'posts') {
     const r = await listFeedPage(meId, { authorId: meId, includeNickname: true, page })
     totalPages = r.totalPages
     body = (
@@ -235,8 +256,10 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   const moims = [...new Map([...moimHosting, ...moimMine].map((m) => [m.id, m])).values()].sort((a, b) => b.startsAt.localeCompare(a.startsAt))
   const agentActs = agents.reduce((s, a) => s + a.counts.agoraPosts + a.counts.agoraReplies + a.counts.feedReplies + a.counts.likes, 0)
 
+  const mineArticles = await listMyArticles().catch(() => ({ articles: [], series: [] }))
   const counts: Record<DashboardTab, number> = {
     posts: stats.posts,
+    articles: mineArticles.articles.length,
     comments: stats.comments,
     likes: stats.likesGiven,
     tools: tools.length,
@@ -247,6 +270,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
 
   const summary: Array<{ label: string; value: number | string; tab?: DashboardTab; href?: string }> = [
     { label: st('게시물'), value: stats.posts, tab: 'posts' },
+    { label: st('아티클'), value: mineArticles.articles.length, tab: 'articles' },
     { label: st('댓글'), value: stats.comments, tab: 'comments' },
     { label: st('받은 좋아요'), value: stats.likesReceived, tab: 'posts' },
     { label: st('쓰는 것'), value: tools.length, tab: 'tools' },
@@ -270,7 +294,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
       {c.nodes}
     </InfiniteList>
   )
-  if (tab === 'posts' || tab === 'comments' || tab === 'likes' || tab === 'tools' || tab === 'moim' || tab === 'groups') {
+  if (tab === 'posts' || tab === 'articles' || tab === 'comments' || tab === 'likes' || tab === 'tools' || tab === 'moim' || tab === 'groups') {
     body = infinite(await dashboardListChunk(me.id, tab, 1))
   } else if (tab === 'agents') {
     // A79 P5: activity only — managing agents lives on /agents, each agent links to /agents/{id}

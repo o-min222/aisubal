@@ -1,4 +1,4 @@
-import { Bot, CalendarDays, Link2, MessageSquare, User, Users, VenetianMask, Wrench } from 'lucide-react'
+import { BookOpen, Bot, CalendarDays, Link2, MessageSquare, User, Users, VenetianMask, Wrench } from 'lucide-react'
 import type { ArchiveKind } from '@/lib/archive-rules'
 
 export const KIND_ICON: Record<ArchiveKind, typeof Link2> = {
@@ -10,6 +10,7 @@ export const KIND_ICON: Record<ArchiveKind, typeof Link2> = {
   moim: CalendarDays,
   member: User,
   link: Link2,
+  article: BookOpen,
 }
 export const hostOf = (u: string | null) => {
   try {

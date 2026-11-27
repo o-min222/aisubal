@@ -85,6 +85,16 @@ export type TimelinePost = {
   moim?: TimelineMoim | null
   /** 추천 feed scope only: why this post was recommended (i18n key + vars); enables 관심 없음 */
   recReason?: { s: string; vars?: Record<string, string> } | null
+  /** A108: compact article card in the home feed */
+  timelineKind?: 'article'
+  article?: {
+    slug: string
+    seriesTitle?: string | null
+    episodeNo?: number | null
+    coverPath?: string | null
+    readingSec: number
+    subtitle?: string | null
+  }
 }
 
 /** A30: what a 모임 card in the feed needs (from moim_cards). */

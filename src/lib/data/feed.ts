@@ -18,6 +18,8 @@ import { pickInterestTags, rankFeedPosts } from '@/lib/recommend-rules'
 import { canRepost } from '@/lib/repost-rules'
 
 import { moimCardsForThreads, promotedGroupMoimThreads } from './moim'
+import { listFeedArticleCards, type ArticleCard } from './articles'
+import { articleHref } from '@/lib/article-rules'
 import { isMoimThreadBody } from '@/lib/moim-thread-rules'
 const FEED_SELECT =
   'id, parent_id, root_id, reply_to_id, title, content, url, link_title, link_description, link_image, link_site_name, link_favicon, link_type, link_previews, image_path, posted_as, author_kind, agent_name, agent_model, agent_token_id, agent_interaction, like_count, reaction_count, repost_count, is_question, visibility, reply_count, is_hidden, created_at, group_id, deleted_at, edited_at, public_author_id, author:members!posts_public_author_id_fkey(id, display_name, handle, avatar_url), nick:nickname_profiles!posts_nickname_id_fkey(id, nickname, avatar_url), as_group_id, grp:groups!posts_as_group_id_fkey(id, slug, name)'
@@ -539,6 +541,52 @@ export async function listFeedTimeline(viewerId: string, opts: FeedListOpts = {}
 }
 
 /** One numbered page (20 per page). Pass `count: false` to skip the exact COUNT (hasMore = full page). */
+
+function articleToTimeline(a: ArticleCard): TimelinePost {
+  return {
+    id: `article:${a.id}`,
+    parentId: null,
+    rootId: null,
+    author: { kind: 'member', id: a.author.id, name: a.author.name, avatarUrl: a.author.avatarUrl, handle: a.author.handle },
+    body: a.subtitle || '',
+    title: a.title,
+    linkUrl: articleHref(a.slug),
+    imageUrl: null,
+    tool: null,
+    rating: null,
+    likeCount: a.likeCount,
+    likedByMe: Boolean(a.likedByMe),
+    replyCount: a.commentCount,
+    createdAt: a.publishedAt || a.createdAt,
+    timelineKind: 'article',
+    article: {
+      slug: a.slug,
+      seriesTitle: a.series?.title ?? null,
+      episodeNo: a.episodeNo,
+      coverPath: a.coverPath,
+      readingSec: a.readingSec,
+      subtitle: a.subtitle,
+    },
+  }
+}
+
+async function withArticleCards(
+  posts: TimelinePost[],
+  scope: string | undefined,
+  opts: { groupId?: string | null; authorId?: string | null; q?: string | null; page?: number },
+): Promise<TimelinePost[]> {
+  if (opts.groupId || opts.authorId || opts.q) return posts
+  const after = posts.length ? posts[posts.length - 1].createdAt : null
+  const before = posts.length && (opts.page ?? 1) > 1 ? posts[0].createdAt : null
+  const mapped = scope === 'for_you' ? 'recommended' : (scope ?? 'all')
+  const articles = await listFeedArticleCards(mapped, after, before).catch(() => [])
+  if (!articles.length) return posts
+  const cards = articles.map(articleToTimeline)
+  const seen = new Set(posts.map((p) => p.id))
+  const extra = cards.filter((c) => !seen.has(c.id))
+  return [...posts, ...extra].sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''))
+}
+
 export async function listFeedPage(
   viewerId: string,
   opts: Omit<FeedListOpts, 'limit' | 'offset' | 'before'> & { page: number; pageSize?: number; count?: boolean }
@@ -546,9 +594,10 @@ export async function listFeedPage(
   const size = opts.pageSize ?? PAGE_SIZE
   const withCount = opts.count !== false
   const { posts, total } = await queryFeed(viewerId, { ...opts, limit: size, offset: (opts.page - 1) * size }, withCount, listExtras(viewerId))
+  const merged = await withArticleCards(posts, opts.scope, { ...opts, page: opts.page })
   const t = total ?? posts.length
   const totalPages = Math.max(1, Math.ceil(t / size))
-  return { posts, page: opts.page, total: t, totalPages, hasMore: withCount ? opts.page < totalPages : posts.length === size }
+  return { posts: merged, page: opts.page, total: t, totalPages, hasMore: withCount ? opts.page < totalPages : posts.length === size }
 }
 
 async function getFeedThread__raw(

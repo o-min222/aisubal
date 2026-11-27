@@ -5,7 +5,7 @@ import { msg } from '@/i18n/translate'
  * gathered in one place and handed to their AI on demand. Pure helpers shared by
  * the web UI, API routes, MCP tools and the public bundle link.
  */
-export const ARCHIVE_KINDS = ['post', 'agora', 'tool', 'anon', 'group', 'moim', 'member', 'link'] as const
+export const ARCHIVE_KINDS = ['post', 'agora', 'tool', 'anon', 'group', 'moim', 'member', 'link', 'article'] as const
 export type ArchiveKind = (typeof ARCHIVE_KINDS)[number]
 export const isArchiveKind = (v: unknown): v is ArchiveKind => typeof v === 'string' && (ARCHIVE_KINDS as readonly string[]).includes(v)
 
@@ -21,6 +21,7 @@ export const ARCHIVE_KIND_LABEL: Record<ArchiveKind, string> = {
   moim: msg('모임'),
   member: msg('멤버'),
   link: msg('링크'),
+  article: msg('아티클'),
 }
 
 export const ARCHIVE_PAGE_SIZE = 20

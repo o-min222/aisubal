@@ -219,7 +219,7 @@ describe('routes, redirects and navigation', () => {
 
   it('side panel holds content sections only; account items live in the account menu', () => {
     const hrefs = SIDE_NAV.map((i) => i.href)
-    expect(hrefs).toEqual(['/gallery', '/archive', '/moim', '/groups', '/anon'])
+    expect(hrefs).toEqual(['/articles', '/gallery', '/archive', '/moim', '/groups', '/anon'])
     // the invite network moved to 친구·팔로워 (A70); the old URL redirects there
     expect(read('src/app/(app)/network/page.tsx')).toMatch(/redirect\(networkHref/)
     for (const h of ['/members/me', '/invites', '/settings', '/admin', '/toolbox', '/products']) expect(hrefs).not.toContain(h)

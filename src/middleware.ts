@@ -6,6 +6,7 @@ import { verifiedUser } from '@/lib/supabase/verified-user'
 import { isSharePreviewFetch, SHARE_PATH_HEADER, sharePreviewKind } from '@/lib/share-teaser'
 import { INVITE_COOKIE, INVITE_COOKIE_MAX_AGE, normalizeInviteCode } from '@/lib/invite-share'
 import { copyResponseCookies } from '@/lib/supabase/forward-auth-cookies'
+import { isPublicArticlePath } from '@/lib/article-rules'
 
 
 export async function middleware(request: NextRequest) {
@@ -56,7 +57,7 @@ export async function middleware(request: NextRequest) {
   const publicRoutes = ['/', '/h', '/auth/callback', '/waitlist', '/i', '/t', '/join', '/og', '/api/auth', '/api/setup', '/api/mcp', '/skill.md', '/llms.txt', '/.well-known']
   const isPublicRoute = publicRoutes.some(route => 
     pathname === route || pathname.startsWith(route + '/')
-  )
+  ) || isPublicArticlePath(pathname)
   
   // API routes that handle their own auth
   const isApiRoute = pathname.startsWith('/api/')

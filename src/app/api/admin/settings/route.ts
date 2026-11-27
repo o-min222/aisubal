@@ -33,6 +33,9 @@ const updateSettingsSchema = z.object({
   landingPeek: z.boolean().optional(),
   sharePreview: z.boolean().optional(),
   feedbackPicker: z.boolean().optional(),
+  articlePublishing: z.boolean().optional(),
+  articlePublicTeaser: z.boolean().optional(),
+  articleSharePreview: z.boolean().optional(),
   // A72/A77: agent reaction caps
   agentCaps: z
     .object({

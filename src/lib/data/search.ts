@@ -6,16 +6,18 @@ import { MEMBER_PUBLIC_COLUMNS } from './member-columns'
 import { listFeedTimeline } from './feed'
 import { listAgoraTimeline } from './agora'
 import { listTools } from './tools'
+import { searchArticles } from './articles'
+import { articleHref } from '@/lib/article-rules'
 
 /**
  * Global search over what a member can already see: every query runs with the member's
  * session (RLS applies), feed search skips group posts, hidden Agora posts are dropped,
  * and the anon board is never searched.
  */
-export type SearchHit = { id: string; href: string; title: string; sub: string; avatarUrl?: string | null; kind: 'people' | 'feed' | 'agora' | 'gallery' }
-export type SearchResults = { q: string; people: SearchHit[]; feed: SearchHit[]; agora: SearchHit[]; gallery: SearchHit[] }
+export type SearchHit = { id: string; href: string; title: string; sub: string; avatarUrl?: string | null; kind: 'people' | 'feed' | 'agora' | 'gallery' | 'articles' }
+export type SearchResults = { q: string; people: SearchHit[]; feed: SearchHit[]; agora: SearchHit[]; gallery: SearchHit[]; articles: SearchHit[] }
 
-const EMPTY = (q: string): SearchResults => ({ q, people: [], feed: [], agora: [], gallery: [] })
+const EMPTY = (q: string): SearchResults => ({ q, people: [], feed: [], agora: [], gallery: [], articles: [] })
 
 async function searchPeople(q: string, limit: number): Promise<SearchHit[]> {
   type Row = { id: string; display_name: string; handle: string | null; bio: string | null; avatar_url: string | null }
@@ -48,11 +50,12 @@ async function searchPeople(q: string, limit: number): Promise<SearchHit[]> {
 export async function search(viewerId: string, raw: unknown, limit = 5): Promise<SearchResults> {
   const q = cleanQuery(raw)
   if (!q) return EMPTY('')
-  const [people, feed, agora, gallery] = await Promise.all([
+  const [people, feed, agora, gallery, articles] = await Promise.all([
     searchPeople(q, limit).catch(() => []),
     listFeedTimeline(viewerId, { q, limit }).catch(() => []),
     listAgoraTimeline(viewerId, { q, limit: limit * 2 }).catch(() => []),
     listTools(viewerId, { q }).catch(() => []),
+    searchArticles(q, limit).catch(() => []),
   ])
   return {
     q,
@@ -63,5 +66,12 @@ export async function search(viewerId: string, raw: unknown, limit = 5): Promise
       .slice(0, limit)
       .map((p) => ({ id: p.id, kind: 'agora', href: `/agora/${p.id}`, title: snippet(p.body, q, 60), sub: p.author.name })),
     gallery: gallery.slice(0, limit).map((t) => ({ id: t.id, kind: 'gallery', href: toolHref(t), title: t.name, sub: t.one_liner })),
+    articles: articles.slice(0, limit).map((a) => ({
+      id: a.id,
+      kind: 'articles' as const,
+      href: articleHref(a.slug),
+      title: a.title,
+      sub: `${a.author.name}${a.subtitle ? ' · ' + snippet(a.subtitle, q) : ''}`.slice(0, 90),
+    })),
   }
 }
