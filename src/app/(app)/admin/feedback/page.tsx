@@ -6,6 +6,7 @@ import { adminListFeedback } from '@/lib/data/feedback'
 import { isFeedbackStatus, type FeedbackStatus } from '@/lib/feedback'
 import { SubPageHeader } from '@/components/shell/sub-nav-layout'
 import { FEEDBACK_STATUS_LABEL, FeedbackStatusBadge } from '@/components/feedback/feedback-status'
+import { FeedbackThanks } from '@/components/feedback/feedback-thanks'
 import { RelativeTime } from '@/components/relative-time'
 import { T } from '@/i18n/t'
 import { msg } from '@/i18n/translate'
@@ -67,6 +68,7 @@ export default async function AdminFeedbackPage({ searchParams }: { searchParams
           ))}
         </ul>
       )}
+      <FeedbackThanks align="center" />
     </>
   )
 }

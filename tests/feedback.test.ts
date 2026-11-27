@@ -7,6 +7,7 @@ import {
   feedbackWebhookConfig,
   feedbackWebhookHeaders,
   feedbackNotifyRecipients,
+  FEEDBACK_THANKS,
   progressSignature,
   verifyProgressSignature,
   type FeedbackItem,
@@ -219,6 +220,23 @@ describe('A106 admin notify policy', () => {
     expect(sql).not.toMatch(/m\.id\s*<>\s*new\.author_id/)
     expect(sql).toMatch(/new\.kind = 'feedback' and new\.actor_member_id is not distinct from new\.recipient_id/)
     expect(sql).toMatch(/\/admin\/feedback\/' \|\| new\.id/)
+  })
+})
+
+
+describe('A107 credit', () => {
+  it('keeps “special thanks to dayoung” exact, in the composer and admin footer, not the picker overlay', () => {
+    expect(FEEDBACK_THANKS).toBe('special thanks to dayoung')
+    const thanks = read('src/components/feedback/feedback-thanks.tsx')
+    expect(thanks).toContain('FEEDBACK_THANKS')
+    expect(thanks).not.toMatch(/\bt\(|useT|msg\(/)
+    const mode = read('src/components/feedback/feedback-mode.tsx')
+    const sheet = mode.slice(mode.indexOf('className="fb-sheet"'), mode.indexOf('className="fb-pill"'))
+    expect(sheet).toContain('<FeedbackThanks')
+    expect(mode.slice(mode.indexOf('className="fb-pill"')).includes('FeedbackThanks')).toBe(false)
+    expect(read('src/app/(app)/admin/feedback/page.tsx')).toContain('<FeedbackThanks')
+    expect(read('src/app/(app)/admin/feedback/[id]/feedback-detail.tsx')).toContain('<FeedbackThanks')
+    expect(read('src/app/globals.css')).toMatch(/\.fb-thanks/)
   })
 })
 

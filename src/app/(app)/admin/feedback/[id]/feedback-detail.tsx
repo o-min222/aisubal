@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { toast } from 'sonner'
 import { RelativeTime } from '@/components/relative-time'
 import { FeedbackStatusBadge } from '@/components/feedback/feedback-status'
+import { FeedbackThanks } from '@/components/feedback/feedback-thanks'
 import type { FeedbackItem } from '@/lib/feedback'
 import { T } from '@/i18n/t'
 import { tn, tx } from '@/i18n/client'
@@ -135,6 +136,7 @@ export function FeedbackDetail({ initial }: { initial: FeedbackItem }) {
           )}
         </div>
       </div>
+      <FeedbackThanks align="center" />
     </div>
   )
 }

@@ -5,6 +5,7 @@ import { MessageSquareText, X } from 'lucide-react'
 import { toast } from 'sonner'
 import { useT } from '@/i18n/client'
 import { FEEDBACK_MODE_KEY, componentOf, elementTextOf, logoTap, selectorFor, type TapState } from '@/lib/feedback-client'
+import { FeedbackThanks } from '@/components/feedback/feedback-thanks'
 
 /**
  * A105 화면 피드백. Allowed members (admin or a 관리 › 유저 tester) turn it on from the account
@@ -263,6 +264,7 @@ function FeedbackLayer({ onOff }: { onOff: () => void }) {
               {sending ? t('보내는 중…') : t('보내기')}
             </button>
           </div>
+          <FeedbackThanks />
         </div>
       ) : (
         <button type="button" className="fb-pill" onClick={onOff} aria-label={t('피드백 모드 끄기')}>

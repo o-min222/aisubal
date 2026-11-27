@@ -57,6 +57,9 @@ export type FeedbackMeta = z.infer<typeof feedbackMetaSchema>
 export const FEEDBACK_SHOT_MAX_BYTES = 6_000_000 // raw upload; the server re-encodes to WebP ≤ 1.5 MB
 export const FEEDBACK_SHOT_TYPES = ['image/jpeg', 'image/png', 'image/webp']
 
+/** A107: credit in the composer / admin footer. Exact English, never translated. */
+export const FEEDBACK_THANKS = 'special thanks to dayoung'
+
 /** A106: every active admin gets an in-app row; web push skips the author (don't buzz yourself). */
 export function feedbackNotifyRecipients(adminIds: readonly string[], authorId: string): { inApp: string[]; push: string[] } {
   const inApp = [...adminIds]
