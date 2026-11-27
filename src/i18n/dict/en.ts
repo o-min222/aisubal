@@ -2778,6 +2778,8 @@ const en: Record<string, string> = {
   "운영진 답변": "Team reply",
   "아직 답변이 없어요. 검토되면 알림으로 알려 드려요.": "No reply yet. We’ll notify you when it’s reviewed.",
   "피드백 스크린샷": "Feedback screenshot",
+  // A120
+  "오늘 AI쓰발에 이런 글이 있어요": "Here’s a post on AI쓰발 today",
   "{name}님을 작가로 지정했어요.": "{name} can now publish articles.",
   "{name}님의 작가 권한을 해제했어요.": "{name}’s writer permission was removed.",
   "{name} 작가 권한 끄기": "Remove writer permission for {name}",

@@ -100,7 +100,7 @@ export function notificationSentence(n: NotificationItem): { s: string; name: st
     case 'digest_pick':
       return { s: msg('놓쳤을 수도 있는 인기 글이 있어요'), name, n: 0 }
     case 'digest_nudge':
-      return { s: msg('오늘 AI쓰발에 잠깐 들러 보세요'), name, n: 0 }
+      return { s: n.excerpt ? msg('오늘 AI쓰발에 이런 글이 있어요') : msg('오늘 AI쓰발에 잠깐 들러 보세요'), name, n: 0 }
     case 'digest_hot':
       return { s: msg('지금 반응이 뜨거운 글이 있어요'), name, n: 0 }
     case 'first_post':

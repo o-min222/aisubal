@@ -4,7 +4,7 @@ import { pushPayload, type PushJob } from '@/lib/push-rules'
 import { makeT } from '@/i18n/translate'
 import { DICTS } from '@/i18n/dict'
 import { DEFAULT_PREFS, NOTIFY_CATEGORIES } from '@/lib/notifications'
-import { shouldPingSeen, SEEN_EVERY_MS } from '@/lib/digest-rules'
+import { shouldPingSeen, SEEN_EVERY_MS, digestTeaser } from '@/lib/digest-rules'
 
 const job = (kind: string, extra: Record<string, unknown> = {}): PushJob => ({
   outboxId: 1, subscriptionId: 's', endpoint: 'e', p256dh: 'p', auth: 'a', locale: 'ko', unread: 0,
@@ -20,12 +20,21 @@ describe('A61 daily 새 소식 push', () => {
   })
   it('writes one sentence per variant, ko and en, opening the right place', () => {
     const ko = makeT('ko', null), en = makeT('en', DICTS.en)
-    const nw = pushPayload(job('digest', { count: 3, excerpt: '제목' }), ko)
-    expect(nw.body).toContain('3'); expect(nw.body).toContain('제목'); expect(nw.url).toBe('/feed')
-    const pick = pushPayload(job('digest_pick', { link: '/posts/abc', excerpt: '인기 글' }), en)
-    expect(pick.body).toMatch(/^A popular post you may have missed\n인기 글/); expect(pick.url).toBe('/posts/abc')
+    const teaser = digestTeaser('프롬프트수집가', '계획 먼저 쓰게 하는 거 저도 써봤는데 툴 호출 실패율이 확 줄었어요.')
+    expect(teaser.startsWith('프롬프트수집가 · ')).toBe(true)
+    expect(teaser.length).toBeLessThanOrEqual('프롬프트수집가 · '.length + 56)
+    const nw = pushPayload(job('digest', { count: 3, excerpt: teaser, link: '/posts/post-1' }), ko)
+    expect(nw.body).toContain('3'); expect(nw.body).toContain('프롬프트수집가'); expect(nw.url).toBe('/posts/post-1')
+    const pick = pushPayload(job('digest_pick', { link: '/posts/abc', excerpt: teaser }), en)
+    expect(pick.body).toMatch(/^A popular post you may have missed\n/); expect(pick.body).toContain('프롬프트수집가'); expect(pick.url).toBe('/posts/abc')
     const nudge = pushPayload(job('digest_nudge'), en)
     expect(nudge.body).toBe('Drop by AI쓰발 today'); expect(nudge.url).toBe('/feed')
+    const nudged = pushPayload(job('digest_nudge', { excerpt: teaser, link: '/posts/post-1' }), ko)
+    expect(nudged.body).toContain('오늘 AI쓰발에 이런 글이 있어요')
+    expect(nudged.body).toContain('프롬프트수집가')
+    expect(nudged.url).toBe('/posts/post-1')
+    const nudgedEn = pushPayload(job('digest_nudge', { excerpt: teaser, link: '/posts/post-1' }), en)
+    expect(nudgedEn.body).toMatch(/Here’s a post on AI쓰발 today/)
   })
   it('pings seen at most every 10 minutes', () => {
     expect(shouldPingSeen(null, 0)).toBe(true)
@@ -40,5 +49,17 @@ describe('A61 daily 새 소식 push', () => {
     expect(sql).not.toMatch(/insert into public\.notifications[\s\S]*'digest_hot'/) // no second push
     for (const k of ["'digest_pick'", "'digest_nudge'"]) expect(sql).toContain(k)
     expect(sql).toMatch(/revoke all on function public\.digest__run\(timestamptz\), public\.digest__fresh_for\(public\.posts, uuid\) from public, anon, authenticated/)
+  })
+  it('0142: teasers, follow-first, deep link, same caps, generic fallback', () => {
+    const sql = readFileSync('supabase/migrations/0142_digest_post_teaser.sql', 'utf8')
+    expect(sql).toMatch(/v_hour < 8 or v_hour > 21/)
+    expect(sql).toMatch(/'digest:' \|\| to_char\(v_kst, 'YYYY-MM-DD'\)/)
+    expect(sql).toMatch(/digest__teaser/)
+    expect(sql).toMatch(/follows f where f\.follower_id = m\.id and f\.followee_id = p\.author_id/)
+    expect(sql).toMatch(/'\/posts\/' \|\| v_top\.id/)
+    expect(sql).toMatch(/left\(btrim\(regexp_replace/)
+    expect(sql).toMatch(/v_kind := 'digest_nudge'/)
+    expect(sql).toMatch(/revoke all on function public\.digest__run\(timestamptz\), public\.digest__teaser\(public\.posts\) from public, anon, authenticated/)
+    expect(sql).not.toMatch(/grant execute on function public\.digest__run/)
   })
 })
