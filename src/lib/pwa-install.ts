@@ -10,7 +10,7 @@
 export const APP_SETUP_KEY = 'aisubal_app_setup'
 
 /**
- * Also registers /sw.js (offline page + web push; no caching) and remembers an install as 'done'.
+ * Also registers /sw.js (offline page + web push; caches hashed /_next/static only) and remembers an install as 'done'.
  * Skipped on localhost unless ?sw=1, so dev reloads never fight a worker.
  */
 export const PWA_BOOT_SCRIPT =

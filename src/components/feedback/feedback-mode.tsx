@@ -1,11 +1,14 @@
 'use client'
 
-import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type MouseEvent as ReactMouseEvent, type ReactNode } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type MouseEvent as ReactMouseEvent, type ReactNode } from 'react'
 import { MessageSquareText, X } from 'lucide-react'
 import { toast } from 'sonner'
 import { useT } from '@/i18n/client'
 import { FEEDBACK_MODE_KEY, componentOf, elementTextOf, logoTap, selectorFor, type TapState } from '@/lib/feedback-client'
 import { FeedbackThanks } from '@/components/feedback/feedback-thanks'
+import { FeedbackCtx } from '@/components/feedback/feedback-context'
+
+export { useFeedbackMode } from '@/components/feedback/feedback-context'
 
 /**
  * A105 화면 피드백. Allowed members (admin or a 관리 › 유저 tester) turn it on from the account
@@ -13,10 +16,6 @@ import { FeedbackThanks } from '@/components/feedback/feedback-thanks'
  * the element under it (scrolling still works); a small sheet takes the note and the server stores
  * it with a viewport screenshot that has the box drawn in. Our own UI is [data-feedback-ui].
  */
-
-type Ctx = { allowed: boolean; on: boolean; setOn: (v: boolean) => void; logoClick: (e: ReactMouseEvent) => void }
-const FeedbackCtx = createContext<Ctx>({ allowed: false, on: false, setOn: () => {}, logoClick: () => {} })
-export const useFeedbackMode = () => useContext(FeedbackCtx)
 
 type Picked = { el: Element; rect: DOMRect }
 

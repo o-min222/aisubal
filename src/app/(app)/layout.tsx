@@ -1,7 +1,7 @@
 import { Suspense } from 'react'
 import { redirect } from 'next/navigation'
 import { canGiveFeedback, getUserState } from '@/lib/auth'
-import { FeedbackModeProvider } from '@/components/feedback/feedback-mode'
+import { FeedbackModeGate } from '@/components/feedback/feedback-mode-gate'
 import { getRailData } from '@/lib/data/shell'
 import { getMemberCard } from '@/lib/data/member-card'
 import { recordVisit } from '@/lib/data/badges'
@@ -67,8 +67,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     feedbackAllowed: canGiveFeedback(member),
   }
 
-  return (
-    <FeedbackModeProvider allowed={Boolean(me.feedbackAllowed)}>
+  const shell = (
     <div className="app-root">
       <TopBar me={me} />
       <PullToRefresh />
@@ -103,6 +102,6 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       <ComposeFab />
       <BottomTabs />
     </div>
-    </FeedbackModeProvider>
   )
+  return me.feedbackAllowed ? <FeedbackModeGate>{shell}</FeedbackModeGate> : shell
 }

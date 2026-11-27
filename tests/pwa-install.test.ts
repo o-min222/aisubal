@@ -61,3 +61,13 @@ describe('boot script (D1)', () => {
     expect(PWA_BOOT_SCRIPT).toContain(APP_SETUP_KEY)
   })
 })
+
+describe('A109 static asset cache in the service worker', () => {
+  it('caches only hashed /_next/static GETs and leaves navigations on the network', () => {
+    const sw = readFileSync('public/sw.js', 'utf8')
+    expect(sw).toContain("url.pathname.startsWith('/_next/static/')")
+    expect(sw).toContain("e.request.mode !== 'navigate'")
+    expect(sw).toContain('aisubal-static-v1')
+    expect(sw).not.toMatch(/caches\.(open|match).*navigate/)
+  })
+})

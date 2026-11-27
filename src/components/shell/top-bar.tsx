@@ -12,7 +12,7 @@ import { GlobalSearch } from '@/components/search/global-search'
 import { NotificationBell } from '@/components/notifications/notification-bell'
 import type { ShellMember } from './nav-items'
 import { useT, tx } from '@/i18n/client'
-import { useFeedbackMode } from '@/components/feedback/feedback-mode'
+import { useFeedbackMode } from '@/components/feedback/feedback-context'
 
 /**
  * Top bar on the page grid's own tracks (same --left-w / --rail-w / gap / max-width as

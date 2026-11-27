@@ -248,6 +248,7 @@ describe('wiring', () => {
     expect(mode).toMatch(/e\.key\.toLowerCase\(\) !== 'd' \|\| !e\.shiftKey/)
     expect(mode).toMatch(/className="fb-pill"/)
     expect(read('src/components/shell/account-menu.tsx')).toMatch(/feedback\.allowed && \(/)
-    expect(read('src/app/(app)/layout.tsx')).toMatch(/<FeedbackModeProvider allowed=\{Boolean\(me\.feedbackAllowed\)\}>/)
+    expect(read('src/app/(app)/layout.tsx')).toMatch(/me\.feedbackAllowed \? <FeedbackModeGate>\{shell\}<\/FeedbackModeGate> : shell/)
+    expect(read('src/components/shell/top-bar.tsx')).toContain("'@/components/feedback/feedback-context'")
   })
 })

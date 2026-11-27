@@ -1,11 +1,34 @@
-// AI쓰발 service worker: makes the site installable and shows a small offline page for navigations.
-// Nothing is cached: pages are per-member, so they always come from the network.
+// AI쓰발 service worker: makes the site installable, caches hashed /_next/static assets,
+// and shows a small offline page for navigations. HTML documents always come from the network
+// (pages are per-member).
+const STATIC_CACHE = 'aisubal-static-v1'
 self.addEventListener('install', () => self.skipWaiting())
 // A67: navigation preload starts the page request while the worker boots (cold opens / PWA launch).
 self.addEventListener('activate', (e) =>
-  e.waitUntil(Promise.all([self.clients.claim(), self.registration.navigationPreload ? self.registration.navigationPreload.enable().catch(() => {}) : null]))
+  e.waitUntil(
+    Promise.all([
+      self.clients.claim(),
+      self.registration.navigationPreload ? self.registration.navigationPreload.enable().catch(() => {}) : null,
+      caches.keys().then((keys) => Promise.all(keys.filter((k) => k.startsWith('aisubal-static-') && k !== STATIC_CACHE).map((k) => caches.delete(k)))),
+    ])
+  )
 )
 self.addEventListener('fetch', (e) => {
+  const url = new URL(e.request.url)
+  if (e.request.method === 'GET' && url.origin === self.location.origin && url.pathname.startsWith('/_next/static/')) {
+    e.respondWith(
+      caches.open(STATIC_CACHE).then((cache) =>
+        cache.match(e.request).then((hit) => {
+          if (hit) return hit
+          return fetch(e.request).then((res) => {
+            if (res.ok) cache.put(e.request, res.clone())
+            return res
+          })
+        })
+      )
+    )
+    return
+  }
   if (e.request.mode !== 'navigate') return
   e.respondWith(
     Promise.resolve(e.preloadResponse)

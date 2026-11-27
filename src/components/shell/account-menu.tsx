@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { Bot, Download, LogOut, MessageSquareText, Settings, Shield, Ticket, Users, LayoutDashboard } from 'lucide-react'
-import { useFeedbackMode } from '@/components/feedback/feedback-mode'
+import { useFeedbackMode } from '@/components/feedback/feedback-context'
 import { AdaptiveSheet } from '@/components/adaptive-sheet'
 import { UserAvatar } from '@/components/user-avatar'
 import { useMediaQuery } from '@/hooks/use-media-query'
