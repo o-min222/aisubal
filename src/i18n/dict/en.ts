@@ -674,6 +674,8 @@ const en: Record<string, string> = {
   "이름 (예: party_parrot)": "Name (e.g. party_parrot)",
   "이모지 이름": "Emoji name",
   "이미지": "Image",
+  "이미지 선택": "Choose image",
+  "다시 선택": "Choose again",
   "정사각형 이미지 · 256KB 이하": "Square image · up to 256KB",
   "모든 커스텀 이모지": "All custom emoji",
   "내가 올린 이모지": "Emoji you added",

@@ -5,10 +5,11 @@ import { SmilePlus, X, ArrowLeft, Plus } from 'lucide-react'
 import { toast } from 'sonner'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { publishLike, useCounts } from '@/lib/count-store'
-import { applyToggle, isCustomCode, normalizeShortcode, searchEmoji, THUMBS, type CustomEmoji, type ReactionSummary } from '@/lib/emoji-rules'
+import { applyToggle, isCustomCode, normalizeShortcode, searchEmoji, THUMBS, CUSTOM_EMOJI_MAX_BYTES, CUSTOM_EMOJI_TYPES, type CustomEmoji, type ReactionSummary } from '@/lib/emoji-rules'
 import { getReactions, loadCustomEmoji, reactionKey, setCustomEmoji, setReactions, useCustomEmoji, useReactions } from '@/lib/reaction-store'
 import type { TimelineLiker } from './types'
 import { tx, tn } from '@/i18n/client'
+import { prepareUploadImage, prepareImageErrorMessage, PrepareImageError } from '@/lib/upload-image-client'
 
 /** A39: Slack-style emoji reactions for feed posts and comments. 👍 = the post's like.
  *  A60: the same control on 아고라 posts (surface='agora' → /api/agora/…). */
@@ -250,8 +251,32 @@ function Picker({ mineSet, onPick }: { mineSet: Set<string>; onPick: (emoji: str
 function ManageCustom({ customs, isAdmin, onBack }: { customs: CustomEmoji[]; isAdmin: boolean; onBack: () => void }) {
   const [code, setCode] = useState('')
   const [file, setFile] = useState<File | null>(null)
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
+  function clearFile() {
+    setFile(null)
+    setPreviewUrl((u) => {
+      if (u) URL.revokeObjectURL(u)
+      return null
+    })
+    if (fileRef.current) fileRef.current.value = ''
+  }
+  async function pickEmojiFile(picked?: File) {
+    if (!picked) return
+    try {
+      const ready = await prepareUploadImage(picked, { maxBytes: CUSTOM_EMOJI_MAX_BYTES, maxSide: 256, allow: CUSTOM_EMOJI_TYPES })
+      setPreviewUrl((u) => {
+        if (u) URL.revokeObjectURL(u)
+        return URL.createObjectURL(ready)
+      })
+      setFile(ready)
+    } catch (e) {
+      clearFile()
+      const code = e instanceof PrepareImageError ? e.code : ''
+      toast.error(code === 'image_size' ? tx('256KB 이하 이미지만 올릴 수 있어요.') : prepareImageErrorMessage(code || 'image_type', tx))
+    }
+  }
   const removable = customs.filter((c) => c.mine || isAdmin)
   async function upload() {
     const sc = normalizeShortcode(code)
@@ -267,8 +292,7 @@ function ManageCustom({ customs, isAdmin, onBack }: { customs: CustomEmoji[]; is
       if (!res.ok) throw new Error(data.error || tn('올리지 못했어요.'))
       setCustomEmoji([...customs, data.emoji].sort((a, b) => a.shortcode.localeCompare(b.shortcode)))
       setCode('')
-      setFile(null)
-      if (fileRef.current) fileRef.current.value = ''
+      clearFile()
       toast.success(tx(':{code}: 이모지를 올렸어요', { code: sc }))
     } catch (e) {
       toast.error(e instanceof Error ? e.message : tn('올리지 못했어요.'))
@@ -293,10 +317,23 @@ function ManageCustom({ customs, isAdmin, onBack }: { customs: CustomEmoji[]; is
       </div>
       <div className="rx-upload">
         <input value={code} onChange={(e) => setCode(e.target.value)} placeholder={tx('이름 (예: party_parrot)')} aria-label={tx('이모지 이름')} className="rx-search" maxLength={34} />
-        <input ref={fileRef} type="file" accept="image/png,image/jpeg,image/webp,image/gif" aria-label={tx('이미지')} className="rx-file" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
+        <input ref={fileRef} type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/heic,image/heif" className="sr-only" id="rx-emoji-file" onChange={(e) => void pickEmojiFile(e.target.files?.[0])} />
+        {file ? (
+          <div className="rx-file-picked">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={previewUrl ?? ''} alt="" className="rx-file-preview" />
+            <span className="rx-file-name truncate">{file.name}</span>
+            <button type="button" className="rx-file-act" onClick={() => fileRef.current?.click()}>{tx('다시 선택')}</button>
+            <button type="button" className="rx-file-act" onClick={clearFile}>{tx('빼기')}</button>
+          </div>
+        ) : (
+          <button type="button" className="rx-file-btn" onClick={() => fileRef.current?.click()}>
+            {tx('이미지 선택')}
+          </button>
+        )}
         <div className="flex items-center justify-between gap-2">
           <span className="rx-hint">{tx('정사각형 이미지 · 256KB 이하')}</span>
-          <button type="button" className="rx-btn" onClick={upload} disabled={busy}>
+          <button type="button" className="rx-btn" onClick={upload} disabled={busy || !file}>
             {tx('올리기')}
           </button>
         </div>
