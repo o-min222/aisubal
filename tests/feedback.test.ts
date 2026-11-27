@@ -243,7 +243,10 @@ describe('A107 credit', () => {
 describe('wiring', () => {
   it('logo only counts for allowed members; account menu + Shift+D + pill exist', () => {
     const bar = read('src/components/shell/top-bar.tsx')
-    expect(bar).toMatch(/onClick=\{feedback\.allowed \? feedback\.logoClick : undefined\}/)
+    // A114: logo still only counts for allowed members; everyone also gets retap-to-feed
+    // unless logoClick prevented default (the 7-tap feedback toggle).
+    expect(bar).toMatch(/if \(feedback\.allowed\) feedback\.logoClick\(e\)/)
+    expect(bar).toMatch(/if \(!e\.defaultPrevented\) onRetap\('\/feed', e\)/)
     const mode = read('src/components/feedback/feedback-mode.tsx')
     expect(mode).toMatch(/e\.key\.toLowerCase\(\) !== 'd' \|\| !e\.shiftKey/)
     expect(mode).toMatch(/className="fb-pill"/)
