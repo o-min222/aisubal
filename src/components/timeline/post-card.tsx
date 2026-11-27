@@ -222,7 +222,7 @@ export function PostCard({
                 <span className="tc-who-name font-semibold text-n-111 truncate">{anon ? <AnonName name={a.name} /> : a.name}</span>
               )}
               {a.kind === 'member' && a.handle && !post.isNickname && !anon && <span className="tc-who-handle text-n-999 truncate">@{a.handle}</span>}
-              {a.follow && <span className="tc-who-chip"><NameChip memberId={a.id} following={a.follow.following} followsMe={a.follow.followsMe} cta={!isReply} /></span>}
+              {a.follow && <span className="tc-who-chip"><NameChip memberId={a.id} following={a.follow.following} followsMe={a.follow.followsMe} badge={a.follow.badge} cta={!isReply} /></span>}
             </span>
             {anon && post.isOp && isReply && <span className="op-chip"><T>글쓴이</T></span>}
             {anon && post.isMine && <span className="text-xs text-n-888"><T>(나)</T></span>}

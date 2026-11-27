@@ -142,12 +142,12 @@ export function MemberCard({ data, variant = 'side' }: { data: MemberCardData; v
             )}
           </div>
         </div>
-        {/* A82: one relationship chip right after the name (맞팔 / 팔로잉, or + 팔로우); the name truncates, the chip stays on its line */}
+        {/* A82 / A126: one relationship chip right after the name (친구 > 맞팔 / 팔로잉, or + 팔로우); the name truncates, the chip stays on its line */}
         <div className="mt-2 flex items-center gap-1.5 min-w-0">
           <Link href={profileHref} className="pc-name min-w-0 font-semibold text-n-111 truncate">{data.displayName}</Link>
           {!data.isMe && data.relation && (
             <span className="flex-none inline-flex">
-              <NameChip memberId={data.id} following={data.relation.iFollow} followsMe={data.relation.followsMe} cta />
+              <NameChip memberId={data.id} following={data.relation.iFollow} followsMe={data.relation.followsMe} friend={data.relation.friend} cta />
             </span>
           )}
         </div>

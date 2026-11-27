@@ -20,18 +20,25 @@ const chips = (html: string) => (html.match(/>(맞팔|팔로잉|\+ 팔로우|친
 const who = (html: string) => html.slice(html.indexOf('class="tc-who"'), html.indexOf('class="tc-meta'))
 
 describe('A82 one relationship chip after the name', () => {
-  it('rule: 맞팔 for mutual, 팔로잉 when only I follow, nothing otherwise', () => {
+  it('rule: 친구 replaces 맞팔/팔로잉; 맞팔 for mutual; 팔로잉 when only I follow; nothing otherwise', () => {
     expect(nameChip({ iFollow: true, followsMe: true })).toBe('맞팔')
     expect(nameChip({ iFollow: true, followsMe: false })).toBe('팔로잉')
     expect(nameChip({ iFollow: false, followsMe: true })).toBeNull()
     expect(nameChip({ iFollow: false })).toBeNull()
+    expect(nameChip({ iFollow: true, followsMe: true, friend: 'friends' })).toBe('친구')
+    expect(nameChip({ iFollow: true, followsMe: false, friend: 'friends' })).toBe('친구')
+    expect(nameChip({ iFollow: false, followsMe: true, friend: 'friends' })).toBe('친구')
+    expect(nameChip({ iFollow: false, followsMe: false, friend: 'friends' })).toBe('친구')
+    expect(nameChip({ iFollow: true, followsMe: true, friend: 'pending_in' })).toBe('맞팔')
+    expect(nameChip({ iFollow: true, followsMe: true, friend: 'none' })).toBe('맞팔')
   })
 
   it('post card: exactly one chip, inside the name line, no floating follow toggle', () => {
     const cases: Array<[NonNullable<TimelinePost['author']['follow']>, string[]]> = [
       [{ following: true, followsMe: true, badge: '맞팔' }, ['맞팔']],
       [{ following: true, followsMe: false, badge: '팔로잉' }, ['팔로잉']],
-      [{ following: true, followsMe: true, badge: '친구' }, ['맞팔']],
+      [{ following: true, followsMe: true, badge: '친구' }, ['친구']],
+      [{ following: false, followsMe: false, badge: '친구' }, ['친구']],
       [{ following: false, followsMe: true, badge: '나를 팔로우' }, ['+ 팔로우']],
       [{ following: false, followsMe: false, badge: null }, ['+ 팔로우']],
     ]
@@ -40,11 +47,13 @@ describe('A82 one relationship chip after the name', () => {
       expect(chips(html)).toEqual(want)
       expect(chips(who(html))).toEqual(want)
       expect(html).not.toContain('ml-auto')
+      expect(chips(html).filter((c) => c === '친구' || c === '맞팔').length).toBeLessThan(2)
     }
   })
 
-  it('comments: the chip when I follow, never a follow button', () => {
+  it('comments: the chip when I follow or we are friends, never a follow button', () => {
     expect(chips(renderToStaticMarkup(createElement(PostCard, { post: post({ following: true, followsMe: true, badge: '맞팔' }, true), isReply: true, ...EP })))).toEqual(['맞팔'])
+    expect(chips(renderToStaticMarkup(createElement(PostCard, { post: post({ following: true, followsMe: true, badge: '친구' }, true), isReply: true, ...EP })))).toEqual(['친구'])
     expect(chips(renderToStaticMarkup(createElement(PostCard, { post: post({ following: false, followsMe: true, badge: '나를 팔로우' }, true), isReply: true, ...EP })))).toEqual([])
   })
 })

@@ -38,10 +38,12 @@ export function relationBadge(r: Relation): { label: string; tone: 'friend' | 'm
 }
 
 /**
- * A82: the one relationship chip next to a name on post cards, comments and the profile peek:
- * 맞팔 when we follow each other, 팔로잉 when only I follow, nothing otherwise.
+ * A82 / A126: the one relationship chip next to a name on post cards, comments and the profile peek.
+ * MECE, same order as relationBadge: 친구 replaces 맞팔/팔로잉 (friendship is the stronger relation);
+ * 맞팔 when we follow each other; 팔로잉 when only I follow; nothing otherwise (the "+ 팔로우" CTA is separate).
  */
-export function nameChip(r: { iFollow: boolean; followsMe?: boolean }): '맞팔' | '팔로잉' | null {
+export function nameChip(r: { iFollow: boolean; followsMe?: boolean; friend?: FriendState }): '친구' | '맞팔' | '팔로잉' | null {
+  if (r.friend === 'friends') return '친구'
   if (!r.iFollow) return null
   return r.followsMe ? '맞팔' : '팔로잉'
 }
