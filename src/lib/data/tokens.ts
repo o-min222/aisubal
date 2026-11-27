@@ -7,23 +7,47 @@ import type { ClientId, ConnectionStatus } from '@/lib/agent-connect'
 import { mockOAuthAgents } from './oauth'
 import { sb, isMock } from './client'
 import { agentHandleBase } from '@/lib/agent-handle'
+import { MCP_CONFIG_VERSION } from '@/lib/mcp/config-version'
 
 const gAgents = globalThis as unknown as {
   __aisubalAgentNames?: Map<string, string>
   __aisubalIssuedTokens?: PublicToken[]
   __aisubalIssuedRaw?: Map<string, string>
+  __aisubalPendingRaw?: Map<string, string>
 }
 /** DEV mock: agent names of tokens issued in this process */
 const mockAgentNames = (): Map<string, string> => (gAgents.__aisubalAgentNames ??= new Map())
 const mockIssuedTokens = (): PublicToken[] => (gAgents.__aisubalIssuedTokens ??= [])
 const mockIssuedRaw = (): Map<string, string> => (gAgents.__aisubalIssuedRaw ??= new Map())
+const mockPendingRaw = (): Map<string, string> => (gAgents.__aisubalPendingRaw ??= new Map())
 
 /** Map a raw bearer token to the mock agent that minted it (never logs the secret). */
 export function mockAgentForToken(raw: string | null | undefined): { id: string; name: string } {
   if (raw) {
+    for (const [id, secret] of mockPendingRaw()) {
+      if (secret === raw) {
+        mockIssuedRaw().set(id, secret)
+        mockPendingRaw().delete(id)
+        const row = mockIssuedTokens().find((x) => x.id === id)
+        if (row) {
+          row.tokenPrefix = secret.slice(0, 12)
+          row.pendingPrefix = null
+          row.pendingAt = null
+          row.lastUsedAt = new Date().toISOString()
+          row.firstUsedAt = row.firstUsedAt ?? row.lastUsedAt
+          row.mcpConfigVersion = MCP_CONFIG_VERSION
+        }
+        return { id, name: row?.agentName || row?.name || 'AI' }
+      }
+    }
     for (const [id, secret] of mockIssuedRaw()) {
       if (secret === raw) {
         const row = mockIssuedTokens().find((x) => x.id === id)
+        if (row) {
+          row.lastUsedAt = new Date().toISOString()
+          row.firstUsedAt = row.firstUsedAt ?? row.lastUsedAt
+          row.mcpConfigVersion = MCP_CONFIG_VERSION
+        }
         return { id, name: row?.agentName || row?.name || 'AI' }
       }
     }
@@ -61,10 +85,15 @@ export type PublicToken = {
   agentAvatarUrl?: string | null
   /** A69: api_tokens.agent_brand (0122), the one brand mark for this agent */
   brand?: AgentBrand | null
+  /** A122: MCP server/config version seen at last call */
+  mcpConfigVersion?: string | null
+  /** A122: prefix of a prepared replacement secret (hash is never exposed) */
+  pendingPrefix?: string | null
+  pendingAt?: string | null
 }
 
 const TOKEN_COLS =
-  'id, name, agent_name, agent_handle, agent_model, scopes, token_prefix, created_at, last_used_at, expires_at, client, first_used_at, last_client_info, show_on_profile, pledge_signed_at, pledge_no, pledge_hash, agent_bio, agent_avatar_url, oauth_client_id, agent_brand'
+  'id, name, agent_name, agent_handle, agent_model, scopes, token_prefix, created_at, last_used_at, expires_at, client, first_used_at, last_client_info, show_on_profile, pledge_signed_at, pledge_no, pledge_hash, agent_bio, agent_avatar_url, oauth_client_id, agent_brand, mcp_config_version, pending_token_prefix, pending_created_at'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function fromRow(t: any): PublicToken {
@@ -90,6 +119,9 @@ function fromRow(t: any): PublicToken {
     agentBio: t.agent_bio ?? null,
     agentAvatarUrl: t.agent_avatar_url ?? null,
     brand: parseBrand(t.agent_brand),
+    mcpConfigVersion: t.mcp_config_version ?? null,
+    pendingPrefix: t.pending_token_prefix ?? null,
+    pendingAt: t.pending_created_at ?? null,
   }
 }
 
@@ -462,15 +494,63 @@ export async function listProfileAgents(viewerId: string, memberId: string): Pro
 }
 
 /**
- * 토큰 재발급 (0061): a fresh secret for the same agent row (id, name, profile, posts, pledge).
- * The old secret stops matching immediately. Owners are rate limited; admins may force-rotate.
+ * 토큰 재발급 (0145): prepare a fresh secret for the same agent row.
+ * The current secret stays valid until the new one is used, or the owner confirms (commitRotateApiToken).
  */
-export async function rotateApiToken(tokenId: string): Promise<{ token: string; rotatedAt: string; forced: boolean }> {
+export async function rotateApiToken(tokenId: string): Promise<{ token: string; preparedAt: string; pending: true; forced: boolean }> {
   const raw = `aisubal_${randomBytes(24).toString('hex')}`
-  if (isMock()) return { token: raw, rotatedAt: new Date().toISOString(), forced: false }
+  const at = new Date().toISOString()
+  if (isMock()) {
+    mockPendingRaw().set(tokenId, raw)
+    const row = mockIssuedTokens().find((x) => x.id === tokenId)
+    if (row) {
+      row.pendingPrefix = raw.slice(0, 12)
+      row.pendingAt = at
+    }
+    return { token: raw, preparedAt: at, pending: true, forced: false }
+  }
   const supabase = await sb()
   const { data, error } = await supabase.rpc('api_token_rotate', { p_token: tokenId, p_hash: hashToken(raw), p_prefix: raw.slice(0, 12) })
   if (error) throw new Error(error.message)
-  const d = data as { rotated_at: string; forced: boolean }
-  return { token: raw, rotatedAt: d.rotated_at, forced: Boolean(d.forced) }
+  const d = data as { prepared_at: string; forced: boolean }
+  return { token: raw, preparedAt: d.prepared_at, pending: true, forced: Boolean(d.forced) }
+}
+
+/** Promote a prepared secret now and retire the previous one. */
+export async function commitRotateApiToken(tokenId: string): Promise<{ rotatedAt: string }> {
+  const at = new Date().toISOString()
+  if (isMock()) {
+    const pending = mockPendingRaw().get(tokenId)
+    if (!pending) throw new Error('rotate_not_pending')
+    mockIssuedRaw().set(tokenId, pending)
+    mockPendingRaw().delete(tokenId)
+    const row = mockIssuedTokens().find((x) => x.id === tokenId)
+    if (row) {
+      row.tokenPrefix = pending.slice(0, 12)
+      row.pendingPrefix = null
+      row.pendingAt = null
+    }
+    return { rotatedAt: at }
+  }
+  const supabase = await sb()
+  const { data, error } = await supabase.rpc('api_token_rotate_commit', { p_token: tokenId })
+  if (error) throw new Error(error.message)
+  const d = data as { rotated_at: string }
+  return { rotatedAt: d.rotated_at }
+}
+
+/** Drop a prepared secret; the current one keeps working. */
+export async function cancelRotateApiToken(tokenId: string): Promise<void> {
+  if (isMock()) {
+    mockPendingRaw().delete(tokenId)
+    const row = mockIssuedTokens().find((x) => x.id === tokenId)
+    if (row) {
+      row.pendingPrefix = null
+      row.pendingAt = null
+    }
+    return
+  }
+  const supabase = await sb()
+  const { error } = await supabase.rpc('api_token_rotate_cancel', { p_token: tokenId })
+  if (error) throw new Error(error.message)
 }

@@ -3758,3 +3758,5 @@ html[data-feedback-on] body * { -webkit-touch-callout: none; }
 .onboard-warn { font-size: 13px; color: var(--c-8a4b00); background: var(--c-fff4e5); border-radius: 12px; padding: 10px 12px; }
 .onboard-ok { display: inline-flex; align-items: center; gap: 6px; font-size: 13.5px; font-weight: 600; color: var(--c-1f7a4d); }
 .onboard-advanced { border-top: 1px solid var(--line, var(--n-eee)); padding-top: 8px; }
+
+.update-needed-chip { display: inline-flex; align-items: center; font-size: 11px; font-weight: 600; color: var(--c-8a4b00); background: var(--c-fff4e5); border-radius: 999px; padding: 1px 7px; letter-spacing: -0.01em; vertical-align: 1px; }

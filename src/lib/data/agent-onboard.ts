@@ -2,6 +2,8 @@ import { sb, isMock } from './client'
 import { getTokenStatus } from './tokens'
 import { formatAgentHandle } from '@/lib/agent-handle'
 import { mockRecordAgentMention } from './agent-mentions'
+import { MCP_CONFIG_VERSION, mcpConfigBehind } from '@/lib/mcp/config-version'
+import { listApiTokens } from './tokens'
 
 export type OnboardingTest = {
   mentionId: string
@@ -20,6 +22,11 @@ export type OnboardingStatus = {
   firstUsedAt: string | null
   lastUsedAt: string | null
   clientInfo: string | null
+  mcpConfigVersion?: string | null
+  currentVersion?: string | null
+  needsUpdate?: boolean
+  pendingPrefix?: string | null
+  pendingAt?: string | null
   test: OnboardingTest | null
 }
 
@@ -28,12 +35,23 @@ type MockTest = OnboardingTest & { tokenId: string; handle: string; ownerId: str
 const g = globalThis as unknown as { __aisubalOnboardTests?: MockTest[] }
 const mockTests = () => (g.__aisubalOnboardTests ??= [])
 
-function asStatus(row: MockTest | undefined, conn: Awaited<ReturnType<typeof getTokenStatus>>): OnboardingStatus {
+function asStatus(
+  row: MockTest | undefined,
+  conn: Awaited<ReturnType<typeof getTokenStatus>>,
+  extra: { mcpConfigVersion?: string | null; pendingPrefix?: string | null; pendingAt?: string | null } = {},
+): OnboardingStatus {
+  const lastUsedAt = conn?.lastUsedAt ?? null
+  const mcpConfigVersion = extra.mcpConfigVersion ?? null
   return {
     connected: Boolean(conn?.connected),
     firstUsedAt: conn?.firstUsedAt ?? null,
-    lastUsedAt: conn?.lastUsedAt ?? null,
+    lastUsedAt,
     clientInfo: conn?.clientInfo ?? null,
+    mcpConfigVersion,
+    currentVersion: MCP_CONFIG_VERSION,
+    needsUpdate: mcpConfigBehind({ version: mcpConfigVersion, lastUsedAt }),
+    pendingPrefix: extra.pendingPrefix ?? null,
+    pendingAt: extra.pendingAt ?? null,
     test: row
       ? {
           mentionId: row.mentionId,
@@ -56,7 +74,12 @@ export async function getOnboardingStatus(memberId: string, tokenId: string): Pr
   if (isMock()) {
     // getTokenStatus always returns a row in mock; treat missing tokens as still ok for issued ids
     const row = mockTests().find((t) => t.tokenId === tokenId && t.ownerId === memberId)
-    return asStatus(row, conn ?? { connected: false, firstUsedAt: null, lastUsedAt: null, clientInfo: null })
+    const listed = (await listApiTokens(memberId)).find((x) => x.id === tokenId)
+    return asStatus(row, conn ?? { connected: false, firstUsedAt: null, lastUsedAt: null, clientInfo: null }, {
+      mcpConfigVersion: listed?.mcpConfigVersion ?? null,
+      pendingPrefix: listed?.pendingPrefix ?? null,
+      pendingAt: listed?.pendingAt ?? null,
+    })
   }
   if (!conn) return null
   const supabase = await sb()

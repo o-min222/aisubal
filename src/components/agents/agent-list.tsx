@@ -20,6 +20,7 @@ import { LOCALE_META } from '@/i18n/config'
 import { recordNo, shortHash } from '@/lib/pledge-record'
 import { dedupeParts } from '@/lib/dedupe-parts'
 import { onboardHandle, peekOnboardSecret, stashOnboardSecret } from '@/lib/agent-onboard'
+import { mcpConfigBehind } from '@/lib/mcp/config-version'
 
 
 type TokenRow = {
@@ -43,6 +44,8 @@ type TokenRow = {
   agentAvatarUrl?: string | null
   tokenPrefix?: string | null
   oauth?: boolean
+  mcpConfigVersion?: string | null
+  pendingPrefix?: string | null
 }
 
 /** 내 에이전트: every connected agent (name, client, scopes, pledge record, last used) with profile (photo · name · bio) / show on profile / disconnect in a menu. */
@@ -124,11 +127,12 @@ export function AgentList({ ownerName }: { ownerName: string }) {
   }, [])
 
 
-  function openOnboard(t: TokenRow, token?: string | null) {
+  function openOnboard(t: TokenRow, token?: string | null, mode?: 'onboard' | 'refresh') {
     const name = t.agentName || t.name
     const handle = onboardHandle(t.agentName, t.agentHandle)
     const secret = token || peekOnboardSecret(t.id)
     if (secret) stashOnboardSecret({ id: t.id, token: secret, name, handle })
+    const connected = Boolean(t.firstUsedAt || t.lastUsedAt)
     setOnboarding({
       id: t.id,
       name,
@@ -136,6 +140,8 @@ export function AgentList({ ownerName }: { ownerName: string }) {
       oauth: Boolean(t.oauth),
       pledged: Boolean(t.pledgeSignedAt),
       token: secret,
+      mode: mode ?? (connected ? 'refresh' : 'onboard'),
+      pendingPrefix: t.pendingPrefix ?? null,
     })
     if (typeof window !== 'undefined') {
       const url = new URL(window.location.href)
@@ -246,7 +252,10 @@ export function AgentList({ ownerName }: { ownerName: string }) {
             setOnboarding((o) => (o ? { ...o, pledged: true } : o))
             setTokens((list) => list.map((x) => (x.id === onboarding.id ? { ...x, pledgeSignedAt: at } : x)))
           }}
-          onRotated={(token) => setOnboarding((o) => (o ? { ...o, token } : o))}
+          onRotated={(token) => {
+            setOnboarding((o) => (o ? { ...o, token: token || null, pendingPrefix: token ? o.pendingPrefix || 'aisubal_' : null } : o))
+            void load()
+          }}
         />
       )}
 
@@ -290,13 +299,24 @@ export function AgentList({ ownerName }: { ownerName: string }) {
                     </p>
                     <div className="text-[12px] mt-0.5" style={{ color: t.firstUsedAt || t.lastUsedAt ? 'var(--c-1f7a4d)' : 'var(--c-a15c00)' }}>
                       {t.lastUsedAt ? <T s="연결됨 · 최근 {when}" vars={{ when: when(t.lastUsedAt) }} /> : t.firstUsedAt ? <T>연결됨 ✅</T> : <T>아직 연결 전</T>}
-                      {!t.lastUsedAt && !t.firstUsedAt && (
+                      {mcpConfigBehind({ version: t.mcpConfigVersion, lastUsedAt: t.lastUsedAt }) && (
+                        <span className="update-needed-chip ml-1.5"><T>업데이트 필요</T></span>
+                      )}
+                      {!t.lastUsedAt && !t.firstUsedAt ? (
                         <button
                           type="button"
                           className="ml-2 underline text-n-555 hover:text-n-111"
                           onClick={() => openOnboard(t)}
                         >
                           <T>이어서 연결하기</T>
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          className="ml-2 underline text-n-555 hover:text-n-111"
+                          onClick={() => openOnboard(t, undefined, 'refresh')}
+                        >
+                          <T>MCP 연결 최신화</T>
                         </button>
                       )}
                     </div>
@@ -354,6 +374,9 @@ export function AgentList({ ownerName }: { ownerName: string }) {
                           {shown ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />} {shown ? <T>프로필에서 숨기기</T> : <T>프로필에 보이기</T>}
                         </DropdownMenuItem>
                       )}
+                      <DropdownMenuItem onClick={() => openOnboard(t, undefined, (t.firstUsedAt || t.lastUsedAt) ? 'refresh' : 'onboard')}>
+                        <RefreshCw className="w-4 h-4" /> <T>MCP 연결 최신화</T>
+                      </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => setManaging(t)}>
                         <KeyRound className="w-4 h-4" /> <T>토큰 관리</T>
                       </DropdownMenuItem>
