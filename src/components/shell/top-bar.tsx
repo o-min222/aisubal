@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { LogoWordmark } from '@/components/logo'
+import Image from 'next/image'
 import { useEffect, useRef, useState } from 'react'
 import { Menu } from 'lucide-react'
 import { AccountMenu } from './account-menu'
@@ -50,7 +50,7 @@ export function TopBar({ me }: { me: ShellMember }) {
               if (!e.defaultPrevented) onRetap('/feed', e)
             }}
           >
-            <LogoWordmark className="logo-ink" title={tx('AI쓰발')} />
+            <Image src="/images/logo-black.png" alt={tx('AI쓰발')} width={100} height={30} priority className="logo-ink" />
           </Link>
         </div>
 

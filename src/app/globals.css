@@ -1286,7 +1286,7 @@ body { -webkit-tap-highlight-color: transparent; }
 }
 .tb-left { display: flex; align-items: center; gap: 2px; min-width: 0; }
 .tb-logo { display: inline-flex; align-items: center; flex-shrink: 0; }
-.tb-logo img, .tb-logo .logo-wordmark { height: 20px; width: auto; }
+.tb-logo img { height: 20px; width: auto; }
 .tb-center { display: flex; justify-content: center; min-width: 0; }
 .tb-right { display: flex; align-items: center; justify-content: flex-end; gap: 4px; min-width: 0; }
 @media (max-width: 767px) {
@@ -1301,7 +1301,7 @@ body { -webkit-tap-highlight-color: transparent; }
 @media (min-width: 768px) {
   /* left track | center track; the center cell centers the switch and ends with search + account */
   .top-bar-inner { padding: 0 24px; height: 60px; grid-template-columns: var(--left-w) minmax(0, 1fr); gap: var(--grid-gap); }
-  .tb-logo img, .tb-logo .logo-wordmark { height: 28px; }
+  .tb-logo img { height: 28px; }
   .tb-left { grid-column: 1; grid-row: 1; }
   .tb-center { grid-column: 2; grid-row: 1; display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; }
   .tb-center > .mode-switch { grid-column: 2; }
@@ -1971,12 +1971,8 @@ html:has(.reading-pane.is-open) body { overflow: hidden; }
 .locale-on-dark .locale-seg { background: rgba(255,255,255,.1); }
 .locale-on-dark .locale-seg button { color: rgba(255,255,255,.7); }
 .locale-on-dark .locale-seg button.on { background: #fff; color: #111; }
-/* Wordmark follows text color; invert is not used (inline SVG, currentColor). */
-.logo-ink, .logo-wordmark { color: var(--n-111); }
-.dark .logo-ink, .dark .logo-wordmark { color: var(--n-fff); }
-.logo-on-dark, .logo-on-dark.logo-wordmark { color: #fff; }
-.logo-wordmark, .logo-mark { display: block; flex-shrink: 0; width: auto; }
-.article-shell-logo .logo-wordmark { height: 26px; width: auto; }
+/* black PNG wordmark → white in dark */
+.dark .logo-ink { filter: invert(1); }
 .theme-seg button { display: inline-flex; align-items: center; gap: 5px; }
 .dark .locale-seg button.on { background: #3a3a3a; box-shadow: none; }
 .pledge-original { max-width: 600px; margin: 0 auto; font-size: 13px; color: var(--n-666); }

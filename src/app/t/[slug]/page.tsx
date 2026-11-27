@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import { SITE_ORIGIN } from '@/lib/invite-share'
-import { LogoWordmark } from '@/components/logo'
+import Image from 'next/image'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { Heart, Lock, MessageCircle } from 'lucide-react'
@@ -53,7 +53,7 @@ export default async function TeaserPage({ params, searchParams }: Props & { sea
   return (
     <div className="teaser-page">
       <Link href="/" className="teaser-logo" aria-label={t('AI쓰발')}>
-        <LogoWordmark className="logo-ink h-8 w-auto" title={t('AI쓰발')} />
+        <Image src="/images/logo-black.png" alt={t('AI쓰발')} width={120} height={36} priority className="logo-ink h-8 w-auto" />
       </Link>
       <main className="teaser-card">
         <header className="teaser-author">

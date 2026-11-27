@@ -44,10 +44,7 @@ export async function generateMetadata(): Promise<Metadata> {
   twitter: { card: "summary_large_image", title: "AI쓰발", description: `${SLOGAN.en} ${SLOGAN.ko}`, images: [OG_DEFAULT.url] },
   applicationName: "AI쓰발",
   icons: {
-    icon: [
-      { url: "/favicon.svg", type: "image/svg+xml" },
-      { url: "/favicon.png", sizes: "32x32", type: "image/png" },
-    ],
+    icon: "/favicon.png",
     apple: "/icons/apple-touch-icon.png",
   },
   appleWebApp: {

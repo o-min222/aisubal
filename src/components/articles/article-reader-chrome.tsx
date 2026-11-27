@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { LogoWordmark } from '@/components/logo'
+import Image from 'next/image'
 import type { Member } from '@/lib/supabase/types'
 import { T } from '@/i18n/t'
 import { getT } from '@/i18n/server'
@@ -20,7 +20,7 @@ export async function ArticleReaderChrome({
     <div className="article-shell">
       <header className="article-shell-bar">
         <Link href={member ? '/articles' : '/'} className="article-shell-logo" aria-label={t('AI쓰발')}>
-          <LogoWordmark className="logo-ink" title={t('AI쓰발')} />
+          <Image src="/images/logo-black.png" alt={t('AI쓰발')} width={88} height={26} className="logo-ink" />
         </Link>
         <div className="article-shell-actions">
           {member ? (
