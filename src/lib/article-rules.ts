@@ -151,3 +151,9 @@ export function canPublishArticle(member: { is_admin?: boolean; article_writer?:
   if (typeof member.article_can_publish === 'boolean') return member.article_can_publish
   return Boolean(member.is_admin || member.article_writer)
 }
+
+/** App-route URL for a private cover or inline image. The API signs the object. */
+export function articleImageSrc(path: string | null | undefined): string | null {
+  if (!path) return null
+  return `/api/article-image?p=${encodeURIComponent(path)}`
+}

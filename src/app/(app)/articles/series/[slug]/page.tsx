@@ -1,13 +1,12 @@
 import { notFound, redirect } from 'next/navigation'
 import Link from 'next/link'
 import { getUserState } from '@/lib/auth'
-import { articleHref, articleSeriesHref } from '@/lib/article-rules'
 import { getSeries } from '@/lib/data/articles'
-import { articleImageSrc } from '@/lib/data/article-images'
 import { SubscribeButton } from '@/components/articles/subscribe-button'
 import { T } from '@/i18n/t'
 import { getT } from '@/i18n/server'
 import { UserAvatar } from '@/components/user-avatar'
+import { articleHref, articleSeriesHref, articleImageSrc } from '@/lib/article-rules'
 
 export default async function ArticleSeriesPage({ params }: { params: Promise<{ slug: string }> }) {
   const state = await getUserState()

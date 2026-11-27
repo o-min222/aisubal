@@ -3,8 +3,6 @@ import Link from 'next/link'
 import type { Metadata } from 'next'
 import { getUserState } from '@/lib/auth'
 import { getArticle, getArticleSharePreview, listArticleComments } from '@/lib/data/articles'
-import { articleHref, articleSeriesHref, formatReadingTime, isReservedArticleSlug, isPublicArticlePath } from '@/lib/article-rules'
-import { articleImageSrc } from '@/lib/data/article-images'
 import { SITE_ORIGIN } from '@/lib/invite-share'
 import { shareCanonicalUrl, shareMeta } from '@/lib/share-teaser'
 import { ArticleMarkdown } from '@/components/articles/article-markdown'
@@ -14,6 +12,7 @@ import { ArticleComments } from '@/components/articles/article-comments'
 import { T } from '@/i18n/t'
 import { getT } from '@/i18n/server'
 import { UserAvatar } from '@/components/user-avatar'
+import { articleHref, articleSeriesHref, formatReadingTime, isReservedArticleSlug, isPublicArticlePath, articleImageSrc } from '@/lib/article-rules'
 
 type Props = { params: Promise<{ slug: string }> }
 

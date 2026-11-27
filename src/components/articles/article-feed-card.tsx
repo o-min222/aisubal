@@ -1,10 +1,9 @@
 import Link from 'next/link'
-import { articleHref, formatReadingTime } from '@/lib/article-rules'
-import { articleImageSrc } from '@/lib/data/article-images'
 import type { TimelinePost } from '@/components/timeline/types'
 import { T } from '@/i18n/t'
 import { tx } from '@/i18n/client'
 import { UserAvatar } from '@/components/user-avatar'
+import { articleHref, formatReadingTime, articleImageSrc } from '@/lib/article-rules'
 
 /** Compact home-feed card. Tap opens the reading view; likes/comments are the article's. */
 export function ArticleFeedCard({ post }: { post: TimelinePost }) {

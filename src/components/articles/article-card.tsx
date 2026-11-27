@@ -1,10 +1,9 @@
 import Link from 'next/link'
-import { articleHref, articleSeriesHref, formatReadingTime } from '@/lib/article-rules'
-import { articleImageSrc } from '@/lib/data/article-images'
 import type { ArticleCard, ArticleSeriesBrief } from '@/lib/data/articles'
 import { T } from '@/i18n/t'
 import { getT } from '@/i18n/server'
 import { UserAvatar } from '@/components/user-avatar'
+import { articleHref, articleSeriesHref, formatReadingTime, articleImageSrc } from '@/lib/article-rules'
 
 function metaLine(a: ArticleCard, t: (s: string, v?: Record<string, string | number>) => string) {
   const parts: string[] = []

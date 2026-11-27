@@ -5,16 +5,9 @@ import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { T } from '@/i18n/t'
 import { tn, tx } from '@/i18n/client'
-import {
-  ARTICLE_BODY_MAX,
-  ARTICLE_SUBTITLE_MAX,
-  ARTICLE_TITLE_MAX,
-  articleEditHref,
-  articleHref,
-} from '@/lib/article-rules'
 import type { ArticleCard, ArticleSeriesBrief } from '@/lib/data/articles'
-import { articleImageSrc } from '@/lib/data/article-images'
 import { ArticleMarkdown } from './article-markdown'
+import { ARTICLE_BODY_MAX, ARTICLE_SUBTITLE_MAX, ARTICLE_TITLE_MAX, articleEditHref, articleHref, articleImageSrc } from '@/lib/article-rules'
 
 type Draft = {
   id?: string | null

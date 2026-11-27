@@ -56,7 +56,3 @@ export async function signedArticleImage(path: string, opts: { anon?: boolean } 
   return { url: s.signedUrl }
 }
 
-export function articleImageSrc(path: string | null | undefined): string | null {
-  if (!path) return null
-  return `/api/article-image?p=${encodeURIComponent(path)}`
-}
