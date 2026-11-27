@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import Image from 'next/image'
+import { LogoWordmark } from '@/components/logo'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { getUserState } from '@/lib/auth'
@@ -31,7 +31,7 @@ export default async function JoinPage({ searchParams }: Props) {
   return (
     <div className="teaser-page">
       <Link href="/" className="teaser-logo" aria-label={t('AI쓰발')}>
-        <Image src="/images/logo-black.png" alt={t('AI쓰발')} width={120} height={36} priority className="logo-ink h-8 w-auto" />
+        <LogoWordmark className="logo-ink h-8 w-auto" title={t('AI쓰발')} />
       </Link>
       <main className="teaser-card join-card">
         <h1 className="join-title">{t('초대장을 기다리는 중이에요')}</h1>

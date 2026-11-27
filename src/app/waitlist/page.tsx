@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
 import { useRouter } from 'next/navigation'
-import Image from 'next/image'
+import { LogoWordmark } from '@/components/logo'
 import { T } from '@/i18n/t'
 import { tx } from '@/i18n/client'
 
@@ -84,14 +84,7 @@ export default function WaitlistPage() {
     <div className="min-h-screen bg-n-f7f7f7 flex flex-col items-center justify-center p-6">
       {/* Logo */}
       <div className="mb-8">
-        <Image
-          src="/images/logo-black.png"
-          alt={tx('AI쓰발')}
-          width={160}
-          height={48}
-          priority
-          className="logo-ink h-10 w-auto"
-        />
+        <LogoWordmark className="logo-ink h-10 w-auto" title={tx('AI쓰발')} />
       </div>
 
       {/* Card */}

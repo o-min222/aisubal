@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import Image from 'next/image'
+import { LogoWordmark } from '@/components/logo'
 import { ChevronDown } from 'lucide-react'
 import { getT } from '@/i18n/server'
 import { LandingPeek } from './landing-peek'
@@ -21,7 +21,7 @@ export async function LandingLayout({ peek, login, note, invited }: { peek: Peek
       <div className="landing-stage">
       <section className="landing-peek" aria-label={t('지금 안에서 오가는 이야기')}>
         <div className="landing-mark only-narrow">
-          <Image src="/images/logo-white.png" alt={t('AI쓰발')} width={80} height={24} priority className="landing-mark-logo" />
+          <LogoWordmark className="landing-mark-logo logo-on-dark" title={t('AI쓰발')} />
           {note && <span className="landing-note">{note}</span>}
         </div>
         <LandingPeek items={peek} invited={invited} />

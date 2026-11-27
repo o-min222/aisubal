@@ -60,6 +60,7 @@ self.addEventListener('push', (e) => {
     self.registration.showNotification(d.title || 'AI쓰발', {
       body: d.body || '',
       icon: '/icons/icon-192.png',
+      badge: '/icons/badge.png',
       tag: d.tag || undefined,
       renotify: Boolean(d.tag),
       data: { url },

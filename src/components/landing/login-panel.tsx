@@ -2,7 +2,7 @@
 
 import { startGoogleSignIn } from '@/lib/google-sign-in'
 import { useSearchParams } from 'next/navigation'
-import Image from 'next/image'
+import { LogoWordmark } from '@/components/logo'
 import { Slogan } from '@/components/slogan'
 import { Suspense, useEffect, useSyncExternalStore } from 'react'
 import { useT, tx } from '@/i18n/client'
@@ -55,14 +55,7 @@ function LoginContent({ invite }: { invite?: LoginInvite }) {
   return (
     <>
       <div className="auth-hero-brand">
-        <Image
-          src="/images/logo-white.png"
-          alt={tx('AI쓰발')}
-          width={240}
-          height={72}
-          priority
-          className="auth-hero-logo auth-hero-logo-lg"
-        />
+        <LogoWordmark className="auth-hero-logo auth-hero-logo-lg logo-on-dark" title={tx('AI쓰발')} />
         <Slogan />
       </div>
 

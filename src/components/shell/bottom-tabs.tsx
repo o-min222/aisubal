@@ -2,18 +2,18 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Home, Wrench, PlusSquare, Archive, LayoutDashboard, PenLine } from 'lucide-react'
+import { Home, Wrench, PlusSquare, Archive, LayoutDashboard, PenLine, type LucideIcon } from 'lucide-react'
 import { isActive } from './nav-items'
 import { useT } from '@/i18n/client'
 import { useRetapNav } from './retap-nav'
 import { msg } from '@/i18n/translate'
 
-const TABS = [
-  { href: '/feed', label: msg('홈'), icon: Home },
-  { href: '/gallery', label: msg('갤러리'), icon: Wrench },
-  { href: '/posts/new', label: msg('작성'), icon: PlusSquare },
-  { href: '/archive', label: msg('아카이브'), icon: Archive },
-  { href: '/me', label: msg('대시보드'), icon: LayoutDashboard },
+const TABS: Array<{ href: string; label: string; icon: LucideIcon; solid: boolean }> = [
+  { href: '/feed', label: msg('홈'), icon: Home, solid: true },
+  { href: '/gallery', label: msg('갤러리'), icon: Wrench, solid: true },
+  { href: '/posts/new', label: msg('작성'), icon: PlusSquare, solid: false },
+  { href: '/archive', label: msg('아카이브'), icon: Archive, solid: true },
+  { href: '/me', label: msg('대시보드'), icon: LayoutDashboard, solid: true },
 ]
 
 /** Mobile bottom tab bar (Instagram/Threads style). 작성 always writes to the human feed. */
@@ -26,9 +26,18 @@ export function BottomTabs() {
       {TABS.map((tab) => {
         const on = tab.href === '/posts/new' ? pathname === '/posts/new' : tab.href === '/feed' ? pathname === '/feed' || (pathname.startsWith('/posts/') && pathname !== '/posts/new') : isActive(pathname, tab.href)
         return (
-          <Link key={tab.href} href={tab.href} className={on ? 'on' : ''} aria-current={on ? 'page' : undefined} onClick={(e) => onRetap(tab.href, e)}>
-            <tab.icon className="w-6 h-6" strokeWidth={on ? 2.4 : 1.8} />
-            <span>{t(tab.label)}</span>
+          <Link
+            key={tab.href}
+            href={tab.href}
+            className={on ? 'on' : ''}
+            aria-label={t(tab.label)}
+            title={t(tab.label)}
+            aria-current={on ? 'page' : undefined}
+            onClick={(e) => onRetap(tab.href, e)}
+          >
+            <span className="tab-ico-wrap">
+              <tab.icon className="tab-icon" strokeWidth={on ? 2.35 : 1.75} fill={tab.solid && on ? 'currentColor' : 'none'} aria-hidden />
+            </span>
           </Link>
         )
       })}
