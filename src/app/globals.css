@@ -1535,7 +1535,9 @@ body { -webkit-tap-highlight-color: transparent; }
 .composer-input {
   display: block; width: 100%; resize: none; border: 0; outline: none; background: transparent;
   font-size: 16px; line-height: 1.5; padding: 4px 0 6px; color: var(--n-111); min-height: 52px; max-height: 480px; overflow-wrap: anywhere;
+  overflow-y: hidden; scrollbar-width: none;
 }
+.composer-input::-webkit-scrollbar { display: none; }
 .composer-input::placeholder { color: var(--n-9a9a9a); }
 .composer-foot { display: flex; align-items: center; gap: 8px; min-width: 0; min-height: 40px; border-top: 1px solid var(--n-f0f0ee); padding-top: 4px; margin-top: 2px; }
 .composer-tools { flex: 1 1 auto; min-width: 0; display: flex; align-items: center; gap: 2px; }
@@ -3132,7 +3134,8 @@ a.notif-pop-all:hover { background: var(--n-fafafa); }
 .qc-row { display: flex; align-items: flex-start; gap: 8px; min-width: 0; }
 .qc-field { flex: 1 1 auto; min-width: 0; display: flex; align-items: flex-start; gap: 6px; min-height: 40px; padding: 4px 12px; border-radius: 20px; background: var(--n-f4f4f2); }
 .qc-field:focus-within { background: var(--n-fff); box-shadow: inset 0 0 0 1px var(--n-ddd); }
-.qc-input { flex: 1 1 auto; min-width: 0; background: transparent; border: 0; outline: none; font-size: 16px; line-height: 1.4; color: var(--n-111); resize: none; overflow-y: auto; max-height: 160px; padding: 6px 0; field-sizing: content; }
+.qc-input { flex: 1 1 auto; min-width: 0; background: transparent; border: 0; outline: none; font-size: 16px; line-height: 1.4; color: var(--n-111); resize: none; overflow-y: hidden; max-height: 160px; padding: 6px 0; field-sizing: content; scrollbar-width: none; }
+.qc-input::-webkit-scrollbar { display: none; }
 .qc-input::placeholder { color: var(--n-999); }
 .qc-icon, .qc-send { flex: 0 0 auto; width: 36px; height: 36px; margin-bottom: 2px; border-radius: 999px; display: inline-flex; align-items: center; justify-content: center; color: var(--n-777); align-self: flex-end; }
 .qc-icon:hover { background: var(--n-f2f2f0); color: var(--n-111); }

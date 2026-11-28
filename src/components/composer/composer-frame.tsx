@@ -1,6 +1,7 @@
 'use client'
 
-import { useRef, type ReactNode } from 'react'
+import { autosizeTextarea } from '@/lib/autosize-textarea'
+import { useLayoutEffect, useRef, type ReactNode } from 'react'
 import { COMPOSER_ENTER_KEY_HINT, composerKeySubmits, isCoarsePointer } from '@/lib/composer-keys'
 import { useMentionSuggest } from './mention-suggest'
 
@@ -69,6 +70,8 @@ export function ComposerTextarea(props: React.TextareaHTMLAttributes<HTMLTextAre
   const ref = useRef<HTMLTextAreaElement>(null)
   const lastSend = useRef(0)
   const ms = useMentionSuggest(ref, mentions)
+  // prefilled or restored text must be fully visible (the field no longer shows a scrollbar until it hits its cap)
+  useLayoutEffect(() => { if (ref.current) autosizeTextarea(ref.current, 480) }, [rest.value])
   const textarea = (
     <textarea
       {...rest}
@@ -102,8 +105,7 @@ export function ComposerTextarea(props: React.TextareaHTMLAttributes<HTMLTextAre
       }}
       onInput={(e) => {
         const el = e.currentTarget
-        el.style.height = 'auto'
-        el.style.height = `${Math.min(el.scrollHeight, 480)}px`
+        autosizeTextarea(el, 480)
         if (mentions) ms.update()
         onInput?.(e)
       }}

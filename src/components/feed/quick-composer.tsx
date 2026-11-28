@@ -1,5 +1,6 @@
 'use client'
 
+import { autosizeTextarea } from '@/lib/autosize-textarea'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
@@ -36,8 +37,7 @@ export function QuickComposer({ me }: { me: ComposerIdentity }) {
   const starters = useMemo(() => QUICK_STARTERS.filter((s) => s.prefill).map((s) => tr(s.prefill!)), [tr])
 
   function grow(el: HTMLTextAreaElement) {
-    el.style.height = 'auto'
-    el.style.height = `${Math.min(el.scrollHeight, 160)}px`
+    autosizeTextarea(el, 160)
   }
   useEffect(() => { if (input.current) grow(input.current) }, [body])
 
