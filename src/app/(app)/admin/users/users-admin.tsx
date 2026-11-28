@@ -54,8 +54,8 @@ export function UsersAdmin({ initial, meId }: { initial: U[]; meId: string }) {
             <Link href={`/members/${u.id}`} className="flex items-center gap-3 min-w-0 flex-1">
               <UserAvatar id={u.id} name={u.name} size="sm" />
               <span className="min-w-0">
-                <span className="flex items-center gap-1.5">
-                  <span className="font-medium text-n-111 truncate">{u.name}</span>
+                <span className="flex items-center gap-1.5 min-w-0">
+                  <span className="font-medium text-n-111 whitespace-nowrap break-keep min-w-0 truncate">{u.name}</span>
                   {u.isAdmin && <span className="badge bg-c-f3e8ff text-c-6b21a8"><T>관리자</T></span>}
                   {u.isBanned && <span className="badge bg-c-fdecec text-c-b42318"><T>차단됨</T></span>}
                   {u.feedbackEnabled && !u.isAdmin && <span className="badge bg-n-f3f3f3 text-n-555"><T>피드백</T></span>}

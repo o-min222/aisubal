@@ -134,27 +134,68 @@ export async function getInvitePreview(rawCode: string): Promise<InvitePreview> 
 /** Admin-only invite tree (emails via SECURITY DEFINER RPC after 0002). */
 export async function getInviteTree() {
   if (isMock()) {
+    // A132: include the names that used to wrap mid-word on a 390px admin tree
+    // (제니나이, 조이리) plus a handle-less '새 멤버' so local shots cover the fix.
     return {
       id: 'founder',
-      displayName: '운영자',
-      email: 'founder@example.com',
+      displayName: '0mins',
+      handle: '0mins',
+      realName: 'YoungMin Song',
+      email: 'dudals2014@example.com',
       joinedAt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
       isBanned: false,
-      invitedCount: 2,
+      invitedCount: 9,
       children: [
         {
           id: 'user-1',
           displayName: '새벽CTO',
+          handle: 'dawn',
+          realName: '김새벽',
           email: 'cto@example.com',
           joinedAt: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000).toISOString(),
           isBanned: false,
-          invitedCount: 1,
+          invitedCount: 4,
           children: [
             {
               id: 'user-3',
               displayName: '노코드요정',
+              handle: 'nocode',
+              realName: '이노코',
               email: 'nocode@example.com',
               joinedAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+              isBanned: false,
+              invitedCount: 0,
+              children: [],
+            },
+            {
+              id: 'user-jenny',
+              displayName: '제니나이',
+              handle: 'jennyage',
+              realName: '김제니',
+              email: 'jenny.very.long.address@example.com',
+              joinedAt: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(),
+              isBanned: false,
+              invitedCount: 0,
+              children: [],
+            },
+            {
+              id: 'user-joie',
+              displayName: '조이리',
+              handle: 'joie',
+              realName: '이조이',
+              email: 'joie@example.com',
+              joinedAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+              isBanned: false,
+              invitedCount: 0,
+              children: [],
+            },
+            {
+              id: 'user-younseul',
+              displayName: '새 멤버',
+              handle: null,
+              realName: '윤슬',
+              email: 'younseul@example.com',
+              joinedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
               isBanned: false,
               invitedCount: 0,
               children: [],
@@ -164,6 +205,8 @@ export async function getInviteTree() {
         {
           id: 'user-2',
           displayName: '픽셀마녀',
+          handle: 'pixel',
+          realName: '박픽셀',
           email: 'pixel@example.com',
           joinedAt: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString(),
           isBanned: false,
