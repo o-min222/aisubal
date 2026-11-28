@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import { getUserState } from '@/lib/auth'
 import { SubNavLayout } from '@/components/shell/sub-nav-layout'
 import { getT } from '@/i18n/server'
+import { I18nArea } from '@/i18n/area'
 
 export async function generateMetadata() {
   const t = await getT()
@@ -14,8 +15,10 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   if (state.type === 'waitlist') redirect('/waitlist')
   if (!state.member.is_admin) redirect('/feed')
   return (
-    <SubNavLayout area="admin">
-      {children}
-    </SubNavLayout>
+    <I18nArea area="admin">
+      <SubNavLayout area="admin">
+        {children}
+      </SubNavLayout>
+    </I18nArea>
   )
 }

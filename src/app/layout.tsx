@@ -10,7 +10,7 @@ import { Suspense } from "react";
 import { ScrollLockGuard } from "@/components/scroll-lock-guard";
 import { I18nProvider } from "@/i18n/client";
 import { LOCALE_META } from "@/i18n/config";
-import { DICTS } from "@/i18n/dict";
+import { SHELL_DICTS } from "@/i18n/dict";
 import { getLocale } from "@/i18n/server";
 import { getTheme } from "@/lib/theme-server";
 import { THEME_BOOT_SCRIPT, THEME_COLOR } from "@/lib/theme";
@@ -86,7 +86,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
         <script dangerouslySetInnerHTML={{ __html: PWA_BOOT_SCRIPT }} />
       </head>
       <body className="min-h-screen antialiased">
-        <I18nProvider locale={locale} dict={DICTS[locale]}>
+        <I18nProvider locale={locale} dict={SHELL_DICTS[locale]}>
         {children}
         <Suspense fallback={null}>
           <ScrollLockGuard />

@@ -16,7 +16,8 @@
     "screenshots": "npx tsx scripts/capture-after.ts",
     "cli": "npx tsx cli/aisubal.ts",
     "check:overflow": "node scripts/overflow-check.mjs",
-    "docs:mcp": "npx tsx scripts/gen-mcp-docs.ts"
+    "docs:mcp": "npx tsx scripts/gen-mcp-docs.ts",
+    "i18n:split": "tsx scripts/i18n-namespaces.mjs --write"
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",

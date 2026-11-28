@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import { getUserState } from '@/lib/auth'
 import { SubNavLayout } from '@/components/shell/sub-nav-layout'
 import { getT } from '@/i18n/server'
+import { I18nArea } from '@/i18n/area'
 
 export async function generateMetadata() {
   const t = await getT()
@@ -13,8 +14,10 @@ export default async function SettingsLayout({ children }: { children: React.Rea
   if (state.type === 'unauthenticated') redirect('/')
   if (state.type === 'waitlist') redirect('/waitlist')
   return (
-    <SubNavLayout area="settings">
-      {children}
-    </SubNavLayout>
+    <I18nArea area="settings">
+      <SubNavLayout area="settings">
+        {children}
+      </SubNavLayout>
+    </I18nArea>
   )
 }
