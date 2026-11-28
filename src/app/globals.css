@@ -3756,8 +3756,25 @@ html[data-feedback-on] body * { -webkit-touch-callout: none; }
 .article-series-head h1 { word-break: keep-all; overflow-wrap: break-word; }
 .article-series-cover { width: 120px; height: 120px; object-fit: cover; border-radius: 10px; flex: none; }
 .article-editor { display: grid; gap: 12px; padding-bottom: 4rem; }
-.article-editor-bar { display: flex; align-items: center; justify-content: space-between; gap: 10px; position: sticky; top: 0; background: var(--n-fff, #fff); z-index: 5; padding: 8px 0; }
+/*
+ * A139b: the editor's sticky bar uses the app header's surface (--n-fff) and divider, sits right under the header
+ * (the header is sticky too, so top:0 hid the bar behind it) and follows it up when the phone header hides on scroll.
+ * The status text has its own one-line slot, so changing it never moves the buttons or changes the bar height.
+ */
+.article-editor-bar {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 10px;
+  position: sticky; top: var(--top-bar-h, 61px); z-index: 30; height: 52px; box-sizing: border-box;
+  margin: 0 -10px; padding: 0 14px;
+  background: var(--n-fff); border-bottom: 1px solid var(--n-e8e8e8);
+  transition: top .22s ease;
+}
+html[data-topbar-hidden] .article-editor-bar { top: env(safe-area-inset-top, 0px); }
+@media (max-width: 767px) { .article-editor-bar { top: calc(56px + env(safe-area-inset-top)); } html[data-topbar-hidden] .article-editor-bar { top: env(safe-area-inset-top, 0px); } }
+@media (min-width: 768px) { .article-editor-bar { margin: 0; border-radius: var(--radius-md); border: 1px solid var(--n-e8e8e8); padding: 0 12px; } }
+@media (prefers-reduced-motion: reduce) { .article-editor-bar { transition: none; } }
 .article-editor-bar .btn { white-space: nowrap; }
+.article-editor-status { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12.5px; line-height: 20px; color: var(--n-888); font-variant-numeric: tabular-nums; }
+.article-editor-actions { display: flex; align-items: center; gap: 8px; flex: none; }
 .article-editor-tools .btn { white-space: nowrap; }
 .article-editor-note { font-size: 13.5px; color: var(--n-666); margin: 0; word-break: keep-all; overflow-wrap: break-word; }
 .article-editor-title { width: 100%; border: 0; outline: 0; background: transparent; font-family: var(--font-serif-title), 'Noto Serif KR', Georgia, serif; font-size: clamp(1.6rem, 3vw, 2.1rem); font-weight: 700; letter-spacing: -0.02em; color: var(--n-111); }

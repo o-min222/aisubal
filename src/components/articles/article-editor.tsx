@@ -158,10 +158,10 @@ export function ArticleEditor({
   return (
     <div className="article-editor">
       <div className="article-editor-bar">
-        <span className="text-sm text-n-888">
-          {saving === 'saving' ? <T>저장 중…</T> : saving === 'saved' ? <T>임시 저장됨</T> : draft.status === 'published' ? <T>발행됨</T> : <T>초고</T>}
+        <span className="article-editor-status" role="status" aria-live="polite">
+          {saving === 'saving' ? <T>저장 중…</T> : saving === 'saved' ? <T>저장됨 · 방금</T> : draft.status === 'published' ? <T>발행됨</T> : <T>초고</T>}
         </span>
-        <div className="flex gap-2">
+        <div className="article-editor-actions">
           <button type="button" className={`btn btn-sm ${preview ? 'btn-primary' : 'btn-secondary'}`} onClick={() => setPreview((v) => !v)}>
             <T>미리보기</T>
           </button>
