@@ -1,6 +1,7 @@
 'use client'
 
 import { useMemo, useState } from 'react'
+import { LOCALE_META } from '@/i18n/config'
 import Link from 'next/link'
 import { ArrowLeft, Check, Copy, ExternalLink, GitBranch, Star, ThumbsDown, ThumbsUp } from 'lucide-react'
 import { toast } from 'sonner'
@@ -24,7 +25,7 @@ import type { AiRatingSummary } from '@/lib/data/agora'
 import { AiRatingSection } from './ai-rating-section'
 import { renderableInstall } from '@/lib/install-catalog'
 import { T } from '@/i18n/t'
-import { tx, tn } from '@/i18n/client'
+import { tx, tn, useLocale } from '@/i18n/client'
 
 interface Props {
   entry: ToolboxEntryDetails
@@ -53,6 +54,7 @@ export function ToolboxDetailClient({ entry: initial, mentionPosts, member, aiRa
   const [reviewBody, setReviewBody] = useState('')
   const [busy, setBusy] = useState(false)
   const [peopleOpen, setPeopleOpen] = useState(false)
+  const locale = useLocale()
 
   // B-1: only reviewer-verified commands, one tab per client that has its OWN snippet
   const install = useMemo(() => renderableInstall(entry), [entry])
@@ -63,7 +65,8 @@ export function ToolboxDetailClient({ entry: initial, mentionPosts, member, aiRa
   const isProduct = entry.type === 'product'
   const usage = people?.usage
   const stack = (usage?.users ?? []).slice(0, 5)
-  const date = (d: string | null | undefined) => (d ? new Date(d).toLocaleDateString(undefined, { timeZone: 'Asia/Seoul', year: 'numeric', month: 'short', day: 'numeric' }) : tx('미확인'))
+  // A148: an explicit locale, so the server (en-US) and a Korean browser render the same date (no hydration mismatch)
+  const date = (d: string | null | undefined) => (d ? new Date(d).toLocaleDateString(LOCALE_META[locale].intl, { timeZone: 'Asia/Seoul', year: 'numeric', month: 'short', day: 'numeric' }) : tx('미확인'))
 
   async function copyCli() {
     try {

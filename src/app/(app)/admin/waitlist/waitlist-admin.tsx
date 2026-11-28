@@ -5,7 +5,8 @@ import { Copy, EyeOff, Undo2 } from 'lucide-react'
 import { toast } from 'sonner'
 import type { WaitlistEntry, WaitlistStatus } from '@/lib/data/public-waitlist'
 import { T } from '@/i18n/t'
-import { tn, tx } from '@/i18n/client'
+import { tn, tx, useLocale } from '@/i18n/client'
+import { LOCALE_META } from '@/i18n/config'
 
 const TABS: { id: WaitlistStatus; label: string }[] = [
   { id: 'waiting', label: '대기' },
@@ -14,6 +15,7 @@ const TABS: { id: WaitlistStatus; label: string }[] = [
 ]
 
 export function WaitlistAdmin({ initial, waiting }: { initial: WaitlistEntry[]; waiting: number }) {
+  const locale = useLocale()
   const [tab, setTab] = useState<WaitlistStatus>('waiting')
   const [rows, setRows] = useState(initial)
   const [busy, setBusy] = useState<string | null>(null)
@@ -75,7 +77,7 @@ export function WaitlistAdmin({ initial, waiting }: { initial: WaitlistEntry[]; 
                 <p className="wl-email">{r.email}</p>
                 {r.reason && <p className="wl-reason">{r.reason}</p>}
                 <p className="wl-meta">
-                  {new Date(r.created_at).toLocaleDateString()}
+                  {new Date(r.created_at).toLocaleDateString(LOCALE_META[locale].intl, { timeZone: 'Asia/Seoul' })}
                   {r.source ? ` · ${r.source}` : ''}
                   {r.locale ? ` · ${r.locale}` : ''}
                   {r.code && r.used ? ` · ${tx('가입함')}` : ''}

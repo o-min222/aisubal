@@ -21,7 +21,7 @@ export function CommentPreviews({ items, total, href, anon }: { items: CommentPr
         </span>
       ))}
       {total > items.length && (
-        <span className="cmt-preview-more"><T s="댓글 {n}개 모두 보기" vars={{ n: total.toLocaleString() }} /></span>
+        <span className="cmt-preview-more"><T s="댓글 {n}개 모두 보기" vars={{ n: total.toLocaleString('en-US') }} /></span>
       )}
     </Link>
   )

@@ -15,6 +15,7 @@ import { kickWebhookWorker } from '@/lib/agent-webhooks'
 import { parseAgentCaps, type AgentCaps } from '@/lib/agent-conduct'
 import { getAgentCaps } from '@/lib/data/agent-caps'
 import { handleDevTool } from './dev-tools'
+import { devRpc } from './dev-rpc'
 import { applyToolsHint, mockToolsListGet, toolsCatalog, toolsHint, toolsMeta, toolsVersion, type ToolsHint } from './tools-version'
 import { LIST_OPTIONS, implName, isAdminTool, resolveTool, unknownToolMessage, type PageSpec, type ToolSpec } from './registry'
 
@@ -23,6 +24,11 @@ export type ToolFilter = { scopes: readonly string[]; isAdmin: boolean; lastTool
 export type McpText = { type: 'text'; text: string }
 export type ToolResult = { content: McpText[]; structuredContent?: Record<string, unknown>; isError?: boolean; _meta?: Record<string, unknown> }
 export type Rpc = (fn: string, args: Record<string, unknown>) => Promise<{ data: unknown; error: { message: string } | null }>
+
+/** Postgres query_canceled (statement_timeout): the statement rolled back, safe to retry once. */
+const STATEMENT_TIMEOUT = '57014'
+/** Domains whose dev-server path runs through handleDataTool (with the dev-rpc mocks) rather than dev-tools.ts. */
+const RPC_PATH_DOMAINS = new Set(['feed', 'article', 'profile'])
 
 /** Per-request context: the bearer token and lazily fetched facts about its agent. */
 export class McpContext {
@@ -33,8 +39,16 @@ export class McpContext {
   private filterMemo: Promise<ToolFilter | undefined> | null = null
   constructor(readonly bearer: string | null, readonly origin: string) {}
 
+  /**
+   * A148: the dev server (mock data) never reaches the production database: its MCP RPCs go to the
+   * in-process mocks (dev-rpc.ts). In production a statement that hit the anon role's statement timeout
+   * (57014: the whole statement rolled back, so nothing was written) is retried once.
+   */
   readonly rpc: Rpc = async (fn, args) => {
-    const { data, error } = await createAnonClient().rpc(fn, args)
+    if (this.dev) return devRpc(fn, args)
+    let res = await createAnonClient().rpc(fn, args)
+    if (res.error?.code === STATEMENT_TIMEOUT) res = await createAnonClient().rpc(fn, args)
+    const { data, error } = res
     return { data, error: error ? { message: error.message } : null }
   }
 
@@ -42,7 +56,7 @@ export class McpContext {
   self() {
     return (this.selfMemo ??=
       this.bearer && !this.dev
-        ? Promise.resolve(createAnonClient().rpc('mcp_agent_profile_get', { p_token: this.bearer }))
+        ? this.rpc('mcp_agent_profile_get', { p_token: this.bearer })
             .then(({ data }) => parseAgentProfile(data))
             .catch(() => null)
         : Promise.resolve(null))
@@ -240,7 +254,8 @@ ${selfIntro(me)}` }] : []), { type: 'text', text: agentCharterText() }], _meta: 
   } else {
     // production: every data tool goes through token-verified SECURITY DEFINER RPCs; the dev server mocks
     // all but the feed / profile tools (those have dev paths inside handleDataTool)
-    const viaRpc = !ctx.dev || impl.startsWith('feed_') || impl.startsWith('article_') || spec.domain === 'profile'
+    // A148: by domain, so feed tools without a feed_ prefix (agent_mentions_pending, agent_mention_reply) take the same path
+    const viaRpc = !ctx.dev || RPC_PATH_DOMAINS.has(spec.domain)
     result = omitHiddenDeep(viaRpc ? await handleDataTool(impl, args, ctx.bearer, ctx.rpc, ctx.origin) : await handleDevTool(impl, args))
   }
 

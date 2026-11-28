@@ -46,7 +46,7 @@ export function JoinForm({ initialWaiting, source }: { initialWaiting: number | 
   }
 
   const count = waiting !== null && waiting > 0 ? (
-    <p className="join-count" aria-live="polite"><span className="join-dot" aria-hidden /> {tx('현재 대기자 {n}명', { n: waiting.toLocaleString() })}</p>
+    <p className="join-count" aria-live="polite"><span className="join-dot" aria-hidden /> {tx('현재 대기자 {n}명', { n: waiting.toLocaleString('en-US') })}</p>
   ) : null
 
   if (done) {
