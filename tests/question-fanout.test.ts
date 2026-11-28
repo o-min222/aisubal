@@ -49,11 +49,12 @@ describe('A93 · 질문해요 posts notify friends and followers (0127)', () => 
     expect(SQL).toMatch(/'digest_nudge','question'\]\)\)/)
   })
 
-  it("copy: '{name}님이 질문했어요' in the bell; push reads '…질문했어요: {first line}' and opens the post", () => {
+  it("copy: '{name}님이 질문했어요' in the bell; push title is the action and the body is the first line", () => {
     expect(notificationSentence(item).s).toBe('{name}님이 질문했어요')
     const t = (s: string, v?: Record<string, string | number>) => s.replace(/\{(\w+)\}/g, (_, k) => String(v?.[k] ?? ''))
     const p = pushPayload({ outboxId: 1, subscriptionId: 's', endpoint: 'e', p256dh: 'k', auth: 'a', locale: 'ko', unread: 2, item }, t)
-    expect(p.body).toBe('소연님이 질문했어요: Cursor 룰 공유 돼요?')
+    expect(p.title).toBe('소연님이 질문했어요')
+    expect(p.body).toBe('Cursor 룰 공유 돼요?')
     expect(p.url).toBe('/posts/p1')
     expect((en as Record<string, string>)['{name}님이 질문했어요']).toBe('{name} asked a question')
   })

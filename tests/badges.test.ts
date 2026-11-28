@@ -38,8 +38,8 @@ describe('E1 contribution badges', () => {
     const n: NotificationItem = { id: 'n', kind: 'badge', category: 'badges', link: '/members/me?badges=liked', excerpt: null, targetKind: 'member', count: 1, createdAt: '', unread: true, actor: { kind: 'someone', id: null, name: 'liked:2', avatarUrl: null } }
     expect(notificationSentence(n)).toMatchObject({ s: '‘{name}’ 배지를 받았어요', name: '좋아요 20개 받은 글', nameIsLabel: true })
     const job = { outboxId: 1, subscriptionId: 's', endpoint: 'https://x', p256dh: 'p', auth: 'a', locale: 'en', unread: 1, item: n } as unknown as PushJob
-    expect(pushPayload(job, makeT('en', DICTS.en)).body).toBe('You earned the ‘Post with 20 likes’ badge')
-    expect(pushPayload({ ...job, locale: 'ko' }, makeT('ko', DICTS.ko)).body).toBe('‘좋아요 20개 받은 글’ 배지를 받았어요')
+    expect(pushPayload(job, makeT('en', DICTS.en)).title).toBe('You earned the ‘Post with 20 likes’ badge')
+    expect(pushPayload({ ...job, locale: 'ko' }, makeT('ko', DICTS.ko)).title).toBe('‘좋아요 20개 받은 글’ 배지를 받았어요')
     expect(pushPayload(job, makeT('en', DICTS.en)).url).toBe('/members/me?badges=liked')
   })
 

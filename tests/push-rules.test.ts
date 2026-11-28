@@ -18,10 +18,11 @@ describe('web push (D1)', () => {
   })
   it('says what the bell says, in the member’s language, and deep-links to the target', () => {
     const ko = pushPayload(job({ ...follow }), interpolate)
-    expect(ko).toMatchObject({ title: 'AI쓰발', body: '새벽CTO님이 나를 팔로우해요', url: '/members/m2', tag: 'follow:n1', badge: 3 })
+    expect(ko).toMatchObject({ title: '새벽CTO님이 나를 팔로우해요', body: '', url: '/members/m2', tag: 'follow:n1', badge: 3 })
     const en = pushPayload(job({ ...follow }), makeT('en', DICTS.en))
-    expect(en.body).toContain('새벽CTO')
-    expect(en.body).not.toContain('팔로우')
+    expect(en.title).toContain('새벽CTO')
+    expect(en.title).not.toContain('팔로우')
+    expect(en.body).toBe('')
     expect(pushPayload(job(null), interpolate)).toMatchObject({ url: '/settings/notifications', tag: 'test' })
   })
   it('never opens another site from a push', () => {

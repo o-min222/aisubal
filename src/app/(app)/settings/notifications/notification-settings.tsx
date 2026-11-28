@@ -85,6 +85,15 @@ export function NotificationSettings({ initial }: { initial: NotifyPrefs }) {
           </div>
         )
       })}
+      <div className="p-4 flex items-center gap-3 min-h-[60px]">
+        <span className="min-w-0 flex-1">
+          <span className="block text-sm font-medium text-n-333"><T>알림에 내용 미리보기</T></span>
+          <span className="block text-xs text-n-888"><T>댓글·글의 첫 줄을 알림에 넣어요. 꺼도 누가 무엇을 했는지는 보여요.</T></span>
+        </span>
+        <button type="button" role="switch" aria-checked={prefs.preview} aria-label={tx('알림에 내용 미리보기')} disabled={busy === 'preview'} onClick={() => toggle('preview')} className={`switch ${prefs.preview ? 'on' : ''}`}>
+          <span />
+        </button>
+      </div>
     </section>
   )
 }

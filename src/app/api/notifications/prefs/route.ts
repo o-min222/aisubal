@@ -5,7 +5,7 @@ import { getNotifyPrefs, setNotifyPref } from '@/lib/data/notifications'
 import { NOTIFY_CATEGORIES } from '@/lib/notifications'
 import { te } from '@/i18n/server'
 
-const schema = z.object({ key: z.enum(['digest_weekly', ...NOTIFY_CATEGORIES.map((c) => c.id)] as [string, ...string[]]), on: z.boolean() })
+const schema = z.object({ key: z.enum(['digest_weekly', 'preview', ...NOTIFY_CATEGORIES.map((c) => c.id)] as [string, ...string[]]), on: z.boolean() })
 
 export async function GET() {
   const member = await getMember()

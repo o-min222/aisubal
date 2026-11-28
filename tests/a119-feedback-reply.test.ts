@@ -57,10 +57,10 @@ describe('A119 reject → author', () => {
       item: { ...reply, kind, ...extra } as NotificationItem,
     })
     const pushed = pushPayload(job('feedback_reply'), ko)
-    expect(pushed.body).toContain('피드백에 답변이 왔어요')
-    expect(pushed.body).toContain('이미 같은 내용이 반영되어 있어요.')
+    expect(pushed.title).toBe('피드백에 답변이 왔어요')
+    expect(pushed.body).toBe('이미 같은 내용이 반영되어 있어요.')
     expect(pushed.url).toBe('/me/feedback/abc')
-    expect(pushPayload(job('feedback_reply'), en).body).toContain('There’s a reply to your feedback')
+    expect(pushPayload(job('feedback_reply'), en).title).toContain('There’s a reply to your feedback')
     expect(notificationSentence({ ...reply, kind: 'feedback_approved', excerpt: null }).s).toBe('피드백이 승인됐어요')
     expect(notificationSentence({ ...reply, kind: 'feedback_deployed', excerpt: null }).s).toBe('피드백이 반영되어 배포됐어요')
   })

@@ -19,9 +19,9 @@ export const NOTIFY_CATEGORIES = [
 ] as const
 export type NotifyCategory = (typeof NOTIFY_CATEGORIES)[number]['id']
 /** digest_weekly: '새 소식' once a week instead of daily (only matters while digest is on) */
-export type NotifyPrefs = Record<NotifyCategory, boolean> & { digest_weekly: boolean }
-export type NotifyPrefKey = NotifyCategory | 'digest_weekly'
-export const DEFAULT_PREFS: NotifyPrefs = { replies: true, likes: true, following: true, social: true, gallery: true, invites: true, agents: true, badges: true, meetups: true, newcomers: true, digest: true, digest_weekly: false, articles: true }
+export type NotifyPrefs = Record<NotifyCategory, boolean> & { digest_weekly: boolean; preview: boolean }
+export type NotifyPrefKey = NotifyCategory | 'digest_weekly' | 'preview'
+export const DEFAULT_PREFS: NotifyPrefs = { replies: true, likes: true, following: true, social: true, gallery: true, invites: true, agents: true, badges: true, meetups: true, newcomers: true, digest: true, digest_weekly: false, articles: true, preview: true }
 
 export function parseNotifyCategory(v: string | string[] | null | undefined): NotifyCategory | null {
   const s = Array.isArray(v) ? v[0] : v
@@ -32,7 +32,7 @@ export type NotifyKind = 'comment' | 'reply' | 'like' | 'follow' | 'friend_reque
   | 'gallery_recommended' | 'gallery_approved' | 'gallery_confirmed' | 'gallery_rejected' | 'follow_post' | 'badge' | 'moim_invite' | 'invite_refill' | 'reaction'
   | 'moim_confirmed' | 'moim_changed' | 'moim_cancelled' | 'moim_tomorrow' | 'moim_today' | 'moim_hour' | 'first_post'
   | 'digest' | 'digest_hot' | 'digest_pick' | 'digest_nudge' | 'question' | 'repost' | 'feedback' | 'article_published' | 'feedback_reply' | 'feedback_approved' | 'feedback_deployed'
-export type NotifyActor = { kind: 'member' | 'agent' | 'anon' | 'someone'; id: string | null; name: string | null; avatarUrl: string | null; brand?: string | null }
+export type NotifyActor = { kind: 'member' | 'agent' | 'anon' | 'someone'; id: string | null; name: string | null; handle?: string | null; avatarUrl: string | null; brand?: string | null }
 export type NotificationItem = {
   id: string
   kind: NotifyKind

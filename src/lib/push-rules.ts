@@ -1,5 +1,6 @@
 import { notificationSentence, type NotificationItem } from '@/lib/notifications'
 import { msg } from '@/i18n/translate'
+import { maskPii } from '@/lib/pii'
 import { FRIEND_REQUESTS_HREF, PUSH_FRIEND_REQUEST_BODY, PUSH_FRIEND_REQUEST_TITLE } from '@/lib/friend-requests'
 
 /** Web push (D1), pure parts: when to ask, what a push says, how to read a send failure. */
@@ -63,26 +64,68 @@ export function parseSubscription(v: unknown): { endpoint: string; p256dh: strin
   return { endpoint, p256dh, auth }
 }
 
-export type PushJob = { outboxId: number; subscriptionId: string; endpoint: string; p256dh: string; auth: string; locale: string; unread: number; item: (NotificationItem & { targetId?: string | null }) | null }
+export type PushJob = { outboxId: number; subscriptionId: string; endpoint: string; p256dh: string; auth: string; locale: string; unread: number; preview?: boolean; item: (NotificationItem & { targetId?: string | null }) | null }
 export type PushPayload = { title: string; body: string; url: string; tag: string; badge: number }
 type Tr = (s: string, vars?: Record<string, string | number>) => string
 
 export const PUSH_TEST_TEXT = msg('테스트 알림이에요. 이 기기에서 푸시가 잘 와요.')
 
-/** Same sentence as the bell (one string per case), opening the notification's own target. */
+/** Android lock-screen body length: one short line. Counted in Unicode code points. */
+export const PREVIEW_MAX = 90
+
+/**
+ * A131: turn member-written text into a lock-screen snippet. Collapse whitespace, strip
+ * light markdown/HTML, mask PII. The anonymous board never reaches here with an author name
+ * (pushPayload uses "누군가"); this only sanitizes the body.
+ */
+export function previewSnippet(raw: string | null | undefined, max = PREVIEW_MAX): string {
+  if (!raw) return ''
+  let s = String(raw)
+    .replace(/```[\s\S]*?```/g, ' ')
+    .replace(/`([^`]+)`/g, '$1')
+    .replace(/!\[[^\]]*\]\([^)]*\)/g, ' ')
+    .replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/^#{1,6}\s+/gm, '')
+    .replace(/^[>*]\s+/gm, '')
+    .replace(/\*\*([^*]+)\*\*/g, '$1')
+    .replace(/__([^_]+)__/g, '$1')
+    .replace(/\s+/g, ' ')
+    .trim()
+  s = maskPii(s)
+  const chars = [...s]
+  if (chars.length <= max) return s
+  return `${chars.slice(0, max - 1).join('').trimEnd()}…`
+}
+
+/** @handle when we have one; never a name for the anonymous board or a hidden actor. */
+export function pushActorName(n: NotificationItem, t: Tr, fallback = ''): string {
+  if (n.targetKind === 'anon' || n.actor?.kind === 'anon' || n.actor?.kind === 'someone' || !n.actor) {
+    return t('누군가')
+  }
+  const handle = (n.actor.handle || '').replace(/^@/, '').trim()
+  if (handle) return `@${handle}`
+  return n.actor.name || fallback || t('누군가')
+}
+
+/**
+ * A131: title is the actor + action (what the bell already says, with @handle when we have one).
+ * Body is the content preview — a single sanitized line — so Android/Chrome lock screens show
+ * the snippet instead of burying it under a second line. preview=false (the member pref) omits the body.
+ */
 export function pushPayload(job: PushJob, t: Tr): PushPayload {
   if (!job.item) return { title: 'AI쓰발', body: t(PUSH_TEST_TEXT), url: '/settings/notifications', tag: 'test', badge: job.unread }
   const n = job.item
-  // A86: a friend request says what it is and what to do, and opens the requests list directly
+  const tag = `${n.kind}:${n.targetId ?? n.id}`
   if (n.kind === 'friend_request') {
-    const who = n.actor?.name || t('누군가')
-    return { title: t(PUSH_FRIEND_REQUEST_TITLE), body: t(PUSH_FRIEND_REQUEST_BODY, { name: who }), url: FRIEND_REQUESTS_HREF, tag: `${n.kind}:${n.targetId ?? n.id}`, badge: job.unread }
+    const who = pushActorName(n, t, n.actor?.name || t('누군가'))
+    return { title: t(PUSH_FRIEND_REQUEST_TITLE), body: t(PUSH_FRIEND_REQUEST_BODY, { name: who }), url: FRIEND_REQUESTS_HREF, tag, badge: job.unread }
   }
   const { s, name, n: count, nameIsLabel } = notificationSentence(n)
-  const sentence = t(s, { name: nameIsLabel ? t(name) : name, n: count })
-  // A93: a question reads as one line — '{name}님이 질문했어요: {first line}'
-  const body = n.excerpt ? (n.kind === 'question' ? `${sentence}: ${n.excerpt}` : `${sentence}\n${n.excerpt}`) : sentence
-  return { title: 'AI쓰발', body: body.slice(0, 240), url: safePath(n.link), tag: `${n.kind}:${n.targetId ?? n.id}`, badge: job.unread }
+  const who = nameIsLabel ? t(name) : pushActorName(n, t, name)
+  const title = t(s, { name: who, n: count })
+  const body = job.preview === false ? '' : previewSnippet(n.excerpt)
+  return { title, body, url: safePath(n.link), tag, badge: job.unread }
 }
 
 /** Only same-site paths open from a push. */

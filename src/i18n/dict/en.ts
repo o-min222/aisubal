@@ -494,6 +494,8 @@ const en: Record<string, string> = {
   "오늘 AI쓰발에 잠깐 들러 보세요": "Drop by AI쓰발 today",
   "새 소식 빈도": "News frequency",
   "새 소식": "News",
+  "알림에 내용 미리보기": "Show a content preview in notifications",
+  "댓글·글의 첫 줄을 알림에 넣어요. 꺼도 누가 무엇을 했는지는 보여요.": "The first line of the comment or post appears in the notification. Turn this off to see only who did what.",
   "새 글 {n}개가 올라왔어요": "{n} new posts",
   "새 글이 올라왔어요": "A new post",
   "지금 반응이 뜨거운 글이 있어요": "A post is getting lots of reactions right now",
