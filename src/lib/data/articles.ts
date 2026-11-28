@@ -154,6 +154,24 @@ function seed(): Mock {
     body: '초고 본문입니다.',
     isMine: true,
   }
+  // A135: a published article the dev member wrote, so the author view (⋯ 수정/삭제) is reviewable locally.
+  const mine: ArticleCard = {
+    ...published,
+    id: 'article-mine',
+    slug: 'my-published-notes',
+    title: '내가 발행한 글: 에이전트에게 맡길 일 고르기',
+    subtitle: '맡길 일과 직접 할 일을 나누는 기준',
+    publishedAt: '2026-11-27T03:00:00.000Z',
+    createdAt: '2026-11-27T01:30:00.000Z',
+    updatedAt: '2026-11-27T03:00:00.000Z',
+    likeCount: 2,
+    commentCount: 0,
+    episodeNo: null,
+    seriesId: null,
+    series: null,
+    author: DEV_AUTHOR,
+    isMine: true,
+  }
   const comments: ArticleComment[] = [
     {
       id: 'ac-1',
@@ -170,7 +188,7 @@ function seed(): Mock {
   ]
   g.__aisubalArticles = {
     series: [series],
-    articles: [published, draft],
+    articles: [published, mine, draft],
     subs: new Set<string>(),
     likes: new Set<string>(),
     comments,

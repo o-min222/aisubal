@@ -3689,7 +3689,11 @@ html[data-feedback-on] body * { -webkit-touch-callout: none; }
 /* A108: articles — typography-first reader, compact cards, editor */
 .article-shell { min-height: 100dvh; background: var(--n-fff, #fff); color: var(--n-111); }
 .article-shell-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 20px; border-bottom: 1px solid var(--n-eee, #eee); position: sticky; top: 0; background: var(--n-fff, #fff); z-index: 10; }
+.article-shell-lead { display: flex; align-items: center; gap: 14px; min-width: 0; }
 .article-shell-logo { display: flex; align-items: center; }
+/* A135: '< 목록' — same quiet back pattern as '< 관리' (.subnav-back) */
+.article-back { display: inline-flex; align-items: center; gap: 2px; min-height: 40px; margin-left: -6px; padding: 0 8px 0 4px; border-radius: 999px; font-size: 14px; color: var(--n-555); white-space: nowrap; }
+.article-back:hover { color: var(--n-111); background: var(--tint-hover); text-decoration: none; }
 .article-shell-actions { display: flex; align-items: center; gap: 10px; flex: none; }
 .article-shell-actions .btn { white-space: nowrap; }
 .article-read { max-width: 680px; margin: 0 auto; padding: 2.25rem 1.25rem 5rem; }
@@ -3697,6 +3701,7 @@ html[data-feedback-on] body * { -webkit-touch-callout: none; }
 .article-read-title { font-family: var(--font-serif-title), 'Noto Serif KR', Georgia, serif; font-weight: 700; font-size: clamp(1.7rem, 4vw, 2.35rem); line-height: 1.35; letter-spacing: -0.02em; margin: 0 0 10px; text-wrap: balance; word-break: keep-all; overflow-wrap: break-word; }
 .article-read-sub { font-size: 1.1rem; color: var(--n-555); line-height: 1.5; margin: 0 0 18px; word-break: keep-all; overflow-wrap: break-word; }
 .article-read-byline { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; font-size: 13px; margin-bottom: 1.5rem; }
+.article-owner-menu { margin: -6px -8px -6px auto; }
 .article-read-author { display: inline-flex; align-items: center; gap: 8px; font-weight: 500; }
 .article-read-cover { width: 100%; max-height: 420px; object-fit: cover; border-radius: 8px; margin: 0 0 1.75rem; }
 .article-read-body { position: relative; }

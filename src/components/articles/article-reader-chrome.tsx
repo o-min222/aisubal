@@ -4,6 +4,7 @@ import type { Member } from '@/lib/supabase/types'
 import { T } from '@/i18n/t'
 import { getT } from '@/i18n/server'
 import { UserAvatar } from '@/components/user-avatar'
+import { ArticleBackLink } from './article-back-link'
 
 /** Slim typography-first chrome for the reading view (members and signed-out visitors). */
 export async function ArticleReaderChrome({
@@ -19,13 +20,14 @@ export async function ArticleReaderChrome({
   return (
     <div className="article-shell">
       <header className="article-shell-bar">
-        <Link href={member ? '/articles' : '/'} className="article-shell-logo" aria-label={t('AI쓰발')}>
-          <Image src="/images/logo-black.png" alt={t('AI쓰발')} width={88} height={26} className="logo-ink" />
-        </Link>
+        <div className="article-shell-lead">
+          {member && <ArticleBackLink />}
+          <Link href={member ? '/articles' : '/'} className="article-shell-logo" aria-label={t('AI쓰발')}>
+            <Image src="/images/logo-black.png" alt={t('AI쓰발')} width={88} height={26} className="logo-ink" />
+          </Link>
+        </div>
         <div className="article-shell-actions">
-          {member ? (
-            <Link href="/articles" className="btn btn-secondary btn-sm"><T>아티클</T></Link>
-          ) : (
+          {!member && (
             <Link href={`/?next=${encodeURIComponent(nextPath)}`} className="btn btn-primary btn-sm"><T>로그인</T></Link>
           )}
           {member && (

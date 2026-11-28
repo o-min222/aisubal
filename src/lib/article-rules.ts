@@ -164,3 +164,18 @@ export function articleDocumentTitle(title: string | null | undefined): { absolu
   const t = (title ?? '').trim() || '아티클'
   return { absolute: `${t} · AI쓰발` }
 }
+
+/**
+ * A135: where the reader's '< 목록' goes. A same-origin referrer means the reader came from inside
+ * the app (feed, list, series, search), so history back keeps their place. Anything else (a shared
+ * link, a search engine, no referrer) falls back to /articles. The editor and 새 아티클 pages are
+ * skipped so back never lands on a half-written draft after 발행.
+ */
+export function articleBackMode(referrer: string | null | undefined, origin: string): 'back' | 'list' {
+  if (!referrer) return 'list'
+  let u: URL
+  try { u = new URL(referrer) } catch { return 'list' }
+  if (u.origin !== origin) return 'list'
+  if (u.pathname === '/articles/new' || /^\/articles\/[^/]+\/edit\/?$/.test(u.pathname)) return 'list'
+  return 'back'
+}
