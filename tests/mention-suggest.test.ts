@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { applyMention, mentionQueryAt } from "@/lib/mention-rules";
 
-const BASE_URL = process.env.TEST_BASE_URL || "http://127.0.0.1:43256";
+const BASE_URL = process.env.TEST_BASE_URL || "http://127.0.0.1:43210";
 
 describe("composer @-autocomplete (C)", () => {
   it("finds the @token before the caret, not emails or mid-word @", () => {

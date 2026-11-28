@@ -63,7 +63,8 @@ describe('A111 UI and API', () => {
   it('article editing lets the author change the cover (A136: cover section above the title) and insert inline images', () => {
     const cover = readFileSync('src/components/articles/article-cover-section.tsx', 'utf8')
     expect(editor).toMatch(/<ArticleCoverSection/)
-    expect(cover).toMatch(/onChange\(slot === 'cover' \? \{ coverPath: path \}/)
+    // A138: setting a cover also resets its focal point
+    expect(cover).toMatch(/if \(slot === 'cover'\) onChange\(\{ coverPath: path/)
     expect(cover).toMatch(/prepareUploadImage/)
     expect(editor).toMatch(/kind', 'inline'|onInlineImage/)
     expect(editor).toMatch(/prepareUploadImage/)

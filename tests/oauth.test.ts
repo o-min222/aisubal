@@ -60,7 +60,7 @@ describe('A66 P4 OAuth core', () => {
 })
 
 /** the whole flow against the dev server (DEV_BYPASS_AUTH: in-memory store, dev member signed in) */
-const B = process.env.TEST_BASE_URL || 'http://127.0.0.1:43256'
+const B = process.env.TEST_BASE_URL || 'http://127.0.0.1:43210'
 const form = (p: Record<string, string>) => new URLSearchParams(p)
 
 describe('A66 P4 OAuth flow (dev server)', () => {

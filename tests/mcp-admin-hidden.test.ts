@@ -33,7 +33,10 @@ describe('A81 admin MCP tools are invisible to members', () => {
   it('a member token: tools/list, prompts and resources carry no admin tool', async () => {
     const c = await connect({ scopes: connectScopes(false, false), isAdmin: false })
     const names = (await c.listTools()).tools.map((t) => t.name)
-    expect(names).toHaveLength(33)
+    // A148: no hard-coded count (it drifted with every new tool); the member list is the full
+    // non-admin registry minus scope-gated tools, and must never be empty
+    expect(names.length).toBeGreaterThan(30)
+    expect(names.length).toBeLessThanOrEqual(TOOL_SPECS.length - ADMIN_TOOLS.length)
     for (const n of ADMIN_TOOLS) expect(names).not.toContain(n)
     const dump = JSON.stringify([(await c.listPrompts()).prompts, (await c.listResourceTemplates()).resourceTemplates])
     expect(dump).not.toMatch(/review_|admin/)
@@ -59,6 +62,10 @@ describe('A81 admin MCP tools are invisible to members', () => {
     const c = await connect({ scopes: connectScopes(true, true), isAdmin: true })
     const names = (await c.listTools()).tools.map((t) => t.name)
     for (const n of ADMIN_TOOLS) expect(names).toContain(n)
-    expect(names).toHaveLength(36)
+    // exactly the member list plus the admin tools (scope-gated extras allowed)
+    const member = (await (await connect({ scopes: connectScopes(false, false), isAdmin: false })).listTools()).tools.map((t) => t.name)
+    for (const n of member) expect(names).toContain(n)
+    expect(names.length).toBeGreaterThanOrEqual(member.length + ADMIN_TOOLS.length)
+    expect(names.length).toBeLessThanOrEqual(TOOL_SPECS.length)
   })
 })

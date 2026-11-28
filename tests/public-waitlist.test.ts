@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 import { joinEmailError, joinSource } from '@/lib/join-rules'
 
-const BASE_URL = process.env.TEST_BASE_URL || 'http://127.0.0.1:43256'
+const BASE_URL = process.env.TEST_BASE_URL || 'http://127.0.0.1:43210'
 const sql = readFileSync('supabase/migrations/0108_public_waitlist.sql', 'utf8')
 
 // A57: a public waitlist for people with no invite (the teaser CTA lands here).

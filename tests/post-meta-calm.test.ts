@@ -25,7 +25,8 @@ describe('A85 (queue) · calmer post meta and action row', () => {
   })
 
   it('action row (A95): one compact left group, no 0 counts, quiet when untouched', () => {
-    expect(card.match(/className="tc-slot"/g)?.length).toBe(5) // reaction, comment, repost, share, save
+    // reaction, comment (reply button on replies | comment link otherwise: two exclusive branches), repost, share, save
+    expect(card.match(/className="tc-slot"/g)?.length).toBe(6)
     expect(card.indexOf('<ArchiveButton')).toBeLessThan(card.indexOf('className="tc-foot-end'))
     expect(card).toMatch(/counts\.replyCount > 0 && <span className="tabular-nums">/)
     expect(card).toMatch(/quiet \? ' is-quiet' : ''/)

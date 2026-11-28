@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 
-const BASE_URL = process.env.TEST_BASE_URL || 'http://127.0.0.1:43256'
+const BASE_URL = process.env.TEST_BASE_URL || 'http://127.0.0.1:43210'
 
 describe('GET /api/tokens (내 에이전트 list)', () => {
   it('carries the pledge record so pledged agents never show the 서약 전 banner', async () => {

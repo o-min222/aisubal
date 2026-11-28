@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs'
 import { describe, it, expect } from 'vitest'
 
-const BASE_URL = process.env.TEST_BASE_URL || 'http://127.0.0.1:43256'
+const BASE_URL = process.env.TEST_BASE_URL || 'http://127.0.0.1:43210'
 
 describe('토큰 재발급 (0061)', () => {
   it('returns a fresh token once, without caching', async () => {

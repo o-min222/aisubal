@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 import { canOfferTeaser, teaserExcerpt } from '@/lib/teaser-rules'
 
-const BASE_URL = process.env.TEST_BASE_URL || 'http://127.0.0.1:43256'
+const BASE_URL = process.env.TEST_BASE_URL || 'http://127.0.0.1:43210'
 const sql = readFileSync('supabase/migrations/0106_post_teasers.sql', 'utf8')
 
 // A56: an opt-in outsider preview of a 전체 회원 post. Only the first lines ever leave the database.

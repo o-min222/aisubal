@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 import { embedOf, socialKind, vimeoId, EXPANDED_LINKS } from '@/lib/link-embed'
 
-const BASE_URL = process.env.TEST_BASE_URL || 'http://127.0.0.1:43256'
+const BASE_URL = process.env.TEST_BASE_URL || 'http://127.0.0.1:43210'
 
 // A58: one expanded link per post; videos are click-to-load (no third-party request before the tap).
 describe('A58 inline link previews', () => {

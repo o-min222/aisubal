@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import { uniqueGroupSlug, GROUP_SLUG_RE } from "@/lib/group-rules";
 import { groupHue, groupInitial } from "@/components/groups/group-avatar";
 
-const BASE_URL = process.env.TEST_BASE_URL || "http://127.0.0.1:43256";
+const BASE_URL = process.env.TEST_BASE_URL || "http://127.0.0.1:43210";
 
 describe("그룹 만들기 단순화 (0060)", () => {
   it("주소는 이름에서 만들고, 한글 이름이면 group-xxxx로 대신한다", () => {

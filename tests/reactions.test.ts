@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest'
 import { applyToggle, isValidReaction, normalizeShortcode, searchEmoji, sortSummary, THUMBS } from '@/lib/emoji-rules'
 import { notificationSentence, type NotificationItem } from '@/lib/notifications'
 
-const BASE_URL = process.env.TEST_BASE_URL || 'http://127.0.0.1:43256'
+const BASE_URL = process.env.TEST_BASE_URL || 'http://127.0.0.1:43210'
 const sql = readFileSync('supabase/migrations/0092_reactions_custom_emoji.sql', 'utf8')
 const list = readFileSync('supabase/migrations/0094_reaction_notifications_list.sql', 'utf8')
 

@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 
-const BASE_URL = process.env.TEST_BASE_URL || 'http://127.0.0.1:43256'
+const BASE_URL = process.env.TEST_BASE_URL || 'http://127.0.0.1:43210'
 
 describe('API 토큰 / MCP 준비', () => {
   it('멤버는 API 토큰을 생성할 수 있다', async () => {

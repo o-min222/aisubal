@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest'
 import { missionAnswerError, missionPostBody } from '@/lib/onboarding-rules'
 import { DEFAULT_PREFS, NOTIFY_CATEGORIES, notificationSentence, type NotificationItem } from '@/lib/notifications'
 
-const BASE_URL = process.env.TEST_BASE_URL || 'http://127.0.0.1:43256'
+const BASE_URL = process.env.TEST_BASE_URL || 'http://127.0.0.1:43210'
 const sql = readFileSync('supabase/migrations/0104_first_mission.sql', 'utf8')
 
 // A54: one first question after the pledge; the answer is the first post and opens the feed.

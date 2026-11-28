@@ -3,7 +3,7 @@ import { readFileSync, readdirSync } from 'node:fs'
 import { join } from 'node:path'
 
 const read = (p: string) => readFileSync(join(__dirname, '..', p), 'utf8')
-const B = process.env.TEST_BASE_URL || 'http://127.0.0.1:43256'
+const B = process.env.TEST_BASE_URL || 'http://127.0.0.1:43210'
 
 /** AI-79: "발행 안된 아티클도 지울 수 있으면 좋겠어" */
 describe('A146 · authors delete unpublished drafts', () => {

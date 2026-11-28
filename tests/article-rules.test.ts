@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 import {
   ARTICLE_RESERVED_SLUGS,
@@ -96,7 +97,6 @@ describe('articleDocumentTitle', () => {
 
 describe('edit route', () => {
   it('lives at [slug]/edit and redirects a leftover id URL to the slug', () => {
-    const { readFileSync } = require('node:fs') as typeof import('node:fs')
     const src = readFileSync('src/app/(app)/articles/[slug]/edit/page.tsx', 'utf8')
     expect(src).toMatch(/getArticle\(slug\)/)
     expect(src).toMatch(/getArticleById\(slug\)/)

@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 
 const read = (f: string) => readFileSync(f, 'utf8')
-const BASE_URL = process.env.TEST_BASE_URL || 'http://127.0.0.1:43256'
+const BASE_URL = process.env.TEST_BASE_URL || 'http://127.0.0.1:43210'
 
 describe('A11 notification layer popup', () => {
   it('the bell opens a non-modal popover (no backdrop) that closes on outside click / Esc', () => {

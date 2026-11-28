@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { INVITES_PER_MEMBER } from '../src/lib/invite-rules'
 
-const BASE_URL = process.env.TEST_BASE_URL || 'http://127.0.0.1:43256'
+const BASE_URL = process.env.TEST_BASE_URL || 'http://127.0.0.1:43210'
 
 describe('권한 / 멤버 전용 API (DEV_BYPASS_AUTH)', () => {
   it('인증된 멤버는 /api/auth/me에 접근할 수 있다', async () => {

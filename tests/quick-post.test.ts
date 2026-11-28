@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 import { applyStarter, isPostImagePath, QUICK_STARTERS } from '@/lib/quick-post-rules'
 
-const BASE_URL = process.env.TEST_BASE_URL || 'http://127.0.0.1:43256'
+const BASE_URL = process.env.TEST_BASE_URL || 'http://127.0.0.1:43210'
 const starters = QUICK_STARTERS.filter((s) => s.prefill).map((s) => s.prefill!)
 
 describe('A62 quick post rules', () => {

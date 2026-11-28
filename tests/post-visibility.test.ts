@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 import { canRestrict, composerVisibility, parseVisibility } from '@/lib/post-visibility'
 
-const BASE_URL = process.env.TEST_BASE_URL || 'http://127.0.0.1:43256'
+const BASE_URL = process.env.TEST_BASE_URL || 'http://127.0.0.1:43210'
 const sql = readFileSync('supabase/migrations/0095_post_visibility.sql', 'utf8')
 
 // A43: 공유범위 — 전체 회원 / 팔로워 / 친구만 / 나만 보기

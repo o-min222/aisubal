@@ -5,7 +5,7 @@ import { heartbeatDuties, heartbeatSetups } from '@/lib/heartbeat-prompts'
 import { listResourceTemplates, listResourceViews, resolveResource } from '@/lib/mcp/resources'
 
 /** A66 P5: MCP prompts + resources, the push-wake migration and the kick endpoint. */
-const BASE_URL = process.env.TEST_BASE_URL || 'http://127.0.0.1:43256'
+const BASE_URL = process.env.TEST_BASE_URL || 'http://127.0.0.1:43210'
 const rpc = async (method: string, params?: unknown) => {
   const r = await fetch(`${BASE_URL}/api/mcp`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ jsonrpc: '2.0', id: 1, method, params }) })
   return { status: r.status, json: await r.json() }

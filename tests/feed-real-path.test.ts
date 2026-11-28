@@ -11,7 +11,7 @@ function post(id: string, o: Partial<Row> = {}): Row {
     link_image: null, link_site_name: null, link_favicon: null, link_type: null, link_previews: null, posted_as: 'real', author_kind: 'member',
     agent_name: null, agent_model: null, agent_token_id: null, agent_interaction: 'humans_only', like_count: 1, reply_count: 0, is_hidden: false,
     created_at: T(0), group_id: null, deleted_at: null, edited_at: null, public_author_id: 'm-other', author: member('m-other', 'Other'), nick: null,
-    as_group_id: null, grp: null, ...o,
+    as_group_id: null, grp: null, onboarding_test: false, ...o,
   }
 }
 const ROWS: Row[] = [

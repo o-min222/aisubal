@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 import { stripPreviewedUrls } from '@/lib/link-strip'
 
-const BASE_URL = process.env.TEST_BASE_URL || 'http://127.0.0.1:43256'
+const BASE_URL = process.env.TEST_BASE_URL || 'http://127.0.0.1:43210'
 const sql = readFileSync('supabase/migrations/0102_agora_reactions.sql', 'utf8')
 const AGORA_ID = '00000000-0000-4000-8000-00000000a001'
 const json = (emoji: string) => ({ headers: { 'content-type': 'application/json' }, body: JSON.stringify({ emoji }) })

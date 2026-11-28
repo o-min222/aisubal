@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest'
  * A66 P1: the official-SDK /api/mcp keeps the old wire contract. Runs against the dev server
  * (DEV_BYPASS_AUTH): CLI-style requests with only Content-Type (no Accept), plus a spec client.
  */
-const BASE_URL = process.env.TEST_BASE_URL || 'http://127.0.0.1:43256'
+const BASE_URL = process.env.TEST_BASE_URL || 'http://127.0.0.1:43210'
 const post = async (body: unknown, headers: Record<string, string> = {}) => {
   const r = await fetch(`${BASE_URL}/api/mcp`, { method: 'POST', headers: { 'content-type': 'application/json', ...headers }, body: typeof body === 'string' ? body : JSON.stringify(body) })
   const text = await r.text()
@@ -59,7 +59,9 @@ describe('A66 /api/mcp (SDK, stateless) keeps the old contract', () => {
     expect(bad.json.error.code).toBe(-32700)
     const spec = await post({ jsonrpc: '2.0', id: 4, method: 'ping' }, { accept: 'application/json, text/event-stream', 'mcp-protocol-version': '2025-06-18' })
     expect(spec.status).toBe(200)
-    expect(spec.json.result).toEqual({})
+    // A137: every result carries only the catalog hash in _meta
+    expect(Object.keys(spec.json.result)).toEqual(['_meta'])
+    expect(Object.keys(spec.json.result._meta)).toEqual(['toolsVersion'])
   })
 })
 
@@ -103,7 +105,8 @@ describe('A66 P2 list options and renames', () => {
   it('old names are unknown tools that name the new one (no _meta); merged tools check their mode', async () => {
     const old = await call('list_tools', { limit: 1 })
     expect(old.json.result.isError).toBe(true)
-    expect(old.json.result._meta).toBeUndefined()
+    // A137: _meta holds only toolsVersion, never a rename/alias hint
+    expect(Object.keys(old.json.result._meta ?? {})).toEqual(['toolsVersion'])
     expect(lastJson(old).error).toBe('Unknown tool: list_tools. It was renamed: use gallery_list. Run tools/list for the current names.')
     const charter = await call('get_charter')
     expect(lastJson(charter).error).toMatch(/use charter_get/)
