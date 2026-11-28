@@ -5,6 +5,7 @@ import { getT } from '@/i18n/server'
 import { ArticleByline } from '@/components/articles/article-byline'
 import { articleHref, articleSeriesHref, formatReadingTime, articleImageSrc, articleCardImagePath, articleCardFocus } from '@/lib/article-rules'
 import { ArticleFramedImage } from '@/components/articles/article-framed-image'
+import { ArticleShareButton } from '@/components/articles/article-share-button'
 
 function metaLine(a: ArticleCard, t: (s: string, v?: Record<string, string | number>) => string) {
   const parts: string[] = []
@@ -23,7 +24,8 @@ export async function ArticleCardView({ article, compact = false }: { article: A
   const meta = metaLine(article, t)
   return (
     <article className={`article-card${compact ? ' article-card-compact' : ''}`}>
-      <Link href={href} className="article-card-link">
+      <div className="article-card-link">
+        <Link href={href} className="article-card-hit" aria-label={article.title} />
         {cover ? (
           <ArticleFramedImage src={cover} focus={articleCardFocus(article)} className="article-card-cover" />
         ) : (
@@ -35,16 +37,21 @@ export async function ArticleCardView({ article, compact = false }: { article: A
           {meta && <p className="article-card-meta">{meta}</p>}
           <h3 className="article-card-title">{article.title}</h3>
           {article.subtitle && <p className="article-card-sub">{article.subtitle}</p>}
-          <p className="article-card-foot">
+          <div className="article-card-foot">
             <span className="article-card-author">
               <ArticleByline author={article.author} agent={article.agent} />
             </span>
-            <span className="text-n-888">
-              <T s="좋아요 {likes} · 댓글 {comments}" vars={{ likes: article.likeCount, comments: article.commentCount }} />
+            <span className="article-card-foot-end">
+              <span className="text-n-888">
+                <T s="좋아요 {likes} · 댓글 {comments}" vars={{ likes: article.likeCount, comments: article.commentCount }} />
+              </span>
+              {article.status === 'published' && (
+                <ArticleShareButton slug={article.slug} teaser={article.title} variant="feed" />
+              )}
             </span>
-          </p>
+          </div>
         </div>
-      </Link>
+      </div>
     </article>
   )
 }

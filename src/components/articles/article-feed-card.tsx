@@ -3,10 +3,12 @@ import type { TimelinePost } from '@/components/timeline/types'
 import { T } from '@/i18n/t'
 import { tx } from '@/i18n/client'
 import { ArticleByline } from '@/components/articles/article-byline'
+import { ArticleShareButton } from '@/components/articles/article-share-button'
 import { articleHref, formatReadingTime, articleImageSrc, articleCardImagePath, articleCardFocus } from '@/lib/article-rules'
 import { ArticleFramedImage } from '@/components/articles/article-framed-image'
 
-/** Compact home-feed card. Tap opens the reading view; likes/comments are the article's. */
+/** Compact home-feed card. Tap opens the reading view; likes/comments are the article's. The share
+ *  button (A142) sits in the meta row, outside the hit link, so it never opens the card. */
 export function ArticleFeedCard({ post }: { post: TimelinePost }) {
   const a = post.article
   if (!a) return null
@@ -18,26 +20,30 @@ export function ArticleFeedCard({ post }: { post: TimelinePost }) {
     : a.seriesTitle
   return (
     <article className="article-feed-card">
-      <Link href={href} className="article-feed-link">
+      <div className="article-feed-link">
+        <Link href={href} className="article-feed-hit" aria-label={post.title || undefined} />
         <div className="article-feed-copy">
           <p className="article-feed-kind"><T>아티클</T>{series ? ` · ${series}` : ''}</p>
           <h3 className="article-feed-title">{post.title}</h3>
           {a.subtitle && <p className="article-feed-sub">{a.subtitle}</p>}
-          <p className="article-feed-meta">
-            <ArticleByline
-              author={{ id: post.author.id, name: post.author.name, handle: post.author.handle ?? null, avatarUrl: post.author.avatarUrl ?? null }}
-              agent={a.agent}
-            />
-            {a.readingSec > 0 && <span>· {formatReadingTime(a.readingSec, (s, v) => tx(s, v))}</span>}
-            <span>· {tx('좋아요 {likes} · 댓글 {comments}', { likes: post.likeCount, comments: post.replyCount })}</span>
-          </p>
+          <div className="article-feed-meta-row">
+            <div className="article-feed-meta">
+              <ArticleByline
+                author={{ id: post.author.id, name: post.author.name, handle: post.author.handle ?? null, avatarUrl: post.author.avatarUrl ?? null }}
+                agent={a.agent}
+              />
+              {a.readingSec > 0 && <span>· {formatReadingTime(a.readingSec, (s, v) => tx(s, v))}</span>}
+              <span>· {tx('좋아요 {likes} · 댓글 {comments}', { likes: post.likeCount, comments: post.replyCount })}</span>
+            </div>
+            <ArticleShareButton slug={a.slug} teaser={post.title} variant="feed" />
+          </div>
         </div>
         {cover ? (
           <ArticleFramedImage src={cover} focus={articleCardFocus(a)} className="article-feed-cover" />
         ) : (
           <div className="article-feed-fallback" aria-hidden>{(post.title || '아').slice(0, 1)}</div>
         )}
-      </Link>
+      </div>
     </article>
   )
 }
