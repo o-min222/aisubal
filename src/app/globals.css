@@ -3766,21 +3766,24 @@ html[data-feedback-on] body * { -webkit-touch-callout: none; }
 .article-card-author { display: inline-flex; align-items: center; gap: 6px; }
 .article-grid { display: grid; gap: 12px; }
 .article-feed-card { position: relative; border-bottom: 1px solid var(--n-eee, #eee); }
-.article-feed-link { display: flex; gap: 14px; padding: 14px 16px; color: inherit; position: relative; }
+.article-feed-link { display: flex; flex-direction: column; gap: 10px; padding: 14px 16px 10px; color: inherit; position: relative; }
+.article-feed-top { display: flex; align-items: flex-start; gap: 14px; min-width: 0; }
 .article-feed-copy { min-width: 0; flex: 1; }
 .article-feed-kind { font-size: 12px; color: var(--n-888); margin: 0 0 4px; }
 .article-feed-title { font-size: 1.05rem; font-weight: 650; margin: 0 0 4px; letter-spacing: -0.02em; word-break: keep-all; overflow-wrap: break-word; }
-.article-feed-sub { font-size: 13.5px; color: var(--n-555); margin: 0 0 8px; word-break: keep-all; overflow-wrap: break-word; }
-.article-feed-meta-row { display: flex; align-items: center; gap: 2px; min-width: 0; }
+.article-feed-sub { font-size: 13.5px; color: var(--n-555); margin: 0; word-break: keep-all; overflow-wrap: break-word; }
+.article-feed-meta-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-width: 0; }
 .article-feed-meta { flex: 1 1 auto; min-width: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-size: 12.5px; color: var(--n-666); margin: 0; }
 .article-feed-cover, .article-feed-fallback { width: 88px; height: 88px; border-radius: 8px; flex: none; background: var(--n-f3f3f3, #f3f3f3); overflow: hidden; }
 .article-feed-fallback { display: flex; align-items: center; justify-content: center; font-family: var(--font-serif-title), 'Noto Serif KR', serif; font-size: 1.8rem; color: var(--n-888); }
 /* A142: a stretched hit link opens the card; the share button (and any byline link) sits above it. */
 .article-feed-hit, .article-card-hit { position: absolute; inset: 0; z-index: 0; }
-.article-feed-copy, .article-feed-cover, .article-feed-fallback,
+.article-feed-top, .article-feed-copy, .article-feed-cover, .article-feed-fallback, .article-feed-meta-row,
 .article-card-body, .article-card-cover, .article-card-fallback { position: relative; z-index: 0; pointer-events: none; }
-.article-feed-copy a, .article-card-body a, .article-feed-share { pointer-events: auto; position: relative; z-index: 1; }
-.article-feed-share { flex: none; margin: -8px -8px -8px 0; color: var(--n-555); }
+.article-feed-copy a, .article-feed-meta a, .article-card-body a, .article-feed-share { pointer-events: auto; position: relative; z-index: 1; }
+.article-feed-share { flex: none; margin: -8px -9px -8px 0; color: var(--n-555); }
+/* the 44px touch target is wider: pull it out so the glyph lines up with the thumbnail's right edge */
+@media (pointer: coarse) { .article-feed-share { margin-right: -13px; } }
 .article-feed-share:hover { color: var(--n-111); }
 .article-series-head { display: flex; gap: 16px; align-items: flex-start; }
 .article-series-head > div { min-width: 0; flex: 1; }
