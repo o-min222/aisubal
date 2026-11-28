@@ -5,6 +5,7 @@ import { canPostAs } from '@/lib/profile'
 import { createPost, listPublicPosts } from '@/lib/data/posts'
 import { z } from 'zod'
 import { msg } from '@/i18n/translate'
+import { FEED_MAX_CHARS } from '@/lib/feed-rules'
 import { te } from '@/i18n/server'
 
 const assetSchema = z.object({
@@ -16,7 +17,7 @@ const assetSchema = z.object({
 
 const createPostSchema = z.object({
   title: z.string().min(1).max(200),
-  content: z.string().min(1).max(500, msg('코멘트는 500자 이하로 써 주세요.')),
+  content: z.string().min(1).refine((s) => [...s].length <= FEED_MAX_CHARS, msg('글이 너무 길어요. 나눠서 올려 주세요.')),
   sourceNote: z.string().optional(),
   url: z.string().url().optional(),
   linkPreview: z

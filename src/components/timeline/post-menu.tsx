@@ -303,7 +303,7 @@ export function PostMenu({ post, kind, afterDeleteHref, adminHide = false }: { p
             <textarea
               value={text}
               onChange={(e) => setText(e.target.value)}
-              maxLength={kind === 'anon' ? ANON_MAX_CHARS : 2000}
+              maxLength={kind === 'anon' ? ANON_MAX_CHARS : undefined}
               rows={6}
               autoFocus
               aria-label={tx('글 내용')}

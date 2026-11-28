@@ -174,7 +174,6 @@ export function NewPostClient() {
               <T>코멘트</T> <span className="text-red-500">*</span>
             </label>
             <textarea
-              maxLength={500}
               value={content}
               onChange={(e) => setContent(e.target.value)}
               required

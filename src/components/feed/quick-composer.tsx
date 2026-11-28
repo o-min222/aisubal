@@ -126,7 +126,6 @@ export function QuickComposer({ me }: { me: ComposerIdentity }) {
             className="qc-input"
             value={body}
             rows={1}
-            maxLength={2000}
             onChange={(e) => { setBody(e.target.value); grow(e.currentTarget) }}
             onKeyDown={(e) => {
               if (!composerKeySubmits(e, isCoarsePointer())) return
