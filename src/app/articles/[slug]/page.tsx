@@ -83,7 +83,7 @@ export default async function ArticleReadPage({ params }: Props) {
             {article.editedAt ? ` · ${t('수정됨')}` : ''}
           </span>
           {article.status === 'published' && <ArticleShareButton slug={article.slug} teaser={shareTeaser} />}
-          {article.isMine && <ArticleOwnerMenu articleId={article.id} slug={article.slug} published={article.status === 'published'} />}
+          {article.isMine && <ArticleOwnerMenu articleId={article.id} slug={article.slug} published={article.status === 'published'} title={article.title} />}
         </div>
         {cover && <ArticleReadCover src={cover} />}
         <div className={`article-read-body${article.truncated ? ' is-truncated' : ''}`}>

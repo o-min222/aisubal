@@ -3,6 +3,7 @@ import { getUserState } from '@/lib/auth'
 import { articleEditHref, articleHref, canPublishArticle } from '@/lib/article-rules'
 import { listMyArticles } from '@/lib/data/articles'
 import { T } from '@/i18n/t'
+import { ArticleRowMenu } from '@/components/articles/article-row-menu'
 import { getT } from '@/i18n/server'
 import { redirect } from 'next/navigation'
 
@@ -40,7 +41,7 @@ export default async function MyArticlesPage() {
                   {a.series ? ` · ${a.series.title}` : ''}
                 </p>
               </div>
-              <Link href={articleEditHref(a.slug || a.id)} className="btn btn-secondary btn-sm whitespace-nowrap"><T>수정</T></Link>
+              <ArticleRowMenu articleId={a.id} editHref={articleEditHref(a.slug || a.id)} title={a.title} published={a.status === 'published'} />
             </li>
           ))}
         </ul>

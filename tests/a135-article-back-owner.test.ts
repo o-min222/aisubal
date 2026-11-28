@@ -40,9 +40,10 @@ describe('A135 · author menu', () => {
     expect(actions).not.toContain('Pencil')
     const menu = read('src/components/articles/article-owner-menu.tsx')
     expect(menu).toContain('articleEditHref')
-    expect(menu).toMatch(/method: 'DELETE'/)
+    expect(menu).toContain('<ArticleDeleteDialog') // A146: the confirm + DELETE live in one shared dialog
+    expect(read('src/components/articles/article-delete-dialog.tsx')).toMatch(/method: 'DELETE'/)
     const page = read('src/app/articles/[slug]/page.tsx')
     expect(page.indexOf('ArticleOwnerMenu articleId')).toBeGreaterThan(page.indexOf('article-read-byline'))
-    expect(page.indexOf('ArticleOwnerMenu articleId')).toBeLessThan(page.indexOf('article-read-cover'))
+    expect(page.indexOf('ArticleOwnerMenu articleId')).toBeLessThan(page.indexOf('<ArticleReadCover'))
   })
 })

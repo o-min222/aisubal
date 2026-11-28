@@ -2,12 +2,14 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { T } from '@/i18n/t'
 import { tn, tx } from '@/i18n/client'
 import type { ArticleCard, ArticleSeriesBrief } from '@/lib/data/articles'
 import { ArticleMarkdown } from './article-markdown'
 import { ArticleCoverSection } from './article-cover-section'
+import { ArticleDeleteDialog } from './article-delete-dialog'
 import { ARTICLE_BODY_MAX, ARTICLE_IMAGE_MAX_BYTES, ARTICLE_IMAGE_TYPES, ARTICLE_SUBTITLE_MAX, ARTICLE_TITLE_MAX, articleEditHref, articleHref, type ArticleImageFocus } from '@/lib/article-rules'
 import { PrepareImageError, prepareImageErrorMessage, prepareUploadImage } from '@/lib/upload-image-client'
 
@@ -53,11 +55,14 @@ export function ArticleEditor({
   const [preview, setPreview] = useState(false)
   const [saving, setSaving] = useState<'idle' | 'saving' | 'saved'>('idle')
   const [publishing, setPublishing] = useState(false)
+  const [confirmDelete, setConfirmDelete] = useState(false)
+  /** set once the article is deleted: nothing may save it back (the 2 s autosave would otherwise recreate it) */
+  const gone = useRef(false)
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const draftRef = useRef(draft)
 
   const persist = useCallback(async (next = draftRef.current) => {
-    if (!next.title.trim()) return next
+    if (gone.current || !next.title.trim()) return next
     setSaving('saving')
     const res = await fetch('/api/articles', {
       method: 'POST',
@@ -92,7 +97,7 @@ export function ArticleEditor({
   useEffect(() => {
     draftRef.current = draft
     if (timer.current) clearTimeout(timer.current)
-    timer.current = setTimeout(() => { void persist() }, 2000)
+    timer.current = setTimeout(() => { if (!gone.current) void persist() }, 2000)
     return () => { if (timer.current) clearTimeout(timer.current) }
   }, [draft, persist])
 
@@ -137,6 +142,13 @@ export function ArticleEditor({
     input.click()
   }
 
+  function afterDelete() {
+    gone.current = true
+    if (timer.current) clearTimeout(timer.current)
+    router.replace('/articles/mine')
+    router.refresh()
+  }
+
   async function publish() {
     if (!canPublish) return toast.error(tn('작가 권한이 필요해요.'))
     setPublishing(true)
@@ -162,6 +174,11 @@ export function ArticleEditor({
           {saving === 'saving' ? <T>저장 중…</T> : saving === 'saved' ? <T>저장됨 · 방금</T> : draft.status === 'published' ? <T>발행됨</T> : <T>초고</T>}
         </span>
         <div className="article-editor-actions">
+          {draft.id && (
+            <button type="button" className="article-editor-delete tap-target icon-btn" onClick={() => setConfirmDelete(true)} aria-label={tx('삭제')} title={tx('삭제')}>
+              <Trash2 className="w-[18px] h-[18px]" />
+            </button>
+          )}
           <button type="button" className={`btn btn-sm ${preview ? 'btn-primary' : 'btn-secondary'}`} onClick={() => setPreview((v) => !v)}>
             <T>미리보기</T>
           </button>
@@ -170,6 +187,9 @@ export function ArticleEditor({
           </button>
         </div>
       </div>
+      {draft.id && (
+        <ArticleDeleteDialog open={confirmDelete} onOpenChange={setConfirmDelete} articleId={draft.id} title={draft.title} published={draft.status === 'published'} onDeleted={afterDelete} />
+      )}
       {!canPublish && (
         <p className="article-editor-note"><T>누구나 초고를 쓸 수 있어요. 발행하려면 작가 권한이 필요해요.</T></p>
       )}

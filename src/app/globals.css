@@ -3809,6 +3809,11 @@ html[data-topbar-hidden] .article-editor-bar { top: env(safe-area-inset-top, 0px
 .article-editor-bar .btn { white-space: nowrap; }
 .article-editor-status { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12.5px; line-height: 20px; color: var(--n-888); font-variant-numeric: tabular-nums; }
 .article-editor-actions { display: flex; align-items: center; gap: 8px; flex: none; }
+/* A146: delete sits quietly before 미리보기/발행; the confirm dialog carries the weight */
+.article-editor-delete { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 999px; color: var(--n-777); }
+.article-editor-delete:hover { background: var(--n-f2f2f0); color: var(--n-111); }
+.article-row-menu { margin: 0; }
+.article-delete-title { display: block; margin-bottom: 6px; font-weight: 600; color: var(--n-111); overflow-wrap: anywhere; }
 .article-editor-tools .btn { white-space: nowrap; }
 .article-editor-note { font-size: 13.5px; color: var(--n-666); margin: 0; word-break: keep-all; overflow-wrap: break-word; }
 .article-editor-title { width: 100%; border: 0; outline: 0; background: transparent; font-family: var(--font-serif-title), 'Noto Serif KR', Georgia, serif; font-size: clamp(1.6rem, 3vw, 2.1rem); font-weight: 700; letter-spacing: -0.02em; color: var(--n-111); }
