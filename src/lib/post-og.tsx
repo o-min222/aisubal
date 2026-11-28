@@ -3,7 +3,7 @@ import { loadFont } from '@/lib/invite-og'
 import { INVITE_MOTTO } from '@/lib/invite-share'
 import { SHARE_OG_TITLE, type ShareTeaser } from '@/lib/share-teaser'
 
-export const POST_OG_SIZE = { width: 1200, height: 630 }
+const POST_OG_SIZE = { width: 1200, height: 630 }
 
 /**
  * Generated share card for an eligible 전체-회원 real-name post. Never uses the post's own image,

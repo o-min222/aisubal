@@ -5,9 +5,9 @@ import { msg as M } from '@/i18n/translate'
  * members_handle_policy trigger, handle_history exclusion constraint); this module only
  * shapes the status for the UI and localizes the error codes.
  */
-export const HANDLE_CHANGE_LIMIT = 2
-export const HANDLE_WINDOW_DAYS = 14
-export const HANDLE_HOLD_DAYS = 14
+const HANDLE_CHANGE_LIMIT = 2
+const HANDLE_WINDOW_DAYS = 14
+const HANDLE_HOLD_DAYS = 14
 
 export type HandleCheckState = 'same' | 'invalid' | 'taken' | 'on_hold' | 'own_hold' | 'available'
 export type HandleHistoryRow = { old: string; new: string; changedAt: string; releasedAt: string }
@@ -19,7 +19,7 @@ export type HandleStatus = {
   history: HandleHistoryRow[]
 }
 
-export type HandleErrorCode = 'handle_change_cooldown' | 'handle_on_hold' | 'handle_taken' | 'profile_handle_invalid' | 'handle_change_use_rpc'
+type HandleErrorCode = 'handle_change_cooldown' | 'handle_on_hold' | 'handle_taken' | 'profile_handle_invalid' | 'handle_change_use_rpc'
 
 export const HANDLE_ERRORS: Record<HandleErrorCode, string> = {
   handle_change_cooldown: M('핸들은 14일 동안 2번까지 바꿀 수 있어요. {date}부터 다시 바꿀 수 있어요.'),

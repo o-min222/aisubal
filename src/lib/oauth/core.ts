@@ -9,10 +9,10 @@ import { createHash, randomBytes } from 'crypto'
  */
 export const ACCESS_TTL_S = 60 * 60 // 1 hour
 export const REFRESH_TTL_S = 90 * 24 * 60 * 60 // 90 days, one-time use (rotated)
-export const MCP_PATH = '/api/mcp'
+const MCP_PATH = '/api/mcp'
 
 /** every scope a member may grant (tools:review is offered to admins only) */
-export const READ_SCOPES = ['posts_read', 'meetups_read', 'toolbox_read', 'archive:read', 'agora:read'] as const
+const READ_SCOPES = ['posts_read', 'meetups_read', 'toolbox_read', 'archive:read', 'agora:read'] as const
 export const WRITE_SCOPES = ['agora:write', 'feed:interact', 'archive:write', 'tools:submit', 'article:write'] as const
 export const ADMIN_SCOPES = ['tools:review'] as const
 export const ALL_SCOPES = [...READ_SCOPES, ...WRITE_SCOPES, ...ADMIN_SCOPES] as const
@@ -88,8 +88,8 @@ export function originFrom(h: Headers): string {
   return `${proto}://${host}`
 }
 
-export const resourceUrl = (origin: string) => `${origin}${MCP_PATH}`
-export const resourceMetadataUrl = (origin: string) => `${origin}/.well-known/oauth-protected-resource${MCP_PATH}`
+const resourceUrl = (origin: string) => `${origin}${MCP_PATH}`
+const resourceMetadataUrl = (origin: string) => `${origin}/.well-known/oauth-protected-resource${MCP_PATH}`
 
 /** RFC 8707: a client may name the resource; it must be this MCP server */
 export function resourceOk(resource: string | null | undefined, origin: string) {

@@ -5,7 +5,7 @@
  */
 const URL_RE = /https?:\/\/[^\s<>"']+/i
 
-export function normUrl(u: string): string {
+function normUrl(u: string): string {
   return u
     .trim()
     .replace(/[)\].,!?'"」』>]+$/u, '')

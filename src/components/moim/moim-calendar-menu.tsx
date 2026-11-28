@@ -43,7 +43,7 @@ export function MoimCalendarMenu({ moim }: { moim: MineMeetup }) {
   )
 }
 
-export function IcsFeedPanel() {
+function IcsFeedPanel() {
   const t = useT()
   const [status, setStatus] = useState<FeedStatus | null>(null)
   const [url, setUrl] = useState<string | null>(null)

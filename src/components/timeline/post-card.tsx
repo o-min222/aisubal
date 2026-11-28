@@ -9,8 +9,8 @@ import { setRecHidden, useRecHidden } from './rec-hidden'
 import { postRecDismiss } from '@/lib/rec-dismiss'
 import Link from 'next/link'
 import { MessageCircle, Star, Wrench, ExternalLink, Share2, VenetianMask, Sparkles, Repeat2 } from 'lucide-react'
-import { toast } from 'sonner'
-import { postShareData, postShareUrl, shareClipboardText, shareSafeTeaser } from '@/lib/share-rules'
+import { postShareUrl, shareSafeTeaser } from '@/lib/share-rules'
+import { useShare } from '@/hooks/use-share'
 import { LinkPreviewBlock } from '@/components/link-preview-block'
 import { LiveLinkPreviews } from '@/components/live-link-previews'
 import { stripPreviewedUrls } from '@/lib/link-strip'
@@ -39,7 +39,7 @@ import { ArchiveButton, archiveKindForEndpoint } from '@/components/archive/arch
 import { MemberPeek } from '@/components/profile/member-peek'
 import { GroupAvatar } from '@/components/groups/group-avatar'
 import { T } from '@/i18n/t'
-import { tx, tn } from '@/i18n/client'
+import { tx } from '@/i18n/client'
 
 const ANON_COLORS = ['#6d5bd0', '#2f7d6d', '#c2581f', '#3466b8', '#a23d7a', '#5b6b2f', '#7a4b2b', '#1f7a94']
 function anonColor(seed: string) {
@@ -97,6 +97,7 @@ export function PostCard({
   const [likersOpen, setLikersOpen] = useState(false)
   const a = post.author
   const recHidden = useRecHidden(post.id)
+  const shareLink = useShare()
   // Stored cards (human posts, up to 4). Agent posts (Agora / agent replies) have
   // none, so their link + body links are previewed live once on screen.
   // A58: only the first link expands; older posts with several stored cards show the first
@@ -189,17 +190,7 @@ export function PostCard({
 
   async function share() {
     const url = postShareUrl(href, window.location)
-    try {
-      const teaser = anon ? null : shareSafeTeaser(post)
-      if (navigator.share) {
-        await navigator.share(postShareData(url, teaser))
-      } else {
-        await navigator.clipboard.writeText(shareClipboardText(url, teaser))
-        toast.success(tn('링크를 복사했어요'))
-      }
-    } catch {
-      /* user cancelled */
-    }
+    await shareLink(url, anon ? null : shareSafeTeaser(post))
   }
 
   return (

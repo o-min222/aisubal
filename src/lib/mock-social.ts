@@ -6,7 +6,7 @@ import type { Relation, FriendState } from './social-rules'
 
 export const DEV_ID = 'dev-user-id'
 
-export type MockPerson = { id: string; name: string; bio: string; invitedBy: string | null; joinedAt: string; handle?: string }
+type MockPerson = { id: string; name: string; bio: string; invitedBy: string | null; joinedAt: string; handle?: string }
 
 const BASE: MockPerson[] = [
   { id: 'member-1', name: '에이전트덕후', bio: 'AI 에이전트로 사이드 프로젝트 중', invitedBy: null, joinedAt: '2026-09-01T00:00:00Z' },
@@ -86,7 +86,7 @@ export function mockSocial(): SocialState {
   return g.__aisubalSocial
 }
 
-export function mockFriendState(viewer: string, other: string): FriendState {
+function mockFriendState(viewer: string, other: string): FriendState {
   const f = mockSocial().friendships.find(
     (x) => (x.requester === viewer && x.addressee === other) || (x.requester === other && x.addressee === viewer)
   )

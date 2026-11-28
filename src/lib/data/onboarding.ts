@@ -5,7 +5,7 @@ import type { Member } from '@/lib/supabase/types'
 import { missionPostBody } from '@/lib/onboarding-rules'
 
 /** A54: the first-question mission (0104). */
-export type MissionPrompt = { id: string; ko: string; en: string | null; done: boolean }
+type MissionPrompt = { id: string; ko: string; en: string | null; done: boolean }
 export type AdminPrompt = { id: string; ko: string; en: string | null; active: boolean; sort: number }
 
 type MockState = { prompts: AdminPrompt[]; done: Set<string>; skipped: Set<string>; post: Map<string, string> }

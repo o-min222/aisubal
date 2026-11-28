@@ -9,18 +9,13 @@ export const ARTICLE_SERIES_TITLE_MAX = 120
 export const ARTICLE_SERIES_DESC_MAX = 2_000
 export const ARTICLE_COMMENT_MAX = 2_000
 export const ARTICLE_TEASER_MAX = 800
-export const ARTICLE_OG_TEASER_MAX = 100
-export const ARTICLE_CHARS_PER_MIN = 500
-export const ARTICLE_PUBLISH_LIMIT_PER_DAY = 5
-export const ARTICLE_SLUG_MAX = 60
+const ARTICLE_OG_TEASER_MAX = 100
+const ARTICLE_CHARS_PER_MIN = 500
+const ARTICLE_SLUG_MAX = 60
 
 export const ARTICLE_RESERVED_SLUGS = ['new', 'mine', 'series', 'edit'] as const
 
-export const ARTICLE_STATUSES = ['draft', 'published', 'hidden'] as const
-export type ArticleStatus = (typeof ARTICLE_STATUSES)[number]
 
-export const ARTICLE_SERIES_STATUSES = ['draft', 'published', 'completed'] as const
-export type ArticleSeriesStatus = (typeof ARTICLE_SERIES_STATUSES)[number]
 
 export const ARTICLE_IMAGE_MAX_BYTES = 4 * 1024 * 1024
 export const ARTICLE_IMAGE_TYPES: Record<string, string> = {
@@ -37,7 +32,6 @@ export type ArticleImageKind = (typeof ARTICLE_IMAGE_KINDS)[number]
 /** What an agent upload is stored as (re-encoded; matches the 2 MB check on article_image_blobs.bytes). */
 export const ARTICLE_AGENT_IMAGE_OUT_MAX = 1_500_000
 export const ARTICLE_AGENT_IMAGE_MAX_SIDE = 2000
-export const ARTICLE_AGENT_IMAGES_PER_DAY = 30
 
 /** Browse tabs on /articles */
 export const ARTICLE_BROWSE_TABS = [
@@ -45,7 +39,7 @@ export const ARTICLE_BROWSE_TABS = [
   { id: 'series', label: msg('연재') },
   { id: 'subscribed', label: msg('구독 중') },
 ] as const
-export type ArticleBrowseTab = (typeof ARTICLE_BROWSE_TABS)[number]['id']
+type ArticleBrowseTab = (typeof ARTICLE_BROWSE_TABS)[number]['id']
 
 export function parseArticleBrowseTab(v: string | string[] | null | undefined): ArticleBrowseTab {
   const s = Array.isArray(v) ? v[0] : v
@@ -105,7 +99,7 @@ export function formatReadingTime(sec: number, t: (s: string, vars?: Record<stri
 }
 
 /** Share of the body a non-member may read before the join gate (A140). */
-export const ARTICLE_GATE_SHARE = 0.6
+const ARTICLE_GATE_SHARE = 0.6
 
 /**
  * A140: what a non-member sees: at most ARTICLE_TEASER_MAX characters AND at most 60% of the body, so there is

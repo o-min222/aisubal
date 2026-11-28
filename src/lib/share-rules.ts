@@ -12,7 +12,7 @@ export function postShareUrl(href: string | undefined, location: { origin: strin
   return `${u.origin}${u.pathname}`
 }
 
-export type PostShareData = { url: string; title: string; text?: string }
+type PostShareData = { url: string; title: string; text?: string }
 
 export function postShareData(url: string, teaser?: string | null): PostShareData {
   const line = clipLine(teaser, TEASER_MAX)

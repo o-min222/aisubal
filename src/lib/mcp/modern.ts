@@ -10,11 +10,11 @@ import { SUPPORTED_PROTOCOL_VERSIONS } from '@modelcontextprotocol/sdk/types.js'
  */
 export const MODERN_PROTOCOL_VERSION = '2026-07-28'
 export const SUPPORTED_VERSIONS: string[] = [MODERN_PROTOCOL_VERSION, ...SUPPORTED_PROTOCOL_VERSIONS]
-export const PROTOCOL_VERSION_KEY = 'io.modelcontextprotocol/protocolVersion'
-export const CLIENT_INFO_KEY = 'io.modelcontextprotocol/clientInfo'
+const PROTOCOL_VERSION_KEY = 'io.modelcontextprotocol/protocolVersion'
+const CLIENT_INFO_KEY = 'io.modelcontextprotocol/clientInfo'
 export const SERVER_INFO_KEY = 'io.modelcontextprotocol/serverInfo'
-export const UNSUPPORTED_PROTOCOL_VERSION = -32022
-export const HEADER_MISMATCH = -32020
+const UNSUPPORTED_PROTOCOL_VERSION = -32022
+const HEADER_MISMATCH = -32020
 
 type Meta = Record<string, unknown>
 export type Rpc = { jsonrpc?: string; id?: unknown; method?: unknown; params?: { _meta?: Meta } & Record<string, unknown> }

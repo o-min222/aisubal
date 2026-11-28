@@ -3,7 +3,7 @@
  * Logos are fetched server-side through /api/icon/[key] (fixed allowlist, CDN-cached),
  * so viewers' browsers never talk to a third party. Unknown labels get a letter mark.
  */
-export type ServiceLogo = { key: string; domain: string }
+type ServiceLogo = { key: string; domain: string }
 
 const SERVICES: Array<ServiceLogo & { match: RegExp }> = [
   { key: 'claude-code', domain: 'claude.com', match: /^claude\s*code/i },

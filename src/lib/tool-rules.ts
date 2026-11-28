@@ -16,7 +16,7 @@ export const TOOL_CATEGORIES = [
 
 export type ToolCategory = (typeof TOOL_CATEGORIES)[number]['id']
 export type ToolSort = 'popular' | 'users' | 'newest' | 'ai'
-export type ToolKind = 'tool' | 'service'
+type ToolKind = 'tool' | 'service'
 
 /** A49: newest member uploads first by default; the others stay one tap away. */
 export const DEFAULT_TOOL_SORT: ToolSort = 'newest'
@@ -53,7 +53,7 @@ export function isOwnEntry(e: Pick<ToolboxEntry, 'is_own' | 'maker_ids' | 'produ
   return Boolean(e.is_own ?? (e.maker_ids && e.maker_ids.length > 0))
 }
 
-export function isToolCategory(v: unknown): v is ToolCategory {
+function isToolCategory(v: unknown): v is ToolCategory {
   return typeof v === 'string' && TOOL_CATEGORIES.some((c) => c.id === v)
 }
 

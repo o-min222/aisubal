@@ -46,7 +46,7 @@ export function moimToMine(m: Moim | MoimDetail): MineMeetup {
   }
 }
 
-export type CalLang = 'ko' | 'en'
+type CalLang = 'ko' | 'en'
 const L = {
   ko: { cal: 'AI쓰발 모임', tbd: '시간 미정', pending: '승인 대기', waitlisted: '대기', invited: '초대됨', interested: '관심', cancelled: '취소됨', host: '내가 여는 모임', confirmed: '참석 확정', open: '모임 페이지', online: '온라인', map: '지도' },
   en: { cal: 'AI쓰발 meetups', tbd: 'time TBD', pending: 'awaiting approval', waitlisted: 'waitlist', invited: 'invited', interested: 'Interested', cancelled: 'cancelled', host: 'You host this', confirmed: 'Confirmed', open: 'Meetup page', online: 'Online', map: 'Map' },
@@ -59,7 +59,7 @@ const DAY = 86_400_000
 const HOUR = 3_600_000
 
 /** 20261124T101500Z */
-export function icsUtc(iso: string | number | Date): string {
+function icsUtc(iso: string | number | Date): string {
   return new Date(iso).toISOString().replace(/[-:]/g, '').replace(/\.\d{3}Z$/, 'Z')
 }
 /** KST calendar date as YYYYMMDD (all-day events for "time TBD"). */
@@ -107,7 +107,7 @@ export function summaryOf(m: MineMeetup, lang: CalLang = 'ko'): string {
   return tags.length ? `${m.title} (${tags.join(' · ')})` : m.title
 }
 
-export function locationOf(m: MineMeetup, lang: CalLang = 'ko'): string | null {
+function locationOf(m: MineMeetup, lang: CalLang = 'ko'): string | null {
   const priv = m.my === 'host' || m.my === 'confirmed' ? m.private : null
   if (m.mode === 'online') return priv?.meetingUrl || m.venueName || L[lang].online
   const parts = [m.venueName, priv?.venueAddress].filter((x): x is string => Boolean(x && x.trim()))
@@ -170,7 +170,7 @@ export function icsFilename(title: string): string {
 }
 
 /** "11월 26일 (목) 19:00" in KST — for agent text. */
-export function kstWhen(iso: string, timeTbd = false): string {
+function kstWhen(iso: string, timeTbd = false): string {
   const d = new Date(iso)
   const date = new Intl.DateTimeFormat('ko-KR', { timeZone: KST, month: 'long', day: 'numeric', weekday: 'short' }).format(d)
   if (timeTbd) return `${date} (시간 미정)`
@@ -181,7 +181,7 @@ export function kstWhen(iso: string, timeTbd = false): string {
 // ------------------------------------------------------------------ agent view (meetup_mine / heartbeat)
 const untrusted = (text: string | null | undefined) => ({ trust: 'untrusted' as const, untrusted_text: text ?? '' })
 
-export const MEETUP_AGENT_RULES =
+const MEETUP_AGENT_RULES =
   'Read + remind only: you may tell your owner about invites, confirmations, time/place changes and upcoming 모임, and help them add them to a calendar. You cannot apply, cancel, or RSVP; the owner does that on the web.'
 
 export function shapeMyMeetups(raw: MyMeetupsRaw, origin: string) {
@@ -214,7 +214,7 @@ export function shapeMyMeetups(raw: MyMeetupsRaw, origin: string) {
   }
 }
 
-export type MeetupSuggestion = { action: 'remind'; why: string; args?: Record<string, unknown> }
+type MeetupSuggestion = { action: 'remind'; why: string; args?: Record<string, unknown> }
 
 /** Plain "tell your owner" nudges; titles are member-written, so they're quoted, never executed. */
 export function suggestMeetupActions(raw: MyMeetupsRaw): MeetupSuggestion[] {

@@ -12,7 +12,7 @@ export type StackItem = { label: string; entry: StackEntryRef | null; /** owner 
 /** null = hidden from this viewer */
 export type StackGroupData = { visibility: LinkVisibility | null; items: StackItem[] } | null
 
-export const AGENT_PLATFORMS = [
+const AGENT_PLATFORMS = [
   { id: 'grok_bot', label: 'Grok Bot', short: 'G', color: '#111111' },
   { id: 'claude_code', label: 'Claude Code', short: 'C', color: '#d97757' },
   { id: 'custom_gpt', label: 'Custom GPT', short: 'GPT', color: '#10a37f' },
@@ -26,7 +26,6 @@ export const AGENT_PLATFORMS = [
   { id: 'other', label: msg('기타'), short: '•', color: '#888888' },
 ] as const
 export type AgentPlatform = (typeof AGENT_PLATFORMS)[number]['id']
-export const AGENT_PLATFORM_IDS = AGENT_PLATFORMS.map((p) => p.id) as AgentPlatform[]
 export const platformOf = (id: string | null | undefined) => AGENT_PLATFORMS.find((p) => p.id === id) ?? AGENT_PLATFORMS[AGENT_PLATFORMS.length - 1]
 
 /** Connected (token) activity merged in for display; hour-rounded for others. */
@@ -52,7 +51,6 @@ export const SUB_SUGGESTIONS = [
   'ZCRE (지크)',
 ] as const
 
-export type SubSuggestion = (typeof SUB_SUGGESTIONS)[number]
 
 /**
  * Search-only aliases (not shown as their own chips). Renamed or bilingual names still
@@ -92,7 +90,7 @@ export const SUB_SUGGESTION_ALIASES: Record<string, readonly string[]> = {
 }
 
 /** Case/space-insensitive key used by stack items and the subscription picker. */
-export const stackNorm = (s: string) => s.toLowerCase().replace(/[\s_\-·.]+/g, '')
+const stackNorm = (s: string) => s.toLowerCase().replace(/[\s_\-·.]+/g, '')
 
 /** True when a suggestion chip should appear for this search term (label or alias). */
 export function suggestionMatches(label: string, term: string, aliases: Record<string, readonly string[]> = SUB_SUGGESTION_ALIASES): boolean {

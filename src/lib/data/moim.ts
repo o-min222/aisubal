@@ -24,7 +24,7 @@ import { moimThreadContent, normalizeInvites, toTimelineMoim } from '@/lib/moim-
 import type { TimelineMoim } from '@/components/timeline/types'
 
 /** Seats when the host doesn't say (A29: the minimal form doesn't ask; matches moim__validate). */
-export const DEFAULT_CAPACITY = 30
+const DEFAULT_CAPACITY = 30
 
 /**
  * 모임 (formerly 밋업). Production reads and writes go through the 0007
@@ -86,7 +86,7 @@ export type MoimDetail = Moim & {
 }
 export type MoimTab = 'upcoming' | 'mine' | 'hosting' | 'past'
 /** Absent optional fields are not sent: create uses the DB defaults, edit keeps what's stored. */
-export type MoimInput = {
+type MoimInput = {
   title: string
   description?: string
   mode: MoimMode
@@ -238,7 +238,7 @@ function seedRsvp(id: string, memberId: string, status: RsvpStatus, h: number, a
   return { id, memberId, status, answers, note: null, createdAt: at, waitlistedAt: status === 'waitlisted' ? at : null, decidedAt: status === 'confirmed' ? at : null }
 }
 
-export function mockMoims(): MockMoim[] {
+function mockMoims(): MockMoim[] {
   if (gm.__aisubalMoim) return gm.__aisubalMoim
   const day = (d: number, h = 19) => {
     const t = new Date(Date.now() + d * 86400_000)
@@ -508,7 +508,7 @@ function mockSetThreadBody(postId: string, body: string) {
 }
 /** DEV: invites land in the mock bell. */
 const gi = globalThis as unknown as { __aisubalMoimInvites?: Array<{ moimId: string; memberId: string; by: string }> }
-export function mockMoimInvites() {
+function mockMoimInvites() {
   return (gi.__aisubalMoimInvites ??= [])
 }
 

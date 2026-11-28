@@ -11,9 +11,9 @@ import { safeFetchBytes } from '@/lib/safe-fetch'
 import { fetchLinkPreview } from '@/lib/link-preview-server'
 import { isServablePreviewMime, sniffPreviewImage, type ServablePreviewMime } from '@/lib/preview-image'
 
-export const PREVIEW_IMAGE_MAX = 1_500_000
+const PREVIEW_IMAGE_MAX = 1_500_000
 
-export type PreviewImageBytes = { body: Buffer; contentType: ServablePreviewMime }
+type PreviewImageBytes = { body: Buffer; contentType: ServablePreviewMime }
 
 async function toServable(body: Buffer): Promise<PreviewImageBytes | null> {
   const kind = sniffPreviewImage(body)

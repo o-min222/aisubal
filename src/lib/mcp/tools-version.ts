@@ -11,10 +11,10 @@ import { listTools } from './registry'
 import { listPrompts } from './prompts'
 import { ARCHIVE_TEMPLATE, CHARTER_RESOURCE, listResourceTemplates, listResourceViews } from './resources'
 
-export type ToolsFilter = { scopes: readonly string[]; isAdmin: boolean } | undefined
+type ToolsFilter = { scopes: readonly string[]; isAdmin: boolean } | undefined
 
 /** What we persist on the token when tools/list is served, so a later call can name what changed. */
-export type StoredCatalog = { toolsVersion: string | null; toolsCatalog: string | null }
+type StoredCatalog = { toolsVersion: string | null; toolsCatalog: string | null }
 
 export type ToolsChange = {
   toolsVersion: string

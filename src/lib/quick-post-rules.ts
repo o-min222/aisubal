@@ -4,7 +4,7 @@ import { msg } from '@/i18n/translate'
 export const QUICK_PLACEHOLDER = msg('오늘 써 본 AI, 한 줄이면 충분해요')
 
 /** 'ask' is a toggle (A97): it marks the post as a question instead of typing a sentence; 'shot' opens the image picker */
-export type QuickStarter = { id: 'ask' | 'tried' | 'chat' | 'shot'; label: string; prefill: string | null }
+type QuickStarter = { id: 'ask' | 'tried' | 'chat' | 'shot'; label: string; prefill: string | null }
 /** chips under the composer: a starter sentence (never a forced category); 'shot' opens the image picker */
 export const QUICK_STARTERS: QuickStarter[] = [
   { id: 'ask', label: msg('질문해요'), prefill: null },

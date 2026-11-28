@@ -344,7 +344,7 @@ export async function withGroupIdentity(viewerId: string, posts: TimelinePost[])
 }
 
 /** Attach the viewer's follow state to real-name member authors (follow chip on cards). */
-export async function withFollowState(viewerId: string, posts: TimelinePost[]): Promise<TimelinePost[]> {
+async function withFollowState(viewerId: string, posts: TimelinePost[]): Promise<TimelinePost[]> {
   const ids = posts.filter((p) => p.author.kind === 'member' && !p.isNickname).map((p) => p.author.id)
   const rel = await getRelations(viewerId, ids).catch(() => null)
   if (!rel) return posts
@@ -355,7 +355,7 @@ export async function withFollowState(viewerId: string, posts: TimelinePost[]): 
   })
 }
 
-export type FeedListOpts = {
+type FeedListOpts = {
   limit?: number
   before?: string
   /** numbered pages: skip this many rows */
@@ -877,7 +877,7 @@ export function mockFeedGroupOf(postId: string): string | null {
 }
 
 // ---------------------------------------------------------------- ⋯ edit / delete (0038)
-export type FeedEditInput = {
+type FeedEditInput = {
   body: string
   url: string | null
   previews: import('@/lib/supabase/types').LinkPreview[] | null

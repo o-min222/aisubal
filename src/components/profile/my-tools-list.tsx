@@ -11,7 +11,7 @@ import { moveItem } from '@/lib/profile-stack'
 import { T } from '@/i18n/t'
 import { tn } from '@/i18n/client'
 
-export type MyTool = { id: string; name: string; iconUrl: string | null; href: string; typeLabel: string; users: number }
+type MyTool = { id: string; name: string; iconUrl: string | null; href: string; typeLabel: string; users: number }
 
 /**
  * '내가 쓰는 것' on a profile. The owner gets 순서 바꾸기 (A90): drag a card with the mouse, or

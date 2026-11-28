@@ -9,7 +9,7 @@ import {
 } from 'lucide-react'
 import { msg } from '@/i18n/translate'
 
-export type NavItem = {
+type NavItem = {
   href: string
   label: string
   icon: LucideIcon

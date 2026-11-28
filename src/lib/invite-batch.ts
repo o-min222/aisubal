@@ -4,7 +4,7 @@
  * of N at once and awards the 'invite_king' badge. Unused codes never expire.
  */
 
-export type BatchCode = { batch: number; isUsed: boolean }
+type BatchCode = { batch: number; isUsed: boolean }
 
 export type BatchProgress = {
   /** current batch number (1 = the first codes) */

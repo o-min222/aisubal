@@ -2,11 +2,10 @@
 
 import type { MouseEvent, PointerEvent } from 'react'
 import { Share2 } from 'lucide-react'
-import { toast } from 'sonner'
 import { T } from '@/i18n/t'
-import { tn, tx } from '@/i18n/client'
+import { tx } from '@/i18n/client'
 import { articleHref } from '@/lib/article-rules'
-import { postShareData, shareClipboardText } from '@/lib/share-rules'
+import { useShare } from '@/hooks/use-share'
 
 /**
  * A140 / A142: share an article. Native share sheet where there is one, else copy the link. The shared
@@ -27,18 +26,8 @@ export function ArticleShareButton({
     e.preventDefault()
     e.stopPropagation()
   }
-  async function share() {
-    const url = new URL(articleHref(slug), window.location.origin).toString()
-    try {
-      if (navigator.share) await navigator.share(postShareData(url, teaser))
-      else {
-        await navigator.clipboard.writeText(shareClipboardText(url, teaser))
-        toast.success(tn('링크를 복사했어요'))
-      }
-    } catch {
-      /* cancelled, or clipboard blocked */
-    }
-  }
+  const shareLink = useShare()
+  const share = () => shareLink(new URL(articleHref(slug), window.location.origin).toString(), teaser)
   const handlers = {
     onClick: (e: MouseEvent<HTMLButtonElement>) => {
       stop(e)

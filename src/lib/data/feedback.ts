@@ -6,7 +6,7 @@ import { mockAppendNotification } from './notifications'
 
 /** A105 화면 피드백: everything goes through the 0133 RPCs; screenshots sit in the private feedback-shots bucket. */
 const BUCKET = 'feedback-shots'
-export const FEEDBACK_SHOT_FINAL_MAX = 1_500_000
+const FEEDBACK_SHOT_FINAL_MAX = 1_500_000
 
 export class FeedbackError extends Error {}
 
@@ -28,11 +28,6 @@ function mock(): MockStore {
 }
 export function mockFeedbackShot(id: string): Buffer | null {
   return isMock() ? (mock().items.get(id)?.shot ?? null) : null
-}
-export function mockSeedFeedbackShot(id: string, shot: Buffer) {
-  const it = mock().items.get(id)
-  if (it) it.shot = shot
-  if (it) it.hasShot = true
 }
 
 /** Any browser image → WebP, ≤ 1600 px wide, ≤ 1.5 MB (quality steps down if needed). */
@@ -205,7 +200,7 @@ export function mockFeedbackEnabled(memberId: string): boolean {
   return mock().enabled.has(memberId)
 }
 
-export type MyFeedback = {
+type MyFeedback = {
   id: string
   status: FeedbackStatus
   body: string

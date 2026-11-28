@@ -6,8 +6,8 @@
  * - A node whose loaded children are fewer than its child_count gets a
  *   "+N" placeholder child that loads the next page when tapped.
  */
-export type LayoutInput = { id: string; parentId: string | null; depth: number | null; childCount: number }
-export type Placed = { id: string; x: number; y: number; depth: number; more?: { parentId: string; remaining: number; offset: number } }
+type LayoutInput = { id: string; parentId: string | null; depth: number | null; childCount: number }
+type Placed = { id: string; x: number; y: number; depth: number; more?: { parentId: string; remaining: number; offset: number } }
 export type Edge = { from: string; to: string }
 
 const RING = 150

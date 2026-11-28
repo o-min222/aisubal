@@ -12,6 +12,7 @@ import { postedHref } from '@/lib/posted-rules'
 import { ComposerTextarea } from '@/components/composer/composer-frame'
 import { useComposer, useImageAttach } from '@/components/composer/use-composer'
 import { applyStarter, QUICK_PLACEHOLDER, QUICK_STARTERS } from '@/lib/quick-post-rules'
+import { fetchJson } from '@/lib/fetch-json'
 
 /**
  * A62: the feed-top composer. Starter chips prefill a sentence (no category is forced),
@@ -32,19 +33,17 @@ export function QuickComposer({ me }: { me: ComposerIdentity }) {
     piiNotice: (pii) => tx('{pii} 공개 글이에요. 그래도 올리려면 한 번 더 눌러주세요.', { pii }),
     errorFallback: () => tn('게시하지 못했어요.'),
     send: async (text) => {
-      const res = await fetch('/api/feed', {
+      const { ok, data } = await fetchJson<{ id: string }>('/api/feed', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+        json: {
           body: text,
           postedAs: 'real',
           agentInteraction: me.agentInteraction ?? 'agents_allowed',
           visibility: me.visibility ?? 'members',
           ...(question ? { isQuestion: true } : {}),
-        }),
+        },
       })
-      const data = await res.json().catch(() => ({}))
-      if (!res.ok) throw new Error(data.error || tn('게시하지 못했어요.'))
+      if (!ok) throw new Error(data.error || tn('게시하지 못했어요.'))
       setBody('')
       setQuestion(false)
       toast.success(tn('게시했어요'))

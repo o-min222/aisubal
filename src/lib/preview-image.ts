@@ -10,7 +10,7 @@
 export const PREVIEW_IMAGE_PATH = '/api/link-preview-image'
 
 export type ServablePreviewMime = 'image/png' | 'image/jpeg' | 'image/webp' | 'image/gif' | 'image/avif'
-export type SniffedPreviewMime = ServablePreviewMime | 'image/heic'
+type SniffedPreviewMime = ServablePreviewMime | 'image/heic'
 
 export function previewImageSrc(pageUrl: string): string | null {
   if (!pageUrl || pageUrl.length > 2000) return null

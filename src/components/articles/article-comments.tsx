@@ -10,6 +10,7 @@ import { ARTICLE_COMMENT_MAX } from '@/lib/article-rules'
 import { MentionText } from '@/components/timeline/mention-text'
 import { ComposerTextarea } from '@/components/composer/composer-frame'
 import { useComposer } from '@/components/composer/use-composer'
+import { fetchJson } from '@/lib/fetch-json'
 
 export function ArticleComments({
   articleId,
@@ -28,13 +29,11 @@ export function ArticleComments({
     errorFallback: () => tn('댓글을 남기지 못했어요.'),
     send: async (text) => {
       const parent = replyTo
-      const res = await fetch(`/api/articles/${articleId}/comments`, {
+      const { ok, data } = await fetchJson<{ comment: ArticleComment }>(`/api/articles/${articleId}/comments`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ body: text.trim(), parentId: parent?.parentId ?? parent?.id ?? null, replyToId: parent?.id ?? null }),
+        json: { body: text.trim(), parentId: parent?.parentId ?? parent?.id ?? null, replyToId: parent?.id ?? null },
       })
-      const data = await res.json().catch(() => ({}))
-      if (!res.ok) throw new Error(data.error || tn('댓글을 남기지 못했어요.'))
+      if (!ok) throw new Error(data.error || tn('댓글을 남기지 못했어요.'))
       setItems((list) => [...list, data.comment as ArticleComment])
       setBody('')
       setReplyTo(null)

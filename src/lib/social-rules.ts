@@ -49,7 +49,7 @@ export function nameChip(r: { iFollow: boolean; followsMe?: boolean; friend?: Fr
 }
 
 /** Ranking for social proof: friends → people I follow → others (me last). */
-export function relationRank(r: Relation): number {
+function relationRank(r: Relation): number {
   if (r.isMe) return 3
   if (r.friend === 'friends') return 0
   if (r.iFollow) return 1
@@ -74,18 +74,6 @@ export function socialProofLine(relations: Relation[], verb = '써요'): string 
   return relations.some((r) => r.isMe) ? `아직 나만 ${verb}` : `아직 쓰는 멤버가 없어요`
 }
 
-export function friendActionLabel(state: FriendState): string {
-  switch (state) {
-    case 'friends':
-      return '친구'
-    case 'pending_out':
-      return '요청 보냄'
-    case 'pending_in':
-      return '친구 요청 수락'
-    default:
-      return '친구 신청'
-  }
-}
 
 export type FeedScope = 'all' | 'for_you' | 'following' | 'friends' | 'popular'
 export const FEED_SCOPES: Array<{ id: FeedScope; label: string }> = [
@@ -105,7 +93,7 @@ export function parseFeedScope(v: string | null | undefined): FeedScope {
 /** 인기: last 14 days, most liked/replied first. */
 export const POPULAR_DAYS = 14
 
-export const SOCIAL_ERRORS: Record<string, string> = {
+const SOCIAL_ERRORS: Record<string, string> = {
   social_self: '나 자신은 팔로우하거나 친구로 추가할 수 없어요.',
   social_member_not_found: '멤버를 찾을 수 없어요.',
   social_rate_limited: '오늘은 더 이상 요청할 수 없어요. 내일 다시 시도해주세요.',

@@ -14,7 +14,7 @@ import { withAgentCards } from './agent-profiles'
 import { listDismissed } from './rec-dismissals'
 import { connectedMemberIds } from './social'
 
-export type ProfileStats = { posts: number; likes: number; invitesLeft: number }
+type ProfileStats = { posts: number; likes: number; invitesLeft: number }
 
 export type RailData = {
   interestTags: string[]

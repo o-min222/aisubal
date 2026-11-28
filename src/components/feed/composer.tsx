@@ -23,6 +23,7 @@ import type { AgentInteraction, PostAs } from '@/lib/supabase/types'
 import { T } from '@/i18n/t'
 import type { PickedImage } from '@/lib/post-image-client'
 import { useComposer, useImageAttach } from '@/components/composer/use-composer'
+import { fetchJson } from '@/lib/fetch-json'
 
 export type ComposerIdentity = {
   id: string
@@ -107,10 +108,9 @@ export function Composer({
     piiNotice: (pii) => tx('{pii} 공개 글이에요. 그래도 올리려면 한 번 더 눌러주세요.', { pii }),
     errorFallback: () => tn('게시하지 못했어요.'),
     send: async (body) => {
-      const res = await fetch('/api/feed', {
+      const { ok, data } = await fetchJson<{ id: string }>('/api/feed', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+        json: {
           body,
           parentId,
           postedAs: asGroup ? 'real' : postedAs,
@@ -121,10 +121,9 @@ export function Composer({
           groupId,
           ...(isReply ? {} : { urls: previews.urls }),
           ...(image ? { imagePath: image.path } : {}),
-        }),
+        },
       })
-      const data = await res.json().catch(() => ({}))
-      if (!res.ok) throw new Error(data.error || tx('게시하지 못했어요.'))
+      if (!ok) throw new Error(data.error || tx('게시하지 못했어요.'))
       setBody('')
       setQuestion(false)
       setImage(null)

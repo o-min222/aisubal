@@ -93,7 +93,7 @@ export const REFUSED_TOOLS: Readonly<Record<string, string>> = {
   friend_request: '팔로우·친구 요청은 사람이 직접 해요. 프로필 페이지에서 눌러 주세요.',
 }
 
-export type Resolved =
+type Resolved =
   | { kind: 'tool'; spec: ToolSpec; args: Record<string, unknown> }
   | { kind: 'refused'; message: string }
   | { kind: 'unknown' }
@@ -107,7 +107,7 @@ export function resolveTool(rawName: string, rawArgs: Record<string, unknown> = 
 
 /** A81: tools only admins (with tools:review) can see or call; hidden from members everywhere */
 export const isAdminTool = (t: Pick<ToolSpec, 'scopes'>) => t.scopes.includes(ADMIN_REVIEW)
-export const isAdminToolName = (name: string) => {
+const isAdminToolName = (name: string) => {
   const spec = BY_NAME.get(name)
   return spec ? isAdminTool(spec) : false
 }
@@ -135,9 +135,9 @@ export function inputJsonSchema(spec: ToolSpec): Record<string, unknown> {
   return rest
 }
 
-export const TOOL_OUTPUT_SCHEMA = { type: 'object', additionalProperties: true } as const
+const TOOL_OUTPUT_SCHEMA = { type: 'object', additionalProperties: true } as const
 
-export type ListedTool = {
+type ListedTool = {
   name: string
   title: string
   description: string
@@ -168,7 +168,3 @@ export function listTools(filter?: { scopes: readonly string[]; isAdmin: boolean
   return tools.map(listed)
 }
 
-/** a tool's required scopes, human-readable (docs / CLI) */
-export function scopeLabel(spec: ToolSpec): string {
-  return spec.scopes.map((s) => (s === ALWAYS ? 'any token' : s === ADMIN_REVIEW ? 'admin + tools:review' : s)).join(' | ')
-}

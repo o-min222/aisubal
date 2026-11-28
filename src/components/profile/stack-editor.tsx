@@ -1,14 +1,12 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { Check, Plus, Search, X } from 'lucide-react'
-import { toast } from 'sonner'
-import { LINK_VISIBILITY, type LinkVisibility } from '@/lib/profile-rules'
-import { AI_SUGGESTIONS, STACK_GROUP_LABEL, STACK_LIMIT, SUB_SUGGESTIONS, SKILL_TYPES, suggestionMatches, type StackGroup } from '@/lib/profile-stack'
+import { Check, Plus, Search } from 'lucide-react'
+import { type LinkVisibility } from '@/lib/profile-rules'
+import { SKILL_TYPES, suggestionMatches, type StackGroup } from '@/lib/profile-stack'
 import { T } from '@/i18n/t'
 import { ServiceIcon } from '@/components/service-chip'
-import { tx, tn } from '@/i18n/client'
+import { tx } from '@/i18n/client'
 
 export type Item = { label: string; entryId: string | null; iconUrl?: string | null; slug?: string; visibility?: LinkVisibility | null; /** skills: a '사용 중' catalog tool (tool_users), not free text */ used?: boolean }
 type CatalogHit = { id: string; slug: string; name: string; icon_url: string | null; type: string }
@@ -111,38 +109,7 @@ export function Picker({ onPick, suggestions, skillsOnly, placeholder, disabled,
   )
 }
 
-function Chips({ items, onRemove }: { items: Item[]; onRemove: (i: number) => void }) {
-  if (!items.length) return <p className="text-[12.5px] text-n-999"><T>아직 없어요.</T></p>
-  return (
-    <ul className="mc-chips">
-      {items.map((it, i) => (
-        <li key={`${it.label}-${i}`}>
-          <span className="mc-chip pr-1">
-            <span className="mc-chip-icon" style={{ background: it.entryId ? 'var(--n-111)' : 'var(--n-888)' }} aria-hidden>
-              {it.label.charAt(0).toUpperCase()}
-            </span>
-            <span className="truncate"><T>{it.label}</T></span>
-            <button type="button" onClick={() => onRemove(i)} className="inline-flex items-center justify-center w-6 h-6 rounded-full icon-btn" aria-label={tx('{label} 빼기', { label: it.label })}>
-              <X className="w-3.5 h-3.5" />
-            </button>
-          </span>
-        </li>
-      ))}
-    </ul>
-  )
-}
 
-function VisSelect({ value, onChange, label }: { value: LinkVisibility; onChange: (v: LinkVisibility) => void; label: string }) {
-  return (
-    <select aria-label={tx('{label} 공개 범위', { label })} value={value} onChange={(e) => onChange(e.target.value as LinkVisibility)} className="rounded-lg border border-n-ddd bg-n-fff px-2 text-[13px] min-h-[36px]">
-      {LINK_VISIBILITY.map((v) => (
-        <option key={v.id} value={v.id}>
-          <T>{v.label}</T>
-        </option>
-      ))}
-    </select>
-  )
-}
 
 export type StackEditorInitial = {
   ai: Item[]
@@ -155,96 +122,3 @@ export type StackEditorInitial = {
   vis: Record<StackGroup, LinkVisibility>
 }
 
-/** 설정 › 프로필 편집: 활용하는 AI / 구독 중인 서비스 / 스킬·플러그인·MCP. */
-export function StackEditor({ initial }: { initial: StackEditorInitial }) {
-  const router = useRouter()
-  const [ai, setAi] = useState<Item[]>(initial.ai)
-  const [subs, setSubs] = useState<Item[]>(initial.subs)
-  const [used, setUsed] = useState<Item[]>(initial.usedSkills)
-  const [extras, setExtras] = useState<Item[]>(initial.skillExtras.map((label) => ({ label, entryId: null })))
-  const [vis, setVis] = useState(initial.vis)
-  const [busy, setBusy] = useState(false)
-
-  const add = (list: Item[], set: (v: Item[]) => void) => (i: Item) => {
-    if (list.length >= STACK_LIMIT) return toast.error(tn('{n}개까지 추가할 수 있어요.', { n: STACK_LIMIT }))
-    if (list.some((x) => (i.entryId && x.entryId === i.entryId) || norm(x.label) === norm(i.label))) return
-    set([...list, i])
-  }
-
-  // catalog skills write straight to '사용 중' so the 툴 pages stay the single source of truth
-  async function toggleUsage(item: Item, using: boolean) {
-    if (!item.entryId) return
-    const res = await fetch(`/api/tools/${item.entryId}/usage`, { method: using ? 'POST' : 'DELETE' })
-    if (!res.ok) return toast.error(tn('사용 중 표시를 바꾸지 못했어요.'))
-    setUsed(using ? [...used.filter((u) => u.entryId !== item.entryId), item] : used.filter((u) => u.entryId !== item.entryId))
-    toast.success(using ? tn('‘{name}’ 사용 중으로 표시했어요', { name: item.label }) : tn('‘{name}’ 사용 중 표시를 뺐어요', { name: item.label }))
-  }
-
-  async function save() {
-    setBusy(true)
-    try {
-      const strip = (l: Item[]) => l.map(({ label, entryId }) => ({ label, entryId }))
-      const res = await fetch('/api/profile/stack', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ai: strip(ai), subs: strip(subs), skills: strip(extras), vis }),
-      })
-      const d = await res.json().catch(() => ({}))
-      if (!res.ok) throw new Error(d.error || tx('저장하지 못했어요.'))
-      toast.success(tn('AI 스택을 저장했어요'))
-      router.refresh()
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : tn('저장하지 못했어요.'))
-    } finally {
-      setBusy(false)
-    }
-  }
-
-  const head = (g: StackGroup, hint: string) => (
-    <div className="flex items-center gap-2 justify-between">
-      <div className="min-w-0">
-        <h3 className="text-[14px] font-semibold" style={{ color: 'var(--n-111)' }}>
-          <T>{STACK_GROUP_LABEL[g]}</T>
-        </h3>
-        <p className="text-[12px] text-n-888"><T>{hint}</T></p>
-      </div>
-      <VisSelect value={vis[g]} onChange={(v) => setVis({ ...vis, [g]: v })} label={STACK_GROUP_LABEL[g]} />
-    </div>
-  )
-
-  return (
-    <section id="stack" className="card p-4 space-y-5 scroll-mt-20" aria-label={tx('AI 스택')}>
-      <div>
-        <h2 className="text-[15px] font-bold" style={{ color: 'var(--n-111)' }}>
-          <T>AI 스택</T>
-        </h2>
-        <p className="text-[12px] text-n-777"><T>프로필 카드에 아이콘 칩으로 보여요. 묶음마다 공개 범위를 정할 수 있어요.</T></p>
-      </div>
-      <div className="space-y-2">
-        {head('ai', 'Claude, ChatGPT, Gemini, Cursor…')}
-        <Chips items={ai} onRemove={(i) => setAi(ai.filter((_, j) => j !== i))} />
-        <Picker onPick={add(ai, setAi)} suggestions={AI_SUGGESTIONS} placeholder={tx('AI 검색 또는 직접 입력')} />
-      </div>
-      <div className="space-y-2">
-        {head('subs', 'ChatGPT Plus, Claude Max, Cursor Pro…')}
-        <Chips items={subs} onRemove={(i) => setSubs(subs.filter((_, j) => j !== i))} />
-        <Picker onPick={add(subs, setSubs)} suggestions={SUB_SUGGESTIONS} placeholder={tx('구독 서비스 검색 또는 직접 입력')} />
-      </div>
-      <div className="space-y-2">
-        {head('skills', tx('갤러리에서 고르면 ‘사용 중’으로 바로 표시돼요. 목록에 없으면 직접 입력.'))}
-        <Chips items={[...used, ...extras]} onRemove={(i) => (i < used.length ? toggleUsage(used[i], false) : setExtras(extras.filter((_, j) => j !== i - used.length)))} />
-        <Picker
-          skillsOnly
-          suggestions={[]}
-          placeholder={tx('스킬·플러그인·MCP 검색')}
-          onPick={(i) => (i.entryId ? toggleUsage(i, true) : add(extras, setExtras)(i))}
-        />
-      </div>
-      <div className="flex justify-end">
-        <button type="button" onClick={save} disabled={busy} className="btn btn-primary btn-sm min-h-[40px] rounded-full">
-          {busy ? <T>저장 중…</T> : <T>AI 스택 저장</T>}
-        </button>
-      </div>
-    </section>
-  )
-}

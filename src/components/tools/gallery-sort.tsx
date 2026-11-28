@@ -7,7 +7,7 @@ import { T } from '@/i18n/t'
 import { tx } from '@/i18n/client'
 import { msg } from '@/i18n/translate'
 
-export type GallerySortItem = { id: string; label: string; href: string }
+type GallerySortItem = { id: string; label: string; href: string }
 
 /** A85: sort labels read as an ordering ("인기순"), not as another category. */
 const SORT_LABEL: Record<string, string> = { newest: msg('최신순'), popular: msg('인기순'), users: msg('많이 쓰는 순'), ai: msg('AI 평가순') }

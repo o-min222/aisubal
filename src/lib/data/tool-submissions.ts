@@ -187,7 +187,7 @@ export async function getSubmission(viewerId: string, id: string): Promise<{ sub
   }
 }
 
-export type MergeLog = {
+type MergeLog = {
   id: string
   keptSlug: string | null
   keptName: string | null
@@ -218,25 +218,6 @@ export async function listMerges(limit = 20): Promise<MergeLog[]> {
   })
 }
 
-/** Light duplicate hints for the admin web view (the full check runs in review_get). */
-export async function duplicateHints(s: Pick<Submission, 'id' | 'url' | 'name'>): Promise<DupCandidate[]> {
-  const norm = (x: string) => x.toLowerCase().replace(/[^a-z0-9가-힣]+/g, '')
-  if (isMock()) return []
-  const supabase = await sb()
-  const words = s.name.replace(/[%_,()]/g, ' ').trim().slice(0, 40)
-  const { data } = await supabase
-    .from('toolbox_entries')
-    .select('id, slug, name, canonical_url')
-    .or(`canonical_url.eq.${s.url.replace(/[,()]/g, '')},name.ilike.%${words}%`)
-    .limit(8)
-  return ((data || []) as Array<{ id: string; slug: string; name: string; canonical_url: string }>).map((e) => ({
-    id: e.id,
-    slug: e.slug,
-    name: e.name,
-    url: e.canonical_url,
-    reason: e.canonical_url === s.url ? 'same_url' : norm(e.name) === norm(s.name) ? 'same_name' : 'similar_name',
-  }))
-}
 
 export async function withdrawSubmission(viewerId: string, id: string): Promise<{ ok: true } | { ok: false; error: string }> {
   if (isMock()) {
@@ -253,7 +234,7 @@ export async function withdrawSubmission(viewerId: string, id: string): Promise<
   return { ok: true }
 }
 
-export type Provenance = { submittedBy: string; submittedAt: string; approvedBy: string | null; approvedAt: string | null; submitterId: string }
+type Provenance = { submittedBy: string; submittedAt: string; approvedBy: string | null; approvedAt: string | null; submitterId: string }
 export async function getToolProvenance(entryId: string): Promise<Provenance | null> {
   if (isMock()) {
     const s = mock().subs.find((x) => x.status === 'approved' && (x.entry?.id === entryId || x.entry?.slug === entryId))

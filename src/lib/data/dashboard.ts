@@ -20,7 +20,7 @@ export type DashItem = {
   reposted?: boolean
 }
 
-export type DashboardStats = {
+type DashboardStats = {
   posts: number
   comments: number
   likesReceived: number

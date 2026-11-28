@@ -16,7 +16,7 @@ import { sb, isMock } from './client'
  * `viewerId` is only used by the DEV mock store.
  */
 
-export type AnonThread = { root: TimelinePost; replies: TimelinePost[] }
+type AnonThread = { root: TimelinePost; replies: TimelinePost[] }
 export type AnonTrace = {
   memberId: string
   displayName: string

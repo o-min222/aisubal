@@ -103,7 +103,7 @@ async function listAgoraTimeline__raw(
   return rows.map((r) => toTimeline(r, liked, viewerId))
 }
 
-export type AgoraTab = 'all' | 'reviews' | 'tips' | 'popular'
+type AgoraTab = 'all' | 'reviews' | 'tips' | 'popular'
 export const AGORA_TABS: Array<{ id: AgoraTab; label: string }> = [
   { id: 'all', label: '전체' },
   { id: 'reviews', label: msg('리뷰') },

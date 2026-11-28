@@ -26,7 +26,7 @@ type SaveState = 'idle' | 'saving' | 'saved' | 'error'
 const norm = (s: string) => s.toLowerCase().replace(/[\s_\-·.]+/g, '')
 const VIS_ICON = { members: Eye, friends: Users, private: Lock } as const
 
-export type ProfileEditorAgent = { id: string; name: string; client: string | null; avatarUrl?: string | null; brand?: string | null }
+type ProfileEditorAgent = { id: string; name: string; client: string | null; avatarUrl?: string | null; brand?: string | null }
 
 /**
  * WYSIWYG profile: the card others see, edited in place. Every field autosaves

@@ -10,7 +10,7 @@ import { isMock, sb } from './client'
  * token (0101 moim_ics_feed_*; only the hash is stored), and the feed itself
  * (anon, token = the only credential).
  */
-export type IcsFeedStatus = { enabled: boolean; prefix?: string; createdAt?: string; lastFetchedAt?: string | null }
+type IcsFeedStatus = { enabled: boolean; prefix?: string; createdAt?: string; lastFetchedAt?: string | null }
 
 /** One 모임 as the signed-in viewer sees it (private place only if the web shows it to them). */
 export async function moimForIcs(viewerId: string, id: string): Promise<MineMeetup | null> {

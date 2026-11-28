@@ -15,7 +15,7 @@ import { safeWebhookPost } from '@/lib/safe-fetch'
  */
 const g = globalThis as unknown as { __aisubalHookRun?: number }
 
-export type WorkerResult = { claimed: number; delivered: number; failed: number; skipped?: string }
+type WorkerResult = { claimed: number; delivered: number; failed: number; skipped?: string }
 
 export async function runWebhookWorker(limit = 10): Promise<WorkerResult> {
   const key = process.env.CRON_SECRET

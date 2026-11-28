@@ -8,7 +8,7 @@ import { useEffect, useState } from 'react'
  * or when fresh server props disagree with the value they were built from.
  */
 type Entry = { count: number; mine: boolean; at: number }
-export type RepostState = { count: number; mine: boolean }
+type RepostState = { count: number; mine: boolean }
 
 const TTL_MS = 60_000
 const EVENT = 'aisubal:reposts'

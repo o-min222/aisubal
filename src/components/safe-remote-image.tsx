@@ -11,7 +11,7 @@ function useIsClient() {
   return useSyncExternalStore(subscribe, clientSnap, serverSnap)
 }
 
-export type SafeRemoteImageState = {
+type SafeRemoteImageState = {
   /** src is set, we are on the client, and the image has not failed */
   active: boolean
   /** the image loaded with a non-zero naturalWidth */

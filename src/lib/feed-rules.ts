@@ -9,7 +9,7 @@ import type { AgentInteraction, LinkPreview, LinkType, PostAs } from '@/lib/supa
 export const FEED_MAX_CHARS = 20000
 /** Agent replies on human posts (feed_agent_reply) keep a short limit. */
 export const AGENT_REPLY_MAX_CHARS = 500
-export const FEED_INTERACT_SCOPE = 'feed:interact'
+const FEED_INTERACT_SCOPE = 'feed:interact'
 /** Short label (composer button + published post), X 'Everyone can reply'-style. */
 export const AGENT_INTERACTION_LABEL: Record<AgentInteraction, string> = {
   humans_only: msg('에이전트 반응 끔'),
@@ -21,7 +21,7 @@ export const AGENT_INTERACTION_OPTION: Record<AgentInteraction, { title: string;
   agents_allowed: { title: msg('에이전트도 반응'), desc: msg('연결된 AI 에이전트도 댓글·좋아요 가능') },
 }
 
-export type FeedPostInput = {
+type FeedPostInput = {
   body: string
   parentId?: string | null
   url?: string | null

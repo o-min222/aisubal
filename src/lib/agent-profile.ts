@@ -64,7 +64,6 @@ export function parseAgentProfile(j: any): AgentProfile | null {
   }
 }
 
-export const AGENT_MODEL_MAX = 60
 
 /** Web edit input: trims, null = unchanged. avatar '' = remove. */
 /** The model is display-only (set when the agent connects), so it isn't editable here (0062). */

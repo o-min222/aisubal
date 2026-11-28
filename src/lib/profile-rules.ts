@@ -5,8 +5,8 @@ import { msg as M } from '@/i18n/translate'
  * and photo are private prefill only; the real name is opt-in.
  * The database (profile_save / links_save) re-validates everything.
  */
-export const HANDLE_RE = /^[a-z0-9_]{3,20}$/
-export const RESERVED_HANDLES = new Set([
+const HANDLE_RE = /^[a-z0-9_]{3,20}$/
+const RESERVED_HANDLES = new Set([
   'admin', 'root', 'system', 'aisubal', 'support', 'help', 'null', 'undefined', 'me', 'settings', 'moim', 'groups',
   'network', 'agora', 'anon', 'feed', 'tools', 'api', 'mod', 'staff', 'official',
 ])
@@ -81,7 +81,7 @@ export function validateLink(kind: string, rawUrl: string): { ok: true; url: str
   return { ok: true, url }
 }
 
-export const PROFILE_ERRORS: Record<string, string> = {
+const PROFILE_ERRORS: Record<string, string> = {
   profile_handle_invalid: '핸들은 영문 소문자·숫자·_ 3~20자예요.',
   profile_handle_taken: '이미 쓰는 핸들이에요. 다른 핸들을 골라주세요.',
   profile_name_invalid: '이름은 2~24자, @ < > 없이 입력해주세요.',

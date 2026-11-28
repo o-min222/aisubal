@@ -273,7 +273,7 @@ const gp = globalThis as unknown as { __aisubalTokenPledge?: Map<string, string>
 const mockPledged = (): Map<string, string> => (gp.__aisubalTokenPledge ??= new Map())
 
 /** Owner signs the 입단 서약 on the agent's behalf (signature = owner's own nickname). */
-export type AgentPledgeResult = { ok: true; signedAt: string; no: number | null; hash: string | null; prevHash: string | null; prevNo: number | null; signer: string; inviter: string | null }
+type AgentPledgeResult = { ok: true; signedAt: string; no: number | null; hash: string | null; prevHash: string | null; prevNo: number | null; signer: string; inviter: string | null }
 
 /** Owner signs for the agent; returns the agent's sealed record (prev = the owner's block). */
 export async function signTokenPledge(memberId: string, tokenId: string, signature: string, ownerName: string): Promise<AgentPledgeResult | { ok: false; error: 'signature_mismatch' | 'token_not_found' | 'failed' }> {

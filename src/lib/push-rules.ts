@@ -65,10 +65,10 @@ export function parseSubscription(v: unknown): { endpoint: string; p256dh: strin
 }
 
 export type PushJob = { outboxId: number; subscriptionId: string; endpoint: string; p256dh: string; auth: string; locale: string; unread: number; preview?: boolean; item: (NotificationItem & { targetId?: string | null }) | null }
-export type PushPayload = { title: string; body: string; url: string; tag: string; badge: number }
+type PushPayload = { title: string; body: string; url: string; tag: string; badge: number }
 type Tr = (s: string, vars?: Record<string, string | number>) => string
 
-export const PUSH_TEST_TEXT = msg('테스트 알림이에요. 이 기기에서 푸시가 잘 와요.')
+const PUSH_TEST_TEXT = msg('테스트 알림이에요. 이 기기에서 푸시가 잘 와요.')
 
 /** Android lock-screen body length: one short line. Counted in Unicode code points. */
 export const PREVIEW_MAX = 90

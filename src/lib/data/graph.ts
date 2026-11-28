@@ -65,7 +65,7 @@ function mockNode(viewer: string, id: string, depth: number | null): GraphNode {
     relation: mockRelation(viewer === 'dev-user-id' ? DEV_ID : viewer, id),
   }
 }
-export function mockInviteGraph(viewer: string, rootId: string, hops = GRAPH_HOPS, perNode = GRAPH_PER_NODE): GraphPayload {
+function mockInviteGraph(viewer: string, rootId: string, hops = GRAPH_HOPS, perNode = GRAPH_PER_NODE): GraphPayload {
   const nodes: GraphNode[] = []
   let cur = mockPerson(rootId).invitedBy
   for (let d = -1; cur && d >= -hops; d--) {
@@ -80,7 +80,7 @@ export function mockInviteGraph(viewer: string, rootId: string, hops = GRAPH_HOP
   walk(rootId, 0)
   return { rootId, perNode, nodes: nodes.slice(0, 400) }
 }
-export function mockInviteChildren(viewer: string, memberId: string, offset: number, limit: number): ChildrenPage {
+function mockInviteChildren(viewer: string, memberId: string, offset: number, limit: number): ChildrenPage {
   const all = mockChildren(memberId)
   return {
     parentId: memberId,

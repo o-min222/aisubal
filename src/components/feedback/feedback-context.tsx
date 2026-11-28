@@ -2,7 +2,7 @@
 
 import { createContext, useContext, type MouseEvent as ReactMouseEvent } from 'react'
 
-export type FeedbackModeCtx = {
+type FeedbackModeCtx = {
   allowed: boolean
   on: boolean
   setOn: (v: boolean) => void

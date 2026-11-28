@@ -79,7 +79,7 @@ export function waitlistPosition(rsvps: MoimRsvp[], rsvpId: string): number | nu
   return i < 0 ? null : i + 1
 }
 
-export type ApplyBlock =
+type ApplyBlock =
   | 'moim_closed'
   | 'moim_deadline_passed'
   | 'moim_host_cannot_apply'
@@ -152,7 +152,7 @@ export const RSVP_LABEL: Record<RsvpStatus, string> = {
   interested: M('관심'),
 }
 
-export const MOIM_ERRORS: Record<string, string> = {
+const MOIM_ERRORS: Record<string, string> = {
   moim_closed: '신청이 마감된 모임이에요.',
   moim_deadline_passed: '신청 기한이 지났어요.',
   moim_host_cannot_apply: '내가 연 모임에는 신청할 수 없어요.',

@@ -8,7 +8,7 @@ import type { McpContext, ToolResult } from './dispatch'
  */
 export type Limited = { scope: 'token' | 'member'; window: 'minute' | 'day'; limit: number; retryAfter: number }
 type Begin = { ok: true; id: number | null } | { ok: false; limited: Limited }
-export type UsageStatus = 'ok' | 'error' | 'refused' | 'unknown' | 'unauthorized' | 'invalid'
+type UsageStatus = 'ok' | 'error' | 'refused' | 'unknown' | 'unauthorized' | 'invalid'
 
 export function rateLimitedResult(l: Limited): ToolResult {
   const who = l.scope === 'token' ? 'this agent' : "your owner's agents together"

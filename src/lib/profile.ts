@@ -1,14 +1,8 @@
-import { INVITES_PER_MEMBER } from '@/lib/invite-rules'
-import type { Member, Post, PostAs, PublicAuthor, SiteSettings } from '@/lib/supabase/types'
-import { msg, interpolate } from '@/i18n/translate'
+import type { Member, Post, PostAs, PublicAuthor } from '@/lib/supabase/types'
+import { msg } from '@/i18n/translate'
 
 export const DEFAULT_ANON_UNLOCK_THRESHOLD = 100
-export const DEV_ANON_UNLOCK_THRESHOLD = 3 // low so both modes are reviewable in seed
-
-export const NICKNAME_MIN = 2
-export const NICKNAME_MAX = 24
-export const NICKNAME_REGEX = /^[a-zA-Z0-9가-힣_]{2,24}$/
-
+export const DEV_ANON_UNLOCK_THRESHOLD = 3
 /**
  * Public id for a 부캐: derived ONLY from its own nickname_profiles.id (0052), never from the
  * member id (the old member-uuid prefix was linkable back to the member).
@@ -17,9 +11,6 @@ export function nicknameProfilePublicId(nicknameId: string): string {
   return `nick_${nicknameId}`
 }
 
-export function memberHasNicknameProfile(member: Member): boolean {
-  return Boolean(member.nickname && member.nickname_created_at)
-}
 
 export function isAnonUnlocked(
   activeMemberCount: number,
@@ -28,22 +19,6 @@ export function isAnonUnlocked(
   return activeMemberCount >= threshold
 }
 
-export function validateNickname(
-  raw: string
-): { ok: true; nickname: string } | { ok: false; reason: string } {
-  const nickname = raw.trim()
-  if (nickname.length < NICKNAME_MIN || nickname.length > NICKNAME_MAX) {
-    return { ok: false, reason: interpolate(msg('별명은 {n}~{n2}자여야 합니다.'), { n: NICKNAME_MIN, n2: NICKNAME_MAX }) }
-  }
-  if (!NICKNAME_REGEX.test(nickname)) {
-    return { ok: false, reason: msg('별명은 한글, 영문, 숫자, _ 만 사용할 수 있습니다.') }
-  }
-  const reserved = ['admin', '관리자', 'aisubal', 'system', 'null', 'undefined']
-  if (reserved.includes(nickname.toLowerCase())) {
-    return { ok: false, reason: msg('사용할 수 없는 별명입니다.') }
-  }
-  return { ok: true, nickname }
-}
 
 /** A42: 부캐 (nickname) posting is retired; old nickname rows still render as before */
 export function canPostAs(postedAs: PostAs): { ok: true } | { ok: false; reason: string } {
@@ -77,7 +52,7 @@ export function publicAuthorLabel(author: PublicAuthor): string {
 }
 
 /** Keys that must never appear on public post/author payloads */
-export const FORBIDDEN_PUBLIC_KEYS = [
+const FORBIDDEN_PUBLIC_KEYS = [
   'email',
   'google_name',
   'googleName',
@@ -123,17 +98,8 @@ export function assertNoIdentityLeak(payload: unknown, secrets: string[] = []) {
   }
 }
 
-export function defaultSiteSettings(dev = false): SiteSettings {
-  return {
-    anon_unlock_threshold: dev
-      ? DEV_ANON_UNLOCK_THRESHOLD
-      : DEFAULT_ANON_UNLOCK_THRESHOLD,
-    site_name: 'AI쓰발',
-    invites_per_member: INVITES_PER_MEMBER,
-  }
-}
 
-export type PostPublicView = {
+type PostPublicView = {
   id: string
   title: string
   content: string

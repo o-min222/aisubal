@@ -1,6 +1,6 @@
 /** A56: pure rules for the blur teaser (/t/<slug>). Mirrors teaser__eligible / teaser_public (0106). */
-export const TEASER_LINES = 3
-export const TEASER_CHARS = 160
+const TEASER_LINES = 3
+const TEASER_CHARS = 160
 
 /** first 3 non-empty lines, at most 160 characters; the rest never reaches the page */
 export function teaserExcerpt(body: string): { excerpt: string; more: boolean } {

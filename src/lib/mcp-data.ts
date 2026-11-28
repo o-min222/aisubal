@@ -364,7 +364,7 @@ export function groupForAgent(gr: { slug: string; name: string; description: str
 }
 
 /** Sorts accepted by mcp_tools_list. */
-export const MCP_TOOL_SORTS = ['popular', 'newest', 'ai', 'rated', 'users', 'upvotes']
+const MCP_TOOL_SORTS = ['popular', 'newest', 'ai', 'rated', 'users', 'upvotes']
 
 function toolSummary(e: Record<string, unknown>) {
   return {

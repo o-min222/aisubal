@@ -5,7 +5,7 @@
  * Desktop: Enter (and Shift+Enter) insert a newline; Cmd/Ctrl+Enter submits.
  * IME composition (Korean syllable commit: isComposing or keyCode 229) never submits.
  */
-export type ComposerKeyEvent = {
+type ComposerKeyEvent = {
   key: string
   shiftKey?: boolean
   altKey?: boolean

@@ -3,7 +3,7 @@ import { mockFeedPost } from './feed'
 import { canOfferTeaser, teaserExcerpt, TEASER_SLUG } from '@/lib/teaser-rules'
 
 /** A56: opt-in blur teasers (0106). The excerpt is cut in the database; the full body never leaves it. */
-export type Teaser = {
+type Teaser = {
   title: string | null
   excerpt: string
   more: boolean
@@ -14,7 +14,7 @@ export type Teaser = {
   /** only for signed-in members (0107), so they can jump to the post */
   post?: string | null
 }
-export type TeaserState = { eligible: boolean; slug: string | null }
+type TeaserState = { eligible: boolean; slug: string | null }
 
 type Mock = Map<string, string> // slug → post id
 function mock(): Mock {

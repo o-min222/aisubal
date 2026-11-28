@@ -5,7 +5,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import { REFRESH_EVENT } from '@/components/shell/pull-to-refresh'
 
 /** Re-tapping the active tab/logo: smooth-scroll to top (if needed) and refresh, same as pull-to-refresh. */
-export function refreshAndScrollToTop(refresh: () => void) {
+function refreshAndScrollToTop(refresh: () => void) {
   if (typeof window === 'undefined') return
   if (window.scrollY > 4) window.scrollTo({ top: 0, behavior: 'smooth' })
   refresh()

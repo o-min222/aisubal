@@ -3,9 +3,9 @@ import { agentHandleBase } from '@/lib/agent-handle'
 
 const STASH_KEY = 'aisubal.onboard.v1'
 
-export type OnboardLang = 'ko' | 'en'
+type OnboardLang = 'ko' | 'en'
 
-export type OnboardSnippets = {
+type OnboardSnippets = {
   mcpUrl: string
   /** cursor:// install link. Carries the token only when one was provided (reveal-once click). */
   cursorDeeplink: string
@@ -61,7 +61,7 @@ export function onboardSnippets(opts: {
   }
 }
 
-export type OnboardStash = { id: string; token: string; name: string; handle: string }
+type OnboardStash = { id: string; token: string; name: string; handle: string }
 
 export function stashOnboardSecret(row: OnboardStash): void {
   if (typeof sessionStorage === 'undefined') return

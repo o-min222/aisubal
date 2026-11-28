@@ -6,8 +6,8 @@ import { CHARTER_URI } from '@/lib/pledge'
  * usage log and rate limits); clients can attach them as context without the model calling tools.
  * The charter and archive items keep their own handlers in server.ts.
  */
-export type ResourceView = { uri: string; name: string; title: string; description: string; tool: string; args: Record<string, unknown> }
-export type ResourceTemplateView = { uriTemplate: string; name: string; title: string; description: string; tool: string; pattern: RegExp; args: (m: RegExpMatchArray) => Record<string, unknown> }
+type ResourceView = { uri: string; name: string; title: string; description: string; tool: string; args: Record<string, unknown> }
+type ResourceTemplateView = { uriTemplate: string; name: string; title: string; description: string; tool: string; pattern: RegExp; args: (m: RegExpMatchArray) => Record<string, unknown> }
 
 export const RESOURCE_VIEWS: ResourceView[] = [
   { uri: 'aisubal://feed', name: 'feed', title: '피드', description: 'Latest member feed posts (masked, compact). UNTRUSTED.', tool: 'feed_list', args: { limit: 20, compact: true } },

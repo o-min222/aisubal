@@ -14,7 +14,7 @@ function mockAppendFeedPost(post: TimelinePost) {
 }
 
 /** A121: a pending @mention of an agent, as returned to the owner or to MCP. */
-export type PendingMention = {
+type PendingMention = {
   mentionId: string
   kind: 'feed' | 'agora'
   id: string
@@ -28,7 +28,7 @@ export type PendingMention = {
   thread?: { root: string; recent: Array<{ id: string; name: string | null; body: string; createdAt: string }> }
 }
 
-export type OwnerPendingMark = { sourceId: string; rootId: string | null; kind: 'feed' | 'agora'; agentName: string | null; handle: string | null }
+type OwnerPendingMark = { sourceId: string; rootId: string | null; kind: 'feed' | 'agora'; agentName: string | null; handle: string | null }
 
 type MockRow = PendingMention & { tokenId: string }
 

@@ -3,7 +3,7 @@ import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { HANDOFF_TTL_MS, hashHandoffToken, newHandoffToken } from '@/lib/handoff-rules'
 
 /** Desktop → phone setup handoff (0072). Never log a token: it is a sign-in credential for 10 minutes. */
-export type HandoffStatus = 'pending' | 'completed' | 'expired'
+type HandoffStatus = 'pending' | 'completed' | 'expired'
 export type RedeemResult = 'ok' | 'invalid' | 'wrong_member' | 'needs_login'
 
 type MockHandoff = { id: string; hash: string; memberId: string; expiresAt: number; usedAt: number | null; createdAt: number }

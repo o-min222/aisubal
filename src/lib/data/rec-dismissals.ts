@@ -4,7 +4,7 @@ import { sb, isMock } from './client'
 /** "관심 없음" on a recommendation: hidden refs per kind, private to the member (0068). */
 export const REC_KINDS = ['tool', 'member', 'agora', 'post'] as const
 export type RecKind = (typeof REC_KINDS)[number]
-export type Dismissed = Record<RecKind, Set<string>>
+type Dismissed = Record<RecKind, Set<string>>
 
 // on globalThis: route handlers and server components get separate module instances in dev
 const g = globalThis as { __recDismissMock?: Map<string, Dismissed> }

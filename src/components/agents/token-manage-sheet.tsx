@@ -8,7 +8,7 @@ import { tx } from '@/i18n/client'
 import { agentHandleBase } from '@/lib/agent-handle'
 import { AgentWebhookSection } from './agent-webhook-section'
 
-export type ManagedToken = {
+type ManagedToken = {
   id: string
   name: string
   agentName: string | null

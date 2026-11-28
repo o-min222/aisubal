@@ -5,7 +5,7 @@ import type { Locale } from '@/i18n/config'
 import { makeT, msg } from '@/i18n/translate'
 import { INVITE_MOTTO } from '@/lib/invite-share'
 
-export const INVITE_OG_SIZE = { width: 1200, height: 630 }
+const INVITE_OG_SIZE = { width: 1200, height: 630 }
 
 /** Fetch only the glyphs we draw from Google Fonts (tiny subset). No browser UA on
  * purpose: Google then serves TrueType, which the OG renderer reads (not WOFF2). */

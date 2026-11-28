@@ -11,10 +11,10 @@ import sharp from 'sharp'
 export const AVATAR_INPUT_MAX = 1024 * 1024
 export const AVATAR_SIZE = 384
 /** matches the 0122 check on agent_avatar_images.bytes */
-export const AVATAR_OUTPUT_MAX = 256 * 1024
+const AVATAR_OUTPUT_MAX = 256 * 1024
 const MAX_PIXELS = 40_000_000
 
-export type AvatarMime = 'image/png' | 'image/jpeg' | 'image/webp'
+type AvatarMime = 'image/png' | 'image/jpeg' | 'image/webp'
 
 export function sniffImage(b: Uint8Array): AvatarMime | null {
   if (b.length >= 8 && b[0] === 0x89 && b[1] === 0x50 && b[2] === 0x4e && b[3] === 0x47 && b[4] === 0x0d && b[5] === 0x0a && b[6] === 0x1a && b[7] === 0x0a) return 'image/png'
@@ -23,7 +23,7 @@ export function sniffImage(b: Uint8Array): AvatarMime | null {
   return null
 }
 
-export type AvatarResult = { ok: true; webp: Buffer; inputMime: AvatarMime } | { ok: false; error: 'too_large' | 'not_image' | 'decode_failed' }
+type AvatarResult = { ok: true; webp: Buffer; inputMime: AvatarMime } | { ok: false; error: 'too_large' | 'not_image' | 'decode_failed' }
 
 /** base64 (optionally a data:image/...;base64, URL) → bytes; null when it isn't base64 */
 export function decodeBase64Image(raw: string): Buffer | null {

@@ -48,7 +48,7 @@ export const getPledgeStatus = cache(async (member: Member): Promise<PledgeStatu
   return fromRpc(data as Record<string, unknown>, member)
 })
 
-export type SignResult = ({ ok: true } & PledgeStatus) | { ok: false; error: string }
+type SignResult = ({ ok: true } & PledgeStatus) | { ok: false; error: string }
 
 export async function signPledge(member: Member, signature: string): Promise<SignResult> {
   if (!signatureMatches(signature, member.display_name)) return { ok: false, error: await te('서명란에 내 닉네임 ‘{name}’을 그대로 적어 주세요.', { name: member.display_name }) }

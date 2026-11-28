@@ -9,7 +9,7 @@ import { sb, isMock } from './client'
  */
 
 export type SocialPerson = { id: string; name: string; handle?: string | null; avatarUrl: string | null; bio: string; relation: Relation }
-export type SocialSummary = { followers: number; following: number; friends: number; incomingRequests: number | null; relation: Relation }
+type SocialSummary = { followers: number; following: number; friends: number; incomingRequests: number | null; relation: Relation }
 export type SocialListKind = 'followers' | 'following' | 'friends' | 'requests' | 'sent'
 
 function mockViewer(id: string) {
@@ -27,7 +27,7 @@ function personFromRow(r: Record<string, unknown>): SocialPerson {
   }
 }
 
-export function mockSocialPerson(viewer: string, id: string): SocialPerson {
+function mockSocialPerson(viewer: string, id: string): SocialPerson {
   const p = mockPerson(id)
   return { id, name: p.name, handle: mockHandle(id), avatarUrl: null, bio: p.bio, relation: mockRelation(mockViewer(viewer), id) }
 }
@@ -96,7 +96,7 @@ export async function listSocial(viewerId: string, memberId: string, kind: Socia
   return ((data || []) as Array<Record<string, unknown>>).map(personFromRow)
 }
 
-export type FriendAction = 'request' | 'accept' | 'decline' | 'remove'
+type FriendAction = 'request' | 'accept' | 'decline' | 'remove'
 
 export async function setFollow(viewerId: string, memberId: string, follow: boolean): Promise<Relation> {
   if (isMock()) {

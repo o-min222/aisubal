@@ -13,7 +13,7 @@ export const FRIEND_REQUESTS_HREF = '/members/me/social?tab=requests'
 export const FRIEND_REQUESTS_EVENT = 'aisubal:friend-requests'
 
 /** The feed card shows this many rows, then 'N개 더'. */
-export const FEED_CARD_MAX = 3
+const FEED_CARD_MAX = 3
 
 export type IncomingRequest = { id: string; name: string; avatarUrl: string | null }
 

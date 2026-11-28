@@ -36,4 +36,3 @@ export const moimInputSchema = z.object({
   /** @handles to notify when the 모임 opens (create only) */
   invites: z.array(z.string().trim().max(40)).max(MAX_INVITES, msg('초대는 한 번에 30명까지예요')).optional(),
 })
-export type MoimInputBody = z.infer<typeof moimInputSchema>

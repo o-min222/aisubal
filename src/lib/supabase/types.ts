@@ -81,15 +81,6 @@ export type WaitlistEntry = {
   created_at: string
 }
 
-export type InviteCode = {
-  id: string
-  code: string
-  created_by_id: string
-  used_by_id: string | null
-  used_at: string | null
-  note: string | null
-  created_at: string
-}
 
 export type LinkType = 'article' | 'youtube' | 'x' | 'github' | 'other'
 
@@ -153,12 +144,6 @@ export type Asset = {
   updated_at: string
 }
 
-export type ArchiveFolder = {
-  id: string
-  owner_id: string
-  name: string
-  created_at: string
-}
 
 /** Legacy post-only archive row (kept for older code paths) */
 export type ArchiveItem = {
@@ -171,18 +156,6 @@ export type ArchiveItem = {
   created_at: string
 }
 
-export type ApiToken = {
-  id: string
-  member_id: string
-  name: string
-  token_hash: string
-  token_prefix: string
-  scopes: string
-  last_used_at: string | null
-  expires_at: string | null
-  is_revoked: boolean
-  created_at: string
-}
 
 export type Report = {
   id: string
@@ -201,9 +174,8 @@ export type SiteSettings = {
   invites_per_member: number
 }
 
-export type MeetupMode = 'offline' | 'online'
-export type MeetupRsvpStatus = 'pending' | 'confirmed' | 'waitlisted' | 'rejected' | 'cancelled'
-export type MeetupStatus = 'open' | 'closed' | 'cancelled' | 'past'
+type MeetupMode = 'offline' | 'online'
+type MeetupStatus = 'open' | 'closed' | 'cancelled' | 'past'
 
 export type Meetup = {
   id: string
@@ -231,24 +203,7 @@ export type Meetup = {
   updated_at: string
 }
 
-export type MeetupRsvp = {
-  id: string
-  meetup_id: string
-  member_id: string
-  posted_as: PostAs
-  nickname_profile_id: string | null
-  status: MeetupRsvpStatus
-  note: string | null
-  created_at: string
-  updated_at: string
-}
 
-export type MeetupAnnouncement = {
-  id: string
-  meetup_id: string
-  body: string
-  created_at: string
-}
 
 export type Product = {
   id: string

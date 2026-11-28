@@ -13,7 +13,7 @@ export type Snippets = Partial<Record<ToolboxEnvironment | 'generic', string>>
 type Mcp =
   | { kind: 'npx'; name: string; pkg: string; args?: string[]; env?: string[] }
   | { kind: 'remote'; name: string; url: string; note?: string }
-export type VerifiedInstall = {
+type VerifiedInstall = {
   /** official install / docs page shown next to (or instead of) commands */
   docs: string
   mcp?: Mcp

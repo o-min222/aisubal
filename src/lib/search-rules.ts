@@ -20,7 +20,7 @@ export function parseSearchTab(v: string | null | undefined): SearchTab {
   return SEARCH_TABS.some((t) => t.id === v) ? (v as SearchTab) : 'all'
 }
 
-export const SEARCH_MAX_LEN = 60
+const SEARCH_MAX_LEN = 60
 
 /**
  * Normalizes a query for ilike filters: trims, caps the length, and drops characters that

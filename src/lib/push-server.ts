@@ -9,12 +9,12 @@ import type { Locale } from '@/i18n/config'
  * Sends queued pushes (D1). The outbox lives in the DB (0075); claim/report are SECURITY DEFINER RPCs gated by
  * PUSH_DISPATCH_SECRET (the DB keeps only its sha256), so this runs on the anon key. Never logs endpoints or keys.
  */
-export function pushConfigured(): boolean {
+function pushConfigured(): boolean {
   return Boolean(process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY && process.env.VAPID_SUBJECT && process.env.PUSH_DISPATCH_SECRET)
 }
 
 const g = globalThis as unknown as { __aisubalPushRun?: Promise<DispatchResult> | null }
-export type DispatchResult = { configured: boolean; sent: number; gone: number; failed: number }
+type DispatchResult = { configured: boolean; sent: number; gone: number; failed: number }
 
 /** One run at a time per instance; a nudge during a run just joins it. */
 export function dispatchPush(): Promise<DispatchResult> {

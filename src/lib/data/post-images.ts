@@ -24,7 +24,7 @@ export async function uploadPostImage(authId: string, file: File): Promise<strin
 }
 
 /** Mock-only: the uploaded bytes (DEV serves them directly). */
-export function mockPostImage(path: string) {
+function mockPostImage(path: string) {
   return mem().get(path) ?? null
 }
 

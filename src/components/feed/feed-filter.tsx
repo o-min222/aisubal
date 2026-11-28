@@ -6,7 +6,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { T } from '@/i18n/t'
 import { tx } from '@/i18n/client'
 
-export type FeedFilterItem = { id: string; label: string; href: string }
+type FeedFilterItem = { id: string; label: string; href: string }
 
 /** A59: the feed's only control — a small "전체 ▾" text menu instead of a tab bar (?f=).
  *  A60: the 아고라 uses the same menu with its own filters. */

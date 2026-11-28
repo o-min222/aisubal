@@ -14,7 +14,8 @@ import { ArticleOwnerMenu } from '@/components/articles/article-owner-menu'
 import { ArticleShareButton } from '@/components/articles/article-share-button'
 import { ArticleReadCover } from '@/components/articles/article-framed-image'
 import { T } from '@/i18n/t'
-import { getT } from '@/i18n/server'
+import { getLocale, getT } from '@/i18n/server'
+import { LOCALE_META } from '@/i18n/config'
 import { articleHref, articleSeriesHref, formatReadingTime, isReservedArticleSlug, isPublicArticlePath, articleImageSrc, articleDocumentTitle } from '@/lib/article-rules'
 
 type Props = { params: Promise<{ slug: string }> }
@@ -56,7 +57,7 @@ export default async function ArticleReadPage({ params }: Props) {
   const comments = signedIn ? await listArticleComments(article.id).catch(() => []) : []
   const cover = articleImageSrc(article.coverPath)
   const date = article.publishedAt
-    ? new Date(article.publishedAt).toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' })
+    ? new Date(article.publishedAt).toLocaleDateString(LOCALE_META[await getLocale()].intl, { timeZone: 'Asia/Seoul', year: 'numeric', month: 'long', day: 'numeric' })
     : null
   const next = articleHref(article.slug)
 

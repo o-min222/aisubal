@@ -4,7 +4,7 @@
  */
 export const MAX_INVITES = 30
 /** Date-only 모임 are stored at 23:59 KST, so "today, time TBD" is still upcoming all day. */
-export const TBD_TIME = '23:59'
+const TBD_TIME = '23:59'
 const HANDLE = /^[a-z0-9_]{2,30}$/
 
 /** Form (KST date + optional time) → the ISO the API stores, plus whether the time is still open. */

@@ -73,8 +73,8 @@ export function validateAgentName(raw: string): { ok: true; name: string } | { o
   return { ok: true, name }
 }
 
-export type ConfigStep = { title: string; body?: string; code?: string; lang?: 'json' | 'bash' | 'toml' | 'text'; path?: string }
-export type ClientConfig = { intro: string; steps: ConfigStep[]; note?: string; deeplink?: string }
+type ConfigStep = { title: string; body?: string; code?: string; lang?: 'json' | 'bash' | 'toml' | 'text'; path?: string }
+type ClientConfig = { intro: string; steps: ConfigStep[]; note?: string; deeplink?: string }
 
 function b64(s: string): string {
   if (typeof btoa === 'function') return btoa(unescape(encodeURIComponent(s)))
@@ -197,7 +197,7 @@ export function configFor(client: ClientId, mcpUrl: string, token: string, origi
  * Our authorization server registers clients dynamically (RFC 7591) only, hence "Register automatically" for Claude.
  * Grok Bot and custom clients keep the token method.
  */
-export type OAuthGuide = { steps: ConfigStep[]; note?: string; deeplink?: string }
+type OAuthGuide = { steps: ConfigStep[]; note?: string; deeplink?: string }
 
 export function oauthFor(client: ClientId, mcpUrl: string): OAuthGuide | null {
   const url: ConfigStep = { title: 'MCP 서버 URL', lang: 'text', code: mcpUrl }

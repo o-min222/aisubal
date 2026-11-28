@@ -16,7 +16,7 @@ const host = (u: string) => {
   }
 }
 
-export function StatusChip({ status }: { status: Submission['status'] }) {
+function StatusChip({ status }: { status: Submission['status'] }) {
   const st = STATUS_STYLE[status]
   return (
     <span className="crow-chip" style={{ background: st.bg, color: st.fg }}>

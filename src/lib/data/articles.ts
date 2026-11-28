@@ -254,7 +254,7 @@ export function mockArticleSharePreview(on?: boolean): boolean {
   if (on !== undefined) st.sharePreview = on
   return st.sharePreview
 }
-export function mockArticleWriter(memberId: string, on?: boolean): boolean {
+function mockArticleWriter(memberId: string, on?: boolean): boolean {
   const st = seed()
   if (on === true) st.writer.add(memberId)
   if (on === false) st.writer.delete(memberId)
@@ -298,7 +298,6 @@ export async function getArticle(slug: string, opts: { teaser?: boolean } = {}):
   return data ? asCard(data) : null
 }
 
-export const getArticleCached = cache(getArticle)
 
 export async function getArticleById(id: string): Promise<ArticleCard | null> {
   if (isMock()) {

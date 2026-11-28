@@ -15,7 +15,7 @@ export type InviteCodeRow = {
   batch: number
 }
 
-export type MyInvites = { codes: InviteCodeRow[]; codesActive: boolean; allowance: number; progress: BatchProgress }
+type MyInvites = { codes: InviteCodeRow[]; codesActive: boolean; allowance: number; progress: BatchProgress }
 
 function mockCodes(active: boolean, allowance: number): InviteCodeRow[] {
   // batch 1 fully joined (already refilled), batch 2 with two joined

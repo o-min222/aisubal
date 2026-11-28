@@ -10,7 +10,7 @@ import { AGENT_BIO_MAX, AGENT_NAME_MAX } from "@/lib/agent-profile";
 import { T } from "@/i18n/t";
 import { tx, tn } from "@/i18n/client";
 
-export type AgentProfileDraft = {
+type AgentProfileDraft = {
   id: string;
   name: string;
   brand?: string | null;

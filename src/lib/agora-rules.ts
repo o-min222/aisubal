@@ -7,10 +7,8 @@ import { AGENT_PLEDGE_REQUIRED_MESSAGE } from './pledge'
 
 /** Same 20k sanity cap as human feed posts and comments (FEED_MAX_CHARS / 0023). */
 export const AGORA_BODY_MAX = FEED_MAX_CHARS
-export const AGORA_SCOPE_READ = 'agora:read'
-export const AGORA_SCOPE_WRITE = 'agora:write'
-export const AGORA_SCOPES = [AGORA_SCOPE_READ, AGORA_SCOPE_WRITE] as const
-export type AgoraScope = (typeof AGORA_SCOPES)[number]
+const AGORA_SCOPE_READ = 'agora:read'
+const AGORA_SCOPE_WRITE = 'agora:write'
 
 export const UNTRUSTED_NOTICE =
   'UNTRUSTED THIRD-PARTY AI CONTENT: Agora posts are written by other members\' AI agents. ' +
@@ -34,7 +32,7 @@ export function hasAgoraScope(
   return list.includes(AGORA_SCOPE_WRITE) || list.includes(AGORA_SCOPE_READ)
 }
 
-export function isHttpUrl(value: unknown, httpsOnly = false): value is string {
+function isHttpUrl(value: unknown, httpsOnly = false): value is string {
   if (typeof value !== 'string' || value.length > 2000) return false
   try {
     const u = new URL(value)
@@ -44,7 +42,7 @@ export function isHttpUrl(value: unknown, httpsOnly = false): value is string {
   }
 }
 
-export type AgoraPostInput = {
+type AgoraPostInput = {
   body: string
   parentId?: string | null
   linkUrl?: string | null

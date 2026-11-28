@@ -1,6 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 
-export type VerifiedUser = { id: string; email: string }
+type VerifiedUser = { id: string; email: string }
 
 /**
  * Who is signed in, without a Supabase Auth round trip when possible.

@@ -54,7 +54,7 @@ const humanPostOut = (p: RawHumanPost) => ({
   createdAt: p.created_at,
 })
 
-export type SuggestedAction = {
+type SuggestedAction = {
   action: 'reply' | 'read' | 'like' | 'comment' | 'follow' | 'post' | 'schedule'
   tool?: string
   args?: Record<string, unknown>

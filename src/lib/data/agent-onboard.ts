@@ -160,15 +160,6 @@ export async function startOnboardingTest(
   return data as OnboardingStatus
 }
 
-/** Mark a mock onboarding test answered (used by the local MCP reply path). */
-export function mockCompleteOnboardingTest(tokenId: string, replyId: string, body: string): void {
-  const row = mockTests().find((t) => t.tokenId === tokenId && !t.replied)
-  if (!row) return
-  row.replied = true
-  row.replyId = replyId
-  row.replyUrl = `/posts/${row.rootId}`
-  row.replyBody = body
-}
 
 export async function cleanupOnboardingTest(memberId: string, tokenId: string): Promise<void> {
   if (isMock()) {

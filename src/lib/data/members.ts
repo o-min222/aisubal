@@ -14,20 +14,6 @@ function asMember(row: Record<string, unknown> | null): Member | null {
   return { email: '', ...row } as Member
 }
 
-export async function listMembers(): Promise<Member[]> {
-  if (isMock()) return MOCK_MEMBERS
-
-  const supabase = await sb()
-  const { data, error } = await supabase
-    .from('members')
-    .select(MEMBER_PUBLIC_COLUMNS)
-    .not('signup_completed_at', 'is', null)
-    .eq('is_banned', false)
-    .order('created_at', { ascending: true })
-
-  if (error) throw error
-  return (data || []).map((r) => asMember(r as Record<string, unknown>)!) 
-}
 
 export async function getMemberById(id: string): Promise<Member | null> {
   if (isMock()) {
@@ -44,7 +30,7 @@ export async function getMemberById(id: string): Promise<Member | null> {
   return asMember(data as Record<string, unknown> | null)
 }
 
-export async function countActiveMembers(): Promise<number> {
+async function countActiveMembers(): Promise<number> {
   if (isMock()) return MOCK_ACTIVE_MEMBER_COUNT
 
   const supabase = await sb()
@@ -103,7 +89,7 @@ export async function getAnonUnlockFromConfig(activeCount?: number) {
 }
 
 /** Resolve a unique @handle to a member id (mentions resolve to handles only). */
-export async function getMemberIdByHandle(handle: string): Promise<string | null> {
+async function getMemberIdByHandle(handle: string): Promise<string | null> {
   if (!/^[a-z0-9_]{3,20}$/.test(handle)) return null
   if (isMock()) {
     if (handle === 'dev') return 'dev-user-id'

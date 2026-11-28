@@ -2,11 +2,7 @@ import { cache } from 'react'
 import type { PostVisibility } from '@/lib/post-visibility'
 import { postImageSrc } from '@/lib/quick-post-rules'
 import { setMockPostVisibilityDefault } from './agent-interaction-default'
-import {
-  MOCK_MEMBERS,
-  MOCK_POSTS,
-  MOCK_TRENDING,
-} from '@/lib/mock-data'
+import { MOCK_POSTS } from '@/lib/mock-data'
 import { nicknameProfilePublicId, toPublicAuthor, toPublicPost, toPublicPostView, assertNoIdentityLeak } from '@/lib/profile'
 import { aggregateMentionsFromPosts } from '@/lib/data/toolbox'
 import { archiveSaveCounts } from '@/lib/data/archive'
@@ -16,11 +12,11 @@ import { normalizeReplyTarget } from '@/lib/thread'
 import { sb, isMock } from './client'
 import { mentionedAgentHandles } from '@/lib/agent-handle'
 import { mockRecordAgentMention } from './agent-mentions'
-import { MEMBER_EMBED, MEMBER_PUBLIC_COLUMNS } from './member-columns'
+import { MEMBER_EMBED } from './member-columns'
 import type { PostWithDetails } from './types'
 
 /** posts columns readable by members (0036/0052): author_id is the PUBLIC author (null on 부캐 rows); no agent_token_name. */
-export const POST_COLUMNS =
+const POST_COLUMNS =
   'id, title, content, url, link_title, link_description, link_image, link_site_name, link_favicon, link_type, link_previews, author_id:public_author_id, posted_as, is_hidden, is_agent_posted, created_at, updated_at, parent_id, root_id, reply_to_id, thread_depth, like_count, reply_count, agent_interaction, author_kind, agent_token_id, agent_name, agent_model, group_id, source_note'
 
 export type { PostWithDetails } from './types'
@@ -139,15 +135,6 @@ export async function getPost(id: string): Promise<PostWithDetails | null> {
   return hydratePost(post, a, assets || [])
 }
 
-export async function listTrendingPosts(limit = 5): Promise<PostWithDetails[]> {
-  if (isMock()) return MOCK_TRENDING.slice(0, limit)
-
-  const posts = await listPosts()
-  return posts
-    .slice()
-    .sort((a, b) => b.archive_count - a.archive_count)
-    .slice(0, limit)
-}
 
 export async function getPostAsset(
   postId: string,
@@ -346,21 +333,6 @@ export async function deletePost(id: string, memberId: string): Promise<boolean>
   return data === true
 }
 
-/** Resolve author Member for a post (mock or supabase). */
-export async function getPostAuthorMember(authorId: string | null): Promise<Member | null> {
-  if (!authorId) return null // 0052: 부캐 rows carry no public author
-  if (isMock()) {
-    return MOCK_MEMBERS.find((m) => m.id === authorId) ?? null
-  }
-  const supabase = await sb()
-  const { data, error } = await supabase
-    .from('members')
-    .select(MEMBER_PUBLIC_COLUMNS)
-    .eq('id', authorId)
-    .maybeSingle()
-  if (error) throw error
-  return data ? ({ email: '', ...(data as object) } as Member) : null
-}
 
 export async function listPublicPosts() {
   const posts = await listPosts()

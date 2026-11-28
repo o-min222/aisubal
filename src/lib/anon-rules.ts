@@ -37,7 +37,7 @@ export function parseSort(v: string | null | undefined): AnonSort {
 }
 
 /** The thread author's alias; their replies also carry the 글쓴이 chip (isOp). */
-export const ANON_OP_ALIAS = '익명'
+const ANON_OP_ALIAS = '익명'
 
 /**
  * A42: per-thread aliases (mirrors anon_private.alias_for, 0097). The OP is "익명" and everyone else
@@ -50,7 +50,7 @@ export function pickAlias(used: Iterable<string>, isOp = false): string {
   return `익명${n + 1}`
 }
 
-export type AnonInput = { body: string; category: AnonCategory | null; parentId: string | null }
+type AnonInput = { body: string; category: AnonCategory | null; parentId: string | null }
 
 export function validateAnonInput(raw: {
   body?: unknown

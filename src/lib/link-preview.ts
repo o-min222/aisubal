@@ -124,7 +124,7 @@ export function extractUrls(text: string, max = MAX_LINK_PREVIEWS): string[] {
 }
 
 const ENT: Record<string, string> = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ', '#39': "'" }
-export function decodeHtmlEntities(s: string): string {
+function decodeHtmlEntities(s: string): string {
   return s
     .replace(/&#x([0-9a-f]+);/gi, (_, h) => cp(parseInt(h, 16)))
     .replace(/&#(\d+);/g, (_, d) => cp(Number(d)))

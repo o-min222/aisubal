@@ -5,7 +5,7 @@
  */
 const SUPABASE = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://*.supabase.co'
 
-export const CSP_REPORT_ONLY = [
+const CSP_REPORT_ONLY = [
   "default-src 'self'",
   // inline theme / PWA boot scripts in <head>; Next.js runtime chunks
   "script-src 'self' 'unsafe-inline'",

@@ -14,7 +14,7 @@ export function interpolate(s: string, vars?: Vars): string {
  * Context marker: '추천||feed tab' is shown as '추천' in Korean but has its own
  * dictionary entry, for a short word whose translation depends on where it sits.
  */
-export const CTX_SEP = '||'
+const CTX_SEP = '||'
 const stripCtx = (s: string) => {
   const i = s.indexOf(CTX_SEP)
   return i < 0 ? s : s.slice(0, i)

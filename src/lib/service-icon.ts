@@ -2,7 +2,7 @@ import { safeFetchText } from '@/lib/safe-fetch'
 import { githubOwnerAvatar, iconCandidates, siteForIcons, type IconSource } from '@/lib/service-icon-rules'
 
 /** GET through the SSRF-safe fetch; the final (post-redirect) URL if it really is an image. */
-export async function probeImage(url: string): Promise<string | null> {
+async function probeImage(url: string): Promise<string | null> {
   const r = await safeFetchText(url, 'image/avif,image/webp,image/png,image/svg+xml,image/*;q=0.8')
   return r.ok && r.status === 200 && /^image\//.test(r.contentType) && r.finalUrl.length <= 500 ? r.finalUrl : null
 }

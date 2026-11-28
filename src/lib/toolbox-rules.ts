@@ -199,37 +199,6 @@ export function upsertReview(
   }
 }
 
-export function upsertCompatVote(
-  votes: ToolboxCompatVote[],
-  entryId: string,
-  memberId: string,
-  environment: ToolboxEnvironment,
-  works: boolean
-): ToolboxCompatVote[] {
-  const idx = votes.findIndex(
-    (v) =>
-      v.entry_id === entryId &&
-      v.member_id === memberId &&
-      v.environment === environment
-  )
-  const now = new Date().toISOString()
-  if (idx >= 0) {
-    const next = [...votes]
-    next[idx] = { ...next[idx], works, created_at: now }
-    return next
-  }
-  return [
-    ...votes,
-    {
-      id: `tc-${entryId}-${memberId}-${environment}`,
-      entry_id: entryId,
-      member_id: memberId,
-      environment,
-      works,
-      created_at: now,
-    },
-  ]
-}
 
 export function compatSummary(
   votes: ToolboxCompatVote[],

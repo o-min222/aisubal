@@ -232,7 +232,7 @@ export async function listGroupMembers(viewerId: string, groupId: string): Promi
 }
 
 // ------------------------------------------------------------------ writes
-export type GroupInput = { name: string; slug?: string; description: string; emoji: string | null; joinPolicy: JoinPolicy; isHidden: boolean }
+type GroupInput = { name: string; slug?: string; description: string; emoji: string | null; joinPolicy: JoinPolicy; isHidden: boolean }
 
 export async function createGroup(viewerId: string, input: GroupInput): Promise<Group> {
   if (isMock()) {

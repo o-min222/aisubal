@@ -33,7 +33,7 @@ export function toolParams(t: ToolSpec): string[] {
     .map((k) => (req.has(k) ? k : `${k}?`))
 }
 
-export type CatalogResource = { uri: string; title: string; description: string; template: boolean }
+type CatalogResource = { uri: string; title: string; description: string; template: boolean }
 
 export function catalogResources(f?: { scopes: readonly string[]; isAdmin: boolean }): CatalogResource[] {
   const ok = (tool: string) => !f || toolAllowed(tool, f.scopes, f.isAdmin)

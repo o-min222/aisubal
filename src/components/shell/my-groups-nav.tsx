@@ -6,7 +6,7 @@ import { Plus } from 'lucide-react'
 import { useT } from '@/i18n/client'
 import { GroupAvatar } from '@/components/groups/group-avatar'
 
-export type MyGroupLink = { slug: string; name: string; emoji: string | null; role: string | null }
+type MyGroupLink = { slug: string; name: string; emoji: string | null; role: string | null }
 
 /** Side panel '내 그룹' (content-only: just links into each group's timeline). */
 export function MyGroupsNav({ groups }: { groups: MyGroupLink[] }) {

@@ -21,11 +21,11 @@ export type AgentUsage = {
   /** rolling 24 h, same window as the daily limit */
   today: number
 }
-export type AdminUsageAgent = {
+type AdminUsageAgent = {
   tokenId: string; name: string; handle: string | null; owner: string; ownerHandle: string | null
   calls: number; errors: number; limited: number; avgMs: number | null
 }
-export type AdminUsage = { days: number; total: number; errors: number; limited: number; limits: McpLimits; agents: AdminUsageAgent[]; tools: ToolUsage[] }
+type AdminUsage = { days: number; total: number; errors: number; limited: number; limits: McpLimits; agents: AdminUsageAgent[]; tools: ToolUsage[] }
 
 const num = (v: unknown): number => (typeof v === 'number' ? v : Number(v) || 0)
 const numOrNull = (v: unknown): number | null => (v == null ? null : num(v))
@@ -78,7 +78,7 @@ export async function getAgentUsage(tokenId: string, days = 7): Promise<AgentUsa
   return toAgentUsage(data as Record<string, unknown>)
 }
 
-export function toAdminUsage(j: Record<string, unknown>): AdminUsage {
+function toAdminUsage(j: Record<string, unknown>): AdminUsage {
   return {
     days: num(j.days) || 1, total: num(j.total), errors: num(j.errors), limited: num(j.limited), limits: limitsOf(j.limits),
     agents: ((j.agents as Record<string, unknown>[]) ?? []).map((a) => ({

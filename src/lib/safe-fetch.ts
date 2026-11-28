@@ -15,7 +15,7 @@ import http from 'node:http'
 import https from 'node:https'
 import net from 'node:net'
 
-export const SAFE_FETCH_UA = 'AIsubalReviewBot/1.0 (+https://aisubal.vercel.app; page snapshot for human/admin review)'
+const SAFE_FETCH_UA = 'AIsubalReviewBot/1.0 (+https://aisubal.vercel.app; page snapshot for human/admin review)'
 const MAX_BYTES = 512 * 1024
 const TIMEOUT_MS = 6000
 const MAX_REDIRECTS = 4
@@ -37,7 +37,7 @@ function v4Blocked(ip: string): boolean {
 }
 
 /** Expand an IPv6 address to 8 numeric hextets (handles :: and embedded IPv4). */
-export function expandIpv6(ip: string): number[] | null {
+function expandIpv6(ip: string): number[] | null {
   let s = ip.toLowerCase().split('%')[0]
   const v4 = s.match(/(\d+\.\d+\.\d+\.\d+)$/)
   if (v4) {
@@ -78,7 +78,7 @@ export function isBlockedIp(ip: string): boolean {
 
 const BLOCKED_SUFFIX = ['.localhost', '.local', '.internal', '.lan', '.home', '.home.arpa', '.intranet', '.corp', '.localdomain']
 
-export type UrlCheck = { ok: true; url: URL } | { ok: false; reason: string }
+type UrlCheck = { ok: true; url: URL } | { ok: false; reason: string }
 
 export function checkFetchUrl(raw: string | URL): UrlCheck {
   let u: URL
@@ -179,7 +179,7 @@ export class BlockedUrlError extends Error {
   }
 }
 
-export type SafeFetchResult =
+type SafeFetchResult =
   | { ok: true; finalUrl: string; status: number; contentType: string; text: string; truncated: boolean; redirects: string[] }
   | { ok: false; error: string; finalUrl?: string; redirects: string[] }
 
@@ -225,7 +225,7 @@ export async function safeFetchText(raw: string, accept = 'text/html,application
 }
 
 // ------------------------------------------------------------------ image bytes (A69)
-export type SafeFetchBytesResult =
+type SafeFetchBytesResult =
   | { ok: true; finalUrl: string; contentType: string; body: Buffer; redirects: string[] }
   | { ok: false; error: string; redirects: string[] }
 
@@ -269,7 +269,7 @@ export async function safeFetchBytes(raw: string, maxBytes: number): Promise<Saf
 }
 
 // ------------------------------------------------------------------ webhook POST
-export const WEBHOOK_UA = 'AIsubalWebhook/1.0 (+https://aisubal.vercel.app/skill.md)'
+const WEBHOOK_UA = 'AIsubalWebhook/1.0 (+https://aisubal.vercel.app/skill.md)'
 
 /** https-only variant of checkFetchUrl for agent webhooks. */
 export function checkWebhookUrl(raw: string): UrlCheck {
@@ -290,7 +290,7 @@ export function resolvesPublic(host: string): Promise<boolean> {
   })
 }
 
-export type WebhookPostResult = { ok: boolean; status: number | null; error: string | null }
+type WebhookPostResult = { ok: boolean; status: number | null; error: string | null }
 
 /**
  * One signed webhook POST: https only, no redirects (a 3xx counts as failure),
@@ -377,7 +377,7 @@ export type PageSnapshot = {
   error?: string
 }
 
-export function htmlToSnapshotParts(html: string, textMax = 3500) {
+function htmlToSnapshotParts(html: string, textMax = 3500) {
   const title = clean(meta(html, 'og:title') || html.match(/<title[^>]*>([\s\S]*?)<\/title>/i)?.[1], 200)
   const description = clean(meta(html, 'og:description') || meta(html, 'description'), 400)
   const siteName = clean(meta(html, 'og:site_name'), 80)

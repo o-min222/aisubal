@@ -1,6 +1,6 @@
 import { getYoutubeId } from '@/lib/link-preview'
 
-export type VideoEmbed = { provider: 'youtube' | 'vimeo' | 'x'; id: string; embedUrl: string; thumb: string | null }
+type VideoEmbed = { provider: 'youtube' | 'vimeo' | 'x'; id: string; embedUrl: string; thumb: string | null }
 
 /**
  * Click-to-play embeds for list cards. Ids are matched strictly so the iframe

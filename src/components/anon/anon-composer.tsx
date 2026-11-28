@@ -14,6 +14,7 @@ import { tx, tn } from '@/i18n/client'
 import { AnonTopicPicker } from './anon-topic-picker'
 import { ComposerFrame, ComposerTextarea } from '@/components/composer/composer-frame'
 import { useComposer } from '@/components/composer/use-composer'
+import { fetchJson } from '@/lib/fetch-json'
 
 /** 익명 composer. Root posts pick a category; replies inherit the thread's. */
 export function AnonComposer({
@@ -49,13 +50,11 @@ export function AnonComposer({
     piiNotice: (pii) => tx('{pii} 익명이어도 신원이 드러날 수 있어요. 그래도 올리려면 한 번 더 눌러주세요.', { pii }),
     errorFallback: () => tn('게시하지 못했어요.'),
     send: async (text) => {
-      const res = await fetch('/api/anon', {
+      const { ok, data } = await fetchJson<{ id: string; alias: string }>('/api/anon', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ body: text, category, parentId }),
+        json: { body: text, category, parentId },
       })
-      const data = await res.json().catch(() => ({}))
-      if (!res.ok) throw new Error(data.error || tx('게시하지 못했어요.'))
+      if (!ok) throw new Error(data.error || tx('게시하지 못했어요.'))
       setBody('')
       toast.success(isReply ? tx('{alias}(으)로 답글을 남겼어요', { alias: data.alias }) : tx('{alias}(으)로 게시했어요', { alias: data.alias }))
       if (isReply && countIds?.length) publishReplyDelta(countIds, 1)

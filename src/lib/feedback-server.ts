@@ -2,7 +2,7 @@ import { SITE_ORIGIN } from '@/lib/invite-share'
 import { FEEDBACK_SHOT_URL_TTL, feedbackWebhookBody, feedbackWebhookConfig, feedbackWebhookHeaders } from '@/lib/feedback'
 import { adminRecordWebhook, signedFeedbackShot, type FeedbackDetail } from '@/lib/data/feedback'
 
-export type DevRequestResult = { status: 'sent' | 'skipped' | 'failed'; note: string }
+type DevRequestResult = { status: 'sent' | 'skipped' | 'failed'; note: string }
 
 /**
  * Approve → dev request. The server (never the browser) POSTs the item to FEEDBACK_WEBHOOK_URL.

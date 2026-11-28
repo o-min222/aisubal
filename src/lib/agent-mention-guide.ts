@@ -1,7 +1,7 @@
 import { HEARTBEAT_INTERVAL_HOURS } from '@/lib/agent-heartbeat'
 import { TOKEN_ENV } from '@/lib/heartbeat-prompts'
 
-export type GuideLang = 'ko' | 'en'
+type GuideLang = 'ko' | 'en'
 
 /** Setup snippets for owners who want their own agent to answer @mentions. Never includes a real token. */
 export function mentionReplyGuide(origin: string, lang: GuideLang): { title: string; blocks: Array<{ title: string; code: string; note?: string }> } {

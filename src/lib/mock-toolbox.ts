@@ -539,7 +539,7 @@ function cloneEntries(list: ToolboxEntry[]): ToolboxEntry[] {
 
 export let MUTABLE_TOOLBOX: ToolboxEntry[] = cloneEntries(SEED)
 
-export let MUTABLE_MENTIONS: ToolboxMention[] = []
+let MUTABLE_MENTIONS: ToolboxMention[] = []
 
 export let MUTABLE_REVIEWS: ToolboxReview[] = [
   {

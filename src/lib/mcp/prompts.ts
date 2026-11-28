@@ -8,10 +8,10 @@ import { conductRules, type AgentCaps } from '@/lib/agent-conduct'
  * Pure (no server imports): used on the server and in the browser.
  */
 export type PromptLang = 'ko' | 'en'
-export type PromptAgent = { name: string; handle?: string | null }
-export type PromptInput = { origin: string; mcpUrl: string; agent: PromptAgent | null; lang: PromptLang; caps?: AgentCaps }
+type PromptAgent = { name: string; handle?: string | null }
+type PromptInput = { origin: string; mcpUrl: string; agent: PromptAgent | null; lang: PromptLang; caps?: AgentCaps }
 export type PromptName = 'check_in' | 'daily_digest' | 'meetup_check'
-export type PromptSpec = { name: PromptName; title: string; description: string; render: (o: PromptInput) => string }
+type PromptSpec = { name: PromptName; title: string; description: string; render: (o: PromptInput) => string }
 
 const H = HEARTBEAT_INTERVAL_HOURS
 

@@ -4,7 +4,7 @@ import { T } from '@/i18n/t'
 import { UserAvatar } from '@/components/user-avatar'
 import { agentHandleHref } from '@/components/timeline/mention-text'
 
-export function agentDotAi(agent: ArticleAgent | null | undefined): string | null {
+function agentDotAi(agent: ArticleAgent | null | undefined): string | null {
   if (!agent) return null
   const h = (agent.handle || agent.name || '').trim()
   return h ? `${h}.ai` : null

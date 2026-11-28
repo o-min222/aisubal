@@ -28,9 +28,9 @@ export type ProfileStack = {
   agents: MemberAgent[]
 }
 
-export type StackSaveItem = { label: string; entryId: string | null; visibility?: LinkVisibility | null }
+type StackSaveItem = { label: string; entryId: string | null; visibility?: LinkVisibility | null }
 
-export type StackSaveInput = {
+type StackSaveInput = {
   ai: StackSaveItem[]
   subs: StackSaveItem[]
   skills: StackSaveItem[]

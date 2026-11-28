@@ -9,14 +9,14 @@
  * - Founder/admin bootstrap members get active codes immediately
  */
 
-export type InviteCodeRecord = {
+type InviteCodeRecord = {
   code: string
   created_by_id: string
   used_by_id: string | null
   used_at: string | null
 }
 
-export type MemberRecord = {
+type MemberRecord = {
   id: string
   signup_completed_at: string | null
   is_admin?: boolean

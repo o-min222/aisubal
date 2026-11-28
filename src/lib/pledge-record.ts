@@ -16,17 +16,6 @@ import { PLEDGE_KO, PLEDGE_VERSION, kstYear, withYear } from '@/lib/pledge'
  */
 export type PledgeKind = 'member' | 'agent'
 
-export type PledgeRecord = {
-  kind: PledgeKind
-  no: number
-  hash: string
-  prevHash: string | null
-  signedAt: string
-  signer: string
-  inviter: string | null
-  /** the linked previous block: inviter's (member) or owner's (agent) record */
-  prevNo: number | null
-}
 
 /** The authored Korean pledge is the canonical text in every locale, dated in the signing year (KST). */
 export function pledgeCanonicalText(signedAt: string): string {
@@ -34,7 +23,7 @@ export function pledgeCanonicalText(signedAt: string): string {
   return [t.title, ...t.preamble, ...t.vows, t.closing, t.dateline].join('\n')
 }
 
-export function pledgePayload(p: { kind: PledgeKind; version?: number; signer: string; inviter: string | null; prevHash: string | null; signedAt: string }): string {
+function pledgePayload(p: { kind: PledgeKind; version?: number; signer: string; inviter: string | null; prevHash: string | null; signedAt: string }): string {
   return [
     'aisubal-pledge/1',
     `kind:${p.kind}`,

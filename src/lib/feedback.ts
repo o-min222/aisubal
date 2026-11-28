@@ -80,11 +80,11 @@ export const feedbackShotPath = (authId: string, id: string) => `${authId}/${id}
 /** The webhook's screenshot link lives this long (seconds). */
 export const FEEDBACK_SHOT_URL_TTL = 6 * 60 * 60
 
-export const feedbackAdminPath = (id: string) => `/admin/feedback/${id}`
+const feedbackAdminPath = (id: string) => `/admin/feedback/${id}`
 
 /* ---------- approve → dev request webhook ---------- */
 
-export type FeedbackWebhookConfig = { url: string; key: string; header: string | null }
+type FeedbackWebhookConfig = { url: string; key: string; header: string | null }
 
 /** FEEDBACK_WEBHOOK_URL + FEEDBACK_WEBHOOK_KEY (+ optional FEEDBACK_WEBHOOK_HEADER). null = not set up yet. */
 export function feedbackWebhookConfig(env: Record<string, string | undefined>): FeedbackWebhookConfig | null {
@@ -101,7 +101,7 @@ export function feedbackWebhookConfig(env: Record<string, string | undefined>): 
 }
 
 /** `Authorization: Bearer <key>`. If the key already starts with `Bearer `, do not prefix again. */
-export function feedbackAuthorizationValue(key: string): string {
+function feedbackAuthorizationValue(key: string): string {
   const rest = key.replace(/^Bearer\s+/i, '').trim()
   return `Bearer ${rest}`
 }
@@ -119,7 +119,7 @@ export function feedbackWebhookHeaders(c: FeedbackWebhookConfig): Record<string,
   return { ...h, [c.header]: c.key }
 }
 
-export type FeedbackWebhookBody = {
+type FeedbackWebhookBody = {
   type: 'aisubal.feedback.approved'
   feedback_id: string
   status: FeedbackStatus
@@ -176,7 +176,7 @@ export function feedbackWebhookBody(
 
 /* ---------- bot → POST /api/feedback/progress ---------- */
 
-export const PROGRESS_MAX_SKEW_S = 300
+const PROGRESS_MAX_SKEW_S = 300
 export const progressBodySchema = z.object({
   feedback_id: z.string().uuid(),
   status: z.enum(['in_progress', 'deployed']),

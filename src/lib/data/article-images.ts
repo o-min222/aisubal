@@ -25,7 +25,7 @@ export async function uploadArticleImage(authId: string, file: File): Promise<st
   return path
 }
 
-export function mockArticleImage(path: string) {
+function mockArticleImage(path: string) {
   mockLib() // seeds the local sample pictures the mock articles point at
   return mem().get(path) ?? null
 }
@@ -96,8 +96,8 @@ export type ArticleLibraryImage = {
   byAgent: boolean
   usedBy: number
 }
-export type ArticleLibrary = { images: ArticleLibraryImage[]; total: number; cap: number }
-export type ArticleLibraryRemoval = { id: string; removed: boolean; path: string; orphan: boolean; blob: boolean; stillUsedBy: number }
+type ArticleLibrary = { images: ArticleLibraryImage[]; total: number; cap: number }
+type ArticleLibraryRemoval = { id: string; removed: boolean; path: string; orphan: boolean; blob: boolean; stillUsedBy: number }
 
 const gl = globalThis as unknown as { __aisubalArticleLib?: ArticleLibraryImage[] }
 const mockLib = () => (gl.__aisubalArticleLib ??= seedMockLibrary())

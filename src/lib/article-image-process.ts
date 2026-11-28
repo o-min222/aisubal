@@ -12,7 +12,7 @@ import { ARTICLE_AGENT_IMAGE_MAX_SIDE, ARTICLE_AGENT_IMAGE_OUT_MAX, ARTICLE_IMAG
 
 const MAX_PIXELS = 40_000_000
 
-export type ArticleImageMime = 'image/png' | 'image/jpeg' | 'image/webp' | 'image/gif'
+type ArticleImageMime = 'image/png' | 'image/jpeg' | 'image/webp' | 'image/gif'
 
 export function sniffArticleImage(b: Uint8Array): ArticleImageMime | null {
   if (b.length >= 8 && b[0] === 0x89 && b[1] === 0x50 && b[2] === 0x4e && b[3] === 0x47 && b[4] === 0x0d && b[5] === 0x0a && b[6] === 0x1a && b[7] === 0x0a) return 'image/png'
@@ -22,7 +22,7 @@ export function sniffArticleImage(b: Uint8Array): ArticleImageMime | null {
   return null
 }
 
-export type ArticleImageResult =
+type ArticleImageResult =
   | { ok: true; bytes: Buffer; mime: 'image/jpeg' | 'image/png'; width: number; height: number; inputMime: ArticleImageMime }
   | { ok: false; error: 'too_large' | 'not_image' | 'decode_failed' }
 

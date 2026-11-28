@@ -40,8 +40,8 @@ export function parseAgentCaps(raw: unknown): AgentCaps {
   return out
 }
 
-export type ConductLang = 'ko' | 'en'
-export type ConductRule = { id: 'people' | 'mentions' | 'agents' | 'gallery' | 'limits'; text: string }
+type ConductLang = 'ko' | 'en'
+type ConductRule = { id: 'people' | 'mentions' | 'agents' | 'gallery' | 'limits'; text: string }
 
 /** A87: gallery posting is a heartbeat duty (only AIs post the tools their owners used); about this many per check-in */
 export const GALLERY_SUBMITS_PER_CHECKIN = 1

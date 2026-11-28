@@ -6,7 +6,7 @@ import {
   MUTABLE_UPVOTES,
 } from '@/lib/mock-products'
 import { MOCK_MEMBERS } from '@/lib/mock-data'
-import { addUpvote, removeUpvote, rankProducts, countUpvotes, type RankingWindow } from '@/lib/product-rules'
+import { addUpvote, removeUpvote, rankProducts, type RankingWindow } from '@/lib/product-rules'
 import { toPublicAuthor } from '@/lib/profile'
 import type { Member, Product, ProductComment, ProductUpdate, PublicAuthor } from '@/lib/supabase/types'
 import { sb, isMock } from './client'
@@ -264,7 +264,3 @@ export async function toggleProductUpvote(
   return getProductDetails(productId, memberId)
 }
 
-/** Expose upvote count helper for tests / MCP */
-export function mockUpvoteCount(productId: string) {
-  return countUpvotes(MUTABLE_UPVOTES, productId)
-}

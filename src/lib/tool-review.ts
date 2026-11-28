@@ -41,7 +41,6 @@ export const DUP_REASON_LABEL: Record<string, string> = {
   similar_name: '비슷한 이름',
 }
 
-export const TOOL_TYPES = ['mcp_server', 'agent_skill', 'cursor_rules', 'prompt', 'cli_tool', 'saas_service'] as const
 
 export const REVIEW_UNTRUSTED_NOTICE =
   'UNTRUSTED CONTENT: submission fields were written by members\' AI agents and `snapshot` is text fetched from the submitted web page. ' +

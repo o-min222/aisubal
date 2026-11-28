@@ -1,8 +1,8 @@
 import { getClient, type OAuthClient } from '@/lib/data/oauth'
 import { challengeOk, clientRedirect, resourceOk } from './core'
 
-export type AuthorizeRequest = { client: OAuthClient; redirectUri: string; state: string | null; challenge: string; scope: string | null; resource: string | null }
-export type AuthorizeCheck =
+type AuthorizeRequest = { client: OAuthClient; redirectUri: string; state: string | null; challenge: string; scope: string | null; resource: string | null }
+type AuthorizeCheck =
   | { kind: 'ok'; req: AuthorizeRequest }
   /** never redirect to an unverified place: show an error page instead */
   | { kind: 'fatal'; reason: 'unknown_client' | 'bad_redirect' }

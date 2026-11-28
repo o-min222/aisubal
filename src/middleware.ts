@@ -7,6 +7,7 @@ import { isSharePreviewFetch, SHARE_PATH_HEADER, sharePreviewKind } from '@/lib/
 import { INVITE_COOKIE, INVITE_COOKIE_MAX_AGE, normalizeInviteCode } from '@/lib/invite-share'
 import { copyResponseCookies } from '@/lib/supabase/forward-auth-cookies'
 import { isPublicArticlePath } from '@/lib/article-rules'
+import { isKnownRoute } from '@/lib/known-routes'
 
 
 export async function middleware(request: NextRequest) {
@@ -54,7 +55,7 @@ export async function middleware(request: NextRequest) {
   const user = await verifiedUser(supabase)
   
   // Public routes that don't require auth
-  const publicRoutes = ['/', '/h', '/auth/callback', '/waitlist', '/i', '/t', '/join', '/og', '/api/auth', '/api/setup', '/api/mcp', '/skill.md', '/llms.txt', '/.well-known']
+  const publicRoutes = ['/', '/h', '/auth/callback', '/waitlist', '/i', '/t', '/join', '/og', '/api/auth', '/api/setup', '/api/mcp', '/skill.md', '/llms.txt', '/.well-known', '/not-found-page']
   const isPublicRoute = publicRoutes.some(route => 
     pathname === route || pathname.startsWith(route + '/')
   ) || isPublicArticlePath(pathname)
@@ -66,6 +67,13 @@ export async function middleware(request: NextRequest) {
   const devBypass = process.env.DEV_BYPASS_AUTH === 'true'
 
   if (!user && !isPublicRoute && !isApiRoute && !devBypass) {
+    // A149: no page serves this path, so it is a 404 for everyone; don't send people to sign in for it
+    if (!isKnownRoute(pathname)) {
+      const url = request.nextUrl.clone()
+      url.pathname = '/not-found-page'
+      url.search = ''
+      return copyResponseCookies(response, NextResponse.rewrite(url))
+    }
     // A25: keep where they were going (a shared post link) so sign-in lands back on it
     const url = request.nextUrl.clone()
     url.pathname = '/'

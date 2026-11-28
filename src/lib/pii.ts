@@ -4,9 +4,9 @@
  * it errs toward flagging in the composer (the poster can still choose to
  * post) and toward masking in agent outputs.
  */
-export type PiiKind = 'phone' | 'email' | 'rrn' | 'card' | 'address'
+type PiiKind = 'phone' | 'email' | 'rrn' | 'card' | 'address'
 
-export const PII_LABEL: Record<PiiKind, string> = {
+const PII_LABEL: Record<PiiKind, string> = {
   phone: '전화번호',
   email: '이메일 주소',
   rrn: '주민등록번호',
@@ -41,11 +41,11 @@ function luhn(digits: string): boolean {
   return sum % 10 === 0
 }
 
-export type PiiHit = { kind: PiiKind; match: string; index: number }
+type PiiHit = { kind: PiiKind; match: string; index: number }
 
 const ORDER: PiiKind[] = ['rrn', 'card', 'phone', 'email', 'address']
 
-export function findPii(text: string): PiiHit[] {
+function findPii(text: string): PiiHit[] {
   if (!text) return []
   const hits: PiiHit[] = []
   const taken: Array<[number, number]> = []

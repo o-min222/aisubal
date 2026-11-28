@@ -2,8 +2,8 @@
  * A25: Google refuses sign-in inside app webviews (403 disallowed_useragent), so a shared link
  * opened in KakaoTalk / Instagram / … has to hop to the real browser first.
  */
-export type InAppName = 'kakaotalk' | 'instagram' | 'facebook' | 'line' | 'naver' | 'daum'
-export type InApp = { app: InAppName; os: 'android' | 'ios' | 'other' }
+type InAppName = 'kakaotalk' | 'instagram' | 'facebook' | 'line' | 'naver' | 'daum'
+type InApp = { app: InAppName; os: 'android' | 'ios' | 'other' }
 
 const APPS: Array<[InAppName, RegExp]> = [
   ['kakaotalk', /KAKAOTALK/i],

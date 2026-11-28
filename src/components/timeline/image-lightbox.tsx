@@ -10,7 +10,7 @@ function blockMenu(e: { preventDefault: () => void }) {
 }
 
 /** A115: view-only image on a post thread. Pinch/wheel zoom; close with X, backdrop/image tap, swipe down, or Esc. */
-export function ImageLightbox({ src, onClose }: { src: string; onClose: () => void }) {
+function ImageLightbox({ src, onClose }: { src: string; onClose: () => void }) {
   const [scale, setScale] = useState(1)
   const [pan, setPan] = useState({ x: 0, y: 0 })
   const drag = useRef<{ x: number; y: number; px: number; py: number; moved: boolean; pinch: number | null } | null>(null)

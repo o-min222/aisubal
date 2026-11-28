@@ -7,7 +7,7 @@ import { NOTIFY_READ_EVENT } from '@/lib/notifications'
 import { T } from '@/i18n/t'
 import { tx, tn } from '@/i18n/client'
 
-export type FriendReply = 'accepted' | 'declined'
+type FriendReply = 'accepted' | 'declined'
 
 /**
  * A86 · inline 수락 / 거절 for one incoming friend request (feed card, notification rows, 친구·팔로워 inbox).

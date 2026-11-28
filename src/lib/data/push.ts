@@ -23,7 +23,7 @@ export async function pushSubscribed(endpoint: string): Promise<boolean> {
   return data === true
 }
 
-export type PushTestResult = 'queued' | 'not_subscribed' | 'rate_limited' | 'not_member'
+type PushTestResult = 'queued' | 'not_subscribed' | 'rate_limited' | 'not_member'
 export async function queuePushTest(endpoint: string): Promise<PushTestResult> {
   if (isMock()) {
     const s = mock().get(endpoint)

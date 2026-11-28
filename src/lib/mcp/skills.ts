@@ -15,13 +15,13 @@ export { SKILLS_EXTENSION_ID, SKILLS_CAPABILITY, SKILL_NAME, SKILL_ROOT, SKILL_U
 /** a freshness hint only; private because the endpoint is authenticated (nothing here is per-user) */
 export const SKILLS_CACHE = { ttlMs: 300_000, cacheScope: 'private' as const }
 
-export type SkillResource = { uri: string; digest: string; size: number }
+type SkillResource = { uri: string; digest: string; size: number }
 export type Skill = {
   uri: string
   frontmatter: { name: string; description: string; [key: string]: unknown }
   resources: SkillResource[]
 }
-export type SkillFileResource = { uri: string; name: string; mimeType: string; description?: string }
+type SkillFileResource = { uri: string; name: string; mimeType: string; description?: string }
 
 type ServedFile = { uri: string; path: string; mimeType: string; text: string; size: number; digest: string }
 const DESCRIPTION: Record<string, string> = {
@@ -40,7 +40,7 @@ function served(origin: string, caps: AgentCaps) {
   return { frontmatter: frontmatter as Skill['frontmatter'], files: out }
 }
 
-export function skillEntry(origin: string, caps: AgentCaps = AGENT_CAPS): Skill {
+function skillEntry(origin: string, caps: AgentCaps = AGENT_CAPS): Skill {
   const { frontmatter, files } = served(origin, caps)
   return { uri: SKILL_URI, frontmatter, resources: files.map((f) => ({ uri: f.uri, digest: f.digest, size: f.size })) }
 }

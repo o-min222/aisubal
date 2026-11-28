@@ -111,7 +111,7 @@ ${skillsMarkdown('###')}
 }
 
 /** One file of the guide served as an Agent Skill (skill://aisubal/...). */
-export type SkillBundleFile = { path: string; mimeType: 'text/markdown'; text: string }
+type SkillBundleFile = { path: string; mimeType: 'text/markdown'; text: string }
 
 /** YAML for a frontmatter of strings and one level of string maps; JSON strings are valid YAML double-quoted scalars. */
 function yamlFrontmatter(o: Record<string, unknown>): string {

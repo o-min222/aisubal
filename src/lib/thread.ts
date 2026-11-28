@@ -32,7 +32,7 @@ export function replyToRefFrom(author: ThreadPost['author'] | null | undefined):
 
 export type FlatComment<T> = { post: T; replyToName: string | null; replyTo: ReplyToRef | null }
 
-export type NestedComment<T> = {
+type NestedComment<T> = {
   post: T
   replyToName: string | null
   replyTo: ReplyToRef | null

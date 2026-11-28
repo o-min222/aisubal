@@ -5,7 +5,6 @@ import { msg } from '@/i18n/translate'
  * Custom emoji are ':shortcode:' strings resolved against the custom_emojis list.
  */
 export const THUMBS = '👍'
-export const MAX_REACTIONS_PER_POST = 20
 export const CUSTOM_EMOJI_MAX_BYTES = 256 * 1024
 export const CUSTOM_EMOJI_TYPES: Record<string, string> = { 'image/png': 'png', 'image/jpeg': 'jpg', 'image/webp': 'webp', 'image/gif': 'gif' }
 
@@ -13,7 +12,7 @@ export type ReactionSummary = { emoji: string; count: number; mine: boolean }
 export type CustomEmoji = { shortcode: string; url: string; mine: boolean }
 
 /** the default picker set; keywords (ko + en) feed search */
-export const CURATED_EMOJI: Array<{ e: string; k: string }> = [
+const CURATED_EMOJI: Array<{ e: string; k: string }> = [
   { e: '👍', k: '좋아요 최고 like thumbs up yes' },
   { e: '❤️', k: '하트 사랑 heart love' },
   { e: '😂', k: '웃김 ㅋㅋ joy laugh lol' },

@@ -25,7 +25,7 @@ export const TEASER_HOOK = msg('이어서 보려면 AI쓰발에서')
  * Link-preview scrapers (no session, no JS). In-app browsers used by people (KAKAOTALK, Line) are
  * not here — those still 307 to /?next= so sign-in can return to the post.
  */
-export const LINK_PREVIEW_BOT_RE = /kakaotalk-scrap|facebookexternalhit|facebookcatalog|Facebot|Twitterbot|Slackbot|Discordbot|TelegramBot|LinkedInBot|WhatsApp|SkypeUriPreview|Iframely|Embedly|redditbot|vkShare|bitlybot|Applebot|MicrosoftPreview|BingPreview|Googlebot|Google-InspectionTool|meta-externalagent|meta-externalfetcher|NotionBot|Pinterestbot|Snapchat|Yandex(?:Bot|Images)|DuckDuckBot|Baiduspider|Yeti|Naverbot|ia_archiver/i
+const LINK_PREVIEW_BOT_RE = /kakaotalk-scrap|facebookexternalhit|facebookcatalog|Facebot|Twitterbot|Slackbot|Discordbot|TelegramBot|LinkedInBot|WhatsApp|SkypeUriPreview|Iframely|Embedly|redditbot|vkShare|bitlybot|Applebot|MicrosoftPreview|BingPreview|Googlebot|Google-InspectionTool|meta-externalagent|meta-externalfetcher|NotionBot|Pinterestbot|Snapchat|Yandex(?:Bot|Images)|DuckDuckBot|Baiduspider|Yeti|Naverbot|ia_archiver/i
 export const isLinkPreviewBot = (ua: string | null | undefined) => !!ua && LINK_PREVIEW_BOT_RE.test(ua)
 
 const CURL_RE = /(?:^| )(?:curl|wget|httpie|Go-http-client|python-requests|python-httpx|libwww-perl|Java\/|okhttp|node-fetch|undici|axios\/|PostmanRuntime|Insomnia)\b/i
@@ -54,7 +54,7 @@ export function sharedPostId(path: string | null | undefined): string | null {
   return m ? m[1].toLowerCase() : null
 }
 
-export type SharePreviewKind = 'post' | 'agora' | 'anon' | 'profile' | 'gallery' | 'article'
+type SharePreviewKind = 'post' | 'agora' | 'anon' | 'profile' | 'gallery' | 'article'
 
 /** Paths whose unauthenticated crawler visit should 200 with OG at the original URL. */
 export function sharePreviewKind(next: string | null | undefined): SharePreviewKind | null {

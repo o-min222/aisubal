@@ -1,20 +1,4 @@
-import {
-  Bell,
-  Flag,
-  GitBranch,
-  LayoutDashboard,
-  ListChecks, PackageCheck,
-  Settings2,
-  SlidersHorizontal,
-  Smartphone,
-  UserCog,
-  UserRound,
-  Users,
-  VenetianMask,
-  Hourglass,
-  MessageSquareText,
-  type LucideIcon,
-} from 'lucide-react'
+import { Bell, Flag, GitBranch, LayoutDashboard, ListChecks, PackageCheck, SlidersHorizontal, Smartphone, UserCog, UserRound, Users, VenetianMask, Hourglass, MessageSquareText, type LucideIcon } from 'lucide-react'
 import { msg } from '@/i18n/translate'
 
 /**
@@ -22,7 +6,7 @@ import { msg } from '@/i18n/translate'
  * not in the content side panel. Settings and admin each get a sub-layout.
  * A71: one home per destination — 내 에이전트 is in the account menu only (not a settings section).
  */
-export type SubNavItem = { href: string; label: string; icon: LucideIcon; hint?: string }
+type SubNavItem = { href: string; label: string; icon: LucideIcon; hint?: string }
 
 export const SETTINGS_SECTIONS: SubNavItem[] = [
   { href: '/settings/account', label: msg('계정'), icon: UserCog, hint: msg('이메일 · 멤버십') },
@@ -44,7 +28,6 @@ export const ADMIN_SECTIONS: SubNavItem[] = [
   { href: '/admin/site', label: msg('사이트 설정'), icon: SlidersHorizontal, hint: msg('초대 · 별명 언락') },
 ]
 
-export const SETTINGS_ICON = Settings2
 
 /** The index route (/settings, /admin) shows the first section on desktop. */
 export function subNavActive(pathname: string, href: string, base: string, first: string) {

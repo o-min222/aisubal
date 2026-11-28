@@ -18,7 +18,7 @@ export function pickInterestTags(tagLists: Array<string[] | null | undefined>, l
     .map(([t]) => t)
 }
 
-export type RankableTool = {
+type RankableTool = {
   id: string
   tags: string[]
   mention_count: number
@@ -84,7 +84,7 @@ export type FeedRecSignals = {
   /** A30: the post is a 모임's thread */
   moim?: { startsAt: string; ended: boolean } | null
 }
-export type FeedRecReason = { s: string; vars?: Record<string, string> }
+type FeedRecReason = { s: string; vars?: Record<string, string> }
 
 /** An interest tag "matches" a post when the post names it as #tag, as its tool, or (≥3 chars) in the text. */
 export function matchInterest(sig: Pick<FeedRecSignals, 'text' | 'toolName'>, interestTags: string[]): string | null {

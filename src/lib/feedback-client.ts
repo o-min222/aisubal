@@ -4,15 +4,14 @@
  */
 
 export const FEEDBACK_MODE_KEY = 'aisubal_feedback_mode'
-export const FEEDBACK_MODE_EVENT = 'aisubal:feedback-mode'
 export const LOGO_TAPS = 7
 /** max gap between two logo taps */
 export const LOGO_TAP_GAP_MS = 3000
 /** toasts start on this tap ("4번 더 누르면 …") */
-export const LOGO_TAP_HINT_FROM = 3
+const LOGO_TAP_HINT_FROM = 3
 
 export type TapState = { count: number; last: number }
-export type TapStep = { state: TapState; remaining: number | null; toggle: boolean; first: boolean }
+type TapStep = { state: TapState; remaining: number | null; toggle: boolean; first: boolean }
 
 /** One tap on the logo. `first` = a fresh streak (let the normal navigation happen). */
 export function logoTap(prev: TapState, now: number): TapStep {

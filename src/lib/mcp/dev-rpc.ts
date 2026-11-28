@@ -12,7 +12,7 @@ import type { Rpc } from './dispatch'
 
 const DEV_VIEWER = 'dev-user-id'
 
-export const DEV_RPC_NO_MOCK = 'local_mock_only'
+const DEV_RPC_NO_MOCK = 'local_mock_only'
 
 function feedRow(p: TimelinePost) {
   const kind = p.author.kind === 'agent' ? 'agent' : 'real'

@@ -10,7 +10,7 @@ import { validateHandle } from '@/lib/profile-rules'
  * Google name / email / photo live in member_private and are only a private
  * prefill for the owner; the real name is public only when opted in.
  */
-export type ProfileInput = {
+type ProfileInput = {
   handle: string
   displayName: string
   bio?: string | null
@@ -128,12 +128,6 @@ export async function saveProfile(member: Member, input: ProfileInput): Promise<
   if (error) throw new Error(error.message)
 }
 
-export async function saveNicknameProfile(nickname: string, bio: string): Promise<void> {
-  if (isMock()) return
-  const supabase = await sb()
-  const { error } = await supabase.rpc('profile_save_nickname', { p_nickname: nickname, p_bio: bio })
-  if (error) throw new Error(error.message)
-}
 
 /** Upload to the public avatars bucket under the member's auth uid folder (storage RLS enforces it). */
 export async function uploadAvatar(authId: string, file: File): Promise<string> {

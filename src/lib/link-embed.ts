@@ -4,7 +4,7 @@ import { getYoutubeId } from '@/lib/link-preview'
  * A58: which links get an inline player (click-to-load facade) and which hosts get an oEmbed card.
  * Pure: no network. The player is never loaded until the reader taps, and never autoplays.
  */
-export type Embed = { kind: 'youtube' | 'vimeo'; id: string; src: string; vertical: boolean }
+type Embed = { kind: 'youtube' | 'vimeo'; id: string; src: string; vertical: boolean }
 
 function hostOf(url: string): string | null {
   try {
@@ -37,7 +37,7 @@ export function embedOf(url: string): Embed | null {
 }
 
 /** hosts whose card comes from oEmbed / OG instead of a generic page fetch */
-export type SocialKind = 'vimeo' | 'tiktok' | 'instagram'
+type SocialKind = 'vimeo' | 'tiktok' | 'instagram'
 export function socialKind(url: string): SocialKind | null {
   const h = hostOf(url)
   if (!h) return null

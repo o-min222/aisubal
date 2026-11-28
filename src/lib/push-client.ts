@@ -5,7 +5,7 @@ import { PUSH_OFFER_KEY, classifyPushError, pushPlan, shouldOfferPush, vapidKeyB
 const VAPID = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || ''
 const json = (body: unknown) => ({ method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
 
-export function pushSupported(): boolean {
+function pushSupported(): boolean {
   return typeof window !== 'undefined' && 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window && Boolean(VAPID)
 }
 

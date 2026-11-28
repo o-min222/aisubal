@@ -25,12 +25,3 @@ export function kstDayBadge(iso: string, intl = 'ko-KR') {
     weekday: new Intl.DateTimeFormat(intl, { weekday: 'short', timeZone: TZ }).format(d),
   }
 }
-/** `datetime-local` value (KST wall clock) ↔ ISO with +09:00. */
-export function kstInputToIso(v: string): string {
-  return v ? `${v}:00+09:00` : ''
-}
-export function isoToKstInput(iso: string | null | undefined): string {
-  if (!iso) return ''
-  const d = new Date(new Date(iso).getTime() + 9 * 3600_000)
-  return d.toISOString().slice(0, 16)
-}

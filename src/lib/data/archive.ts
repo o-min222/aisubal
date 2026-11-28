@@ -1,13 +1,5 @@
 import type { Member } from '@/lib/supabase/types'
-import {
-  ARCHIVE_KINDS,
-  ARCHIVE_PAGE_SIZE,
-  archiveKey,
-  archiveFromRow,
-  cleanTags,
-  type ArchiveItem,
-  type ArchiveKind,
-} from '@/lib/archive-rules'
+import { ARCHIVE_PAGE_SIZE, archiveKey, archiveFromRow, cleanTags, type ArchiveItem, type ArchiveKind } from '@/lib/archive-rules'
 import { fetchLinkPreview } from '@/lib/link-preview-server'
 import { checkFetchUrl } from '@/lib/safe-fetch'
 import { sb, isMock } from './client'
@@ -48,7 +40,7 @@ function mockItems(memberId: string): ArchiveItem[] {
 }
 
 // ------------------------------------------------------------------ queries
-export type ArchiveQuery = { kind?: ArchiveKind | null; tag?: string | null; q?: string | null; page?: number }
+type ArchiveQuery = { kind?: ArchiveKind | null; tag?: string | null; q?: string | null; page?: number }
 export type ArchivePage = { items: ArchiveItem[]; total: number; page: number; pages: number; kindCounts: Record<string, number>; tags: Array<{ tag: string; count: number }> }
 
 function facet(rows: Array<Pick<ArchiveItem, 'kind' | 'tags'>>) {
@@ -117,8 +109,8 @@ export async function getArchiveItems(memberId: string, ids: string[]): Promise<
 }
 
 // ------------------------------------------------------------------ writes
-export type AddInput = { kind: ArchiveKind; ref: string; memo?: string | null; tags?: unknown; hint?: { title?: string; excerpt?: string; url?: string; author?: string } }
-export type AddResult = { ok: true; item: ArchiveItem; created: boolean } | { ok: false; error: 'not_found' | 'bad_url' | 'full' | 'failed' }
+type AddInput = { kind: ArchiveKind; ref: string; memo?: string | null; tags?: unknown; hint?: { title?: string; excerpt?: string; url?: string; author?: string } }
+type AddResult = { ok: true; item: ArchiveItem; created: boolean } | { ok: false; error: 'not_found' | 'bad_url' | 'full' | 'failed' }
 
 export async function addToArchive(member: Member, input: AddInput): Promise<AddResult> {
   const memo = input.memo == null ? null : String(input.memo).slice(0, 500)
@@ -244,7 +236,6 @@ export async function archiveSaveCounts(kind: ArchiveKind, refs: string[]): Prom
   return (data as Record<string, number>) ?? {}
 }
 
-export const ARCHIVE_KIND_LIST = ARCHIVE_KINDS
 
 /** Dev-mode backend for the archive MCP tools (session member, mock store). */
 export function devArchiveBackend(member: Member): import('@/lib/archive-mcp').ArchiveBackend {

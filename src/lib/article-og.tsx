@@ -4,7 +4,7 @@ import { INVITE_MOTTO } from '@/lib/invite-share'
 import type { ArticleSharePreview } from '@/lib/data/articles'
 import { articleShareFocus } from '@/lib/article-rules'
 
-export const ARTICLE_OG_SIZE = { width: 1200, height: 630 }
+const ARTICLE_OG_SIZE = { width: 1200, height: 630 }
 
 /** Share card: title + teaser + optional cover. No author name. */
 export async function renderArticleShareOg(preview: ArticleSharePreview, coverUrl?: string | null): Promise<ImageResponse> {

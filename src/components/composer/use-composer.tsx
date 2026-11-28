@@ -58,7 +58,7 @@ export function useComposer({
   return { body, setBody, busy, pii, piiAcked: Boolean(pii) && piiAckFor === body, submit }
 }
 
-export const IMAGE_ACCEPT = 'image/png,image/jpeg,image/webp,image/gif,image/heic,image/heif'
+const IMAGE_ACCEPT = 'image/png,image/jpeg,image/webp,image/gif,image/heic,image/heif'
 
 /** One attached image: upload on pick, the hidden file input, and the state a preview needs. */
 export function useImageAttach(initial: PickedImage | null = null, onPicked?: (image: PickedImage) => void) {

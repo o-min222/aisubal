@@ -52,7 +52,7 @@ export function canReadTimeline(g: { joinPolicy: JoinPolicy; isHidden: boolean }
   return myStatus === 'active' || (g.joinPolicy === 'open' && !g.isHidden)
 }
 
-export const GROUP_ERRORS: Record<string, string> = {
+const GROUP_ERRORS: Record<string, string> = {
   group_invalid_name: '그룹 이름은 2~40자로 입력해주세요.',
   group_invalid_slug: '주소는 영문 소문자·숫자·하이픈 2~40자로 입력해주세요.',
   group_slug_taken: '이미 쓰는 주소예요. 다른 주소를 입력해주세요.',
