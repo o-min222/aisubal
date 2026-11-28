@@ -3519,7 +3519,14 @@ body.is-sorting, body.is-sorting * { user-select: none; -webkit-user-select: non
 /* ---------- A92 · side-panel profile card: numbers-only stats + one quiet 초대 네트워크 row ---------- */
 .profile-stats-foot { display: flex; border-top: 1px solid var(--n-eee); }
 .profile-stats-link { flex: 1 1 0; min-width: 0; display: flex; align-items: center; justify-content: center; gap: 4px; min-height: 36px; padding: 0 10px; font-size: 12px; color: var(--n-666); white-space: nowrap; }
-.profile-stats-link:hover { background: var(--n-fafafa); color: var(--n-111); text-decoration: none; }
+.profile-stats-link:hover, .profile-stats-link:focus-visible { background: var(--n-fafafa); color: var(--n-111); text-decoration: none; }
+/* A134: .app-left .profile-card is overflow:visible so the account menu can open;
+   clip the bottom row's hover fill to the card's inner 13px corners (14px radius - 1px border). */
+.profile-card .profile-stats:last-child,
+.profile-card .profile-stats-foot {
+  border-radius: 0 0 13px 13px;
+  overflow: hidden;
+}
 .profile-stats dt { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 /* ---------- A91 · profile view (LinkedIn-style top card + stacked section cards) ---------- */
 .pf-page .card:hover { border-color: var(--border-light); box-shadow: none; }

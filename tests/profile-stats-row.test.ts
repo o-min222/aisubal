@@ -18,4 +18,12 @@ describe('A92 · side-panel profile card stats', () => {
     expect(css).toMatch(/\.profile-stats dt \{[^}]*white-space: nowrap/)
     expect(read('src/i18n/dict/en.ts')).toContain('"받은 좋아요": "Likes",')
   })
+
+  it('A134 · bottom-row hover fill follows the card rounded corners', () => {
+    const css = read('src/app/globals.css')
+    expect(css).toMatch(
+      /\.profile-card \.profile-stats:last-child,\s*\.profile-card \.profile-stats-foot \{\s*border-radius: 0 0 13px 13px;\s*overflow: hidden;/,
+    )
+    expect(css).toMatch(/\.profile-stats-link:hover, \.profile-stats-link:focus-visible/)
+  })
 })
