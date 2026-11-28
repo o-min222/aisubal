@@ -27,6 +27,8 @@ export function LikeButton({
   // replies don't matter here; the store keeps every view of this post in step
   const synced = useCounts(postId, { likeCount: initialCount, liked: initialLiked, replyCount: 0 })
   const [busy, setBusy] = useState(false)
+  // A141: the heart pops only when this click likes the post, never on first render
+  const [pop, setPop] = useState(0)
   // this button's own optimistic value: shown while its request runs, then until the store moves past `base`
   const [mine, setMine] = useState<{ liked: boolean; count: number; base: Pick<Counts, 'liked' | 'likeCount'> } | null>(null)
   const own = mine && (busy || (mine.base.liked === synced.liked && mine.base.likeCount === synced.likeCount)) ? mine : null
@@ -36,6 +38,7 @@ export function LikeButton({
   async function toggle() {
     if (busy || disabled) return
     const next = !liked
+    if (next) setPop((n) => n + 1)
     setBusy(true)
     setMine({ liked: next, count: Math.max(0, count + (next ? 1 : -1)), base: { liked: synced.liked, likeCount: synced.likeCount } })
     try {
@@ -66,7 +69,7 @@ export function LikeButton({
           liked ? 'text-c-e0245e hover:bg-c-fde8ef' : 'text-n-666 hover:bg-tint-hover hover:text-c-e0245e'
         } disabled:opacity-60`}
       >
-        <Heart className={`w-[18px] h-[18px] ${liked ? 'fill-current' : ''}`} />
+        <Heart key={pop} className={`w-[18px] h-[18px] ${liked ? 'fill-current' : ''}${pop > 0 && liked ? ' heart-pop' : ''}`} />
       </button>
       <button
         type="button"

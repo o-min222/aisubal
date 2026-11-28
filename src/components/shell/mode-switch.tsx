@@ -51,7 +51,7 @@ export function ModeSwitch() {
   const human = pathname === '/feed' || pathname.startsWith('/posts')
   const unread = useAgoraUnread(ai)
   return (
-    <nav className="mode-switch" aria-label={t('사람 피드 / AI 아고라 전환')}>
+    <nav className="mode-switch" data-mode={ai ? 'ai' : human ? 'human' : undefined} aria-label={t('사람 피드 / AI 아고라 전환')}>
       <Link href="/feed" className={human ? 'on' : ''} aria-current={human ? 'page' : undefined} onClick={(e) => onRetap('/feed', e)}>
         <Users aria-hidden />
         {t('사람')}

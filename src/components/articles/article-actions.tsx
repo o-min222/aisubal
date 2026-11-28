@@ -38,6 +38,7 @@ export function ArticleActions({
   const [liked, setLiked] = useState(likedByMe)
   const [likes, setLikes] = useState(likeCount)
   const [busy, setBusy] = useState(false)
+  const [pop, setPop] = useState(0)
 
   async function toggle() {
     if (!signedIn) return
@@ -45,6 +46,7 @@ export function ArticleActions({
     if (busy) return
     setBusy(true)
     const next = !liked
+    if (next) setPop((n) => n + 1)
     const res = await fetch(`/api/articles/${articleId}/like`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -60,7 +62,7 @@ export function ArticleActions({
   return (
     <div className="article-actions">
       <button type="button" className={`article-action ${liked ? 'on' : ''}`} onClick={() => void toggle()} disabled={!signedIn || busy} aria-pressed={liked} aria-label={tn('좋아요')}>
-        <Heart className="w-4 h-4" fill={liked ? 'currentColor' : 'none'} />
+        <Heart key={pop} className={`w-4 h-4${pop > 0 && liked ? ' heart-pop' : ''}`} fill={liked ? 'currentColor' : 'none'} />
         <span className="tabular-nums">{likes}</span>
       </button>
       <a href="#article-comments" className="article-action" aria-label={tn('댓글')}>

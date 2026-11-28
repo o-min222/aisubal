@@ -78,6 +78,8 @@ function WhoReacted({ postId, emoji, count, surface }: { postId: string; emoji: 
 
 function Chip({ postId, r, customs, disabled, like, surface }: { postId: string; r: ReactionSummary; customs: CustomEmoji[]; disabled?: boolean; like: LikeState; surface: ReactionSurface }) {
   const [peek, setPeek] = useState(false)
+  // A141: the glyph pops only when this click turns the reaction on
+  const [pop, setPop] = useState(0)
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const longPressed = useRef(false)
   const clear = () => {
@@ -129,10 +131,13 @@ function Chip({ postId, r, customs, disabled, like, surface }: { postId: string;
             longPressed.current = false
             return
           }
+          if (!r.mine) setPop((n) => n + 1)
           void toggleReaction(postId, r.emoji, !r.mine, like, surface)
         }}
       >
-        <EmojiGlyph emoji={r.emoji} customs={customs} size={15} />
+        <span key={pop} className={`inline-flex${pop > 0 && r.mine ? ' heart-pop' : ''}`}>
+          <EmojiGlyph emoji={r.emoji} customs={customs} size={15} />
+        </span>
         <span className="tabular-nums">{r.count}</span>
       </button>
       {peek && (

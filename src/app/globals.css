@@ -1364,8 +1364,22 @@ body { -webkit-tap-highlight-color: transparent; }
   .mode-switch a::after { content: ''; position: absolute; left: 0; right: 0; top: -7px; bottom: -7px; }
 }
 .mode-switch a:hover { color: var(--n-111); text-decoration: none; }
-.mode-switch a.on { background: var(--n-fff); color: var(--n-111); box-shadow: 0 1px 2px rgba(0,0,0,.12); }
-.mode-switch a.on.ai { background: var(--n-111); color: var(--n-fff); }
+.mode-switch a.on { color: var(--n-111); }
+.mode-switch a.on.ai { color: var(--n-fff); }
+/* A141: the selected pill slides between segments (transform + opacity only). The thumb is two layers, light and dark,
+ * that share one transform; the dark one fades in on AI. Off both pages (e.g. /articles) neither is visible. */
+.mode-switch { position: relative; display: inline-grid; grid-template-columns: 1fr 1fr; }
+.mode-switch::before, .mode-switch::after {
+  content: ''; position: absolute; top: 2px; bottom: 2px; left: 2px; width: calc(50% - 2px); border-radius: 999px; pointer-events: none;
+  transform: translateX(0); opacity: 0;
+  transition: transform .26s var(--ease-out), opacity .2s ease;
+}
+.mode-switch::before { background: var(--n-fff); box-shadow: 0 1px 2px rgba(0,0,0,.12); }
+.mode-switch::after { background: var(--n-111); }
+.mode-switch[data-mode="human"]::before { opacity: 1; }
+.mode-switch[data-mode="ai"]::before { opacity: 0; transform: translateX(100%); }
+.mode-switch[data-mode="ai"]::after { opacity: 1; transform: translateX(100%); }
+.mode-switch a { z-index: 1; }
 @media (max-width: 400px) {
   /* phones: text-only segments so search · bell · account fit beside the switch */
   .mode-switch a { min-width: 52px; padding: 0 10px; gap: 4px; }
@@ -3877,3 +3891,45 @@ html[data-topbar-hidden] .article-editor-bar { top: env(safe-area-inset-top, 0px
 .article-picker-confirm { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: center; gap: 4px; padding: 6px; overflow: auto; background: var(--n-fff, #fff); }
 .article-picker-confirm p { font-size: 11.5px; line-height: 1.3; font-weight: 600; margin: 0 0 2px; color: var(--n-333); word-break: keep-all; overflow-wrap: break-word; }
 .article-picker-confirm .btn { white-space: nowrap; justify-content: center; min-height: 28px; height: 28px; padding: 0 6px; font-size: 12px; }
+
+
+/* ============================================================================
+ * A141: motion. Small, purposeful, and flat: 120-280ms, ease-out, transform + opacity only, no bounce beyond a 1.2x
+ * press/pop, nothing that delays content. Everything is off under prefers-reduced-motion (catch-all at the end).
+ * Already animated elsewhere: dialogs, menus, popovers and selects (tw-animate), toasts (sonner), the reading pane
+ * push, the top bar hide on scroll, skeletons, and the just-posted highlight.
+ * ========================================================================== */
+:root { --ease-out: cubic-bezier(.2, .8, .2, 1); }
+
+/* press feedback: buttons, chips, icon buttons give a 3% squeeze while held */
+.btn:not(:disabled):active, .qc-chip:not(:disabled):active, .qc-icon:active, .qc-send:active, .article-action:active,
+.article-share-icon:active, .rx-chip:not(:disabled):active, .compose-fab:active { transform: scale(.96); }
+.btn, .qc-chip, .qc-icon, .qc-send, .article-action, .article-share-icon, .rx-chip { transition: background-color .15s ease, color .15s ease, border-color .15s ease, opacity .15s ease, transform .12s var(--ease-out); }
+
+/* like: the heart pops once when you like (class set by the click, not by the initial render) */
+@keyframes heart-pop { 0% { transform: scale(1); } 40% { transform: scale(1.28); } 100% { transform: scale(1); } }
+.heart-pop { animation: heart-pop .32s var(--ease-out); transform-origin: center; }
+
+/* notification badge: appears (and re-appears when the count changes) with a quick scale-in */
+@keyframes badge-in { from { transform: scale(.4); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+.notif-badge { animation: badge-in .22s var(--ease-out); }
+.tab-badge, .nav-unread { animation: badge-in .22s var(--ease-out); }
+
+/* lists: cards rise 8px and fade in as they mount (first screen staggers a little; later pages as they load) */
+@keyframes list-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+.timeline-card, .article-card, .article-feed-card { animation: list-in .26s var(--ease-out) backwards; }
+.timeline-card:nth-child(2), .article-card:nth-child(2), .article-feed-card:nth-child(2) { animation-delay: 30ms; }
+.timeline-card:nth-child(3), .article-card:nth-child(3), .article-feed-card:nth-child(3) { animation-delay: 60ms; }
+.timeline-card:nth-child(4), .article-card:nth-child(4), .article-feed-card:nth-child(4) { animation-delay: 90ms; }
+.timeline-card:nth-child(n+5), .article-card:nth-child(n+5), .article-feed-card:nth-child(n+5) { animation-delay: 120ms; }
+
+/* quick composer: the expanded writer eases in; folding it back is instant (the field is already there) */
+@keyframes qc-expand { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+.qc-open { animation: qc-expand .2s var(--ease-out); }
+
+/* article gate: the join card fades up after the text */
+.article-read-cta { animation: list-in .32s var(--ease-out) .12s backwards; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; animation-delay: 0s !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
+}
