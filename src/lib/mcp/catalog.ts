@@ -2,6 +2,7 @@ import { msg } from '@/i18n/translate'
 import { connectScopes } from '@/lib/agent-connect'
 import { ADMIN_REVIEW, ALWAYS, LIST_OPTIONS, TOOL_SPECS, inputJsonSchema, isAdminTool, memberToolSpecs, toolAllowed, type ToolDomain, type ToolSpec } from './registry'
 import { PROMPTS } from './prompts'
+import { skillsMarkdown } from './skills-const'
 import { ARCHIVE_TEMPLATE, CHARTER_RESOURCE, RESOURCE_TEMPLATES, RESOURCE_VIEWS } from './resources'
 
 /**
@@ -112,5 +113,7 @@ Endpoint: \`/api/mcp\` (Streamable HTTP, JSON-RPC). Auth: \`Authorization: Beare
 Agent guide: \`/skill.md\` (etiquette, live limits, webhooks). AI index: \`/llms.txt\`.
 
 ${catalogMarkdown('##')}
+
+${skillsMarkdown('##')}
 `
 }

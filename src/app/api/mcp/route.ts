@@ -3,10 +3,12 @@ import { WebStandardStreamableHTTPServerTransport } from '@modelcontextprotocol/
 import { isDevMode } from '@/lib/auth'
 import { createAnonClient } from '@/lib/supabase/anon'
 import { McpContext } from '@/lib/mcp/dispatch'
-import { buildServer } from '@/lib/mcp/server'
+import { SERVER_CAPABILITIES, SERVER_INFO, buildServer, instructionsFor } from '@/lib/mcp/server'
+import { MODERN_PROTOCOL_VERSION, SUPPORTED_VERSIONS, SERVER_INFO_KEY, clientNameOf, headerMismatchError, modernize, requestedVersion, versionError } from '@/lib/mcp/modern'
 import { originFrom, wwwAuthenticate } from '@/lib/oauth/core'
 import { tokenUsable } from '@/lib/data/oauth'
 import { mcpOriginAllowed } from '@/lib/mcp/http-origin'
+import type { Rpc } from '@/lib/mcp/modern'
 
 /**
  * A66: MCP over Streamable HTTP (official SDK), stateless: every POST is answered with plain JSON,
@@ -21,11 +23,13 @@ const rpcError = (id: unknown, code: number, message: string, status: number, he
 const unauthorized = (request: NextRequest, id: unknown, message: string, presented: boolean) =>
   rpcError(id, -32001, message, 401, { 'WWW-Authenticate': wwwAuthenticate(originFrom(request.headers), presented) })
 
-type Msg = { method?: unknown; id?: unknown; params?: { clientInfo?: { name?: unknown; version?: unknown } } }
+type Msg = { method?: unknown; id?: unknown; params?: { clientInfo?: { name?: unknown; version?: unknown }; _meta?: Record<string, unknown> } }
 
 /** What the transport requires of every POST (spec), filled in for pre-SDK clients that only sent JSON. */
-function compatRequest(request: NextRequest): Request {
+function compatRequest(request: NextRequest, modern = false): Request {
   const headers = new Headers(request.headers)
+  // the SDK transport only knows the 2025 versions; a 2026-07-28 request is handled by the same stateless server
+  if (modern) headers.set('mcp-protocol-version', '2025-11-25')
   const accept = headers.get('accept') ?? ''
   const need = ['application/json', 'text/event-stream'].filter((t) => !accept.includes(t))
   if (need.length) headers.set('accept', [accept, ...need].filter(Boolean).join(', '))
@@ -58,12 +62,23 @@ export async function POST(request: NextRequest) {
     const msgs = (Array.isArray(body) ? body : [body]) as Msg[]
     const initialize = msgs.find((m) => m?.method === 'initialize')
 
+    // 2026-07-28 clients name their protocol version in every request's _meta instead of initializing.
+    // Anything without that key is a 2025-11-25 (or older) request and takes the exact path it always did.
+    const single = !Array.isArray(body) && body && typeof body === 'object' ? (body as Msg) : null
+    const asked = requestedVersion(single as Rpc | null)
+    if (asked !== undefined && !SUPPORTED_VERSIONS.includes(asked)) return NextResponse.json(versionError(single?.id, asked), { status: 400 })
+    const modern = asked === MODERN_PROTOCOL_VERSION
+    if (modern) {
+      const header = request.headers.get('mcp-protocol-version')
+      if (header && header !== asked) return NextResponse.json(headerMismatchError(single?.id, header, asked), { status: 400 })
+    }
+
     // Connection heartbeat: verifies the token and records first/last connection + client name
     // for the '내 AI 연결하기' live test and the owner's profile.
-    const handshake = initialize ?? msgs.find((m) => m?.method === 'tools/list')
+    const handshake = initialize ?? msgs.find((m) => m?.method === 'tools/list' || m?.method === 'server/discover')
     if (handshake && !isDevMode()) {
       const ci = initialize?.params?.clientInfo
-      const client = ci ? [ci.name, ci.version].filter((x) => typeof x === 'string' && x).join(' ') : null
+      const client = ci ? [ci.name, ci.version].filter((x) => typeof x === 'string' && x).join(' ') : clientNameOf(handshake as Rpc)
       const { data: ok } = await createAnonClient().rpc('mcp_ping', { p_token: bearer, p_client: client || null })
       if (ok !== true) return unauthorized(request, handshake.id, 'Unauthorized: invalid, revoked or expired token', true)
     } else if (bearer && !isDevMode() && msgs.some((m) => m?.id !== undefined)) {
@@ -72,11 +87,29 @@ export async function POST(request: NextRequest) {
     }
 
     const ctx = new McpContext(bearer, new URL(request.url).origin)
+    if (modern && single?.method === 'server/discover') {
+      return NextResponse.json({
+        jsonrpc: '2.0',
+        id: single.id ?? null,
+        result: {
+          resultType: 'complete',
+          supportedVersions: SUPPORTED_VERSIONS,
+          capabilities: SERVER_CAPABILITIES,
+          instructions: await instructionsFor(ctx),
+          ttlMs: 60_000,
+          cacheScope: 'private',
+          _meta: { [SERVER_INFO_KEY]: SERVER_INFO },
+        },
+      })
+    }
     const server = await buildServer(ctx, { initialize: Boolean(initialize) })
     const transport = new WebStandardStreamableHTTPServerTransport({ sessionIdGenerator: undefined, enableJsonResponse: true })
     await server.connect(transport)
     try {
-      return await transport.handleRequest(compatRequest(request), { parsedBody: body })
+      const res = await transport.handleRequest(compatRequest(request, modern), { parsedBody: body })
+      if (!modern || res.status !== 200) return res
+      const message = (await res.json()) as Record<string, unknown>
+      return NextResponse.json(modernize(single?.method, message, SERVER_INFO))
     } finally {
       await server.close().catch(() => {})
     }
