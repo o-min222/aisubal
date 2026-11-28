@@ -64,29 +64,43 @@ export function ComposerFrame({
   )
 }
 
-/** Auto-growing textarea for composers (no character counter). `mentions` adds @-autocomplete. */
-export function ComposerTextarea(props: React.TextareaHTMLAttributes<HTMLTextAreaElement> & { onSubmitShortcut?: () => void; mentions?: boolean }) {
-  const { onSubmitShortcut, mentions = false, className = '', onKeyDown, onInput, onBlur, onFocus, enterKeyHint, ...rest } = props
-  const ref = useRef<HTMLTextAreaElement>(null)
+/**
+ * The one composer field (A149: feed, replies, group, 익명, quick composer, article comments).
+ * Grows with its text up to `autosize` px (false: a plain fixed field). `mentions` adds
+ * @-autocomplete. With onSubmitShortcut, desktop Cmd/Ctrl+Enter submits. `bare` drops the
+ * composer-input look for surfaces with their own field style.
+ */
+export function ComposerTextarea(
+  props: React.TextareaHTMLAttributes<HTMLTextAreaElement> & {
+    onSubmitShortcut?: () => void
+    mentions?: boolean
+    autosize?: number | false
+    bare?: boolean
+    ref?: React.RefObject<HTMLTextAreaElement | null>
+  }
+) {
+  const { onSubmitShortcut, mentions = false, autosize = 480, bare = false, className = '', onKeyDown, onInput, onBlur, onFocus, enterKeyHint, ref: outer, ...rest } = props
+  const own = useRef<HTMLTextAreaElement>(null)
+  const ref = outer ?? own
   const lastSend = useRef(0)
   const ms = useMentionSuggest(ref, mentions)
   // prefilled or restored text must be fully visible (the field no longer shows a scrollbar until it hits its cap)
-  useLayoutEffect(() => { if (ref.current) autosizeTextarea(ref.current, 480) }, [rest.value])
+  useLayoutEffect(() => { if (ref.current && autosize) autosizeTextarea(ref.current, autosize) }, [rest.value, autosize, ref])
   const textarea = (
     <textarea
       {...rest}
       {...ms.inputProps}
       ref={ref}
-      className={`composer-input ${className}`}
+      className={bare ? className : `composer-input ${className}`}
       enterKeyHint={enterKeyHint ?? COMPOSER_ENTER_KEY_HINT}
       onKeyDown={(e) => {
         if (ms.onKeyDown(e)) return
         // A102: desktop Cmd/Ctrl+Enter submits; plain Enter is a newline; touch is button-only
-        if (composerKeySubmits(e, isCoarsePointer())) {
+        if (onSubmitShortcut && composerKeySubmits(e, isCoarsePointer())) {
           e.preventDefault()
           if (e.currentTarget.value.trim() && Date.now() - lastSend.current > 800) {
             lastSend.current = Date.now()
-            onSubmitShortcut?.()
+            onSubmitShortcut()
           }
           return
         }
@@ -104,8 +118,7 @@ export function ComposerTextarea(props: React.TextareaHTMLAttributes<HTMLTextAre
         onBlur?.(e)
       }}
       onInput={(e) => {
-        const el = e.currentTarget
-        autosizeTextarea(el, 480)
+        if (autosize) autosizeTextarea(e.currentTarget, autosize)
         if (mentions) ms.update()
         onInput?.(e)
       }}

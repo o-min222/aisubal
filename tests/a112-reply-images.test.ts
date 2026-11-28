@@ -39,8 +39,11 @@ describe('A112 UI and API', () => {
     expect(composer).toMatch(/isReply \? \(/)
     expect(composer).toMatch(/imagePreview/)
     expect(composer).toMatch(/\.\.\.\(image \? \{ imagePath: image\.path \} : \{\}\)/)
-    expect(composer).toMatch(/uploadPickedImage/)
-    expect(composer).toMatch(/image\/heic,image\/heif/)
+    // A149: the upload pipeline moved into the shared composer core
+    expect(composer).toMatch(/useImageAttach\(/)
+    const core = readFileSync('src/components/composer/use-composer.tsx', 'utf8')
+    expect(core).toMatch(/uploadPickedImage/)
+    expect(core).toMatch(/image\/heic,image\/heif/)
   })
 
   it('editing a reply can change its image, and POST no longer drops reply paths', () => {

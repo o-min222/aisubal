@@ -1,9 +1,8 @@
 'use client'
 
 import { scrollToPosted } from '@/lib/scroll-to-post'
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import { publishReplyDelta } from '@/lib/count-store'
-import { piiWarning } from '@/lib/pii'
 import { useRouter } from 'next/navigation'
 import { VenetianMask, ShieldAlert } from 'lucide-react'
 import { toast } from 'sonner'
@@ -14,6 +13,7 @@ import { T } from '@/i18n/t'
 import { tx, tn } from '@/i18n/client'
 import { AnonTopicPicker } from './anon-topic-picker'
 import { ComposerFrame, ComposerTextarea } from '@/components/composer/composer-frame'
+import { useComposer } from '@/components/composer/use-composer'
 
 /** 익명 composer. Root posts pick a category; replies inherit the thread's. */
 export function AnonComposer({
@@ -38,30 +38,21 @@ export function AnonComposer({
 }) {
   const router = useRouter()
   const isReply = Boolean(parentId)
-  const [body, setBody] = useState('')
   const [category, setCategory] = useState<AnonCategory | null>(defaultCategory ?? null)
-  const [busy, setBusy] = useState(false)
-  const canSubmit = body.trim().length > 0 && !busy && (isReply || category)
-
-  const pii = useMemo(() => piiWarning(body), [body])
-  const [piiAckFor, setPiiAckFor] = useState<string | null>(null)
-
-  async function submit() {
-    if (!canSubmit) {
-      if (!isReply && !category && body.trim()) toast.error(tn('주제를 골라주세요.'))
-      return
-    }
-    if (pii && piiAckFor !== body) {
-      setPiiAckFor(body)
-      toast.warning(tx('{pii} 익명이어도 신원이 드러날 수 있어요. 그래도 올리려면 한 번 더 눌러주세요.', { pii }))
-      return
-    }
-    setBusy(true)
-    try {
+  const { body, setBody, busy, pii, submit } = useComposer({
+    // root posts need a topic; replies inherit the thread's
+    guard: () => {
+      if (isReply || category) return true
+      toast.error(tn('주제를 골라주세요.'))
+      return false
+    },
+    piiNotice: (pii) => tx('{pii} 익명이어도 신원이 드러날 수 있어요. 그래도 올리려면 한 번 더 눌러주세요.', { pii }),
+    errorFallback: () => tn('게시하지 못했어요.'),
+    send: async (text) => {
       const res = await fetch('/api/anon', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ body, category, parentId }),
+        body: JSON.stringify({ body: text, category, parentId }),
       })
       const data = await res.json().catch(() => ({}))
       if (!res.ok) throw new Error(data.error || tx('게시하지 못했어요.'))
@@ -75,12 +66,8 @@ export function AnonComposer({
       if (redirectTo === 'timeline' && !isReply && data.id) router.push(postedHref('/anon', data.id))
       else router.refresh()
       if (isReply) scrollToPosted(data.id)
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : tn('게시하지 못했어요.'))
-    } finally {
-      setBusy(false)
-    }
-  }
+    },
+  })
 
   return (
     <ComposerFrame
@@ -101,7 +88,7 @@ export function AnonComposer({
           </span>
         </span>
       }
-      onSubmit={submit}
+      onSubmit={() => void submit()}
       canSubmit={Boolean(body.trim())}
       busy={busy}
       submitLabel={busy ? <T>게시 중…</T> : <T>게시</T>}
@@ -109,7 +96,7 @@ export function AnonComposer({
       <ComposerTextarea
         value={body}
         onChange={(e) => setBody(e.target.value)}
-        onSubmitShortcut={submit}
+        onSubmitShortcut={() => void submit()}
         placeholder={isReply ? (replyKind === 'comment' ? tx('익명으로 댓글 남기기…') : tx('익명으로 답글 남기기…')) : tx('회사 얘기, 커리어 고민, AI 때문에 생긴 일… 편하게 털어놓으세요.')}
         autoFocus={autoFocus}
         rows={isReply ? 1 : 3}

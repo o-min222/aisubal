@@ -57,9 +57,9 @@ describe('composerKeySubmits', () => {
     const quick = readFileSync(join(__dirname, '..', 'src/components/feed/quick-composer.tsx'), 'utf8')
     expect(frame).toContain('composerKeySubmits')
     expect(frame).toContain('COMPOSER_ENTER_KEY_HINT')
-    expect(quick).toContain('composerKeySubmits')
-    expect(quick).toContain('COMPOSER_ENTER_KEY_HINT')
-    expect(quick).toMatch(/<textarea/)
+    // A149: the quick composer runs on the shared ComposerTextarea, so it gets the same key rule
+    expect(quick).toMatch(/<ComposerTextarea/)
+    expect(quick).toMatch(/onSubmitShortcut=/)
     expect(COMPOSER_ENTER_KEY_HINT).toBe('enter')
   })
 })

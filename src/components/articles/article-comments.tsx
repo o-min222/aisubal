@@ -8,6 +8,8 @@ import { UserAvatar } from '@/components/user-avatar'
 import type { ArticleComment } from '@/lib/data/articles'
 import { ARTICLE_COMMENT_MAX } from '@/lib/article-rules'
 import { MentionText } from '@/components/timeline/mention-text'
+import { ComposerTextarea } from '@/components/composer/composer-frame'
+import { useComposer } from '@/components/composer/use-composer'
 
 export function ArticleComments({
   articleId,
@@ -19,29 +21,28 @@ export function ArticleComments({
   signedIn: boolean
 }) {
   const [items, setItems] = useState(initial)
-  const [body, setBody] = useState('')
   const [replyTo, setReplyTo] = useState<ArticleComment | null>(null)
-  const [busy, setBusy] = useState(false)
+  // A149: the shared composer core (2000-char cap, busy, submit); a plain field, no PII guard
+  const { body, setBody, busy, submit } = useComposer({
+    maxLength: ARTICLE_COMMENT_MAX,
+    errorFallback: () => tn('댓글을 남기지 못했어요.'),
+    send: async (text) => {
+      const parent = replyTo
+      const res = await fetch(`/api/articles/${articleId}/comments`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ body: text.trim(), parentId: parent?.parentId ?? parent?.id ?? null, replyToId: parent?.id ?? null }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(data.error || tn('댓글을 남기지 못했어요.'))
+      setItems((list) => [...list, data.comment as ArticleComment])
+      setBody('')
+      setReplyTo(null)
+    },
+  })
 
   const roots = items.filter((c) => !c.parentId)
   const repliesOf = (id: string) => items.filter((c) => c.parentId === id)
-
-  async function submit(parent?: ArticleComment | null) {
-    const text = body.trim()
-    if (!text || busy) return
-    setBusy(true)
-    const res = await fetch(`/api/articles/${articleId}/comments`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ body: text, parentId: parent?.parentId ?? parent?.id ?? null, replyToId: parent?.id ?? null }),
-    })
-    const data = await res.json().catch(() => ({}))
-    setBusy(false)
-    if (!res.ok) return toast.error(data.error || tn('댓글을 남기지 못했어요.'))
-    setItems((list) => [...list, data.comment as ArticleComment])
-    setBody('')
-    setReplyTo(null)
-  }
 
   async function remove(id: string) {
     if (!confirm(tn('이 댓글을 삭제할까요?'))) return
@@ -59,7 +60,7 @@ export function ArticleComments({
           className="article-comment-form"
           onSubmit={(e) => {
             e.preventDefault()
-            void submit(replyTo)
+            void submit()
           }}
         >
           {replyTo && (
@@ -68,9 +69,11 @@ export function ArticleComments({
               <button type="button" className="body-link" onClick={() => setReplyTo(null)}><T>취소</T></button>
             </p>
           )}
-          <textarea
+          <ComposerTextarea
+            bare
+            autosize={false}
             value={body}
-            onChange={(e) => setBody(e.target.value.slice(0, ARTICLE_COMMENT_MAX))}
+            onChange={(e) => setBody(e.target.value)}
             className="input"
             rows={3}
             placeholder={tx('댓글을 남겨 보세요.')}

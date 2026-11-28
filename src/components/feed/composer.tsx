@@ -1,10 +1,9 @@
 'use client'
 
 import { scrollToPosted } from '@/lib/scroll-to-post'
-import { piiWarning } from '@/lib/pii'
 import { publishReplyDelta } from '@/lib/count-store'
 import { useT, tx, tn } from '@/i18n/client'
-import { useState, useMemo, useRef } from 'react'
+import { useState } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import { Users, ShieldAlert, ImagePlus, X } from 'lucide-react'
 import { toast } from 'sonner'
@@ -22,7 +21,8 @@ import { LinkCarousel } from '@/components/link-carousel'
 import { useLinkPreviews } from '@/hooks/use-link-previews'
 import type { AgentInteraction, PostAs } from '@/lib/supabase/types'
 import { T } from '@/i18n/t'
-import { uploadPickedImage, type PickedImage } from '@/lib/post-image-client'
+import type { PickedImage } from '@/lib/post-image-client'
+import { useComposer, useImageAttach } from '@/components/composer/use-composer'
 
 export type ComposerIdentity = {
   id: string
@@ -83,43 +83,30 @@ export function Composer({
   const router = useRouter()
   const pathname = usePathname()
   const tr = useT()
-  const [body, setBody] = useState(initialBody)
   const [postedAs, setPostedAs] = useState<PostAs>('real')
   // 'real' | 'nickname' | 'group:<id>' (group identities only on root posts)
   const [who, setWho] = useState('real')
   const [interaction, setInteraction] = useState<AgentInteraction>(me.agentInteraction ?? 'agents_allowed')
   const [visibility, setVisibility] = useState<PostVisibility>(me.visibility ?? 'members')
   const [question, setQuestion] = useState(initialQuestion)
-  const [busy, setBusy] = useState(false)
-  const [image, setImage] = useState<PickedImage | null>(initialImage)
-  const [uploading, setUploading] = useState(false)
-  const fileRef = useRef<HTMLInputElement>(null)
+  const attach = useImageAttach(initialImage)
+  const { image, setImage, uploading } = attach
   const isReply = Boolean(parentId)
   const asGroup = !isReply && who.startsWith('group:') ? (me.groupIdentities ?? []).find((g) => `group:${g.id}` === who) ?? null : null
   const restrictable = canRestrict({ isReply, groupId, asGroup: Boolean(asGroup), postedAs })
   const questionable = canAskQuestion({ isReply, groupId, asGroup: Boolean(asGroup), postedAs })
-  // live link previews (top-level posts only; replies never get cards)
-  const previews = useLinkPreviews(body, !isReply)
-  // PII guard: warn before publishing; a second press posts anyway (the poster decides).
-  const pii = useMemo(() => piiWarning(body), [body])
-  const [piiAckFor, setPiiAckFor] = useState<string | null>(null)
-  const piiPending = Boolean(pii) && piiAckFor !== body
-
   // A24: the next post starts where this one was set (saved quietly; the toggle works even if saving fails)
   function pickInteraction(v: AgentInteraction) {
     setInteraction(v)
     void fetch('/api/agent-interaction', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ value: v }), keepalive: true }).catch(() => {})
   }
 
-  async function submit() {
-    if (!body.trim() || busy) return
-    if (piiPending) {
-      setPiiAckFor(body)
-      toast.warning(tx('{pii} 공개 글이에요. 그래도 올리려면 한 번 더 눌러주세요.', { pii: pii ?? '' }))
-      return
-    }
-    setBusy(true)
-    try {
+  // PII guard: warn before publishing; a second press posts anyway (the poster decides).
+  const composer = useComposer({
+    initialBody,
+    piiNotice: (pii) => tx('{pii} 공개 글이에요. 그래도 올리려면 한 번 더 눌러주세요.', { pii }),
+    errorFallback: () => tn('게시하지 못했어요.'),
+    send: async (body) => {
       const res = await fetch('/api/feed', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -154,25 +141,12 @@ export function Composer({
       if (isReply || !data.id) router.refresh()
       else if (groupId) router.replace(postedHref(pathname, data.id), { scroll: false })
       else router.push(postedHref('/feed', data.id))
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : tn('게시하지 못했어요.'))
-    } finally {
-      setBusy(false)
-    }
-  }
+    },
+  })
+  const { body, setBody, busy, pii, piiAcked, submit } = composer
+  // live link previews (top-level posts only; replies never get cards)
+  const previews = useLinkPreviews(body, !isReply)
 
-  async function pickImage(f: File | undefined) {
-    if (!f) return
-    setUploading(true)
-    try {
-      setImage(await uploadPickedImage(f, (x) => tr(x)))
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : tn('업로드하지 못했어요.'))
-    } finally {
-      setUploading(false)
-      if (fileRef.current) fileRef.current.value = ''
-    }
-  }
   const imagePreview = image ? (
     <div className="composer-image">
       {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -182,11 +156,11 @@ export function Composer({
   ) : null
   const imageButton = (
     <>
-      <button type="button" className="agent-react-btn" onClick={() => fileRef.current?.click()} disabled={uploading || Boolean(image)} aria-label={tx('이미지 한 장')} title={tx('이미지 한 장')}>
+      <button type="button" className="agent-react-btn" onClick={attach.open} disabled={uploading || Boolean(image)} aria-label={tx('이미지 한 장')} title={tx('이미지 한 장')}>
         <ImagePlus className="w-4 h-4 flex-shrink-0" />
         {uploading ? <span className="truncate"><T>올리는 중…</T></span> : isReply ? <span className="truncate"><T>이미지 한 장</T></span> : null}
       </button>
-      <input ref={fileRef} type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/heic,image/heif" hidden onChange={(e) => void pickImage(e.target.files?.[0])} />
+      {attach.input}
     </>
   )
 
@@ -246,10 +220,10 @@ export function Composer({
           </span>
         )
       }
-      onSubmit={submit}
+      onSubmit={() => void submit()}
       canSubmit={Boolean(body.trim())}
       busy={busy}
-      submitLabel={busy ? <T>게시 중…</T> : piiAckFor === body && pii ? <T>그래도 게시</T> : <T>게시</T>}
+      submitLabel={busy ? <T>게시 중…</T> : piiAcked ? <T>그래도 게시</T> : <T>게시</T>}
     >
       {replyToLabel && (
         <p className="composer-reply-to text-xs text-n-888">
@@ -265,7 +239,7 @@ export function Composer({
       <ComposerTextarea
         value={body}
         onChange={(e) => setBody(e.target.value)}
-        onSubmitShortcut={submit}
+        onSubmitShortcut={() => void submit()}
         mentions
         placeholder={placeholder ? tr(placeholder) : image ? tr('이미지에 한 줄 설명을 붙여 주세요') : isReply ? (replyKind === 'comment' ? tr('댓글 남기기… @로 태그') : tr('답글 남기기…')) : tr('무슨 생각을 하고 있나요? 링크를 붙이면 미리보기가 생겨요.')}
         autoFocus={autoFocus}
@@ -275,7 +249,7 @@ export function Composer({
       {pii && (
         <div role="alert" className="pii-warning flex items-start gap-1.5 rounded-lg px-2.5 py-2 text-xs mb-1" style={{ background: 'var(--c-fff4e5)', color: 'var(--c-8a4b00)' }}>
           <ShieldAlert className="w-3.5 h-3.5 mt-px flex-shrink-0" />
-          <span><T s="{pii} 멤버 모두가 볼 수 있어요. 지우거나 가려주세요.{v}" vars={{ pii, v: piiAckFor === body ? tx(' (한 번 더 누르면 그대로 게시돼요)') : '' }} /></span>
+          <span><T s="{pii} 멤버 모두가 볼 수 있어요. 지우거나 가려주세요.{v}" vars={{ pii, v: piiAcked ? tx(' (한 번 더 누르면 그대로 게시돼요)') : '' }} /></span>
         </div>
       )}
       {!isReply && imagePreview}
