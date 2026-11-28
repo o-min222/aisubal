@@ -4,6 +4,7 @@ import { isDevMode } from '@/lib/auth'
 import { createAnonClient } from '@/lib/supabase/anon'
 import { McpContext } from '@/lib/mcp/dispatch'
 import { SERVER_CAPABILITIES, SERVER_INFO, buildServer, instructionsFor } from '@/lib/mcp/server'
+import { decorateMcpResult, mockToolsListPut, toolsCatalog, toolsVersion } from '@/lib/mcp/tools-version'
 import { MODERN_PROTOCOL_VERSION, SUPPORTED_VERSIONS, SERVER_INFO_KEY, clientNameOf, headerMismatchError, modernize, requestedVersion, versionError } from '@/lib/mcp/modern'
 import { originFrom, wwwAuthenticate } from '@/lib/oauth/core'
 import { tokenUsable } from '@/lib/data/oauth'
@@ -87,8 +88,14 @@ export async function POST(request: NextRequest) {
     }
 
     const ctx = new McpContext(bearer, new URL(request.url).origin)
+    const listed = msgs.some((m) => m?.method === 'tools/list')
+    const filter = await ctx.filter()
+    const current = { toolsVersion: toolsVersion(filter), toolsCatalog: toolsCatalog(filter) }
+    const hint = listed
+      ? { toolsVersion: current.toolsVersion, toolsChanged: false as const }
+      : await ctx.catalogHint()
     if (modern && single?.method === 'server/discover') {
-      return NextResponse.json({
+      const discover = decorateMcpResult('server/discover', {
         jsonrpc: '2.0',
         id: single.id ?? null,
         result: {
@@ -98,18 +105,36 @@ export async function POST(request: NextRequest) {
           instructions: await instructionsFor(ctx),
           ttlMs: 60_000,
           cacheScope: 'private',
+          serverInfo: SERVER_INFO,
           _meta: { [SERVER_INFO_KEY]: SERVER_INFO },
         },
-      })
+      }, hint)
+      return NextResponse.json(discover)
     }
     const server = await buildServer(ctx, { initialize: Boolean(initialize) })
     const transport = new WebStandardStreamableHTTPServerTransport({ sessionIdGenerator: undefined, enableJsonResponse: true })
     await server.connect(transport)
     try {
       const res = await transport.handleRequest(compatRequest(request, modern), { parsedBody: body })
-      if (!modern || res.status !== 200) return res
+      if (res.status !== 200) return res
       const message = (await res.json()) as Record<string, unknown>
-      return NextResponse.json(modernize(single?.method, message, SERVER_INFO))
+      if (listed) {
+        // tools/list is the refresh: record this catalog so later calls stop flagging toolsChanged
+        if (ctx.dev || !bearer) mockToolsListPut(bearer, current)
+        else {
+          const ci = initialize?.params?.clientInfo
+          const client = ci ? [ci.name, ci.version].filter((x) => typeof x === 'string' && x).join(' ') : clientNameOf((initialize ?? msgs.find((m) => m?.method === 'tools/list')) as Rpc)
+          const { data: ok } = await createAnonClient().rpc('mcp_ping', {
+            p_token: bearer,
+            p_client: client || null,
+            p_tools_version: current.toolsVersion,
+            p_tools_catalog: current.toolsCatalog,
+          })
+          void ok
+        }
+      }
+      const decorated = decorateMcpResult(single?.method ?? (initialize ? 'initialize' : listed ? 'tools/list' : null), message, hint)
+      return NextResponse.json(modern ? modernize(single?.method, decorated, SERVER_INFO) : decorated)
     } finally {
       await server.close().catch(() => {})
     }

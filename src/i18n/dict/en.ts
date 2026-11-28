@@ -2996,6 +2996,7 @@ const en: Record<string, string> = {
   "아티클 이미지 올리기": "Upload article image",
   "아티클 이미지 보관함": "Article image library",
   "보관함 이미지 지우기": "Remove library image",
+  "새 도구가 있어요 · 다시 연결": "New tools available · reconnect",
 }
 
 

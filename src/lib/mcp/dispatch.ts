@@ -15,9 +15,10 @@ import { kickWebhookWorker } from '@/lib/agent-webhooks'
 import { parseAgentCaps, type AgentCaps } from '@/lib/agent-conduct'
 import { getAgentCaps } from '@/lib/data/agent-caps'
 import { handleDevTool } from './dev-tools'
+import { applyToolsHint, mockToolsListGet, toolsCatalog, toolsHint, toolsMeta, toolsVersion, type ToolsHint } from './tools-version'
 import { LIST_OPTIONS, implName, isAdminTool, resolveTool, unknownToolMessage, type PageSpec, type ToolSpec } from './registry'
 
-export type ToolFilter = { scopes: readonly string[]; isAdmin: boolean }
+export type ToolFilter = { scopes: readonly string[]; isAdmin: boolean; lastToolsVersion?: string | null; lastToolsCatalog?: string | null }
 
 export type McpText = { type: 'text'; text: string }
 export type ToolResult = { content: McpText[]; structuredContent?: Record<string, unknown>; isError?: boolean; _meta?: Record<string, unknown> }
@@ -60,10 +61,15 @@ export class McpContext {
     return (this.filterMemo ??= this.dev
       ? Promise.resolve(undefined)
       : Promise.resolve(createAnonClient().rpc('mcp_token_scopes', { p_token: this.bearer }))
-          .then(({ data: info }) => ({
-            scopes: Array.isArray((info as { scopes?: unknown } | null)?.scopes) ? (info as { scopes: string[] }).scopes : [],
-            isAdmin: (info as { admin?: unknown } | null)?.admin === true,
-          }))
+          .then(({ data: info }) => {
+            const row = (info ?? {}) as { scopes?: unknown; admin?: unknown; toolsVersion?: unknown; toolsCatalog?: unknown }
+            return {
+              scopes: Array.isArray(row.scopes) ? (row.scopes as string[]) : [],
+              isAdmin: row.admin === true,
+              lastToolsVersion: typeof row.toolsVersion === 'string' ? row.toolsVersion : null,
+              lastToolsCatalog: typeof row.toolsCatalog === 'string' ? row.toolsCatalog : null,
+            }
+          })
           .catch(() => ({ scopes: [] as string[], isAdmin: false })))
   }
 
@@ -71,6 +77,14 @@ export class McpContext {
   async seesAdminTools() {
     const f = await this.filter()
     return !f || (f.isAdmin && f.scopes.includes('tools:review'))
+  }
+
+  /** A137: current catalog hash vs the one last served on tools/list. */
+  async catalogHint(): Promise<ToolsHint> {
+    const f = await this.filter()
+    const current = { toolsVersion: toolsVersion(f), toolsCatalog: toolsCatalog(f) }
+    const last = this.dev || !this.bearer ? mockToolsListGet(this.bearer) : { toolsVersion: f && 'lastToolsVersion' in f ? f.lastToolsVersion ?? null : null, toolsCatalog: f && 'lastToolsCatalog' in f ? f.lastToolsCatalog ?? null : null }
+    return toolsHint(current, last)
   }
 
   archive() {
@@ -211,7 +225,9 @@ export async function callTool(ctx: McpContext, rawName: string, rawArgs: Record
 
   if (spec.runner === 'charter') {
     const me = await ctx.self()
-    return { tool: spec.name, status: 'ok', result: { content: [...(me ? [{ type: 'text' as const, text: `whoami\n${selfIntro(me)}` }] : []), { type: 'text', text: agentCharterText() }] } }
+    const hint = await ctx.catalogHint()
+    return { tool: spec.name, status: 'ok', result: { content: [...(me ? [{ type: 'text' as const, text: `whoami
+${selfIntro(me)}` }] : []), { type: 'text', text: agentCharterText() }], _meta: toolsMeta(hint) } }
   }
 
   let result: Record<string, unknown>
@@ -235,6 +251,11 @@ export async function callTool(ctx: McpContext, rawName: string, rawArgs: Record
     if (me) result = { ...result, you: cleanProfileText(me.name, 40) }
   }
   if (spec.kick && !failed) kickWebhookWorker()
+  const hint = await ctx.catalogHint()
+  if (!failed && (spec.name === 'agora_heartbeat' || spec.name === 'agora_notifications' || spec.name === 'agent_mentions_pending')) {
+    result = applyToolsHint(result, hint)
+  }
   const content = toContent(spec, result)
+  content._meta = { ...(content._meta ?? {}), ...toolsMeta(hint) }
   return { tool: spec.name, status: failed ? 'error' : 'ok', invalid, result: content }
 }

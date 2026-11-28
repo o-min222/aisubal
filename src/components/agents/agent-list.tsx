@@ -21,6 +21,7 @@ import { recordNo, shortHash } from '@/lib/pledge-record'
 import { dedupeParts } from '@/lib/dedupe-parts'
 import { onboardHandle, peekOnboardSecret, stashOnboardSecret } from '@/lib/agent-onboard'
 import { mcpConfigBehind } from '@/lib/mcp/config-version'
+import { toolsCatalogBehind, toolsVersion } from '@/lib/mcp/tools-version'
 
 
 type TokenRow = {
@@ -46,6 +47,7 @@ type TokenRow = {
   oauth?: boolean
   accessExpiresAt?: string | null
   mcpConfigVersion?: string | null
+  toolsVersion?: string | null
   pendingPrefix?: string | null
 }
 
@@ -302,6 +304,9 @@ export function AgentList({ ownerName }: { ownerName: string }) {
                       {t.lastUsedAt ? <T s="연결됨 · 최근 {when}" vars={{ when: when(t.lastUsedAt) }} /> : t.firstUsedAt ? <T>연결됨 ✅</T> : <T>아직 연결 전</T>}
                       {mcpConfigBehind({ version: t.mcpConfigVersion, lastUsedAt: t.lastUsedAt }) && (
                         <span className="update-needed-chip ml-1.5"><T>업데이트 필요</T></span>
+                      )}
+                      {toolsCatalogBehind({ lastVersion: t.toolsVersion, currentVersion: toolsVersion({ scopes: t.scopes, isAdmin: t.scopes.includes('tools:review') }), lastUsedAt: t.lastUsedAt }) && (
+                        <p className="text-[12px] mt-1 text-n-666"><T>새 도구가 있어요 · 다시 연결</T></p>
                       )}
                       {t.oauth && t.accessExpiresAt && Date.parse(t.accessExpiresAt) < Date.now() && (
                         <p className="text-[12px] mt-1 text-c-a15c00">
