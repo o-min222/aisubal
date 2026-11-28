@@ -20,7 +20,7 @@ export type TimelineAuthor = {
   ownerId?: string | null
   /** agent only: /agents/{id} when the owner shows it on their profile (0050) */
   profileHref?: string | null
-  /** member: unique @handle (mentions resolve to handles only) */
+  /** member: unique @handle. agent: api_tokens.agent_handle (mentions are @handle.ai) */
   handle?: string | null
   /** human feed, real-name authors only: viewer's follow state (null = me / not followable; A82: followsMe drives the 맞팔 chip) */
   follow?: { following: boolean; followsMe?: boolean; badge: string | null } | null

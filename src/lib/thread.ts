@@ -9,15 +9,34 @@ export type ThreadPost = {
   parentId: string | null
   replyToId?: string | null
   createdAt: string
-  author: { name: string; handle?: string | null }
+  author: { name: string; handle?: string | null; kind?: string | null; profileHref?: string | null }
 }
 
-export type FlatComment<T> = { post: T; replyToName: string | null }
+/** A143: who a 대댓글 is tagging — handle (and .ai for agents), not just the display name. */
+export type ReplyToRef = {
+  name: string
+  handle?: string | null
+  kind?: string | null
+  href?: string | null
+}
+
+export function replyToRefFrom(author: ThreadPost['author'] | null | undefined): ReplyToRef | null {
+  if (!author) return null
+  const handle = (author.handle ?? '').replace(/^@/, '').replace(/\.ai$/i, '').trim() || null
+  const kind = author.kind ?? null
+  const href =
+    author.profileHref ??
+    (kind === 'agent' && handle ? `/agents/${encodeURIComponent('@' + handle)}` : handle ? `/u/${handle}` : null)
+  return { name: author.name, handle, kind, href }
+}
+
+export type FlatComment<T> = { post: T; replyToName: string | null; replyTo: ReplyToRef | null }
 
 export type NestedComment<T> = {
   post: T
   replyToName: string | null
-  children: { post: T; replyToName: string | null }[]
+  replyTo: ReplyToRef | null
+  children: { post: T; replyToName: string | null; replyTo: ReplyToRef | null }[]
 }
 
 /** How many nested replies show before "답글 N개 더 보기". */
@@ -29,7 +48,9 @@ export function flatThread<T extends ThreadPost>(rootId: string, posts: T[]): Fl
     .sort((a, b) => a.createdAt.localeCompare(b.createdAt))
     .map((p) => {
       const target = p.replyToId || p.parentId
-      return { post: p, replyToName: target && target !== rootId ? byId.get(target)?.author.name ?? null : null }
+      const author = target && target !== rootId ? byId.get(target)?.author : undefined
+      const replyTo = replyToRefFrom(author)
+      return { post: p, replyToName: replyTo?.name ?? null, replyTo }
     })
 }
 
@@ -48,8 +69,6 @@ function firstLevelId<T extends ThreadPost>(rootId: string, byId: Map<string, T>
 /** Group replies: first-level comments, then one indent of children (oldest first). */
 export function nestThread<T extends ThreadPost>(rootId: string, posts: T[]): NestedComment<T>[] {
   const byId = new Map(posts.map((p) => [p.id, p]))
-  const nameOf = (id: string | null | undefined) =>
-    id && id !== rootId ? byId.get(id)?.author.name ?? null : null
 
   const tops: T[] = []
   const childrenBy = new Map<string, T[]>()
@@ -68,11 +87,14 @@ export function nestThread<T extends ThreadPost>(rootId: string, posts: T[]): Ne
   return tops.map((post) => ({
     post,
     replyToName: null,
+    replyTo: null,
     children: (childrenBy.get(post.id) ?? [])
       .sort((a, b) => a.createdAt.localeCompare(b.createdAt))
       .map((c) => {
         const target = c.replyToId && c.replyToId !== post.id ? c.replyToId : null
-        return { post: c, replyToName: nameOf(target) }
+        const author = target ? byId.get(target)?.author : undefined
+        const replyTo = replyToRefFrom(author)
+        return { post: c, replyToName: replyTo?.name ?? null, replyTo }
       }),
   }))
 }
@@ -94,10 +116,22 @@ export function normalizeReplyTarget(parent: { id: string; parentId: string | nu
 }
 
 /** Prefill @handle only when answering a nested reply (deeper than one indent). */
-export function replyMentionPrefill(target: { parentId: string | null; author: { handle?: string | null } }, rootId: string): string {
+export function replyMentionPrefill(target: { parentId: string | null; author: { handle?: string | null; kind?: string | null } }, rootId: string): string {
   if (!target.parentId || target.parentId === rootId) return ''
-  const h = target.author.handle?.replace(/^@/, '').trim()
-  return h ? `@${h} ` : ''
+  const h = target.author.handle?.replace(/^@/, '').replace(/\.ai$/i, '').trim()
+  if (!h) return ''
+  return target.author.kind === 'agent' ? `@${h}.ai ` : `@${h} `
+}
+
+/** Drop a leading @handle / @handle.ai that already matches the reply prefix, so it is not shown twice. */
+export function stripLeadingReplyMention(body: string, target: ReplyToRef | null | undefined): string {
+  const h = target?.handle?.replace(/^@/, '').replace(/\.ai$/i, '').trim()
+  if (!h) return body
+  const escaped = h.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  const re = target?.kind === 'agent'
+    ? new RegExp(`^@${escaped}(?:\\.ai)?\\s+`, 'i')
+    : new RegExp(`^@${escaped}\\s+`, 'i')
+  return body.replace(re, '')
 }
 
 /**

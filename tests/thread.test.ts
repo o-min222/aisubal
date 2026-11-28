@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { flatThread, nestThread, normalizeReplyTarget, replyMentionPrefill, NESTED_PREVIEW } from '@/lib/thread'
+import { flatThread, nestThread, normalizeReplyTarget, replyMentionPrefill, stripLeadingReplyMention, NESTED_PREVIEW } from '@/lib/thread'
 
 const p = (id: string, parentId: string | null, min: number, replyToId: string | null = null, name = id.toUpperCase(), handle: string | null = null) => ({
   id,
@@ -24,7 +24,7 @@ describe('flatThread', () => {
     expect(rows.map((r) => r.parentId)).toEqual(['root', 'a', 'a'])
   })
   it('an orphan (parent gone) shows without a name', () => {
-    expect(flatThread('root', [p('z', 'gone', 1)])).toEqual([{ post: expect.objectContaining({ id: 'z' }), replyToName: null }])
+    expect(flatThread('root', [p('z', 'gone', 1)])).toEqual([{ post: expect.objectContaining({ id: 'z' }), replyToName: null, replyTo: null }])
   })
 })
 
@@ -38,7 +38,7 @@ describe('nestThread', () => {
   it('flattens a reply-to-reply under the same comment and shows @name only then', () => {
     const groups = nestThread('root', [p('a', 'root', 1), p('a1', 'a', 2), p('a2', 'a', 3, 'a1')])
     expect(groups).toHaveLength(1)
-    expect(groups[0].children.map((c) => [c.post.id, c.replyToName])).toEqual([['a1', null], ['a2', 'A1']])
+    expect(groups[0].children.map((c) => [c.post.id, c.replyToName, c.replyTo?.handle ?? null])).toEqual([['a1', null, null], ['a2', 'A1', null]])
   })
   it('an orphan (parent gone) stays a top-level row', () => {
     const groups = nestThread('root', [p('z', 'gone', 1)])
@@ -78,8 +78,16 @@ describe('normalizeReplyTarget / replyMentionPrefill', () => {
     expect(replyMentionPrefill({ parentId: 'root', author: { handle: 'prompt_jar' } }, 'root')).toBe('')
     expect(replyMentionPrefill({ parentId: 'a', author: { handle: 'prompt_jar' } }, 'root')).toBe('@prompt_jar ')
     expect(replyMentionPrefill({ parentId: 'a', author: { handle: null } }, 'root')).toBe('')
+    expect(replyMentionPrefill({ parentId: 'a', author: { handle: '쓰발이', kind: 'agent' } }, 'root')).toBe('@쓰발이.ai ')
+    expect(replyMentionPrefill({ parentId: 'a', author: { handle: '소연이_2.ai', kind: 'agent' } }, 'root')).toBe('@소연이_2.ai ')
   })
-  it('keeps the preview cap at 3', () => {
+  it('strips a leading @handle.ai that the reply prefix already shows', () => {
+    const agent = { name: '소연이', handle: '소연이_2', kind: 'agent', href: '/agents/@소연이_2' }
+    expect(stripLeadingReplyMention('@소연이_2.ai 살아났군', agent)).toBe('살아났군')
+    expect(stripLeadingReplyMention('답글 테스트해보려고', { name: '쓰발이', handle: '쓰발이', kind: 'agent' })).toBe('답글 테스트해보려고')
+    expect(stripLeadingReplyMention('@namd0 hello', { name: '남도', handle: 'namd0', kind: 'member' })).toBe('hello')
+  })
+    it('keeps the preview cap at 3', () => {
     expect(NESTED_PREVIEW).toBe(3)
   })
 })

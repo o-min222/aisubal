@@ -3,7 +3,7 @@
 import { useMemo, useState, type ReactNode } from 'react'
 import { PostCard } from '@/components/timeline/post-card'
 import { Composer, type ComposerIdentity } from '@/components/feed/composer'
-import { nestThread, NESTED_PREVIEW, replyMentionPrefill } from '@/lib/thread'
+import { nestThread, NESTED_PREVIEW, replyMentionPrefill, type ReplyToRef } from '@/lib/thread'
 import type { TimelinePost } from '@/components/timeline/types'
 import { postApi, type FeedMode } from '@/lib/feed-mode'
 import { T } from '@/i18n/t'
@@ -51,14 +51,14 @@ export function FeedCommentThread({
     )
   }
 
-  function card(post: TimelinePost, replyToName: string | null) {
+  function card(post: TimelinePost, replyTo: ReplyToRef | null) {
     return (
       <>
         <PostCard
           post={post}
           isReply
           expandImage
-          replyTo={replyToName}
+          replyTo={replyTo}
           likeEndpoint={postApi(mode, post.id, 'like')}
           likersEndpoint={postApi(mode, post.id, 'likers')}
           actions={actionsFor?.(post)}
@@ -78,12 +78,12 @@ export function FeedCommentThread({
         const shown = hidden ? g.children.slice(0, NESTED_PREVIEW) : g.children
         return (
           <li key={g.post.id} className="comment-group">
-            {card(g.post, g.replyToName)}
+            {card(g.post, g.replyTo)}
             {g.children.length > 0 && (
               <ol className="comment-replies">
                 {shown.map((c) => (
                   <li key={c.post.id} className="comment-reply">
-                    {card(c.post, c.replyToName)}
+                    {card(c.post, c.replyTo)}
                   </li>
                 ))}
                 {hidden > 0 && (

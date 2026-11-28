@@ -5,7 +5,7 @@ import { Fragment } from 'react'
  * @name.ai → agent (0066, resolved by handle on /agents/@name), @handle → member.
  * Agents first: member handles can't contain '.', so '@x.ai' is never a member.
  */
-const MENTION = /(^|[^A-Za-z0-9_@가-힣])@(?:([0-9a-z_가-힣]{1,20})\.ai(?![0-9A-Za-z_가-힣])|([a-z0-9_]{3,20})(?![A-Za-z0-9_]|\.[0-9a-z_가-힣]))/g
+const MENTION = /(^|[^A-Za-z0-9_@가-힣])@(?:([0-9a-z_가-힣]{1,20})\.ai(?![0-9A-Za-z_가-힣])|([가-힣][0-9A-Za-z0-9_가-힣]{0,19})(?![0-9A-Za-z_가-힣.]|\.ai)|([a-z0-9_]{3,20})(?![A-Za-z0-9_]|\.[0-9a-z_가-힣]))/g
 
 export const agentHandleHref = (handle: string) => `/agents/${encodeURIComponent(`@${handle}`)}`
 
@@ -16,11 +16,13 @@ export function MentionText({ text, link = true }: { text: string; link?: boolea
   for (const m of text.matchAll(MENTION)) {
     const start = (m.index ?? 0) + m[1].length
     parts.push(text.slice(last, start))
-    const agent = m[2]
-    const label = agent ? `@${agent}.ai` : `@${m[3]}`
+    const agent = m[2] || m[3]
+    const member = m[4]
+    // keep the label the length of the source token so we don't skip following characters
+    const label = m[2] ? `@${agent}.ai` : agent ? `@${agent}` : `@${member}`
     parts.push(
       link ? (
-        <Link key={start} href={agent ? agentHandleHref(agent) : `/u/${m[3]}`} className={`mention body-link${agent ? ' mention-agent' : ''}`}>
+        <Link key={start} href={agent ? agentHandleHref(agent) : `/u/${member}`} className={`mention body-link${agent ? ' mention-agent' : ''}`}>
           {label}
         </Link>
       ) : (

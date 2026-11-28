@@ -30,7 +30,8 @@ import { categoryLabel } from '@/lib/anon-rules'
 import { NameChip } from '@/components/social/name-chip'
 import { AgentAttribution } from './agent-attribution'
 import { AgentAvatar } from '@/components/agents/agent-avatar'
-import { MentionText } from './mention-text'
+import { MentionText, agentHandleHref } from './mention-text'
+import { stripLeadingReplyMention, type ReplyToRef } from '@/lib/thread'
 import { ExpandableImage } from './image-lightbox'
 import { PostMenu, type PostMenuKind } from './post-menu'
 import { useCounts } from '@/lib/count-store'
@@ -84,8 +85,8 @@ export function PostCard({
   /** A60: 아고라 admins get 숨기기 in the ⋯ menu */
   adminHide?: boolean
   isReply?: boolean
-  /** A 대댓글 that answered a sibling: its name as an @mention before the body */
-  replyTo?: string | null
+  /** A 대댓글 that answered a sibling: who it tags, shown as a real @mention before the body */
+  replyTo?: string | ReplyToRef | null
   /** root card in a detail view: where to go after a delete that leaves no tombstone */
   afterDeleteHref?: string
   /** A115: on a thread page, tap the image to open a view-only lightbox */
@@ -111,6 +112,14 @@ export function PostCard({
   const plainBody = carded.length ? stripPreviewedUrls(post.body || '', carded) : post.body || ''
   // A97: a flagged question wears a 질문 tag; the old text starter (A93 backfill) isn't repeated beside it
   const shownBody = post.isQuestion ? stripQuestionStarter(plainBody) : plainBody
+  const replyTarget: ReplyToRef | null = replyTo ? (typeof replyTo === 'string' ? { name: replyTo } : replyTo) : null
+  const replyHandle = replyTarget?.handle || null
+  const replyAgent = replyTarget?.kind === 'agent'
+  const replyLabel = replyHandle
+    ? replyAgent ? `@${replyHandle}.ai` : `@${replyHandle}`
+    : replyTarget ? `@${replyTarget.name}` : null
+  const mentionHref = replyTarget?.href || (replyAgent && replyHandle ? agentHandleHref(replyHandle) : replyHandle ? `/u/${replyHandle}` : null)
+  const bodyAfterReply = replyTarget ? stripLeadingReplyMention(shownBody, { ...replyTarget, handle: replyHandle }) : shownBody
 
   const anon = a.kind === 'anon'
   const archiveKind = archiveKindForEndpoint(likeEndpoint)
@@ -161,11 +170,17 @@ export function PostCard({
       ) : post.moim && !isReply ? (
         <MoimFeedCard moim={post.moim} />
       ) : (
-        (shownBody || replyTo) && (
+        (bodyAfterReply || replyLabel) && (
           <CollapsibleText lines={href ? 8 : 400} className="mt-1 text-[15px] leading-relaxed text-n-111 whitespace-pre-wrap break-words">
             {post.isQuestion && !isReply && <span className="q-tag"><T>질문</T></span>}
-            {replyTo && <span className="reply-mention">@{replyTo}</span>}
-            {anon ? shownBody : <MentionText text={shownBody} link={!bodyLinked} />}
+            {replyLabel && (
+              mentionHref && !anon ? (
+                <Link href={mentionHref} className={`reply-mention mention body-link${replyAgent ? ' mention-agent' : ''}`}>{replyLabel}</Link>
+              ) : (
+                <span className={`reply-mention${mentionHref || replyAgent ? ' mention' : ''}${replyAgent ? ' mention-agent' : ''}`}>{replyLabel}</span>
+              )
+            )}
+            {anon ? bodyAfterReply : <MentionText text={bodyAfterReply} link={!bodyLinked} />}
           </CollapsibleText>
         )
       )}

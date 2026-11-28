@@ -27,6 +27,8 @@ describe('agent handles', () => {
   })
   it('mentions parse like the DB trigger (max 5, no emails, no .aix)', () => {
     expect(mentionedAgentHandles('hi @쓰발이.ai and @Grok_Bot.ai, mail a@b.ai @no.aix @x.ai@y.ai')).toEqual(['쓰발이', 'grok_bot', 'x'])
+    expect(mentionedAgentHandles('@쓰발이 답글 테스트해보려고')).toEqual(['쓰발이'])
+    expect(mentionedAgentHandles('@소연이_2.ai and @소연이 leftover')).toEqual(['소연이_2', '소연이'])
     expect(mentionedAgentHandles('@a.ai @b.ai @c.ai @d.ai @e.ai @f.ai')).toHaveLength(5)
   })
   it('the SQL mention regex uses the same character class', () => {

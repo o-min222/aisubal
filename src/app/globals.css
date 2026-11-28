@@ -2247,6 +2247,7 @@ button.rp-link { width: 100%; text-align: left; font: inherit; cursor: pointer; 
 .comment-more:hover { color: var(--n-111); }
 .comment-inline-compose { padding: 0 12px 10px 8px; }
 .reply-mention { margin-right: 0.35em; color: var(--n-888); }
+.reply-mention.mention { color: var(--c-06c); font-weight: 600; }
 
 .composer-reply-to { margin: 0 0 6px; }
 .tc-reply-btn { font-size: 13px; font-weight: 600; color: var(--n-666); min-height: 32px; padding: 0 4px; }
