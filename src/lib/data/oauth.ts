@@ -43,19 +43,21 @@ export async function getClient(clientId: string): Promise<OAuthClient | null> {
   return { clientId: String(d.clientId), name: String(d.name), redirectUris: (d.redirectUris as string[]) ?? [], clientUri: (d.clientUri as string) ?? null, createdAt: String(d.createdAt) }
 }
 
-/** the member's agents already connected through this client (consent screen: reconnect instead of a new agent) */
+/**
+ * The member's agents already connected through this client, or through an earlier registration of the same app
+ * (Orca, Cursor… register a fresh client_id on every connect): consent screen "reconnect" instead of a new agent.
+ */
 export async function myOAuthAgents(memberId: string, clientId: string): Promise<{ id: string; name: string; lastUsedAt: string | null; avatarUrl?: string | null; brand?: string | null }[]> {
-  if (isMock()) return [...mock().agents.entries()].filter(([, a]) => a.clientId === clientId).map(([id, a]) => ({ id, name: a.name, lastUsedAt: null, brand: brandFromText(mock().clients.get(a.clientId)?.name) }))
+  if (isMock()) {
+    const name = mock().clients.get(clientId)?.name.toLowerCase()
+    return [...mock().agents.entries()]
+      .filter(([, a]) => a.clientId === clientId || (name != null && mock().clients.get(a.clientId)?.name.toLowerCase() === name))
+      .map(([id, a]) => ({ id, name: a.name, lastUsedAt: null, brand: brandFromText(mock().clients.get(a.clientId)?.name) }))
+  }
+  void memberId // the RPC reads the member from the session
   const s = await sb()
-  const { data } = await s
-    .from('api_tokens')
-    .select('id, agent_name, name, last_used_at, agent_avatar_url, agent_brand')
-    .eq('member_id', memberId)
-    .eq('oauth_client_id', clientId)
-    .eq('is_revoked', false)
-    .order('last_used_at', { ascending: false, nullsFirst: false })
-    .limit(10)
-  return (data ?? []).map((t) => ({ id: t.id as string, name: (t.agent_name as string) || (t.name as string), lastUsedAt: (t.last_used_at as string) ?? null, avatarUrl: (t.agent_avatar_url as string) ?? null, brand: (t.agent_brand as string) ?? null }))
+  const { data } = await s.rpc('oauth_my_agents', { p_client_id: clientId })
+  return ((data ?? []) as { id: string; name: string; last_used_at: string | null; avatar_url: string | null; brand: string | null }[]).map((t) => ({ id: t.id, name: t.name, lastUsedAt: t.last_used_at, avatarUrl: t.avatar_url, brand: t.brand }))
 }
 
 export async function createCode(p: { codeHash: string; clientId: string; redirectUri: string; challenge: string; scopes: string[]; agentName: string; tokenId: string | null; resource: string | null }): Promise<{ ok: true } | { error: string }> {

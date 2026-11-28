@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { readFileSync } from 'node:fs'
+import { readFileSync, readdirSync } from 'node:fs'
 import { createHash, randomBytes } from 'node:crypto'
 import {
   ALL_SCOPES, authorizationServerMetadata, clientRedirect, grantScopes, protectedResourceMetadata, redirectUriOk, requestedWrites, resourceOk, s256, wwwAuthenticate,
@@ -108,5 +108,35 @@ describe('A66 P4 OAuth flow (dev server)', () => {
     const bad = await fetch(`${B}/api/oauth/register`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ redirect_uris: ['http://evil.example/cb'] }) })
     expect(bad.status).toBe(400)
     expect((await (await fetch(`${B}/api/oauth/token`, { method: 'POST', body: form({ grant_type: 'password', client_id: 'x' }) })).json()).error).toBe('unsupported_grant_type')
+  })
+})
+
+describe('A144 consent "허용" must be able to succeed', () => {
+  const migrations = readdirSync('supabase/migrations').filter((f) => f.endsWith('.sql')).sort()
+  /** the scopes oauth__allowed_scopes returns after every migration has run (the last definition wins) */
+  const allowed = (() => {
+    let last: string[] = []
+    for (const f of migrations) {
+      const sql = readFileSync(`supabase/migrations/${f}`, 'utf8')
+      const m = sql.match(/function public\.oauth__allowed_scopes\(p_member uuid\)[\s\S]*?select array\[([^\]]+)\]/)
+      if (m) last = [...m[1].matchAll(/'([^']+)'/g)].map((x) => x[1])
+    }
+    return last
+  })()
+
+  it('every scope the consent screen can grant is one oauth_code_create accepts (0152 added article:write to the screen only: every approval bounced)', () => {
+    expect(allowed.length).toBeGreaterThan(0)
+    const grantable = [...ALL_SCOPES].filter((s) => s !== 'tools:review') // admins only: added by the CASE branch
+    expect(grantable.filter((s) => !allowed.includes(s))).toEqual([])
+    expect(allowed.filter((s) => !(ALL_SCOPES as readonly string[]).includes(s))).toEqual([])
+  })
+  it('a refusal lands back on the buttons with the reason beside them, and is logged', () => {
+    const route = readFileSync('src/app/api/oauth/authorize/route.ts', 'utf8')
+    expect(route).toMatch(/oauth\/authorize\?\$\{back\}#decision/)
+    expect(route).toMatch(/console\.warn\('\[oauth\] authorize'/)
+    const page = readFileSync('src/app/oauth/authorize/page.tsx', 'utf8')
+    expect(page.indexOf('id="decision"')).toBeGreaterThan(page.indexOf('CONSENT.revokeNote'))
+    expect(page.indexOf('oauth-error')).toBeGreaterThan(page.indexOf('id="decision"'))
+    expect(page.indexOf('oauth-error')).toBeLessThan(page.indexOf('value="allow"'))
   })
 })

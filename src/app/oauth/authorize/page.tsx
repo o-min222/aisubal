@@ -80,7 +80,6 @@ export default async function OAuthAuthorizePage({ searchParams }: { searchParam
           <p className="text-sm text-n-555 leading-relaxed">{t(CONSENT.intro, { app, owner: m.display_name, agent: existing[0]?.name ?? app.slice(0, 40) })}</p>
           <p className="text-[12.5px] text-n-888 break-words">{t(CONSENT.unverified, { where: redirectLabel(req.redirectUri) })}</p>
         </header>
-        {err && <p className="text-sm text-n-111" role="alert">{t(err)}</p>}
 
         <fieldset className="oauth-field space-y-2">
           <legend className="oauth-h">{t(existing.length > 0 ? CONSENT.agentLabel : CONSENT.nameLabel)}</legend>
@@ -143,9 +142,12 @@ export default async function OAuthAuthorizePage({ searchParams }: { searchParam
           <p>{t(CONSENT.revokeNote)}</p>
         </div>
 
-        <div className="grid grid-cols-2 gap-2">
-          <button type="submit" name="decision" value="deny" className="btn btn-secondary min-h-[48px] rounded-full">{t(CONSENT.deny)}</button>
-          <button type="submit" name="decision" value="allow" className="btn btn-primary min-h-[48px] rounded-full">{t(CONSENT.allow)}</button>
+        <div id="decision" className="space-y-3 scroll-mt-4">
+          {err && <p className="oauth-error" role="alert">{t(err)}</p>}
+          <div className="grid grid-cols-2 gap-2">
+            <button type="submit" name="decision" value="deny" className="btn btn-secondary min-h-[48px] rounded-full">{t(CONSENT.deny)}</button>
+            <button type="submit" name="decision" value="allow" className="btn btn-primary min-h-[48px] rounded-full">{t(CONSENT.allow)}</button>
+          </div>
         </div>
       </form>
     </Shell>

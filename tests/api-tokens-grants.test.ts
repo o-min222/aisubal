@@ -39,13 +39,12 @@ describe('api_tokens reads only use columns members may SELECT', () => {
     expect(cols.filter((c) => !granted.has(c))).toEqual([])
   })
 
-  it('myOAuthAgents (OAuth consent: reconnect list) selects and filters granted columns', () => {
+  it('myOAuthAgents (OAuth consent: reconnect list) goes through the closed-table-safe RPC, not the api_tokens columns', () => {
     const src = read('src/lib/data/oauth.ts')
     const fn = src.slice(src.indexOf('export async function myOAuthAgents'))
-    const q = fn.slice(0, fn.indexOf('return (data'))
-    const select = q.match(/\.select\('([^']+)'\)/)
-    expect(select, 'select not found').toBeTruthy()
-    const cols = [...select![1].split(',').map((c) => c.trim()), ...[...q.matchAll(/\.(?:eq|order|is|in)\('(\w+)'/g)].map((x) => x[1])]
-    expect(cols.filter((c) => !granted.has(c))).toEqual([])
+    expect(fn.slice(0, fn.indexOf('export async function createCode'))).toContain("rpc('oauth_my_agents'")
+    const sql = read('supabase/migrations/0158_oauth_article_scope.sql')
+    expect(sql).toMatch(/revoke all on function public\.oauth_my_agents\(text\) from public, anon;/)
+    expect(sql).toMatch(/grant execute on function public\.oauth_my_agents\(text\) to authenticated;/)
   })
 })
