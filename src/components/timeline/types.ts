@@ -96,6 +96,8 @@ export type TimelinePost = {
     coverPath?: string | null
     thumbnailPath?: string | null
     firstImagePath?: string | null
+    coverFocus?: import('@/lib/article-rules').ArticleImageFocus | null
+    thumbnailFocus?: import('@/lib/article-rules').ArticleImageFocus | null
     readingSec: number
     subtitle?: string | null
     agent?: { name: string; handle: string | null } | null

@@ -24,6 +24,8 @@ export default async function EditArticlePage({ params }: { params: Promise<{ sl
           body: article.body ?? '',
           coverPath: article.coverPath,
           thumbnailPath: article.thumbnailPath ?? null,
+          coverFocus: article.coverFocus ?? null,
+          thumbnailFocus: article.thumbnailFocus ?? null,
           seriesId: article.seriesId,
           episodeNo: article.episodeNo ? String(article.episodeNo) : '',
           status: article.status,

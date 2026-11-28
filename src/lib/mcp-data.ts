@@ -21,7 +21,7 @@ import { AGENT_REPLY_MAX_CHARS as FEED_MAX_CHARS } from '@/lib/feed-rules'
 import { fetchPageSnapshot, safeFetchBytes } from '@/lib/safe-fetch'
 import { AVATAR_INPUT_MAX, decodeBase64Image, processAvatar } from '@/lib/agent-avatar-image'
 import { processArticleImage } from '@/lib/article-image-process'
-import { ARTICLE_IMAGE_MAX_BYTES, articleImageSrc } from '@/lib/article-rules'
+import { ARTICLE_IMAGE_MAX_BYTES, articleImageSrc, parseArticleImageFocus, type ArticleImageFocus } from '@/lib/article-rules'
 import { isStale } from '@/lib/tool-review'
 import { AGENT_BIO_MAX, AGENT_NAME_MAX, AGENT_PROFILE_NOTICE, parseAgentProfile, toAgentFacingProfile } from '@/lib/agent-profile'
 import { revalidatePath } from 'next/cache'
@@ -86,7 +86,7 @@ function articleImageOut(raw: Record<string, unknown>, origin: string): Record<s
   return { ...raw, url: src ? `${origin}${src}` : null, markdown: src ? `![${alt}](${src})` : null }
 }
 
-type ArticleImageSlot = { set: string } | { clear: true } | null
+type ArticleImageSlot = { set: string | null; clear: boolean; focus: ArticleImageFocus | null; focusSet: boolean } | null
 /** cover / thumbnail argument → a library image id to set, a clear, or nothing; uploads new images on the way. */
 async function resolveArticleImageSlot(
   call: (fn: string, args: Record<string, unknown>) => Promise<unknown>,
@@ -96,20 +96,43 @@ async function resolveArticleImageSlot(
   allowRemove: boolean,
 ): Promise<ArticleImageSlot | { error: string }> {
   if (raw == null) return null
-  if (typeof raw !== 'object' || Array.isArray(raw)) return { error: `${kind} must be an object with one of imageId, imageBase64, url or remove.` }
+  if (typeof raw !== 'object' || Array.isArray(raw)) return { error: `${kind} must be an object with imageId, imageBase64, url, remove, and/or x, y, fit.` }
   const o = raw as Record<string, unknown>
   const imageId = typeof o.imageId === 'string' && o.imageId.trim() ? o.imageId.trim() : null
   const b64 = typeof o.imageBase64 === 'string' && o.imageBase64.trim() ? o.imageBase64 : null
   const url = typeof o.url === 'string' && o.url.trim() ? o.url.trim() : null
   const remove = o.remove === true
-  if (Number(Boolean(imageId)) + Number(Boolean(b64)) + Number(Boolean(url)) + Number(remove) !== 1) {
+  const sources = Number(Boolean(imageId)) + Number(Boolean(b64)) + Number(Boolean(url)) + Number(remove)
+  const parsedFocus = parseSlotFocus(o)
+  if ('error' in parsedFocus) return parsedFocus
+  const { focus, focusSet } = parsedFocus
+  if (sources > 1) {
     return { error: `${kind}: pass exactly one of imageId, imageBase64, url${allowRemove ? ' or remove=true' : ''}.` }
   }
-  if (remove) return allowRemove ? { clear: true } : { error: `${kind}.remove is only for article_edit.` }
-  if (imageId) return isUuid(imageId) ? { set: imageId } : { error: `${kind}.imageId must be a UUID.` }
+  if (sources === 0) {
+    if (focusSet && allowRemove) return { set: null, clear: false, focus, focusSet: true }
+    return { error: `${kind}: pass exactly one of imageId, imageBase64, url${allowRemove ? ', remove=true, or x/y/fit to update the focal point' : ''}.` }
+  }
+  if (remove) return allowRemove ? { set: null, clear: true, focus: null, focusSet: false } : { error: `${kind}.remove is only for article_edit.` }
+  if (imageId) {
+    if (!isUuid(imageId)) return { error: `${kind}.imageId must be a UUID.` }
+    return { set: imageId, clear: false, focus, focusSet }
+  }
   const r = await storeArticleImage(call, origin, b64 ? { b64 } : { url: url as string }, kind, null)
   if ('error' in r) return { error: `${kind}: ${r.error}` }
-  return { set: String(r.image.id) }
+  return { set: String(r.image.id), clear: false, focus, focusSet }
+}
+
+function parseSlotFocus(o: Record<string, unknown>): { focus: ArticleImageFocus | null; focusSet: boolean } | { error: string } {
+  if (o.focus != null) {
+    const f = parseArticleImageFocus(o.focus)
+    if (!f) return { error: 'focus must be { x: 0-100, y: 0-100, fit: "crop" | "contain" }.' }
+    return { focus: f, focusSet: true }
+  }
+  if ('x' in o || 'y' in o || 'fit' in o) {
+    return { focus: parseArticleImageFocus({ x: o.x, y: o.y, fit: o.fit }), focusSet: true }
+  }
+  return { focus: null, focusSet: false }
 }
 
 /** profile_set_avatar url: why the server refused to download it */
@@ -161,6 +184,7 @@ export function dataErrorMessage(raw: string | null | undefined): string {
   if (m.includes('bad_title')) return 'title must be 1-120 characters.'
   if (m.includes('body_too_long')) return 'body must be 100000 characters or fewer.'
   if (m.includes('bad_series')) return 'seriesId must be a series the owner created.'
+  if (m.includes('bad_focus')) return 'cover/thumbnail focus must be { x: 0-100, y: 0-100, fit: "crop" | "contain" }.'
   if (m.includes('bad_cover')) return 'cover.imageId must be an image in the owner library (see article_image_list).'
   if (m.includes('bad_thumbnail')) return 'thumbnail.imageId must be an image in the owner library (see article_image_list).'
   if (m.includes('bad_kind')) return 'kind must be cover, thumbnail or inline.'
@@ -509,8 +533,10 @@ export async function handleDataTool(
           p_body: body,
           p_publish: args.publish === true,
           p_series_id: seriesId || null,
-          p_cover_id: cover && 'set' in cover ? cover.set : null,
-          p_thumbnail_id: thumb && 'set' in thumb ? thumb.set : null,
+          p_cover_id: cover && cover.set ? cover.set : null,
+          p_thumbnail_id: thumb && thumb.set ? thumb.set : null,
+          p_cover_focus: cover && cover.focusSet ? cover.focus : null,
+          p_thumbnail_focus: thumb && thumb.focusSet ? thumb.focus : null,
         })) as Record<string, unknown>
       }
       case 'article_edit': {
@@ -533,10 +559,14 @@ export async function handleDataTool(
           p_subtitle: args.subtitle == null ? null : str(args.subtitle),
           p_body: body,
           p_publish: args.publish === true,
-          p_cover_id: cover && 'set' in cover ? cover.set : null,
-          p_cover_clear: Boolean(cover && 'clear' in cover),
-          p_thumbnail_id: thumb && 'set' in thumb ? thumb.set : null,
-          p_thumbnail_clear: Boolean(thumb && 'clear' in thumb),
+          p_cover_id: cover && cover.set ? cover.set : null,
+          p_cover_clear: Boolean(cover && cover.clear),
+          p_thumbnail_id: thumb && thumb.set ? thumb.set : null,
+          p_thumbnail_clear: Boolean(thumb && thumb.clear),
+          p_cover_focus: cover && cover.focusSet ? cover.focus : null,
+          p_cover_focus_set: Boolean(cover && cover.focusSet),
+          p_thumbnail_focus: thumb && thumb.focusSet ? thumb.focus : null,
+          p_thumbnail_focus_set: Boolean(thumb && thumb.focusSet),
         })) as Record<string, unknown>
       }
       case 'article_delete': {

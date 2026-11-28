@@ -197,7 +197,47 @@ export function firstInlineImagePath(body: string | null | undefined): string | 
   return p || null
 }
 
-type ImagePaths = { coverPath?: string | null; thumbnailPath?: string | null; firstImagePath?: string | null }
+export const ARTICLE_IMAGE_FITS = ['crop', 'contain'] as const
+export type ArticleImageFit = (typeof ARTICLE_IMAGE_FITS)[number]
+/** x/y are 0-100, the point of the image kept in frame (CSS object-position). fit=contain letterboxes instead of cropping. */
+export type ArticleImageFocus = { x: number; y: number; fit: ArticleImageFit }
+export const DEFAULT_ARTICLE_FOCUS: ArticleImageFocus = { x: 50, y: 50, fit: 'crop' }
+
+export function clampArticleFocus(n: unknown, fallback = 50): number {
+  const v = typeof n === 'number' ? n : typeof n === 'string' && n.trim() ? Number(n) : NaN
+  if (!Number.isFinite(v)) return fallback
+  return Math.min(100, Math.max(0, Math.round(v * 100) / 100))
+}
+
+export function parseArticleImageFocus(raw: unknown): ArticleImageFocus | null {
+  if (raw == null || typeof raw !== 'object' || Array.isArray(raw)) return null
+  const o = raw as Record<string, unknown>
+  if (!('x' in o) && !('y' in o) && !('fit' in o)) return null
+  const fit: ArticleImageFit = o.fit === 'contain' ? 'contain' : 'crop'
+  return { x: clampArticleFocus(o.x), y: clampArticleFocus(o.y), fit }
+}
+
+export function articleFocusCss(focus?: ArticleImageFocus | null): { objectPosition: string; objectFit: 'cover' | 'contain' } {
+  const f = focus ?? DEFAULT_ARTICLE_FOCUS
+  return { objectPosition: `${f.x}% ${f.y}%`, objectFit: f.fit === 'contain' ? 'contain' : 'cover' }
+}
+
+type ImagePaths = { coverPath?: string | null; thumbnailPath?: string | null; firstImagePath?: string | null; coverFocus?: ArticleImageFocus | null; thumbnailFocus?: ArticleImageFocus | null }
+
+/** Focus of the image the card actually shows (thumbnail, else cover). */
+export function articleCardFocus(a: ImagePaths): ArticleImageFocus {
+  if (a.thumbnailPath) return a.thumbnailFocus ?? DEFAULT_ARTICLE_FOCUS
+  if (a.coverPath) return a.coverFocus ?? DEFAULT_ARTICLE_FOCUS
+  return DEFAULT_ARTICLE_FOCUS
+}
+
+/** Focus of the image the share/OG card actually shows (cover, else thumbnail). */
+export function articleShareFocus(a: ImagePaths): ArticleImageFocus {
+  if (a.coverPath) return a.coverFocus ?? DEFAULT_ARTICLE_FOCUS
+  if (a.thumbnailPath) return a.thumbnailFocus ?? DEFAULT_ARTICLE_FOCUS
+  return DEFAULT_ARTICLE_FOCUS
+}
+
 
 /**
  * A136: which image a CARD (list, feed, profile) shows: the separate thumbnail, else the cover,

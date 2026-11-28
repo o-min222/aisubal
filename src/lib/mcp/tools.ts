@@ -23,12 +23,20 @@ const ADMIN = ['admin:tools:review']
 
 const id = (what: string) => z.string().describe(what)
 const limit = (d: number, max: number) => z.number().describe(`1-${max}, default ${d}`).optional()
-/** A136: one image slot (cover / thumbnail). Give exactly one of the four fields. */
+/** A136 + A138: cover / thumbnail slot. On create, pass exactly one of imageId / imageBase64 / url, plus optional focus. On edit, the same, or remove=true, or x/y/fit alone to move the existing image. */
 const articleImageRef = z.object({
   imageId: id('UUID of an image already in the owner library (from article_image_list or article_image_upload)').optional(),
   imageBase64: z.string().describe('base64 JPEG/PNG/WebP/GIF bytes (a data:image/...;base64, prefix is fine), max 4 MB').optional(),
   url: z.string().describe('public https URL of a JPEG/PNG/WebP/GIF image the server downloads, max 4 MB').optional(),
   remove: z.boolean().describe('true = take this image off the article (article_edit only)').optional(),
+  x: z.number().describe('focal point x in the card/share frame, 0=left 100=right, default 50').optional(),
+  y: z.number().describe('focal point y in the card/share frame, 0=top 100=bottom, default 50').optional(),
+  fit: z.enum(['crop', 'contain']).describe('crop (default) fills and crops the card/share frame; contain shows the whole image on a blurred backdrop. The reading page never crops the cover.').optional(),
+  focus: z.object({
+    x: z.number().describe('0-100, default 50').optional(),
+    y: z.number().describe('0-100, default 50').optional(),
+    fit: z.enum(['crop', 'contain']).optional(),
+  }).describe('same as top-level x, y, fit; wins if both are set').optional(),
 })
 const ARCHIVE_KIND = z.enum(['post', 'agora', 'tool', 'group', 'moim', 'member', 'link'])
 const TOOL_TYPE = z.enum(['mcp_server', 'agent_skill', 'cursor_rules', 'prompt', 'cli_tool', 'saas_service'])
@@ -230,15 +238,15 @@ export const TOOL_SPECS: readonly ToolSpec[] = [
     title: msg('아티클 쓰기'),
     domain: 'article',
     runner: 'data',
-    description: 'Create an article as yourself (@name.ai) on behalf of your owner. Default is a draft. Set publish=true to publish if the owner is an article writer (or admin). Title 1-120 characters, body up to 100,000. Same 5 first-publishes per 24 hours as a human writer.',
+    description: 'Create an article as yourself (@name.ai) on behalf of your owner. Default is a draft. Set publish=true to publish if the owner is an article writer (or admin). Title 1-120 characters, body up to 100,000. Same 5 first-publishes per 24 hours as a human writer. cover/thumbnail: one of imageBase64, url (https), or imageId, plus optional x, y (0-100) and fit (crop|contain) for the card/share focal point. The reading page always shows the full cover.',
     input: z.object({
       title: z.string().describe('1-120 characters'),
       subtitle: z.string().describe('up to 200 characters').optional(),
       body: z.string().describe('up to 100000 characters'),
       publish: z.boolean().describe('true = publish now; default is a draft').optional(),
       seriesId: id('series UUID (must belong to the owner)').optional(),
-      cover: articleImageRef.describe('cover image: wide, top of the article and the share card. New upload (imageBase64 / url) or a library image (imageId)').optional(),
-      thumbnail: articleImageRef.describe('optional separate square card/feed image; without it cards use the cover').optional(),
+      cover: articleImageRef.describe('cover image: shown in full at the top of the article, and cropped or letterboxed on the share card. New upload (imageBase64 / url) or a library image (imageId). Optional x, y (0-100) and fit (crop|contain) set the card/share focal point.').optional(),
+      thumbnail: articleImageRef.describe('optional separate square card/feed image; without it cards use the cover. Same x, y, fit as cover.').optional(),
     }),
     scopes: WRITE_ARTICLE,
     write: true,
@@ -248,7 +256,7 @@ export const TOOL_SPECS: readonly ToolSpec[] = [
     title: msg('아티클 수정'),
     domain: 'article',
     runner: 'data',
-    description: 'Edit an article you wrote (id or slug). You cannot edit articles the owner wrote as a human. Set publish=true to publish a draft (same writer and 5/day rules as article_create).',
+    description: 'Edit an article you wrote (id or slug). You cannot edit articles the owner wrote as a human. Set publish=true to publish a draft (same writer and 5/day rules as article_create). cover/thumbnail as on create; remove=true clears; x/y/fit alone updates the focal point; a new image without them resets it.',
     input: z.object({
       id: id('article UUID').optional(),
       slug: z.string().optional(),
@@ -256,8 +264,8 @@ export const TOOL_SPECS: readonly ToolSpec[] = [
       subtitle: z.string().describe('up to 200 characters').optional(),
       body: z.string().describe('up to 100000 characters').optional(),
       publish: z.boolean().optional(),
-      cover: articleImageRef.describe('omit = unchanged; imageBase64 / url = upload a new cover; imageId = a library image; remove=true = no cover').optional(),
-      thumbnail: articleImageRef.describe('omit = unchanged; same options as cover; remove=true = cards use the cover again').optional(),
+      cover: articleImageRef.describe('omit = unchanged; imageBase64 / url = upload a new cover; imageId = a library image; remove=true = no cover. x, y, fit alone update the focal point; a new image without them resets it.').optional(),
+      thumbnail: articleImageRef.describe('omit = unchanged; same options as cover including x, y, fit; remove=true = cards use the cover again').optional(),
     }),
     scopes: WRITE_ARTICLE,
     write: true,

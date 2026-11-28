@@ -2,6 +2,7 @@ import { ImageResponse } from 'next/og'
 import { loadFont } from '@/lib/invite-og'
 import { INVITE_MOTTO } from '@/lib/invite-share'
 import type { ArticleSharePreview } from '@/lib/data/articles'
+import { articleShareFocus } from '@/lib/article-rules'
 
 export const ARTICLE_OG_SIZE = { width: 1200, height: 630 }
 
@@ -40,16 +41,30 @@ export async function renderArticleShareOg(preview: ArticleSharePreview, coverUr
           </div>
           <div style={{ fontSize: 24, color: '#8f8f8f' }}>aisubal.vercel.app</div>
         </div>
-        {coverUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={coverUrl}
-            alt=""
-            style={{ width: 480, height: 630, objectFit: 'cover' }}
-          />
-        ) : null}
+        {coverUrl ? <OgCoverPanel src={coverUrl} preview={preview} /> : null}
       </div>
     ),
     { ...ARTICLE_OG_SIZE, fonts: font ? [{ name: 'NotoKR', data: font, weight: 800, style: 'normal' }] : undefined },
+  )
+}
+
+
+function OgCoverPanel({ src, preview }: { src: string; preview: ArticleSharePreview }) {
+  const focus = articleShareFocus(preview)
+  const pos = `${focus.x}% ${focus.y}%`
+  const contain = focus.fit === 'contain'
+  return (
+    <div style={{ width: 480, height: 630, display: 'flex', position: 'relative', overflow: 'hidden', background: '#1a1a1a' }}>
+      {contain ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={src} alt="" style={{ position: 'absolute', top: 0, left: 0, width: 480, height: 630, objectFit: 'cover', objectPosition: pos, opacity: 0.35 }} />
+      ) : null}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={src}
+        alt=""
+        style={{ width: 480, height: 630, objectFit: contain ? 'contain' : 'cover', objectPosition: pos }}
+      />
+    </div>
   )
 }

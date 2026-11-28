@@ -2978,7 +2978,7 @@ const en: Record<string, string> = {
   "이 이미지 쓰기: {name}": "Use this image: {name}",
   "이름 없는 이미지": "Untitled image",
   "이미지 보관함이 가득 찼어요. 안 쓰는 이미지를 지우고 다시 올려 주세요.": "Your image library is full. Remove one you no longer need and try again.",
-  "이미지가 보이는 모양 미리보기": "Preview of how the image is cropped",
+  "이미지가 보이는 모양 미리보기": "Preview of how the image appears",
   "이미지는 올렸지만 보관함에는 저장하지 못했어요.": "Uploaded, but it could not be saved to your library.",
   "이미지를 불러오지 못했어요.": "Couldn't load images.",
   "이미지를 쓸 수 없어요. 다시 골라 주세요.": "This image can't be used. Pick another.",
@@ -2996,6 +2996,11 @@ const en: Record<string, string> = {
   "아티클 이미지 올리기": "Upload article image",
   "아티클 이미지 보관함": "Article image library",
   "보관함 이미지 지우기": "Remove library image",
+  "이미지 위치를 확인해 주세요.": "Check the image position and try again.",
+  "잘리지 않게": "Fit (no crop)",
+  "켜면 이미지 전체가 들어가고, 빈 자리는 흐린 배경으로 채워요.": "On, the whole image fits and empty space is filled with a blurred backdrop.",
+  "세로 칸 · {via}": "Tall frame · {via}",
+  "읽는 화면은 이미지를 자르지 않고 그대로 보여 줘요. 카드와 공유 미리보기는 아래 칸을 끌어 보이는 위치를 맞춰 주세요.": "The reading page shows the full image, uncropped. Drag the card and share previews below to set what stays in view.",
   "새 도구가 있어요 · 다시 연결": "New tools available · reconnect",
 }
 

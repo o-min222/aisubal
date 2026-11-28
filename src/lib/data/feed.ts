@@ -624,6 +624,8 @@ function articleToTimeline(a: ArticleCard): TimelinePost {
       coverPath: a.coverPath,
       thumbnailPath: a.thumbnailPath ?? null,
       firstImagePath: a.firstImagePath ?? null,
+      coverFocus: a.coverFocus ?? null,
+      thumbnailFocus: a.thumbnailFocus ?? null,
       readingSec: a.readingSec,
       subtitle: a.subtitle,
       agent: a.agent ?? null,

@@ -1,36 +1,53 @@
 'use client'
 
-import { useRef, useState } from 'react'
+import { useRef, useState, type ReactNode } from 'react'
 import { ImagePlus, Images, X } from 'lucide-react'
 import { toast } from 'sonner'
 import { T } from '@/i18n/t'
 import { tn, tx } from '@/i18n/client'
 import { ToggleSwitch } from '@/components/ui/toggle-switch'
-import { ARTICLE_IMAGE_MAX_BYTES, ARTICLE_IMAGE_TYPES, articleImageSrc, firstInlineImagePath } from '@/lib/article-rules'
+import {
+  ARTICLE_IMAGE_MAX_BYTES,
+  ARTICLE_IMAGE_TYPES,
+  DEFAULT_ARTICLE_FOCUS,
+  articleImageSrc,
+  firstInlineImagePath,
+  type ArticleImageFocus,
+} from '@/lib/article-rules'
 import { PrepareImageError, prepareImageErrorMessage, prepareUploadImage } from '@/lib/upload-image-client'
 import type { ArticleLibraryImage } from '@/lib/data/article-images'
 import { ArticleImagePicker } from './article-image-picker'
+import { ArticleFramedImage } from './article-framed-image'
 
 type Slot = 'cover' | 'thumbnail'
+type Patch = {
+  coverPath?: string | null
+  thumbnailPath?: string | null
+  coverFocus?: ArticleImageFocus | null
+  thumbnailFocus?: ArticleImageFocus | null
+}
 
 /**
- * A136: the cover sits above the title. One cover feeds the reading page (wide), the card thumbnail (square crop)
- * and the share card (tall crop); the live previews below show exactly those crops. '썸네일 따로 지정' adds an
- * optional square image used only on cards and the feed. Cards: thumbnail, cover, first body image, letter.
- * Share card: cover, thumbnail, first body image, default.
+ * A136 + A138: the cover sits above the title. The reading page shows the full cover (no crop).
+ * Cards and the share card use a fixed frame: drag the live previews to set a focal point, or turn
+ * on '잘리지 않게' to letterbox on a blurred backdrop. A separate thumbnail is optional.
  */
 export function ArticleCoverSection({
   coverPath,
   thumbnailPath,
+  coverFocus,
+  thumbnailFocus,
   body,
   title,
   onChange,
 }: {
   coverPath: string | null
   thumbnailPath: string | null
+  coverFocus: ArticleImageFocus | null
+  thumbnailFocus: ArticleImageFocus | null
   body: string
   title: string
-  onChange: (patch: { coverPath?: string | null; thumbnailPath?: string | null }) => void
+  onChange: (patch: Patch) => void
 }) {
   const [thumbOn, setThumbOn] = useState(Boolean(thumbnailPath))
   const [picker, setPicker] = useState<Slot | null>(null)
@@ -42,13 +59,31 @@ export function ArticleCoverSection({
   const cover = articleImageSrc(coverPath)
   const thumb = articleImageSrc(thumbnailPath)
   const firstSrc = articleImageSrc(first)
+  const coverF = coverFocus ?? DEFAULT_ARTICLE_FOCUS
+  const thumbF = thumbnailFocus ?? DEFAULT_ARTICLE_FOCUS
 
-  // what each surface actually shows (see articleCardImagePath / articleShareImagePath)
-  const cardPick = thumbnailPath ? { src: thumb, via: tx('썸네일') } : coverPath ? { src: cover, via: tx('커버') } : first ? { src: firstSrc, via: tx('본문 첫 이미지') } : { src: null, via: tx('글자') }
-  const sharePick = coverPath ? { src: cover, via: tx('커버') } : thumbnailPath ? { src: thumb, via: tx('썸네일') } : first ? { src: firstSrc, via: tx('본문 첫 이미지') } : { src: null, via: tx('기본 카드') }
+  const cardPick = thumbnailPath
+    ? { src: thumb, via: tx('썸네일'), focus: thumbF, slot: 'thumbnail' as const, canFocus: true }
+    : coverPath
+      ? { src: cover, via: tx('커버'), focus: coverF, slot: 'cover' as const, canFocus: true }
+      : first
+        ? { src: firstSrc, via: tx('본문 첫 이미지'), focus: DEFAULT_ARTICLE_FOCUS, slot: null, canFocus: false }
+        : { src: null, via: tx('글자'), focus: DEFAULT_ARTICLE_FOCUS, slot: null, canFocus: false }
+  const sharePick = coverPath
+    ? { src: cover, via: tx('커버'), focus: coverF, slot: 'cover' as const, canFocus: true }
+    : thumbnailPath
+      ? { src: thumb, via: tx('썸네일'), focus: thumbF, slot: 'thumbnail' as const, canFocus: true }
+      : first
+        ? { src: firstSrc, via: tx('본문 첫 이미지'), focus: DEFAULT_ARTICLE_FOCUS, slot: null, canFocus: false }
+        : { src: null, via: tx('기본 카드'), focus: DEFAULT_ARTICLE_FOCUS, slot: null, canFocus: false }
 
-  function set(slot: Slot, path: string | null) {
-    onChange(slot === 'cover' ? { coverPath: path } : { thumbnailPath: path })
+  function setPath(slot: Slot, path: string | null) {
+    if (slot === 'cover') onChange({ coverPath: path, coverFocus: path ? DEFAULT_ARTICLE_FOCUS : null })
+    else onChange({ thumbnailPath: path, thumbnailFocus: path ? DEFAULT_ARTICLE_FOCUS : null })
+  }
+
+  function setFocus(slot: Slot, focus: ArticleImageFocus) {
+    onChange(slot === 'cover' ? { coverFocus: focus } : { thumbnailFocus: focus })
   }
 
   function choose(slot: Slot) {
@@ -68,7 +103,7 @@ export function ArticleCoverSection({
       const res = await fetch('/api/article-image', { method: 'POST', body: form })
       const data = await res.json().catch(() => ({}))
       if (!res.ok) return toast.error(data.error || tn('이미지를 올리지 못했어요.'))
-      set(slot, data.path as string)
+      setPath(slot, data.path as string)
       if (slot === 'thumbnail') setThumbOn(true)
       if (!data.image) toast.message(tn('이미지는 올렸지만 보관함에는 저장하지 못했어요.'))
     } catch (e) {
@@ -81,13 +116,13 @@ export function ArticleCoverSection({
 
   function pick(img: ArticleLibraryImage) {
     if (!picker) return
-    set(picker, img.path)
+    setPath(picker, img.path)
     if (picker === 'thumbnail') setThumbOn(true)
   }
 
   function toggleThumb(next: boolean) {
     setThumbOn(next)
-    if (!next) set('thumbnail', null)
+    if (!next) setPath('thumbnail', null)
   }
 
   return (
@@ -101,13 +136,17 @@ export function ArticleCoverSection({
       />
       <div className="article-cover-head">
         <h2 className="article-cover-title"><T>커버 이미지</T></h2>
-        <p className="article-cover-hint"><T>읽는 화면 맨 위, 카드, 공유 미리보기에 같이 쓰여요.</T></p>
+        <p className="article-cover-hint"><T>읽는 화면은 이미지를 자르지 않고 그대로 보여 줘요. 카드와 공유 미리보기는 아래 칸을 끌어 보이는 위치를 맞춰 주세요.</T></p>
       </div>
 
       <div className={`article-cover-stage${cover ? ' has-image' : ''}`}>
         {cover ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={cover} alt="" className="article-cover-img" />
+          <>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={cover} alt="" aria-hidden className="article-cover-stage-blur" />
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={cover} alt="" className="article-cover-img" />
+          </>
         ) : (
           <button type="button" className="article-cover-empty" onClick={() => choose('cover')} disabled={busy === 'cover'}>
             <ImagePlus className="w-6 h-6" aria-hidden />
@@ -124,35 +163,33 @@ export function ArticleCoverSection({
           <Images className="w-4 h-4" aria-hidden /> <T>내 이미지에서 고르기</T>
         </button>
         {coverPath && (
-          <button type="button" className="btn btn-secondary btn-sm" onClick={() => set('cover', null)}>
+          <button type="button" className="btn btn-secondary btn-sm" onClick={() => setPath('cover', null)}>
             <X className="w-4 h-4" aria-hidden /> <T>제거</T>
           </button>
         )}
       </div>
 
       <div className="article-cover-previews" aria-label={tx('이미지가 보이는 모양 미리보기')}>
-        <figure className="article-crop">
-          <div className="article-crop-box article-crop-square">
-            {cardPick.src ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={cardPick.src} alt="" />
-            ) : (
-              <span className="article-crop-letter" aria-hidden>{(title || '아').slice(0, 1)}</span>
-            )}
-          </div>
-          <figcaption><T>카드 썸네일</T><span>{tx('정사각 · {via}', { via: cardPick.via })}</span></figcaption>
-        </figure>
-        <figure className="article-crop">
-          <div className="article-crop-box article-crop-share">
-            {sharePick.src ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={sharePick.src} alt="" />
-            ) : (
-              <span className="article-crop-letter article-crop-brand" aria-hidden>AI쓰발</span>
-            )}
-          </div>
-          <figcaption><T>공유 카드</T><span>{tx('세로 잘림 · {via}', { via: sharePick.via })}</span></figcaption>
-        </figure>
+        <FocusPreview
+          label={tx('카드 썸네일')}
+          caption={tx('정사각 · {via}', { via: cardPick.via })}
+          boxClass="article-crop-square"
+          src={cardPick.src}
+          focus={cardPick.focus}
+          canFocus={cardPick.canFocus}
+          fallback={<span className="article-crop-letter" aria-hidden>{(title || '아').slice(0, 1)}</span>}
+          onFocusChange={cardPick.slot ? (f) => setFocus(cardPick.slot!, f) : undefined}
+        />
+        <FocusPreview
+          label={tx('공유 카드')}
+          caption={tx('세로 칸 · {via}', { via: sharePick.via })}
+          boxClass="article-crop-share"
+          src={sharePick.src}
+          focus={sharePick.focus}
+          canFocus={sharePick.canFocus}
+          fallback={<span className="article-crop-letter article-crop-brand" aria-hidden>AI쓰발</span>}
+          onFocusChange={sharePick.slot ? (f) => setFocus(sharePick.slot!, f) : undefined}
+        />
       </div>
 
       <div className="article-thumb-opt">
@@ -167,8 +204,7 @@ export function ArticleCoverSection({
           <div className="article-thumb-body">
             <div className="article-crop-box article-crop-square article-thumb-preview">
               {thumb ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={thumb} alt="" />
+                <ArticleFramedImage src={thumb} focus={thumbF} interactive className="article-thumb-preview" onFocusChange={(f) => setFocus('thumbnail', f)} />
               ) : (
                 <ImagePlus className="w-5 h-5" aria-hidden />
               )}
@@ -181,7 +217,7 @@ export function ArticleCoverSection({
                 <Images className="w-4 h-4" aria-hidden /> <T>내 이미지에서 고르기</T>
               </button>
               {thumbnailPath && (
-                <button type="button" className="btn btn-secondary btn-sm" onClick={() => set('thumbnail', null)}>
+                <button type="button" className="btn btn-secondary btn-sm" onClick={() => setPath('thumbnail', null)}>
                   <X className="w-4 h-4" aria-hidden /> <T>제거</T>
                 </button>
               )}
@@ -198,5 +234,55 @@ export function ArticleCoverSection({
         onPick={pick}
       />
     </section>
+  )
+}
+
+function FocusPreview({
+  label,
+  caption,
+  boxClass,
+  src,
+  focus,
+  canFocus,
+  fallback,
+  onFocusChange,
+}: {
+  label: string
+  caption: string
+  boxClass: string
+  src: string | null
+  focus: ArticleImageFocus
+  canFocus: boolean
+  fallback: ReactNode
+  onFocusChange?: (focus: ArticleImageFocus) => void
+}) {
+  return (
+    <figure className="article-crop">
+      <div className={`article-crop-box ${boxClass}`}>
+        {src ? (
+          <ArticleFramedImage src={src} focus={focus} interactive={canFocus} onFocusChange={canFocus ? onFocusChange : undefined} />
+        ) : (
+          fallback
+        )}
+      </div>
+      <figcaption>
+        {label}
+        <span>{caption}</span>
+      </figcaption>
+      {src && canFocus && onFocusChange && <FitToggle focus={focus} onChange={onFocusChange} />}
+    </figure>
+  )
+}
+
+function FitToggle({ focus, onChange }: { focus: ArticleImageFocus; onChange: (focus: ArticleImageFocus) => void }) {
+  return (
+    <div className="article-fit-row">
+      <ToggleSwitch
+        checked={focus.fit === 'contain'}
+        onChange={(on) => onChange({ ...focus, fit: on ? 'contain' : 'crop' })}
+        label={tx('잘리지 않게')}
+      />
+      <p className="article-cover-hint"><T>켜면 이미지 전체가 들어가고, 빈 자리는 흐린 배경으로 채워요.</T></p>
+    </div>
   )
 }

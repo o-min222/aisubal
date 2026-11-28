@@ -3,7 +3,8 @@ import type { TimelinePost } from '@/components/timeline/types'
 import { T } from '@/i18n/t'
 import { tx } from '@/i18n/client'
 import { ArticleByline } from '@/components/articles/article-byline'
-import { articleHref, formatReadingTime, articleImageSrc, articleCardImagePath } from '@/lib/article-rules'
+import { articleHref, formatReadingTime, articleImageSrc, articleCardImagePath, articleCardFocus } from '@/lib/article-rules'
+import { ArticleFramedImage } from '@/components/articles/article-framed-image'
 
 /** Compact home-feed card. Tap opens the reading view; likes/comments are the article's. */
 export function ArticleFeedCard({ post }: { post: TimelinePost }) {
@@ -32,8 +33,7 @@ export function ArticleFeedCard({ post }: { post: TimelinePost }) {
           </p>
         </div>
         {cover ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={cover} alt="" className="article-feed-cover" />
+          <ArticleFramedImage src={cover} focus={articleCardFocus(a)} className="article-feed-cover" />
         ) : (
           <div className="article-feed-fallback" aria-hidden>{(post.title || '아').slice(0, 1)}</div>
         )}

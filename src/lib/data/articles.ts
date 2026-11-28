@@ -1,6 +1,6 @@
 import { cache } from 'react'
 import { createAnonClient } from '@/lib/supabase/anon'
-import { articleTeaserBody, canPublishArticle, firstInlineImagePath } from '@/lib/article-rules'
+import { articleTeaserBody, canPublishArticle, firstInlineImagePath, parseArticleImageFocus, type ArticleImageFocus } from '@/lib/article-rules'
 import { MOCK_MEMBERS } from '@/lib/mock-data'
 import { sb, isMock } from './client'
 
@@ -40,6 +40,9 @@ export type ArticleCard = {
   thumbnailPath?: string | null
   /** A136: first inline body image (card / share fallback) */
   firstImagePath?: string | null
+  /** A138: focal point + crop/contain for the cover / optional thumbnail */
+  coverFocus?: ArticleImageFocus | null
+  thumbnailFocus?: ArticleImageFocus | null
   status: 'draft' | 'published' | 'hidden'
   publishedAt: string | null
   editedAt: string | null
@@ -75,7 +78,7 @@ export type ArticleComment = {
   isMine: boolean
 }
 
-export type ArticleSharePreview = { title: string | null; body: string | null; coverPath: string | null; thumbnailPath?: string | null; firstImagePath?: string | null; slug: string }
+export type ArticleSharePreview = { title: string | null; body: string | null; coverPath: string | null; thumbnailPath?: string | null; firstImagePath?: string | null; coverFocus?: ArticleImageFocus | null; thumbnailFocus?: ArticleImageFocus | null; slug: string }
 
 const DEV_AUTHOR: ArticleAuthor = { id: 'dev-user-id', name: '개발자', handle: 'dev', avatarUrl: null }
 const OTHER = MOCK_MEMBERS[1] || { id: 'member-2', display_name: '프롬프트수집가', handle: 'prompt', avatar_url: null }
@@ -314,7 +317,7 @@ export async function getArticleSharePreview(slug: string): Promise<ArticleShare
     if (!st.sharePreview) return null
     const a = st.articles.find((x) => x.slug === slug && x.status === 'published')
     if (!a) return null
-    return { title: a.title, body: a.subtitle || a.title, coverPath: a.coverPath, thumbnailPath: a.thumbnailPath ?? null, firstImagePath: firstInlineImagePath(a.body), slug: a.slug }
+    return { title: a.title, body: a.subtitle || a.title, coverPath: a.coverPath, thumbnailPath: a.thumbnailPath ?? null, firstImagePath: firstInlineImagePath(a.body), coverFocus: a.coverFocus ?? null, thumbnailFocus: a.thumbnailFocus ?? null, slug: a.slug }
   }
   const { data, error } = await createAnonClient().rpc('article_share_preview', { p_slug: slug })
   if (error) return null
@@ -403,6 +406,8 @@ export async function upsertArticle(input: {
   body?: string
   coverPath?: string | null
   thumbnailPath?: string | null
+  coverFocus?: ArticleImageFocus | null
+  thumbnailFocus?: ArticleImageFocus | null
   seriesId?: string | null
   episodeNo?: number | null
 }): Promise<ArticleCard> {
@@ -416,6 +421,8 @@ export async function upsertArticle(input: {
       subtitle: input.subtitle ?? null,
       coverPath: input.coverPath ?? null,
       thumbnailPath: input.thumbnailPath ?? null,
+      coverFocus: (input.coverPath ?? null) ? (parseArticleImageFocus(input.coverFocus) ?? (input.coverPath === existing?.coverPath ? existing?.coverFocus ?? null : null)) : null,
+      thumbnailFocus: (input.thumbnailPath ?? null) ? (parseArticleImageFocus(input.thumbnailFocus) ?? (input.thumbnailPath === existing?.thumbnailPath ? existing?.thumbnailFocus ?? null : null)) : null,
       firstImagePath: firstInlineImagePath(input.body),
       status: existing?.status ?? 'draft',
       publishedAt: existing?.publishedAt ?? null,
@@ -447,6 +454,8 @@ export async function upsertArticle(input: {
     p_series_id: input.seriesId ?? null,
     p_episode_no: input.episodeNo ?? null,
     p_thumbnail_path: input.thumbnailPath ?? null,
+    p_cover_focus: (input.coverPath ?? null) ? parseArticleImageFocus(input.coverFocus) : null,
+    p_thumbnail_focus: (input.thumbnailPath ?? null) ? parseArticleImageFocus(input.thumbnailFocus) : null,
   })
   if (error) rpcError(error)
   return asCard(data)

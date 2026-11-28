@@ -11,6 +11,7 @@ import { ArticleReaderChrome } from '@/components/articles/article-reader-chrome
 import { ArticleActions } from '@/components/articles/article-actions'
 import { ArticleComments } from '@/components/articles/article-comments'
 import { ArticleOwnerMenu } from '@/components/articles/article-owner-menu'
+import { ArticleReadCover } from '@/components/articles/article-framed-image'
 import { T } from '@/i18n/t'
 import { getT } from '@/i18n/server'
 import { articleHref, articleSeriesHref, formatReadingTime, isReservedArticleSlug, isPublicArticlePath, articleImageSrc, articleDocumentTitle } from '@/lib/article-rules'
@@ -79,10 +80,7 @@ export default async function ArticleReadPage({ params }: Props) {
           </span>
           {article.isMine && <ArticleOwnerMenu articleId={article.id} slug={article.slug} published={article.status === 'published'} />}
         </div>
-        {cover && (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={cover} alt="" className="article-read-cover" />
-        )}
+        {cover && <ArticleReadCover src={cover} />}
         <div className={`article-read-body${article.truncated ? ' is-truncated' : ''}`}>
           <ArticleMarkdown content={article.body || ''} />
           {article.truncated && (

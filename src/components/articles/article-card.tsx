@@ -3,7 +3,8 @@ import type { ArticleCard, ArticleSeriesBrief } from '@/lib/data/articles'
 import { T } from '@/i18n/t'
 import { getT } from '@/i18n/server'
 import { ArticleByline } from '@/components/articles/article-byline'
-import { articleHref, articleSeriesHref, formatReadingTime, articleImageSrc, articleCardImagePath } from '@/lib/article-rules'
+import { articleHref, articleSeriesHref, formatReadingTime, articleImageSrc, articleCardImagePath, articleCardFocus } from '@/lib/article-rules'
+import { ArticleFramedImage } from '@/components/articles/article-framed-image'
 
 function metaLine(a: ArticleCard, t: (s: string, v?: Record<string, string | number>) => string) {
   const parts: string[] = []
@@ -24,8 +25,7 @@ export async function ArticleCardView({ article, compact = false }: { article: A
     <article className={`article-card${compact ? ' article-card-compact' : ''}`}>
       <Link href={href} className="article-card-link">
         {cover ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={cover} alt="" className="article-card-cover" />
+          <ArticleFramedImage src={cover} focus={articleCardFocus(article)} className="article-card-cover" />
         ) : (
           <div className="article-card-fallback" aria-hidden>
             <span>{article.title.slice(0, 1)}</span>
@@ -56,8 +56,7 @@ export async function SeriesCardView({ series }: { series: ArticleSeriesBrief })
     <article className="article-card">
       <Link href={articleSeriesHref(series.slug)} className="article-card-link">
         {cover ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={cover} alt="" className="article-card-cover" />
+          <ArticleFramedImage src={cover} className="article-card-cover" />
         ) : (
           <div className="article-card-fallback" aria-hidden>
             <span>{series.title.slice(0, 1)}</span>

@@ -8,7 +8,7 @@ import { tn, tx } from '@/i18n/client'
 import type { ArticleCard, ArticleSeriesBrief } from '@/lib/data/articles'
 import { ArticleMarkdown } from './article-markdown'
 import { ArticleCoverSection } from './article-cover-section'
-import { ARTICLE_BODY_MAX, ARTICLE_IMAGE_MAX_BYTES, ARTICLE_IMAGE_TYPES, ARTICLE_SUBTITLE_MAX, ARTICLE_TITLE_MAX, articleEditHref, articleHref } from '@/lib/article-rules'
+import { ARTICLE_BODY_MAX, ARTICLE_IMAGE_MAX_BYTES, ARTICLE_IMAGE_TYPES, ARTICLE_SUBTITLE_MAX, ARTICLE_TITLE_MAX, articleEditHref, articleHref, type ArticleImageFocus } from '@/lib/article-rules'
 import { PrepareImageError, prepareImageErrorMessage, prepareUploadImage } from '@/lib/upload-image-client'
 
 type Draft = {
@@ -18,6 +18,8 @@ type Draft = {
   body: string
   coverPath: string | null
   thumbnailPath?: string | null
+  coverFocus?: ArticleImageFocus | null
+  thumbnailFocus?: ArticleImageFocus | null
   seriesId: string | null
   episodeNo: string
   status?: ArticleCard['status']
@@ -41,6 +43,8 @@ export function ArticleEditor({
     body: initial?.body ?? '',
     coverPath: initial?.coverPath ?? null,
     thumbnailPath: initial?.thumbnailPath ?? null,
+    coverFocus: initial?.coverFocus ?? null,
+    thumbnailFocus: initial?.thumbnailFocus ?? null,
     seriesId: initial?.seriesId ?? null,
     episodeNo: initial?.episodeNo ?? '',
     status: initial?.status ?? 'draft',
@@ -65,6 +69,8 @@ export function ArticleEditor({
         body: next.body,
         coverPath: next.coverPath,
         thumbnailPath: next.thumbnailPath ?? null,
+        coverFocus: next.coverFocus ?? null,
+        thumbnailFocus: next.thumbnailFocus ?? null,
         seriesId: next.seriesId,
         episodeNo: next.episodeNo ? Number(next.episodeNo) : null,
       }),
@@ -76,7 +82,7 @@ export function ArticleEditor({
       return next
     }
     const article = data.article as ArticleCard
-    const updated = { ...next, id: article.id, slug: article.slug, status: article.status, coverPath: article.coverPath, thumbnailPath: article.thumbnailPath ?? null }
+    const updated = { ...next, id: article.id, slug: article.slug, status: article.status, coverPath: article.coverPath, thumbnailPath: article.thumbnailPath ?? null, coverFocus: article.coverFocus ?? null, thumbnailFocus: article.thumbnailFocus ?? null }
     setDraft(updated)
     setSaving('saved')
     if (!next.id && article.id) router.replace(articleEditHref(article.slug || article.id))
@@ -171,6 +177,8 @@ export function ArticleEditor({
       <ArticleCoverSection
         coverPath={draft.coverPath}
         thumbnailPath={draft.thumbnailPath ?? null}
+        coverFocus={draft.coverFocus ?? null}
+        thumbnailFocus={draft.thumbnailFocus ?? null}
         body={draft.body}
         title={draft.title}
         onChange={(patch) => setDraft((d) => ({ ...d, ...patch }))}
