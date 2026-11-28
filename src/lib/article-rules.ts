@@ -30,6 +30,15 @@ export const ARTICLE_IMAGE_TYPES: Record<string, string> = {
   'image/gif': 'gif',
 }
 
+/** A136: the member's reusable image library (covers, thumbnails). Must match article__library_cap() in 0153. */
+export const ARTICLE_LIBRARY_CAP = 100
+export const ARTICLE_IMAGE_KINDS = ['cover', 'thumbnail', 'inline'] as const
+export type ArticleImageKind = (typeof ARTICLE_IMAGE_KINDS)[number]
+/** What an agent upload is stored as (re-encoded; matches the 2 MB check on article_image_blobs.bytes). */
+export const ARTICLE_AGENT_IMAGE_OUT_MAX = 1_500_000
+export const ARTICLE_AGENT_IMAGE_MAX_SIDE = 2000
+export const ARTICLE_AGENT_IMAGES_PER_DAY = 30
+
 /** Browse tabs on /articles */
 export const ARTICLE_BROWSE_TABS = [
   { id: 'latest', label: msg('최신') },
@@ -178,4 +187,35 @@ export function articleBackMode(referrer: string | null | undefined, origin: str
   if (u.origin !== origin) return 'list'
   if (u.pathname === '/articles/new' || /^\/articles\/[^/]+\/edit\/?$/.test(u.pathname)) return 'list'
   return 'back'
+}
+
+/** A136: the first inline body image, the same rule article__first_image() applies in the database. */
+export function firstInlineImagePath(body: string | null | undefined): string | null {
+  const m = /\/api\/article-image\?p=([^)\s"']+)/.exec(body ?? '')
+  if (!m) return null
+  const p = m[1]!.replace(/%2f/gi, '/')
+  return p || null
+}
+
+type ImagePaths = { coverPath?: string | null; thumbnailPath?: string | null; firstImagePath?: string | null }
+
+/**
+ * A136: which image a CARD (list, feed, profile) shows: the separate thumbnail, else the cover,
+ * else the first inline body image. null = the letter tile.
+ */
+export function articleCardImagePath(a: ImagePaths): string | null {
+  return a.thumbnailPath || a.coverPath || a.firstImagePath || null
+}
+
+/**
+ * A136: which image the share card (OG, 1200x630) shows: the cover, else the thumbnail, else the first
+ * inline body image. null = the text-only default card. The wide cover is the better crop for a share card.
+ */
+export function articleShareImagePath(a: ImagePaths): string | null {
+  return articleShareImagePaths(a)[0] ?? null
+}
+
+/** The same order as a list, so the OG route can fall through to the next image when a viewer may not read one. */
+export function articleShareImagePaths(a: ImagePaths): string[] {
+  return [a.coverPath, a.thumbnailPath, a.firstImagePath].filter((p, i, all): p is string => Boolean(p) && all.indexOf(p) === i)
 }

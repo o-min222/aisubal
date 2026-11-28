@@ -3,7 +3,7 @@ import type { ArticleCard, ArticleSeriesBrief } from '@/lib/data/articles'
 import { T } from '@/i18n/t'
 import { getT } from '@/i18n/server'
 import { ArticleByline } from '@/components/articles/article-byline'
-import { articleHref, articleSeriesHref, formatReadingTime, articleImageSrc } from '@/lib/article-rules'
+import { articleHref, articleSeriesHref, formatReadingTime, articleImageSrc, articleCardImagePath } from '@/lib/article-rules'
 
 function metaLine(a: ArticleCard, t: (s: string, v?: Record<string, string | number>) => string) {
   const parts: string[] = []
@@ -17,7 +17,8 @@ function metaLine(a: ArticleCard, t: (s: string, v?: Record<string, string | num
 export async function ArticleCardView({ article, compact = false }: { article: ArticleCard; compact?: boolean }) {
   const t = await getT()
   const href = articleHref(article.slug)
-  const cover = articleImageSrc(article.coverPath)
+  // A136: thumbnail, then cover, then the first body image, then the letter
+  const cover = articleImageSrc(articleCardImagePath(article))
   const meta = metaLine(article, t)
   return (
     <article className={`article-card${compact ? ' article-card-compact' : ''}`}>

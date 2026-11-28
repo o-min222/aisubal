@@ -3,14 +3,15 @@ import type { TimelinePost } from '@/components/timeline/types'
 import { T } from '@/i18n/t'
 import { tx } from '@/i18n/client'
 import { ArticleByline } from '@/components/articles/article-byline'
-import { articleHref, formatReadingTime, articleImageSrc } from '@/lib/article-rules'
+import { articleHref, formatReadingTime, articleImageSrc, articleCardImagePath } from '@/lib/article-rules'
 
 /** Compact home-feed card. Tap opens the reading view; likes/comments are the article's. */
 export function ArticleFeedCard({ post }: { post: TimelinePost }) {
   const a = post.article
   if (!a) return null
   const href = articleHref(a.slug)
-  const cover = articleImageSrc(a.coverPath)
+  // A136: thumbnail, then cover, then the first body image, then the letter
+  const cover = articleImageSrc(articleCardImagePath(a))
   const series = a.seriesTitle && a.episodeNo
     ? tx('{series} {n}화', { series: a.seriesTitle, n: a.episodeNo })
     : a.seriesTitle

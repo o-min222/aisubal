@@ -20,6 +20,8 @@ import {
 import { AGENT_REPLY_MAX_CHARS as FEED_MAX_CHARS } from '@/lib/feed-rules'
 import { fetchPageSnapshot, safeFetchBytes } from '@/lib/safe-fetch'
 import { AVATAR_INPUT_MAX, decodeBase64Image, processAvatar } from '@/lib/agent-avatar-image'
+import { processArticleImage } from '@/lib/article-image-process'
+import { ARTICLE_IMAGE_MAX_BYTES, articleImageSrc } from '@/lib/article-rules'
 import { isStale } from '@/lib/tool-review'
 import { AGENT_BIO_MAX, AGENT_NAME_MAX, AGENT_PROFILE_NOTICE, parseAgentProfile, toAgentFacingProfile } from '@/lib/agent-profile'
 import { revalidatePath } from 'next/cache'
@@ -50,6 +52,65 @@ const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
 const isUuid = (v: unknown): v is string => typeof v === 'string' && UUID_RE.test(v)
 const str = (v: unknown) => (typeof v === 'string' && v.trim() ? v.trim() : null)
 const num = (v: unknown, d: number, max: number) => Math.min(Math.max(Number(v) || d, 1), max)
+
+/** A136: article image from base64 or an https URL: same limits as /api/article-image (JPEG/PNG/WebP/GIF, 4 MB). */
+type ArticleImageInput = { b64: string } | { url: string }
+async function storeArticleImage(
+  call: (fn: string, args: Record<string, unknown>) => Promise<unknown>,
+  origin: string,
+  input: ArticleImageInput,
+  kind: 'cover' | 'thumbnail' | 'inline',
+  name: string | null,
+): Promise<{ image: Record<string, unknown> } | { error: string }> {
+  let bytes: Buffer
+  if ('b64' in input) {
+    if (input.b64.length > Math.ceil((ARTICLE_IMAGE_MAX_BYTES * 4) / 3) + 128) return { error: 'imageBase64 is over 4 MB.' }
+    const d = decodeBase64Image(input.b64)
+    if (!d) return { error: 'imageBase64 is not valid base64.' }
+    bytes = d
+  } else {
+    const r = await safeFetchBytes(input.url, ARTICLE_IMAGE_MAX_BYTES)
+    if (!r.ok) return { error: (r.error === 'too_large' ? 'The image is over 4 MB.' : AVATAR_FETCH_ERRORS[r.error]) ?? (r.error.startsWith('http_') ? `The image URL answered ${r.error.slice(5)}.` : 'Could not download the image.') }
+    bytes = r.body
+  }
+  const img = await processArticleImage(bytes)
+  if (!img.ok) return { error: img.error === 'too_large' ? 'The image is over 4 MB.' : img.error === 'not_image' ? 'Only JPEG, PNG, WebP or GIF images (checked from the file bytes).' : 'Could not read that image.' }
+  const raw = (await call('mcp_article_image_put', { p_mime: img.mime, p_b64: img.bytes.toString('base64'), p_kind: kind, p_name: name })) as Record<string, unknown>
+  return { image: articleImageOut(raw, origin) }
+}
+
+/** What an agent sees of a library image: an absolute-able path plus a ready markdown snippet. */
+function articleImageOut(raw: Record<string, unknown>, origin: string): Record<string, unknown> {
+  const src = articleImageSrc(String(raw.path ?? ''))
+  const alt = String(raw.name ?? '').replace(/[\[\]]/g, '') || 'image'
+  return { ...raw, url: src ? `${origin}${src}` : null, markdown: src ? `![${alt}](${src})` : null }
+}
+
+type ArticleImageSlot = { set: string } | { clear: true } | null
+/** cover / thumbnail argument → a library image id to set, a clear, or nothing; uploads new images on the way. */
+async function resolveArticleImageSlot(
+  call: (fn: string, args: Record<string, unknown>) => Promise<unknown>,
+  origin: string,
+  raw: unknown,
+  kind: 'cover' | 'thumbnail',
+  allowRemove: boolean,
+): Promise<ArticleImageSlot | { error: string }> {
+  if (raw == null) return null
+  if (typeof raw !== 'object' || Array.isArray(raw)) return { error: `${kind} must be an object with one of imageId, imageBase64, url or remove.` }
+  const o = raw as Record<string, unknown>
+  const imageId = typeof o.imageId === 'string' && o.imageId.trim() ? o.imageId.trim() : null
+  const b64 = typeof o.imageBase64 === 'string' && o.imageBase64.trim() ? o.imageBase64 : null
+  const url = typeof o.url === 'string' && o.url.trim() ? o.url.trim() : null
+  const remove = o.remove === true
+  if (Number(Boolean(imageId)) + Number(Boolean(b64)) + Number(Boolean(url)) + Number(remove) !== 1) {
+    return { error: `${kind}: pass exactly one of imageId, imageBase64, url${allowRemove ? ' or remove=true' : ''}.` }
+  }
+  if (remove) return allowRemove ? { clear: true } : { error: `${kind}.remove is only for article_edit.` }
+  if (imageId) return isUuid(imageId) ? { set: imageId } : { error: `${kind}.imageId must be a UUID.` }
+  const r = await storeArticleImage(call, origin, b64 ? { b64 } : { url: url as string }, kind, null)
+  if ('error' in r) return { error: `${kind}: ${r.error}` }
+  return { set: String(r.image.id) }
+}
 
 /** profile_set_avatar url: why the server refused to download it */
 const AVATAR_FETCH_ERRORS: Record<string, string> = {
@@ -100,6 +161,13 @@ export function dataErrorMessage(raw: string | null | undefined): string {
   if (m.includes('bad_title')) return 'title must be 1-120 characters.'
   if (m.includes('body_too_long')) return 'body must be 100000 characters or fewer.'
   if (m.includes('bad_series')) return 'seriesId must be a series the owner created.'
+  if (m.includes('bad_cover')) return 'cover.imageId must be an image in the owner library (see article_image_list).'
+  if (m.includes('bad_thumbnail')) return 'thumbnail.imageId must be an image in the owner library (see article_image_list).'
+  if (m.includes('bad_kind')) return 'kind must be cover, thumbnail or inline.'
+  if (m.includes('image_type')) return 'Only JPEG, PNG, WebP or GIF images.'
+  if (m.includes('image_size')) return 'The image is too large.'
+  if (m.includes('library_full')) return 'The owner image library is full (100). Remove images you uploaded with article_image_remove, or reuse one with article_image_list.'
+  if (m.includes('image_rate_limited')) return 'Image upload limit: max 30 per 24 hours for this agent. Reuse a library image (article_image_list) or try again tomorrow.'
   if (m.includes('not_found')) return 'Not found.'
   if (m.includes('forbidden')) return 'You can only edit or delete articles you wrote.'
   if (m.includes('not_member')) return 'The owner account cannot write articles right now.'
@@ -431,12 +499,18 @@ export async function handleDataTool(
           const published = args.publish === true
           return { ok: true, id, slug, status: published ? 'published' : 'draft', title, subtitle: str(args.subtitle) || null, url: '/articles/' + slug, mock: true }
         }
+        const cover = await resolveArticleImageSlot(call, origin, args.cover, 'cover', false)
+        if (cover && 'error' in cover) return cover
+        const thumb = await resolveArticleImageSlot(call, origin, args.thumbnail, 'thumbnail', false)
+        if (thumb && 'error' in thumb) return thumb
         return (await call('mcp_article_create', {
           p_title: title,
           p_subtitle: str(args.subtitle),
           p_body: body,
           p_publish: args.publish === true,
           p_series_id: seriesId || null,
+          p_cover_id: cover && 'set' in cover ? cover.set : null,
+          p_thumbnail_id: thumb && 'set' in thumb ? thumb.set : null,
         })) as Record<string, unknown>
       }
       case 'article_edit': {
@@ -448,6 +522,10 @@ export async function handleDataTool(
         if (title && title.length > 120) return { error: 'title must be 1-120 characters.' }
         if (body != null && body.length > 100000) return { error: 'body must be 100000 characters or fewer.' }
         if (isMock()) return { ok: true, id: id || 'mock-article', slug: slug || 'article', mock: true }
+        const cover = await resolveArticleImageSlot(call, origin, args.cover, 'cover', true)
+        if (cover && 'error' in cover) return cover
+        const thumb = await resolveArticleImageSlot(call, origin, args.thumbnail, 'thumbnail', true)
+        if (thumb && 'error' in thumb) return thumb
         return (await call('mcp_article_edit', {
           p_id: id || null,
           p_slug: slug || null,
@@ -455,6 +533,10 @@ export async function handleDataTool(
           p_subtitle: args.subtitle == null ? null : str(args.subtitle),
           p_body: body,
           p_publish: args.publish === true,
+          p_cover_id: cover && 'set' in cover ? cover.set : null,
+          p_cover_clear: Boolean(cover && 'clear' in cover),
+          p_thumbnail_id: thumb && 'set' in thumb ? thumb.set : null,
+          p_thumbnail_clear: Boolean(thumb && 'clear' in thumb),
         })) as Record<string, unknown>
       }
       case 'article_delete': {
@@ -463,6 +545,31 @@ export async function handleDataTool(
         if (id ? !isUuid(id) : !slug) return { error: 'id (UUID) or slug is required' }
         if (isMock()) return { ok: true, id: id || 'mock-article', deleted: true, mock: true }
         return (await call('mcp_article_delete', { p_id: id || null, p_slug: slug || null })) as Record<string, unknown>
+      }
+      case 'article_image_upload': {
+        const b64 = typeof args.imageBase64 === 'string' && args.imageBase64.trim() ? args.imageBase64 : null
+        const url = typeof args.url === 'string' && args.url.trim() ? args.url.trim() : null
+        if (Number(Boolean(b64)) + Number(Boolean(url)) !== 1) return { error: 'Pass exactly one of imageBase64 or url.' }
+        const kind = args.kind === 'cover' || args.kind === 'thumbnail' ? args.kind : 'inline'
+        const name = str(args.name)?.slice(0, 80) ?? null
+        if (isMock()) {
+          if (!b64 && !url) return { error: 'Pass exactly one of imageBase64 or url.' }
+          const path = `dev-auth-id/mock-${Date.now().toString(36)}.jpg`
+          return { ok: true, image: articleImageOut({ id: crypto.randomUUID(), path, kind, name, createdAt: new Date().toISOString(), byAgent: true, usedBy: 0 }, origin), mock: true }
+        }
+        const r = await storeArticleImage(call, origin, b64 ? { b64 } : { url: url as string }, kind, name)
+        if ('error' in r) return r
+        return { ok: true, image: r.image }
+      }
+      case 'article_image_list': {
+        if (isMock()) return { images: [], total: 0, cap: 100 }
+        const d = (await call('mcp_article_image_list', { p_limit: num(args.limit, 30, 100) })) as { images?: Record<string, unknown>[]; total?: number; cap?: number }
+        return { ...d, images: (d.images ?? []).map((i) => articleImageOut(i, origin)) }
+      }
+      case 'article_image_remove': {
+        if (!isUuid(args.id)) return { error: 'id must be a library image UUID' }
+        if (isMock()) return { ok: true, id: args.id, removed: true, mock: true }
+        return (await call('mcp_article_image_remove', { p_id: args.id })) as Record<string, unknown>
       }
       case 'create_post':
         return {

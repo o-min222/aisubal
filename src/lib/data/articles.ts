@@ -1,6 +1,6 @@
 import { cache } from 'react'
 import { createAnonClient } from '@/lib/supabase/anon'
-import { articleTeaserBody, canPublishArticle } from '@/lib/article-rules'
+import { articleTeaserBody, canPublishArticle, firstInlineImagePath } from '@/lib/article-rules'
 import { MOCK_MEMBERS } from '@/lib/mock-data'
 import { sb, isMock } from './client'
 
@@ -36,6 +36,10 @@ export type ArticleCard = {
   title: string
   subtitle: string | null
   coverPath: string | null
+  /** A136: optional separate square image for cards; falls back to the cover */
+  thumbnailPath?: string | null
+  /** A136: first inline body image (card / share fallback) */
+  firstImagePath?: string | null
   status: 'draft' | 'published' | 'hidden'
   publishedAt: string | null
   editedAt: string | null
@@ -71,7 +75,7 @@ export type ArticleComment = {
   isMine: boolean
 }
 
-export type ArticleSharePreview = { title: string | null; body: string | null; coverPath: string | null; slug: string }
+export type ArticleSharePreview = { title: string | null; body: string | null; coverPath: string | null; thumbnailPath?: string | null; firstImagePath?: string | null; slug: string }
 
 const DEV_AUTHOR: ArticleAuthor = { id: 'dev-user-id', name: '개발자', handle: 'dev', avatarUrl: null }
 const OTHER = MOCK_MEMBERS[1] || { id: 'member-2', display_name: '프롬프트수집가', handle: 'prompt', avatar_url: null }
@@ -114,11 +118,12 @@ function seed(): Mock {
     author: OTHER_AUTHOR,
   }
   const published: ArticleCard = {
-    id: 'article-1',
+    id: '00000000-0000-4000-8000-0000000a0001',
     slug: 'why-agents-fail',
     title: '에이전트가 실패하는 이유',
     subtitle: '계획은 짧게, 검증은 자주',
-    coverPath: null,
+    coverPath: 'dev-auth-id/mock-lib-1.svg',
+    thumbnailPath: 'dev-auth-id/mock-lib-2.svg',
     status: 'published',
     publishedAt: '2026-11-26T03:00:00.000Z',
     editedAt: null,
@@ -134,7 +139,7 @@ function seed(): Mock {
     body: LONG_BODY,
   }
   const draft: ArticleCard = {
-    id: 'article-draft',
+    id: '00000000-0000-4000-8000-0000000a0002',
     slug: 'article-draftdr',
     title: '아직 안 낸 초고',
     subtitle: null,
@@ -157,7 +162,7 @@ function seed(): Mock {
   // A135: a published article the dev member wrote, so the author view (⋯ 수정/삭제) is reviewable locally.
   const mine: ArticleCard = {
     ...published,
-    id: 'article-mine',
+    id: '00000000-0000-4000-8000-0000000a0003',
     slug: 'my-published-notes',
     title: '내가 발행한 글: 에이전트에게 맡길 일 고르기',
     subtitle: '맡길 일과 직접 할 일을 나누는 기준',
@@ -171,6 +176,32 @@ function seed(): Mock {
     series: null,
     author: DEV_AUTHOR,
     isMine: true,
+    coverPath: 'dev-auth-id/mock-lib-3.svg',
+  }
+  // A136: card/feed order review: a first-body-image-only article and a no-image one (letter).
+  const inlineOnly: ArticleCard = {
+    ...mine,
+    id: '00000000-0000-4000-8000-0000000a0004',
+    slug: 'inline-image-only',
+    title: '커버 없이 본문 이미지만 있는 글',
+    subtitle: '카드는 본문 첫 이미지를 써요',
+    coverPath: null,
+    thumbnailPath: null,
+    firstImagePath: 'dev-auth-id/mock-lib-4.svg',
+    publishedAt: '2026-11-27T02:00:00.000Z',
+    body: '본문 첫 이미지가 카드 썸네일로 쓰여요.\n\n![도식](/api/article-image?p=dev-auth-id%2Fmock-lib-4.svg)\n\n그 아래 문단입니다.',
+  }
+  const plain: ArticleCard = {
+    ...mine,
+    id: '00000000-0000-4000-8000-0000000a0005',
+    slug: 'no-image-article',
+    title: '이미지가 하나도 없는 글',
+    subtitle: '카드는 첫 글자를 써요',
+    coverPath: null,
+    thumbnailPath: null,
+    firstImagePath: null,
+    publishedAt: '2026-11-27T01:45:00.000Z',
+    body: '이미지 없이 글만 있는 본문입니다.',
   }
   const comments: ArticleComment[] = [
     {
@@ -188,7 +219,7 @@ function seed(): Mock {
   ]
   g.__aisubalArticles = {
     series: [series],
-    articles: [published, mine, draft],
+    articles: [published, mine, inlineOnly, plain, draft],
     subs: new Set<string>(),
     likes: new Set<string>(),
     comments,
@@ -200,6 +231,11 @@ function seed(): Mock {
   return g.__aisubalArticles
 }
 
+/** Mock only: how many articles still use an image (cover, thumbnail or inline), for the library's usedBy. */
+export function mockArticleImageUses(path: string): number {
+  const enc = path.replace(/\//g, '%2F')
+  return seed().articles.filter((a) => a.coverPath === path || a.thumbnailPath === path || (a.body ?? '').includes(path) || (a.body ?? '').includes(enc)).length
+}
 export function mockArticlePublishing(on?: boolean): boolean {
   const st = seed()
   if (on !== undefined) st.publishing = on
@@ -278,7 +314,7 @@ export async function getArticleSharePreview(slug: string): Promise<ArticleShare
     if (!st.sharePreview) return null
     const a = st.articles.find((x) => x.slug === slug && x.status === 'published')
     if (!a) return null
-    return { title: a.title, body: a.subtitle || a.title, coverPath: a.coverPath, slug: a.slug }
+    return { title: a.title, body: a.subtitle || a.title, coverPath: a.coverPath, thumbnailPath: a.thumbnailPath ?? null, firstImagePath: firstInlineImagePath(a.body), slug: a.slug }
   }
   const { data, error } = await createAnonClient().rpc('article_share_preview', { p_slug: slug })
   if (error) return null
@@ -366,6 +402,7 @@ export async function upsertArticle(input: {
   subtitle?: string | null
   body?: string
   coverPath?: string | null
+  thumbnailPath?: string | null
   seriesId?: string | null
   episodeNo?: number | null
 }): Promise<ArticleCard> {
@@ -378,6 +415,8 @@ export async function upsertArticle(input: {
       title: input.title,
       subtitle: input.subtitle ?? null,
       coverPath: input.coverPath ?? null,
+      thumbnailPath: input.thumbnailPath ?? null,
+      firstImagePath: firstInlineImagePath(input.body),
       status: existing?.status ?? 'draft',
       publishedAt: existing?.publishedAt ?? null,
       editedAt: existing?.status === 'published' ? new Date().toISOString() : existing?.editedAt ?? null,
@@ -407,6 +446,7 @@ export async function upsertArticle(input: {
     p_cover_path: input.coverPath ?? null,
     p_series_id: input.seriesId ?? null,
     p_episode_no: input.episodeNo ?? null,
+    p_thumbnail_path: input.thumbnailPath ?? null,
   })
   if (error) rpcError(error)
   return asCard(data)

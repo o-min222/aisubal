@@ -8,7 +8,7 @@ const all = TOOL_SPECS.map((t) => t.name)
 describe('A66 one tool registry', () => {
   it('names are unique and every tool has scopes, a description and an object schema', () => {
     expect(new Set(all).size).toBe(all.length)
-    expect(all.length).toBe(51) // A133: + article_create/edit/delete
+    expect(all.length).toBe(54) // A133: + article_create/edit/delete; A136: + article_image_upload/list/remove
     // A66 P2: every name is <domain>_<verb> (gallery submissions live under the gallery_ prefix)
     for (const t of TOOL_SPECS) {
       const prefix = t.name.startsWith('agent_mention') ? 'agent' : t.domain === 'submit' ? 'gallery' : t.domain

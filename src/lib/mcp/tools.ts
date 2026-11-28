@@ -23,6 +23,13 @@ const ADMIN = ['admin:tools:review']
 
 const id = (what: string) => z.string().describe(what)
 const limit = (d: number, max: number) => z.number().describe(`1-${max}, default ${d}`).optional()
+/** A136: one image slot (cover / thumbnail). Give exactly one of the four fields. */
+const articleImageRef = z.object({
+  imageId: id('UUID of an image already in the owner library (from article_image_list or article_image_upload)').optional(),
+  imageBase64: z.string().describe('base64 JPEG/PNG/WebP/GIF bytes (a data:image/...;base64, prefix is fine), max 4 MB').optional(),
+  url: z.string().describe('public https URL of a JPEG/PNG/WebP/GIF image the server downloads, max 4 MB').optional(),
+  remove: z.boolean().describe('true = take this image off the article (article_edit only)').optional(),
+})
 const ARCHIVE_KIND = z.enum(['post', 'agora', 'tool', 'group', 'moim', 'member', 'link'])
 const TOOL_TYPE = z.enum(['mcp_server', 'agent_skill', 'cursor_rules', 'prompt', 'cli_tool', 'saas_service'])
 const agoraBody = z.string().max(AGORA_BODY_MAX).describe(`max ${AGORA_BODY_MAX} chars, plain text / light markdown`)
@@ -230,6 +237,8 @@ export const TOOL_SPECS: readonly ToolSpec[] = [
       body: z.string().describe('up to 100000 characters'),
       publish: z.boolean().describe('true = publish now; default is a draft').optional(),
       seriesId: id('series UUID (must belong to the owner)').optional(),
+      cover: articleImageRef.describe('cover image: wide, top of the article and the share card. New upload (imageBase64 / url) or a library image (imageId)').optional(),
+      thumbnail: articleImageRef.describe('optional separate square card/feed image; without it cards use the cover').optional(),
     }),
     scopes: WRITE_ARTICLE,
     write: true,
@@ -247,6 +256,8 @@ export const TOOL_SPECS: readonly ToolSpec[] = [
       subtitle: z.string().describe('up to 200 characters').optional(),
       body: z.string().describe('up to 100000 characters').optional(),
       publish: z.boolean().optional(),
+      cover: articleImageRef.describe('omit = unchanged; imageBase64 / url = upload a new cover; imageId = a library image; remove=true = no cover').optional(),
+      thumbnail: articleImageRef.describe('omit = unchanged; same options as cover; remove=true = cards use the cover again').optional(),
     }),
     scopes: WRITE_ARTICLE,
     write: true,
@@ -262,6 +273,42 @@ export const TOOL_SPECS: readonly ToolSpec[] = [
       id: id('article UUID').optional(),
       slug: z.string().optional(),
     }),
+    scopes: WRITE_ARTICLE,
+    write: true,
+    destructive: true,
+    idempotent: true,
+  },
+  {
+    name: 'article_image_upload',
+    title: msg('아티클 이미지 올리기'),
+    domain: 'article',
+    runner: 'data',
+    description: 'Upload an image to the owner image library (agent uploads land in the OWNER library, reusable by both). Pass exactly one of imageBase64 or url. Same limits as the website: JPEG/PNG/WebP/GIF, max 4 MB; it is re-encoded (max 2000 px, metadata removed, animated GIF = first frame). Returns an id for article_create/article_edit cover or thumbnail, and a markdown snippet for inline use in a body. Max 30 uploads per 24 hours; the library holds 100 images.',
+    input: z.object({
+      imageBase64: z.string().describe('base64 image bytes (a data:image/...;base64, prefix is fine), max 4 MB').optional(),
+      url: z.string().describe('public https URL of an image, max 4 MB').optional(),
+      kind: z.enum(['cover', 'thumbnail', 'inline']).describe('what you plan to use it for (a label only); default inline').optional(),
+      name: z.string().describe('short label shown in the library, max 80 chars').optional(),
+    }),
+    scopes: WRITE_ARTICLE,
+    write: true,
+  },
+  {
+    name: 'article_image_list',
+    title: msg('아티클 이미지 보관함'),
+    domain: 'article',
+    runner: 'data',
+    description: 'The owner image library, newest first: id, url, kind, name, byAgent (you or another agent uploaded it), usedBy (how many of their articles use it). Pick an id for a cover or thumbnail instead of uploading again.',
+    input: z.object({ limit: limit(30, 100) }),
+    scopes: WRITE_ARTICLE,
+  },
+  {
+    name: 'article_image_remove',
+    title: msg('보관함 이미지 지우기'),
+    domain: 'article',
+    runner: 'data',
+    description: 'Remove an image YOU uploaded from the library. Articles that already use it keep it (the file is only dropped once no article uses it). You cannot remove images the owner uploaded.',
+    input: z.object({ id: id('library image UUID') }),
     scopes: WRITE_ARTICLE,
     write: true,
     destructive: true,

@@ -60,10 +60,12 @@ describe('A111 UI and API', () => {
     expect(route).toMatch(/post_image_invalid/)
   })
 
-  it('article editing already lets the author change the cover and insert inline images', () => {
-    expect(editor).toMatch(/onImage\('cover'\)/)
-    expect(editor).toMatch(/update\('coverPath', null\)/)
-    expect(editor).toMatch(/onImage\('inline'\)/)
+  it('article editing lets the author change the cover (A136: cover section above the title) and insert inline images', () => {
+    const cover = readFileSync('src/components/articles/article-cover-section.tsx', 'utf8')
+    expect(editor).toMatch(/<ArticleCoverSection/)
+    expect(cover).toMatch(/onChange\(slot === 'cover' \? \{ coverPath: path \}/)
+    expect(cover).toMatch(/prepareUploadImage/)
+    expect(editor).toMatch(/kind', 'inline'|onInlineImage/)
     expect(editor).toMatch(/prepareUploadImage/)
   })
 })

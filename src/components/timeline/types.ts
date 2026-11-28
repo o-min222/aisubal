@@ -94,6 +94,8 @@ export type TimelinePost = {
     seriesTitle?: string | null
     episodeNo?: number | null
     coverPath?: string | null
+    thumbnailPath?: string | null
+    firstImagePath?: string | null
     readingSec: number
     subtitle?: string | null
     agent?: { name: string; handle: string | null } | null

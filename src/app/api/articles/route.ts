@@ -11,6 +11,7 @@ const Body = z.object({
   subtitle: z.string().trim().max(ARTICLE_SUBTITLE_MAX).optional().nullable(),
   body: z.string().max(ARTICLE_BODY_MAX).optional(),
   coverPath: z.string().max(200).optional().nullable(),
+  thumbnailPath: z.string().max(200).optional().nullable(),
   seriesId: z.string().uuid().optional().nullable(),
   episodeNo: z.number().int().positive().optional().nullable(),
 })
@@ -29,6 +30,7 @@ export async function POST(request: NextRequest) {
   } catch (e) {
     const code = e instanceof ArticleError ? e.message : ''
     if (code === 'bad_title') return NextResponse.json({ error: await te('제목을 확인해 주세요.') }, { status: 400 })
+    if (code === 'bad_cover' || code === 'bad_thumbnail') return NextResponse.json({ error: await te('이미지를 쓸 수 없어요. 다시 골라 주세요.') }, { status: 400 })
     if (code === 'body_too_long') return NextResponse.json({ error: await te('본문이 너무 길어요.') }, { status: 400 })
     console.error(e)
     return NextResponse.json({ error: await te('저장하지 못했어요.') }, { status: 500 })

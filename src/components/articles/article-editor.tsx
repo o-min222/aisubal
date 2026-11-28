@@ -7,7 +7,8 @@ import { T } from '@/i18n/t'
 import { tn, tx } from '@/i18n/client'
 import type { ArticleCard, ArticleSeriesBrief } from '@/lib/data/articles'
 import { ArticleMarkdown } from './article-markdown'
-import { ARTICLE_BODY_MAX, ARTICLE_IMAGE_MAX_BYTES, ARTICLE_IMAGE_TYPES, ARTICLE_SUBTITLE_MAX, ARTICLE_TITLE_MAX, articleEditHref, articleHref, articleImageSrc } from '@/lib/article-rules'
+import { ArticleCoverSection } from './article-cover-section'
+import { ARTICLE_BODY_MAX, ARTICLE_IMAGE_MAX_BYTES, ARTICLE_IMAGE_TYPES, ARTICLE_SUBTITLE_MAX, ARTICLE_TITLE_MAX, articleEditHref, articleHref } from '@/lib/article-rules'
 import { PrepareImageError, prepareImageErrorMessage, prepareUploadImage } from '@/lib/upload-image-client'
 
 type Draft = {
@@ -16,6 +17,7 @@ type Draft = {
   subtitle: string
   body: string
   coverPath: string | null
+  thumbnailPath?: string | null
   seriesId: string | null
   episodeNo: string
   status?: ArticleCard['status']
@@ -38,6 +40,7 @@ export function ArticleEditor({
     subtitle: initial?.subtitle ?? '',
     body: initial?.body ?? '',
     coverPath: initial?.coverPath ?? null,
+    thumbnailPath: initial?.thumbnailPath ?? null,
     seriesId: initial?.seriesId ?? null,
     episodeNo: initial?.episodeNo ?? '',
     status: initial?.status ?? 'draft',
@@ -61,6 +64,7 @@ export function ArticleEditor({
         subtitle: next.subtitle.trim() || null,
         body: next.body,
         coverPath: next.coverPath,
+        thumbnailPath: next.thumbnailPath ?? null,
         seriesId: next.seriesId,
         episodeNo: next.episodeNo ? Number(next.episodeNo) : null,
       }),
@@ -72,7 +76,7 @@ export function ArticleEditor({
       return next
     }
     const article = data.article as ArticleCard
-    const updated = { ...next, id: article.id, slug: article.slug, status: article.status, coverPath: article.coverPath }
+    const updated = { ...next, id: article.id, slug: article.slug, status: article.status, coverPath: article.coverPath, thumbnailPath: article.thumbnailPath ?? null }
     setDraft(updated)
     setSaving('saved')
     if (!next.id && article.id) router.replace(articleEditHref(article.slug || article.id))
@@ -104,7 +108,7 @@ export function ArticleEditor({
     update('body', next.slice(0, ARTICLE_BODY_MAX))
   }
 
-  async function onImage(kind: 'cover' | 'inline') {
+  async function onInlineImage() {
     const input = document.createElement('input')
     input.type = 'file'
     input.accept = 'image/jpeg,image/png,image/webp,image/gif,image/heic,image/heif'
@@ -115,11 +119,11 @@ export function ArticleEditor({
         const f = await prepareUploadImage(file, { maxBytes: ARTICLE_IMAGE_MAX_BYTES, maxSide: 2000, allow: ARTICLE_IMAGE_TYPES })
         const form = new FormData()
         form.set('file', f)
+        form.set('kind', 'inline')
         const res = await fetch('/api/article-image', { method: 'POST', body: form })
         const data = await res.json().catch(() => ({}))
         if (!res.ok) return toast.error(data.error || tn('이미지를 올리지 못했어요.'))
-        if (kind === 'cover') update('coverPath', data.path as string)
-        else wrap(`![${file.name}](${data.url})`, '')
+        wrap(`![${file.name}](${data.url})`, '')
       } catch (e) {
         toast.error(e instanceof PrepareImageError ? prepareImageErrorMessage(e.code, (s) => tn(s)) : tn('이미지를 올리지 못했어요.'))
       }
@@ -145,8 +149,6 @@ export function ArticleEditor({
     router.refresh()
   }
 
-  const cover = articleImageSrc(draft.coverPath)
-
   return (
     <div className="article-editor">
       <div className="article-editor-bar">
@@ -166,6 +168,14 @@ export function ArticleEditor({
         <p className="article-editor-note"><T>누구나 초고를 쓸 수 있어요. 발행하려면 작가 권한이 필요해요.</T></p>
       )}
 
+      <ArticleCoverSection
+        coverPath={draft.coverPath}
+        thumbnailPath={draft.thumbnailPath ?? null}
+        body={draft.body}
+        title={draft.title}
+        onChange={(patch) => setDraft((d) => ({ ...d, ...patch }))}
+      />
+
       <input
         className="article-editor-title"
         value={draft.title}
@@ -184,17 +194,6 @@ export function ArticleEditor({
       />
 
       <div className="article-editor-meta">
-        <label className="article-editor-field">
-          <span><T>커버 이미지</T></span>
-          <button type="button" className="btn btn-secondary btn-sm" onClick={() => void onImage('cover')}><T>이미지 올리기</T></button>
-          {cover && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={cover} alt="" className="article-editor-cover" />
-          )}
-          {draft.coverPath && (
-            <button type="button" className="btn btn-secondary btn-sm" onClick={() => update('coverPath', null)}><T>제거</T></button>
-          )}
-        </label>
         <label className="article-editor-field">
           <span><T>연재</T></span>
           <select className="input" value={draft.seriesId ?? ''} onChange={(e) => update('seriesId', e.target.value || null)} aria-label={tx('연재')}>
@@ -217,7 +216,7 @@ export function ArticleEditor({
         <button type="button" onClick={() => wrap('\n- ', '')} className="btn btn-secondary btn-sm"><T>목록</T></button>
         <button type="button" onClick={() => wrap('\n> ', '\n')} className="btn btn-secondary btn-sm"><T>인용</T></button>
         <button type="button" onClick={() => wrap('[', '](https://)')} className="btn btn-secondary btn-sm"><T>링크</T></button>
-        <button type="button" onClick={() => void onImage('inline')} className="btn btn-secondary btn-sm"><T>이미지</T></button>
+        <button type="button" onClick={() => void onInlineImage()} className="btn btn-secondary btn-sm"><T>이미지</T></button>
       </div>
 
       <div className={`article-editor-stage${preview ? ' is-preview' : ''}`}>

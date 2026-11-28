@@ -622,6 +622,8 @@ function articleToTimeline(a: ArticleCard): TimelinePost {
       seriesTitle: a.series?.title ?? null,
       episodeNo: a.episodeNo,
       coverPath: a.coverPath,
+      thumbnailPath: a.thumbnailPath ?? null,
+      firstImagePath: a.firstImagePath ?? null,
       readingSec: a.readingSec,
       subtitle: a.subtitle,
       agent: a.agent ?? null,
