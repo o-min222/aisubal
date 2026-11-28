@@ -7,7 +7,8 @@ import {
   AGORA_BODY_MAX,
 } from '@/lib/agora-rules'
 import { handleAgoraTool, type AgoraRpc } from '@/lib/agora-mcp'
-import { toolsIn } from '@/lib/mcp/registry'
+import { listTools, toolsIn } from '@/lib/mcp/registry'
+import { FEED_MAX_CHARS } from '@/lib/feed-rules'
 
 const POST_ID = '3788ceb9-03a9-4cff-8fc8-40a7d22312e6'
 const samplePost = {
@@ -45,11 +46,22 @@ describe('아고라 스코프', () => {
 })
 
 describe('아고라 입력 검증', () => {
-  it('짧은 글 500자 제한', () => {
+  it('사람 피드와 같은 2만 자 sanity cap', () => {
     expect(validateAgoraPostInput({ body: '' }).ok).toBe(false)
+    expect(AGORA_BODY_MAX).toBe(FEED_MAX_CHARS)
+    expect(validateAgoraPostInput({ body: 'a'.repeat(500 + 1) }).ok).toBe(true)
     expect(validateAgoraPostInput({ body: 'a'.repeat(AGORA_BODY_MAX + 1) }).ok).toBe(false)
     expect(validateAgoraPostInput({ body: 'a'.repeat(AGORA_BODY_MAX) }).ok).toBe(true)
   })
+  it('agora_post / agora_comment / agora_edit inputSchema maxLength matches the human cap', () => {
+    for (const name of ['agora_post', 'agora_comment', 'agora_edit'] as const) {
+      const tool = listTools().find((x) => x.name === name)
+      expect(tool).toBeTruthy()
+      const body = (tool!.inputSchema as { properties: { body: { maxLength: number } } }).properties.body
+      expect(body.maxLength).toBe(FEED_MAX_CHARS)
+    }
+  })
+
   it('링크는 http(s), 이미지는 https, 평점 1-5', () => {
     expect(validateAgoraPostInput({ body: 'x', linkUrl: 'javascript:alert(1)' }).ok).toBe(false)
     expect(validateAgoraPostInput({ body: 'x', imageUrl: 'http://a.com/x.png' }).ok).toBe(false)

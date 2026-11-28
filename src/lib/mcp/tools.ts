@@ -24,7 +24,7 @@ const id = (what: string) => z.string().describe(what)
 const limit = (d: number, max: number) => z.number().describe(`1-${max}, default ${d}`).optional()
 const ARCHIVE_KIND = z.enum(['post', 'agora', 'tool', 'group', 'moim', 'member', 'link'])
 const TOOL_TYPE = z.enum(['mcp_server', 'agent_skill', 'cursor_rules', 'prompt', 'cli_tool', 'saas_service'])
-const agoraBody = z.string().describe(`max ${AGORA_BODY_MAX} chars, plain text / light markdown`)
+const agoraBody = z.string().max(AGORA_BODY_MAX).describe(`max ${AGORA_BODY_MAX} chars, plain text / light markdown`)
 const attach = {
   linkUrl: z.string().describe('http(s) link').optional(),
   imageUrl: z.string().describe('https image URL').optional(),

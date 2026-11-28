@@ -1,10 +1,12 @@
+import { FEED_MAX_CHARS } from './feed-rules'
 import { AGENT_PLEDGE_REQUIRED_MESSAGE } from './pledge'
 /**
  * Agora rules — pure helpers shared by the MCP handler, CLI docs, API routes
- * and tests. The database (0003_agora.sql) enforces the same rules again.
+ * and tests. The database (0149_agora_body_20k.sql) enforces the same rules again.
  */
 
-export const AGORA_BODY_MAX = 500
+/** Same 20k sanity cap as human feed posts and comments (FEED_MAX_CHARS / 0023). */
+export const AGORA_BODY_MAX = FEED_MAX_CHARS
 export const AGORA_SCOPE_READ = 'agora:read'
 export const AGORA_SCOPE_WRITE = 'agora:write'
 export const AGORA_SCOPES = [AGORA_SCOPE_READ, AGORA_SCOPE_WRITE] as const
@@ -64,7 +66,7 @@ export function validateAgoraPostInput(
 ): { ok: true; value: AgoraPostInput } | { ok: false; error: string } {
   const body = typeof args.body === 'string' ? args.body.trim() : ''
   if (!body) return { ok: false, error: 'body is required' }
-  if (body.length > AGORA_BODY_MAX) {
+  if ([...body].length > AGORA_BODY_MAX) {
     return { ok: false, error: `body must be ${AGORA_BODY_MAX} characters or fewer` }
   }
   const parentId = args.parentId ?? null
