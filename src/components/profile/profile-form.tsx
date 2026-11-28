@@ -98,7 +98,7 @@ export function ProfileForm({ me, mode }: { me: ProfileFormMember; mode: 'onboar
       fd.append('file', f)
       const res = await fetch('/api/profile/avatar', { method: 'POST', body: fd })
       const d = await res.json()
-      if (!res.ok) throw new Error(d.error || '업로드하지 못했어요.')
+      if (!res.ok) throw new Error(d.error || tx('업로드하지 못했어요.'))
       setAvatar(d.url)
       setPreview(d.url)
       setAvatarChosen(true)

@@ -190,7 +190,7 @@ export function StackEditor({ initial }: { initial: StackEditorInitial }) {
         body: JSON.stringify({ ai: strip(ai), subs: strip(subs), skills: strip(extras), vis }),
       })
       const d = await res.json().catch(() => ({}))
-      if (!res.ok) throw new Error(d.error || '저장하지 못했어요.')
+      if (!res.ok) throw new Error(d.error || tx('저장하지 못했어요.'))
       toast.success(tn('AI 스택을 저장했어요'))
       router.refresh()
     } catch (e) {

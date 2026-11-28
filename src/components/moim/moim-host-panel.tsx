@@ -58,7 +58,7 @@ export function MoimHostPanel({ moim: m, bare = false }: { moim: MoimDetail; bar
     try {
       const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
       const data = await res.json().catch(() => ({}))
-      if (!res.ok) throw new Error(data.error || '처리하지 못했어요.')
+      if (!res.ok) throw new Error(data.error || tx('처리하지 못했어요.'))
       toast.success(data.promoted ? tx('{ok} · 대기자 {promoted}명 자동 확정', { ok, promoted: data.promoted }) : ok)
       router.refresh()
       return true

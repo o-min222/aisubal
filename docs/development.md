@@ -31,7 +31,7 @@ npx tsc --noEmit -p .
 npx eslint <changed files>
 ```
 
-- Vitest (`tests/`, ~120 files, ~660 tests). Most suites are pure: rules in `src/lib/*-rules.ts`, and source-level assertions on components and migrations. About 20 suites send HTTP to `TEST_BASE_URL` (default `http://127.0.0.1:43256`) and expect a **mock-mode** server.
+- Vitest (`tests/`, ~120 files, ~660 tests). Most suites are pure: rules in `src/lib/*-rules.ts`, and source-level assertions on components and migrations. About 20 suites send HTTP to `TEST_BASE_URL` (default `http://127.0.0.1:43210`, the dev server) and expect a **mock-mode** server.
 - `tests/i18n.test.ts` fails when a marked Korean string has no English entry or drops a `{placeholder}`.
 - `tests/mcp-catalog.test.ts` fails when `docs/mcp.md`, `skill.md`, `/llms.txt` or the tool modal drift from the registry. Regenerate with `npm run docs:mcp` (`scripts/gen-mcp-docs.ts`) and **never hand-edit `docs/mcp.md`**.
 - UI checks: `npm run check:overflow` (every main route at 375–1440, light + dark) and Playwright screenshots (`scripts/*capture*`). Before shipping UI, check 390 WebKit (iPhone), Pixel 7 and 1440×900, in light and dark, Korean and English.

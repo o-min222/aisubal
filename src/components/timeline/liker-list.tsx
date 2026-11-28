@@ -35,12 +35,12 @@ export function LikerList({
     fetch(endpoint)
       .then(async (res) => {
         const data = await res.json().catch(() => ({}))
-        if (!res.ok) throw new Error(data.error || '불러오지 못했어요')
+        if (!res.ok) throw new Error(data.error || tx('불러오지 못했어요.'))
         if (cancelled) return
         if (anonymous) setAnonCount(typeof data.anonymousCount === 'number' ? data.anonymousCount : 0)
         else setLikers(data.likers || [])
       })
-      .catch((e) => !cancelled && setError(e instanceof Error ? e.message : tx('불러오지 못했어요')))
+      .catch((e) => !cancelled && setError(e instanceof Error ? e.message : tx('불러오지 못했어요.')))
     return () => {
       cancelled = true
     }

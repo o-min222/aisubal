@@ -380,25 +380,28 @@ export type ToolboxCompatVote = {
   created_at: string
 }
 
-export type TokenScope =
-  | 'archive:read'
-  | 'archive:write'
-  /** legacy names, still honored by the DB */
-  | 'archive_read'
-  | 'archive_write'
-  | 'posts_read'
-  | 'meetups_read'
-  | 'meetups_write'
-  | 'products_read'
-  | 'products_write'
-  | 'toolbox_read'
-  | 'toolbox_write'
-  | 'agora:read'
-  | 'agora:write'
-  | 'feed:interact'
-  | 'tools:submit'
-  | 'tools:review'
-  | 'article:write'
+/** Every scope a token may carry; /api/tokens validates explicit lists against this. */
+export const TOKEN_SCOPES = [
+  'archive:read',
+  'archive:write',
+  // legacy names, still honored by the DB
+  'archive_read',
+  'archive_write',
+  'posts_read',
+  'meetups_read',
+  'meetups_write',
+  'products_read',
+  'products_write',
+  'toolbox_read',
+  'toolbox_write',
+  'agora:read',
+  'agora:write',
+  'feed:interact',
+  'tools:submit',
+  'tools:review',
+  'article:write',
+] as const
+export type TokenScope = (typeof TOKEN_SCOPES)[number]
 
 export type UserState =
   | { type: 'unauthenticated' }

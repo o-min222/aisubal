@@ -41,7 +41,7 @@ export function LinksEditor({ initial }: { initial: ProfileLink[] }) {
     try {
       const res = await fetch('/api/profile/links', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ links: next }) })
       const d = await res.json().catch(() => ({}))
-      if (!res.ok) throw new Error(d.error || '저장하지 못했어요.')
+      if (!res.ok) throw new Error(d.error || tx('저장하지 못했어요.'))
       setRows(d.links)
       router.refresh()
       return true

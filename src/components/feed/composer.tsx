@@ -137,7 +137,7 @@ export function Composer({
         }),
       })
       const data = await res.json().catch(() => ({}))
-      if (!res.ok) throw new Error(data.error || '게시하지 못했어요.')
+      if (!res.ok) throw new Error(data.error || tx('게시하지 못했어요.'))
       setBody('')
       setQuestion(false)
       setImage(null)

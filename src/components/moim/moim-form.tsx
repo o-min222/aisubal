@@ -72,7 +72,7 @@ export function MoimForm({
         body: JSON.stringify(body),
       })
       const data = await res.json().catch(() => ({}))
-      if (!res.ok) throw new Error(data.error || '저장하지 못했어요.')
+      if (!res.ok) throw new Error(data.error || tx('저장하지 못했어요.'))
       if (edit) {
         const inv = data.invites as { added?: number; error?: boolean } | null | undefined
         if (inv?.error) toast.success(tn('모임을 수정했어요 · 초대 목록은 저장하지 못했어요'))

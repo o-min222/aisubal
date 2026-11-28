@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { shouldRefreshSession } from '@/lib/session-keep-alive'
+import { sameOrigin, shouldRefreshSession } from '@/lib/session-keep-alive'
 
 /**
  * POST /api/auth/refresh — refresh the httpOnly Supabase session when it is close
@@ -8,8 +8,7 @@ import { shouldRefreshSession } from '@/lib/session-keep-alive'
  * Returns no tokens. 204 when there is no session (signed out).
  */
 export async function POST(request: NextRequest) {
-  const origin = request.headers.get('origin')
-  if (origin && origin !== request.nextUrl.origin) {
+  if (!sameOrigin(request.headers.get('origin'), request.headers.get('host'))) {
     return NextResponse.json({ error: 'forbidden' }, { status: 403 })
   }
   if (!process.env.NEXT_PUBLIC_SUPABASE_URL?.startsWith('http')) {
@@ -28,3 +27,4 @@ export async function POST(request: NextRequest) {
   }
   return NextResponse.json({ ok: true, expiresAt: data.session.expires_at ?? null })
 }
+

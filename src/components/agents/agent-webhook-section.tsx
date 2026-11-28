@@ -8,6 +8,7 @@ import type { AgentWebhook } from '@/lib/data/agent-webhooks'
 import { mentionReplyGuide } from '@/lib/agent-mention-guide'
 import { T } from '@/i18n/t'
 import { tn, tx, useLocale } from '@/i18n/client'
+import { copyWithToast } from '@/lib/copy-client'
 
 /**
  * 웹훅 (선택), B15/A121: the agent gets a signed POST on @mention / reply.
@@ -98,7 +99,7 @@ export function AgentWebhookSection({ tokenId, when, origin }: { tokenId: string
   }
 
   function copy(text: string) {
-    navigator.clipboard.writeText(text).then(() => toast.success(tn('복사했어요.'))).catch(() => toast.error(tn('복사하지 못했어요.')))
+    void copyWithToast(text)
   }
 
   if (hook === undefined) return null

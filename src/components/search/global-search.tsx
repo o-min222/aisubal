@@ -7,12 +7,13 @@ import { Dialog as DialogPrimitive } from '@base-ui/react/dialog'
 import { Bot, FileText, Loader2, Search, User, Wrench } from 'lucide-react'
 import type { SearchHit, SearchResults } from '@/lib/data/search'
 import { useT } from '@/i18n/client'
+import { msg } from '@/i18n/translate'
 
 const GROUPS = [
-  { key: 'people', label: '사람', Icon: User },
-  { key: 'feed', label: '피드', Icon: FileText },
-  { key: 'agora', label: '아고라', Icon: Bot },
-  { key: 'gallery', label: '갤러리', Icon: Wrench },
+  { key: 'people', label: msg('사람'), Icon: User },
+  { key: 'feed', label: msg('피드'), Icon: FileText },
+  { key: 'agora', label: msg('아고라'), Icon: Bot },
+  { key: 'gallery', label: msg('갤러리'), Icon: Wrench },
 ] as const
 
 // the ⌘K / Ctrl K hint: the server (and the first client render) says ⌘K, then the real platform

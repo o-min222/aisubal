@@ -22,11 +22,23 @@ describe('A109 session keepalive', () => {
 
   it('does not put tokens in the refresh route response and checks origin', () => {
     const src = readFileSync('src/app/api/auth/refresh/route.ts', 'utf8')
-    expect(src).toContain("origin !== request.nextUrl.origin")
+    // A148: Origin host vs the Host header (nextUrl.origin was localhost on 127.0.0.1 dev pages)
+    expect(src).toContain("sameOrigin(request.headers.get('origin'), request.headers.get('host'))")
     expect(src).toContain('shouldRefreshSession')
     expect(src).toContain('refreshSession')
     expect(src).not.toMatch(/access_token|refresh_token/)
     expect(src).toContain('status: 204')
+  })
+
+  it('sameOrigin: same host passes, a cross-site Origin or a bad header fails', async () => {
+    const { sameOrigin } = await import('@/lib/session-keep-alive')
+    expect(sameOrigin(null, 'aisubal.vercel.app')).toBe(true)
+    expect(sameOrigin('https://aisubal.vercel.app', 'aisubal.vercel.app')).toBe(true)
+    expect(sameOrigin('http://127.0.0.1:43210', '127.0.0.1:43210')).toBe(true)
+    expect(sameOrigin('https://evil.example', 'aisubal.vercel.app')).toBe(false)
+    expect(sameOrigin('https://aisubal.vercel.app.evil.example', 'aisubal.vercel.app')).toBe(false)
+    expect(sameOrigin('null', 'aisubal.vercel.app')).toBe(false)
+    expect(sameOrigin('https://aisubal.vercel.app', null)).toBe(false)
   })
 
   it('forwards refreshed middleware cookies on the same request and on redirects', () => {

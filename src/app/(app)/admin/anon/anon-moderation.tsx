@@ -87,7 +87,7 @@ export function AnonModeration() {
         body: JSON.stringify({ reason: traceReason }),
       })
       const data = await res.json().catch(() => ({}))
-      if (!res.ok) throw new Error(data.error || '조회하지 못했어요.')
+      if (!res.ok) throw new Error(data.error || tx('조회하지 못했어요.'))
       setTrace(data)
       load(filter)
     } catch (e) {

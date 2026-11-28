@@ -47,7 +47,7 @@ export function SiteSettingsForm({ initial }: { initial: S }) {
         body: JSON.stringify(s),
       })
       const data = await res.json().catch(() => ({}))
-      if (!res.ok) throw new Error(data.error || '저장하지 못했어요.')
+      if (!res.ok) throw new Error(data.error || tx('저장하지 못했어요.'))
       setS(data.settings)
       if (data.settings?.landingPeek !== initial.landingPeek) await refreshLandingPeek().catch(() => {})
       toast.success(tn('저장했어요.'))

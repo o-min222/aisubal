@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { UserPlus, UserCheck } from 'lucide-react'
 import { toast } from 'sonner'
 import { T } from '@/i18n/t'
-import { tn } from '@/i18n/client'
+import { tn, tx } from '@/i18n/client'
 
 /**
  * One-way follow toggle (instant, no approval). `chip` is the compact form
@@ -42,7 +42,7 @@ export function FollowButton({
         body: JSON.stringify({ memberId, follow: next }),
       })
       const data = await res.json().catch(() => ({}))
-      if (!res.ok) throw new Error(data.error || '처리하지 못했어요.')
+      if (!res.ok) throw new Error(data.error || tx('처리하지 못했어요.'))
       onChange?.(next)
       if (refresh) router.refresh()
     } catch (err) {

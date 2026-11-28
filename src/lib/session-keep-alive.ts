@@ -26,3 +26,18 @@ export function nextKeepaliveDelayMs(expiresAtSec: number | null | undefined, no
   if (expiresAtSec == null || !Number.isFinite(expiresAtSec)) return MIN_RETRY_MS
   return Math.max(MIN_RETRY_MS, wait)
 }
+
+/**
+ * A148: compare the Origin host with the Host the browser actually sent. nextUrl.origin is what Next
+ * resolved (localhost on the dev server), so 127.0.0.1 pages got a 403 on every keep-alive. A browser
+ * always sets Host to the server it is talking to, so a cross-site page still cannot match.
+ */
+export function sameOrigin(origin: string | null, host: string | null): boolean {
+  if (!origin) return true
+  if (!host) return false
+  try {
+    return new URL(origin).host === host.toLowerCase()
+  } catch {
+    return false
+  }
+}

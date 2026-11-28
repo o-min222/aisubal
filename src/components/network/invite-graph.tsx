@@ -148,7 +148,7 @@ export function InviteGraph({ initial }: { initial: GraphPayload }) {
     try {
       const res = await fetch(`/api/network/children?member=${encodeURIComponent(parentId)}&offset=${offset}`)
       const data: ChildrenPage & { error?: string } = await res.json()
-      if (!res.ok) throw new Error(data.error || '불러오지 못했어요.')
+      if (!res.ok) throw new Error(data.error || tx('불러오지 못했어요.'))
       const depth = (parent.depth ?? 0) + 1
       setNodes((cur) => {
         const seen = new Set(cur.map((n) => n.id))

@@ -44,7 +44,7 @@ export function MoimApplyPanel({ moim: m }: { moim: MoimDetail }) {
         body: method === 'POST' ? JSON.stringify({ answers, note: note.trim() || null }) : undefined,
       })
       const data = await res.json().catch(() => ({}))
-      if (!res.ok) throw new Error(data.error || '처리하지 못했어요.')
+      if (!res.ok) throw new Error(data.error || tx('처리하지 못했어요.'))
       if (method === 'POST') toast.success(data.status === 'confirmed' ? tn('참석 확정!') : data.status === 'waitlisted' ? tn('대기열에 올렸어요') : tn('신청했어요. 호스트 승인을 기다려주세요'))
       else toast.success(tn('취소했어요'))
       router.refresh()
@@ -62,7 +62,7 @@ export function MoimApplyPanel({ moim: m }: { moim: MoimDetail }) {
     try {
       const res = await fetch(`/api/moim/${m.id}/interest`, { method: 'POST' })
       const data = await res.json().catch(() => ({}))
-      if (!res.ok) throw new Error(data.error || '처리하지 못했어요.')
+      if (!res.ok) throw new Error(data.error || tx('처리하지 못했어요.'))
       toast.success(data.status === 'interested' ? tn('관심을 표시했어요.') : tn('취소했어요'))
       router.refresh()
     } catch (e) {

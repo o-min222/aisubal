@@ -64,7 +64,7 @@ export function AnonComposer({
         body: JSON.stringify({ body, category, parentId }),
       })
       const data = await res.json().catch(() => ({}))
-      if (!res.ok) throw new Error(data.error || '게시하지 못했어요.')
+      if (!res.ok) throw new Error(data.error || tx('게시하지 못했어요.'))
       setBody('')
       toast.success(isReply ? tx('{alias}(으)로 답글을 남겼어요', { alias: data.alias }) : tx('{alias}(으)로 게시했어요', { alias: data.alias }))
       if (isReply && countIds?.length) publishReplyDelta(countIds, 1)

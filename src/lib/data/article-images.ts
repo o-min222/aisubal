@@ -67,8 +67,12 @@ export async function signedArticleImage(path: string, opts: { anon?: boolean } 
   const supabase = await sb()
   const { data: ok, error } = await supabase.rpc('article_image_ok', { p_path: path })
   if (error || !ok) return null
+  // A148: blob first, like the signed-out path. Agent uploads have no storage object, so signing them
+  // first only produced a storage 400 per view before falling back (18/day in the edge log).
+  const blob = await blobImage(path, false)
+  if (blob) return blob
   const { data: s, error: signErr } = await supabase.storage.from(BUCKET).createSignedUrl(path, 600)
-  if (signErr || !s?.signedUrl) return blobImage(path, false)
+  if (signErr || !s?.signedUrl) return null
   return { url: s.signedUrl }
 }
 

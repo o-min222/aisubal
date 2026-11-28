@@ -83,7 +83,7 @@ export function ProfileCardEditor({
       const d = await res.json().catch(() => ({}))
       if (!res.ok) {
         if (d.field === 'handle') setHandleErr(d.error)
-        throw new Error(d.error || '저장하지 못했어요.')
+        throw new Error(d.error || tx('저장하지 못했어요.'))
       }
       last.current = { name: next.name, handle: next.handle, bio: next.bio, showReal: next.showReal }
       setHandleErr(null)
@@ -107,7 +107,7 @@ export function ProfileCardEditor({
       fd.append('file', f)
       const res = await fetch('/api/profile/avatar', { method: 'POST', body: fd })
       const d = await res.json()
-      if (!res.ok) throw new Error(d.error || '업로드하지 못했어요.')
+      if (!res.ok) throw new Error(d.error || tx('업로드하지 못했어요.'))
       setAvatarUrl(d.url)
       setAvatarOpen(false)
       await saveProfile({ avatar: d.url })
@@ -156,7 +156,7 @@ export function ProfileCardEditor({
         body: JSON.stringify({ ai: strip(nextGroups.ai), subs: strip(nextGroups.subs), skills: skillsPayload(nextGroups.skills), vis: nextVis }),
       })
       const d = await res.json().catch(() => ({}))
-      if (!res.ok) throw new Error(d.error || '저장하지 못했어요.')
+      if (!res.ok) throw new Error(d.error || tx('저장하지 못했어요.'))
       mark('saved')
       router.refresh()
     } catch (e) {

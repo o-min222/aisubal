@@ -22,6 +22,7 @@ import { dedupeParts } from '@/lib/dedupe-parts'
 import { onboardHandle, peekOnboardSecret, stashOnboardSecret } from '@/lib/agent-onboard'
 import { mcpConfigBehind } from '@/lib/mcp/config-version'
 import { toolsCatalogBehind, toolsVersion } from '@/lib/mcp/tools-version'
+import { copyWithToast } from '@/lib/copy-client'
 
 
 type TokenRow = {
@@ -171,7 +172,7 @@ export function AgentList({ ownerName }: { ownerName: string }) {
         }),
       })
       const data = await res.json()
-      if (!res.ok) throw new Error(data.error || '토큰 생성 실패')
+      if (!res.ok) throw new Error(data.error || tx('토큰 생성 실패'))
       setCreated(data.token.token)
       setOpen(false)
       setName('')
@@ -228,7 +229,7 @@ export function AgentList({ ownerName }: { ownerName: string }) {
           <p className="text-sm font-medium text-n-333 mb-2"><T>새 토큰 — 지금 복사해 두세요. 다시 볼 수 없어요.</T></p>
           <div className="flex gap-2 min-w-0">
             <code className="flex-1 min-w-0 text-xs bg-n-fff border border-n-eee rounded-lg px-3 py-2 break-all font-mono">{created}</code>
-            <button className="btn btn-secondary btn-sm" onClick={() => navigator.clipboard.writeText(created).then(() => toast.success(tn('복사했어요.')))} aria-label={tx('복사')}>
+            <button className="btn btn-secondary btn-sm" onClick={() => copyWithToast(created)} aria-label={tx('복사')}>
               <Copy className="w-4 h-4" />
             </button>
           </div>

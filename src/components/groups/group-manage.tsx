@@ -51,9 +51,9 @@ export function MemberControls({ groupId, member, myRole, isSelf }: { groupId: s
             run('role', { action: 'role', memberId: member.id, role }, role === 'owner' ? msg('소유권을 넘겼어요') : tn('{role}(으)로 바꿨어요', { role: tn(ROLE_LABEL[role]) }))
           }}
         >
-          <option value="member">멤버</option>
-          <option value="mod">매니저</option>
-          <option value="owner">소유권 넘기기</option>
+          <option value="member">{tx('멤버')}</option>
+          <option value="mod">{tx('매니저')}</option>
+          <option value="owner">{tx('소유권 넘기기')}</option>
         </select>
       )}
       {removable && (

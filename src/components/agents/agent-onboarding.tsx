@@ -11,6 +11,7 @@ import { clearOnboardSecret, onboardSnippets, peekOnboardSecret, stashOnboardSec
 import type { OnboardingStatus } from '@/lib/data/agent-onboard'
 import { T } from '@/i18n/t'
 import { tn, tx, useLocale } from '@/i18n/client'
+import { copyWithToast } from '@/lib/copy-client'
 
 export type OnboardTarget = {
   id: string
@@ -326,7 +327,7 @@ function CopyLabel({ text, label }: { text: string; label: string }) {
       type="button"
       className="btn btn-secondary min-h-[44px] rounded-full inline-flex"
       onClick={() =>
-        navigator.clipboard.writeText(text).then(() => toast.success(tn('복사했어요.'))).catch(() => toast.error(tn('복사하지 못했어요.')))
+        void copyWithToast(text)
       }
       aria-label={tx('{label} 복사', { label })}
     >

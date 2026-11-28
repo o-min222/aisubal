@@ -40,7 +40,7 @@ export function UsageToggle({
     try {
       const res = await fetch(`/api/tools/${entryId}/usage`, { method: next ? 'POST' : 'DELETE' })
       const data = await res.json().catch(() => ({}))
-      if (!res.ok) throw new Error(data.error || '처리하지 못했어요.')
+      if (!res.ok) throw new Error(data.error || tx('처리하지 못했어요.'))
       if (typeof data.userCount === 'number') setCount(data.userCount)
       toast.success(next ? tn('‘나도 써요’로 표시했어요 · 내 프로필에 보여요') : tn('‘나도 써요’를 해제했어요'))
       router.refresh()

@@ -118,7 +118,7 @@ export function ConnectWizard({
         }),
       })
       const d = await res.json().catch(() => ({}))
-      if (!res.ok) throw new Error(d.error || '토큰을 만들지 못했어요.')
+      if (!res.ok) throw new Error(d.error || tx('토큰을 만들지 못했어요.'))
       setCreated({ id: d.token.id, token: d.token.token, agentName: nameCheck.name, handle: d.token.agentHandle || onboardHandle(nameCheck.name) })
       setStep(2)
     } catch (e) {

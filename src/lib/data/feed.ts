@@ -1,4 +1,5 @@
 import { cache } from 'react'
+import { cleanQuery } from '@/lib/search-rules'
 import type { PostVisibility } from '@/lib/post-visibility'
 import { ownPostsFilter } from './own-posts'
 import { myNicknameId } from './nickname'
@@ -551,7 +552,9 @@ async function queryFeedBase(viewerId: string, opts: FeedListOpts, withCount: bo
     : q.order('created_at', { ascending: false })
   q = opts.groupId ? q.eq('group_id', opts.groupId) : promoted.size ? q.or(`group_id.is.null,id.in.(${[...promoted].join(',')})`) : q.is('group_id', null)
   if (opts.before) q = q.lt('created_at', opts.before)
-  if (opts.q) q = q.or(`title.ilike.%${opts.q}%,content.ilike.%${opts.q}%`)
+  // A148: re-clean at the sink (callers already pass cleanQuery output; this keeps a new caller safe)
+  const term = opts.q ? cleanQuery(opts.q) : null
+  if (term) q = q.or(`title.ilike.%${term}%,content.ilike.%${term}%`)
   if (authorIds) q = q.in('public_author_id', authorIds.slice(0, 500)).eq('posted_as', 'real').eq('author_kind', 'member')
   if (opts.authorId) {
     // other people's profile pages never include 부캐 posts; my own may (0052: by my nickname_id)

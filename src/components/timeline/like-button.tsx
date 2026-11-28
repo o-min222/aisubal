@@ -44,7 +44,7 @@ export function LikeButton({
     try {
       const res = await fetch(endpoint, { method: next ? 'POST' : 'DELETE' })
       const data = await res.json().catch(() => ({}))
-      if (!res.ok) throw new Error(data.error || '좋아요 실패')
+      if (!res.ok) throw new Error(data.error || tx('좋아요 실패'))
       if (typeof data.likeCount === 'number') {
         setMine((m) => m && { ...m, count: data.likeCount })
         if (postId) publishLike(postId, data.likeCount, next)

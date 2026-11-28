@@ -26,13 +26,15 @@ async function searchPeople(q: string, limit: number): Promise<SearchHit[]> {
     const n = q.toLowerCase()
     rows = MOCK_MEMBERS.filter((m) => m.display_name.toLowerCase().includes(n) || (m.handle ?? '').toLowerCase().includes(n)).slice(0, limit) as Row[]
   } else {
+    // A148: re-clean at the sink so a future caller cannot inject PostgREST filter syntax
+    const term = cleanQuery(q) ?? ''
     const supabase = await sb()
     const { data, error } = await supabase
       .from('members')
       .select(MEMBER_PUBLIC_COLUMNS)
       .not('signup_completed_at', 'is', null)
       .eq('is_banned', false)
-      .or(`display_name.ilike.%${q}%,handle.ilike.%${q}%`)
+      .or(`display_name.ilike.%${term}%,handle.ilike.%${term}%`)
       .limit(limit)
     if (error) throw error
     rows = (data || []) as unknown as Row[]

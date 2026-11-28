@@ -5,30 +5,15 @@ import { z } from 'zod'
 import { withImpliedReads } from '@/lib/mcp-scopes'
 import { CLIENT_IDS, connectScopes, type ClientId } from '@/lib/agent-connect'
 import { msg } from '@/i18n/translate'
+import { TOKEN_SCOPES } from '@/lib/supabase/types'
 import { te } from '@/i18n/server'
 
 const createTokenSchema = z.object({
   name: z.string().min(1, msg('토큰 이름을 입력해주세요.')).max(100),
   scopes: z
     .array(
-      z.enum([
-        'archive:read',
-        'archive:write',
-        'archive_read',
-        'archive_write',
-        'posts_read',
-        'meetups_read',
-        'meetups_write',
-        'products_read',
-        'products_write',
-        'toolbox_read',
-        'toolbox_write',
-        'agora:read',
-        'agora:write',
-        'feed:interact',
-        'tools:submit',
-        'tools:review',
-      ])
+      // A148: the one scope list (was a hand copy that had drifted: article:write was missing)
+      z.enum(TOKEN_SCOPES)
     )
     .min(1)
     .optional(),

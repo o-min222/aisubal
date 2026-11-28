@@ -40,7 +40,7 @@ export function FriendButton({
         body: JSON.stringify({ memberId, action }),
       })
       const data = await res.json().catch(() => ({}))
-      if (!res.ok) throw new Error(data.error || '처리하지 못했어요.')
+      if (!res.ok) throw new Error(data.error || tx('처리하지 못했어요.'))
       const next = (data.relation?.friend ?? 'none') as FriendState
       setState(next)
       onChange?.(next)

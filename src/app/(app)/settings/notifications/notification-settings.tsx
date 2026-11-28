@@ -4,13 +4,14 @@ import { useState } from 'react'
 import { toast } from 'sonner'
 import { NOTIFY_CATEGORIES, type NotifyPrefKey, type NotifyPrefs } from '@/lib/notifications'
 import { T } from '@/i18n/t'
+import { msg } from '@/i18n/translate'
 import { tn, tx } from '@/i18n/client'
 
 type Freq = 'daily' | 'weekly' | 'off'
 const FREQS: { id: Freq; label: string }[] = [
-  { id: 'daily', label: '매일' },
-  { id: 'weekly', label: '주 1회' },
-  { id: 'off', label: '끄기' },
+  { id: 'daily', label: msg('매일') },
+  { id: 'weekly', label: msg('주 1회') },
+  { id: 'off', label: msg('끄기') },
 ]
 
 /** Server-backed toggles (0048 notification_prefs): off = no new notifications of that kind. */

@@ -3003,6 +3003,7 @@ const en: Record<string, string> = {
   "읽는 화면은 이미지를 자르지 않고 그대로 보여 줘요. 카드와 공유 미리보기는 아래 칸을 끌어 보이는 위치를 맞춰 주세요.": "The reading page shows the full image, uncropped. Drag the card and share previews below to set what stays in view.",
   "새 도구가 있어요 · 다시 연결": "New tools available · reconnect",
   "저장됨 · 방금": "Saved · just now",
+  "소유권 넘기기": "Transfer ownership",
 }
 
 
