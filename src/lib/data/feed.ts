@@ -624,6 +624,7 @@ function articleToTimeline(a: ArticleCard): TimelinePost {
       coverPath: a.coverPath,
       readingSec: a.readingSec,
       subtitle: a.subtitle,
+      agent: a.agent ?? null,
     },
   }
 }

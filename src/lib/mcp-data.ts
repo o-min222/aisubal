@@ -94,6 +94,15 @@ export function dataErrorMessage(raw: string | null | undefined): string {
   if (m.includes('api_invalid:avatar_image')) return 'Could not store that image.'
   if (m.includes('api_nickname_missing')) return '부캐 프로필은 더 이상 쓸 수 없어요.'
   if (m.includes('api_invalid')) return `Invalid input (${m.split('api_invalid:')[1]?.split(/\s/)[0] || 'payload'}).`
+  if (m.includes('not_writer')) return 'The owner is not an article writer (or publishing is off), so this cannot be published. Save it as a draft (publish=false) or ask them to enable writer permission.'
+  if (m.includes('empty_article')) return 'title and body cannot be empty when publishing.'
+  if (m.includes('publish_rate_limited')) return 'Publish limit: max 5 first publishes per 24 hours for this owner. Try again tomorrow, or keep it as a draft.'
+  if (m.includes('bad_title')) return 'title must be 1-120 characters.'
+  if (m.includes('body_too_long')) return 'body must be 100000 characters or fewer.'
+  if (m.includes('bad_series')) return 'seriesId must be a series the owner created.'
+  if (m.includes('not_found')) return 'Not found.'
+  if (m.includes('forbidden')) return 'You can only edit or delete articles you wrote.'
+  if (m.includes('not_member')) return 'The owner account cannot write articles right now.'
   return 'Request failed.'
 }
 
@@ -408,6 +417,52 @@ export async function handleDataTool(
         if (isMock()) return { notice: HUMAN_UNTRUSTED_NOTICE, articles: [] }
         const d = (await call('mcp_article_search', { p_q: query, p_limit: num(args.limit, 20, 50) })) as Record<string, unknown>
         return { notice: HUMAN_UNTRUSTED_NOTICE, ...d }
+      }
+      case 'article_create': {
+        const title = str(args.title)
+        const body = str(args.body) ?? ''
+        if (!title || title.length > 120) return { error: 'title must be 1-120 characters.' }
+        if (body.length > 100000) return { error: 'body must be 100000 characters or fewer.' }
+        const seriesId = str(args.seriesId)
+        if (seriesId && !isUuid(seriesId)) return { error: 'seriesId must be a UUID' }
+        if (isMock()) {
+          const id = 'mock-article-' + Date.now().toString(36)
+          const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 80) || 'article'
+          const published = args.publish === true
+          return { ok: true, id, slug, status: published ? 'published' : 'draft', title, subtitle: str(args.subtitle) || null, url: '/articles/' + slug, mock: true }
+        }
+        return (await call('mcp_article_create', {
+          p_title: title,
+          p_subtitle: str(args.subtitle),
+          p_body: body,
+          p_publish: args.publish === true,
+          p_series_id: seriesId || null,
+        })) as Record<string, unknown>
+      }
+      case 'article_edit': {
+        const id = str(args.id)
+        const slug = str(args.slug)
+        if (id ? !isUuid(id) : !slug) return { error: 'id (UUID) or slug is required' }
+        const title = str(args.title)
+        const body = args.body == null ? null : str(args.body)
+        if (title && title.length > 120) return { error: 'title must be 1-120 characters.' }
+        if (body != null && body.length > 100000) return { error: 'body must be 100000 characters or fewer.' }
+        if (isMock()) return { ok: true, id: id || 'mock-article', slug: slug || 'article', mock: true }
+        return (await call('mcp_article_edit', {
+          p_id: id || null,
+          p_slug: slug || null,
+          p_title: title || null,
+          p_subtitle: args.subtitle == null ? null : str(args.subtitle),
+          p_body: body,
+          p_publish: args.publish === true,
+        })) as Record<string, unknown>
+      }
+      case 'article_delete': {
+        const id = str(args.id)
+        const slug = str(args.slug)
+        if (id ? !isUuid(id) : !slug) return { error: 'id (UUID) or slug is required' }
+        if (isMock()) return { ok: true, id: id || 'mock-article', deleted: true, mock: true }
+        return (await call('mcp_article_delete', { p_id: id || null, p_slug: slug || null })) as Record<string, unknown>
       }
       case 'create_post':
         return {

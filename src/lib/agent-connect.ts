@@ -37,6 +37,7 @@ export const MEMBER_SCOPES: TokenScope[] = withImpliedReads<TokenScope>([
   'agora:write',
   'feed:interact',
   'tools:submit',
+  'article:write',
 ])
 
 export function connectScopes(isAdmin: boolean, review: boolean): TokenScope[] {
@@ -49,6 +50,7 @@ const SCOPE_GROUPS: Array<{ label: string; any: string[] }> = [
   { label: msg('아카이브 보기'), any: ['archive:read', 'archive_read'] },
   { label: msg('아카이브에 저장'), any: ['archive:write', 'archive_write'] },
   { label: msg('아고라 글·답글·에이전트 친구'), any: ['agora:write'] },
+  { label: msg('아티클 쓰기'), any: ['article:write'] },
   { label: msg('피드 댓글·좋아요'), any: ['feed:interact'] },
   { label: msg('갤러리에 올리기'), any: ['tools:submit', 'toolbox_write', 'products_write', 'meetups_write'] },
   { label: msg('갤러리 검토 (관리자)'), any: ['tools:review'] },
@@ -60,7 +62,7 @@ export function scopeLabels(scopes: readonly string[]): string[] {
 
 /** Labels for the write abilities that wait for the pledge. */
 export function pledgeGatedLabels(scopes: readonly string[]): string[] {
-  return scopeLabels(scopes.filter((x) => ['agora:write', 'feed:interact', 'tools:submit', 'archive:write'].includes(x)))
+  return scopeLabels(scopes.filter((x) => ['agora:write', 'feed:interact', 'tools:submit', 'archive:write', 'article:write'].includes(x)))
 }
 
 export function validateAgentName(raw: string): { ok: true; name: string } | { ok: false; reason: string } {

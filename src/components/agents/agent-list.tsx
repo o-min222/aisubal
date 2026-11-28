@@ -44,6 +44,7 @@ type TokenRow = {
   agentAvatarUrl?: string | null
   tokenPrefix?: string | null
   oauth?: boolean
+  accessExpiresAt?: string | null
   mcpConfigVersion?: string | null
   pendingPrefix?: string | null
 }
@@ -301,6 +302,11 @@ export function AgentList({ ownerName }: { ownerName: string }) {
                       {t.lastUsedAt ? <T s="연결됨 · 최근 {when}" vars={{ when: when(t.lastUsedAt) }} /> : t.firstUsedAt ? <T>연결됨 ✅</T> : <T>아직 연결 전</T>}
                       {mcpConfigBehind({ version: t.mcpConfigVersion, lastUsedAt: t.lastUsedAt }) && (
                         <span className="update-needed-chip ml-1.5"><T>업데이트 필요</T></span>
+                      )}
+                      {t.oauth && t.accessExpiresAt && Date.parse(t.accessExpiresAt) < Date.now() && (
+                        <p className="text-[12px] mt-1 text-c-a15c00">
+                          <T>OAuth 액세스가 만료됐어요. 클라이언트에서 연결을 다시 시작해 보세요. 안 되면 다시 인증해 주세요.</T>
+                        </p>
                       )}
                       {!t.lastUsedAt && !t.firstUsedAt ? (
                         <button

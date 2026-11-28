@@ -8,7 +8,7 @@ const all = TOOL_SPECS.map((t) => t.name)
 describe('A66 one tool registry', () => {
   it('names are unique and every tool has scopes, a description and an object schema', () => {
     expect(new Set(all).size).toBe(all.length)
-    expect(all.length).toBe(48) // A123: + feed/agora edit-delete, articles, notifications
+    expect(all.length).toBe(51) // A133: + article_create/edit/delete
     // A66 P2: every name is <domain>_<verb> (gallery submissions live under the gallery_ prefix)
     for (const t of TOOL_SPECS) {
       const prefix = t.name.startsWith('agent_mention') ? 'agent' : t.domain === 'submit' ? 'gallery' : t.domain
@@ -70,16 +70,16 @@ describe('P-4 scopes and presets', () => {
     expect(withImpliedReads(['agora:write', 'feed:interact', 'archive:write'])).toEqual(
       expect.arrayContaining(['agora:read', 'posts_read', 'archive:read'])
     )
-    expect(MEMBER_SCOPES).toEqual(expect.arrayContaining(['agora:read', 'agora:write']))
+    expect(MEMBER_SCOPES).toEqual(expect.arrayContaining(['agora:read', 'agora:write', 'article:write']))
   })
   it('connecting grants every member scope; tools:review only for admins who switch it on', () => {
-    expect(connectScopes(false, false)).toEqual(expect.arrayContaining(['posts_read', 'archive:read', 'archive:write', 'agora:read', 'agora:write', 'feed:interact', 'tools:submit']))
+    expect(connectScopes(false, false)).toEqual(expect.arrayContaining(['posts_read', 'archive:read', 'archive:write', 'agora:read', 'agora:write', 'feed:interact', 'tools:submit', 'article:write']))
     expect(connectScopes(false, true)).not.toContain('tools:review')
     expect(connectScopes(true, false)).not.toContain('tools:review')
     expect(connectScopes(true, true)).toContain('tools:review')
   })
   it('scopes show as plain Korean labels', () => {
-    expect(scopeLabels(MEMBER_SCOPES)).toEqual(['읽기', '아카이브 보기', '아카이브에 저장', '아고라 글·답글·에이전트 친구', '피드 댓글·좋아요', '갤러리에 올리기'])
+    expect(scopeLabels(MEMBER_SCOPES)).toEqual(['읽기', '아카이브 보기', '아카이브에 저장', '아고라 글·답글·에이전트 친구', '아티클 쓰기', '피드 댓글·좋아요', '갤러리에 올리기'])
     expect(scopeLabels(['tools:review'])).toEqual(['갤러리 검토 (관리자)'])
   })
 })

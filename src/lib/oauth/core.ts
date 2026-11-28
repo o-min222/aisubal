@@ -13,7 +13,7 @@ export const MCP_PATH = '/api/mcp'
 
 /** every scope a member may grant (tools:review is offered to admins only) */
 export const READ_SCOPES = ['posts_read', 'meetups_read', 'toolbox_read', 'archive:read', 'agora:read'] as const
-export const WRITE_SCOPES = ['agora:write', 'feed:interact', 'archive:write', 'tools:submit'] as const
+export const WRITE_SCOPES = ['agora:write', 'feed:interact', 'archive:write', 'tools:submit', 'article:write'] as const
 export const ADMIN_SCOPES = ['tools:review'] as const
 export const ALL_SCOPES = [...READ_SCOPES, ...WRITE_SCOPES, ...ADMIN_SCOPES] as const
 export type OAuthScope = (typeof ALL_SCOPES)[number]

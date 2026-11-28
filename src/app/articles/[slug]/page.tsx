@@ -5,13 +5,13 @@ import { getUserState } from '@/lib/auth'
 import { getArticle, getArticleSharePreview, listArticleComments } from '@/lib/data/articles'
 import { SITE_ORIGIN } from '@/lib/invite-share'
 import { shareCanonicalUrl, shareMeta } from '@/lib/share-teaser'
+import { ArticleByline } from '@/components/articles/article-byline'
 import { ArticleMarkdown } from '@/components/articles/article-markdown'
 import { ArticleReaderChrome } from '@/components/articles/article-reader-chrome'
 import { ArticleActions } from '@/components/articles/article-actions'
 import { ArticleComments } from '@/components/articles/article-comments'
 import { T } from '@/i18n/t'
 import { getT } from '@/i18n/server'
-import { UserAvatar } from '@/components/user-avatar'
 import { articleHref, articleSeriesHref, formatReadingTime, isReservedArticleSlug, isPublicArticlePath, articleImageSrc, articleDocumentTitle } from '@/lib/article-rules'
 
 type Props = { params: Promise<{ slug: string }> }
@@ -65,10 +65,12 @@ export default async function ArticleReadPage({ params }: Props) {
         <h1 className="article-read-title">{article.title}</h1>
         {article.subtitle && <p className="article-read-sub">{article.subtitle}</p>}
         <div className="article-read-byline">
-          <Link href={signedIn ? `/members/${article.author.id}` : next} className="article-read-author">
-            <UserAvatar id={article.author.id} name={article.author.name} avatarUrl={article.author.avatarUrl} size="sm" />
-            <span>{article.author.name}</span>
-          </Link>
+          <ArticleByline
+            author={article.author}
+            agent={article.agent}
+            href={signedIn ? `/members/${article.author.id}` : next}
+            className="article-read-author"
+          />
           <span className="text-n-888">
             {date}
             {article.readingSec > 0 ? ` · ${formatReadingTime(article.readingSec, t)}` : ''}

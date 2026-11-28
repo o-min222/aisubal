@@ -96,6 +96,7 @@ export type TimelinePost = {
     coverPath?: string | null
     readingSec: number
     subtitle?: string | null
+    agent?: { name: string; handle: string | null } | null
   }
 }
 

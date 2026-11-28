@@ -12,6 +12,8 @@ export class ArticleError extends Error {
 }
 
 export type ArticleAuthor = { id: string; name: string; handle: string | null; avatarUrl: string | null }
+/** Present when an agent wrote the article on the owner's behalf. */
+export type ArticleAgent = { name: string; handle: string | null }
 export type ArticleSeriesBrief = {
   id: string
   slug: string
@@ -45,6 +47,7 @@ export type ArticleCard = {
   episodeNo: number | null
   seriesId: string | null
   author: ArticleAuthor
+  agent?: ArticleAgent | null
   series: ArticleSeriesBrief | null
   body?: string | null
   isMine?: boolean

@@ -398,6 +398,7 @@ export type TokenScope =
   | 'feed:interact'
   | 'tools:submit'
   | 'tools:review'
+  | 'article:write'
 
 export type UserState =
   | { type: 'unauthenticated' }

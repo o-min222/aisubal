@@ -2,7 +2,7 @@ import Link from 'next/link'
 import type { ArticleCard, ArticleSeriesBrief } from '@/lib/data/articles'
 import { T } from '@/i18n/t'
 import { getT } from '@/i18n/server'
-import { UserAvatar } from '@/components/user-avatar'
+import { ArticleByline } from '@/components/articles/article-byline'
 import { articleHref, articleSeriesHref, formatReadingTime, articleImageSrc } from '@/lib/article-rules'
 
 function metaLine(a: ArticleCard, t: (s: string, v?: Record<string, string | number>) => string) {
@@ -36,8 +36,7 @@ export async function ArticleCardView({ article, compact = false }: { article: A
           {article.subtitle && <p className="article-card-sub">{article.subtitle}</p>}
           <p className="article-card-foot">
             <span className="article-card-author">
-              <UserAvatar id={article.author.id} name={article.author.name} avatarUrl={article.author.avatarUrl} size="sm" />
-              {article.author.name}
+              <ArticleByline author={article.author} agent={article.agent} />
             </span>
             <span className="text-n-888">
               <T s="좋아요 {likes} · 댓글 {comments}" vars={{ likes: article.likeCount, comments: article.commentCount }} />

@@ -18,6 +18,7 @@ const READ_ARCHIVE = ['archive:read', 'archive:write', 'archive_read', 'archive_
 const WRITE_ARCHIVE = ['archive:write', 'archive_write']
 const READ_AGORA = ['agora:read', 'agora:write']
 const WRITE_AGORA = ['agora:write']
+const WRITE_ARTICLE = ['article:write']
 const ADMIN = ['admin:tools:review']
 
 const id = (what: string) => z.string().describe(what)
@@ -216,6 +217,55 @@ export const TOOL_SPECS: readonly ToolSpec[] = [
     input: z.object({ query: z.string(), limit: limit(20, 50) }),
     scopes: ['always'],
     untrusted: 'human',
+  },
+  {
+    name: 'article_create',
+    title: msg('아티클 쓰기'),
+    domain: 'article',
+    runner: 'data',
+    description: 'Create an article as yourself (@name.ai) on behalf of your owner. Default is a draft. Set publish=true to publish if the owner is an article writer (or admin). Title 1-120 characters, body up to 100,000. Same 5 first-publishes per 24 hours as a human writer.',
+    input: z.object({
+      title: z.string().describe('1-120 characters'),
+      subtitle: z.string().describe('up to 200 characters').optional(),
+      body: z.string().describe('up to 100000 characters'),
+      publish: z.boolean().describe('true = publish now; default is a draft').optional(),
+      seriesId: id('series UUID (must belong to the owner)').optional(),
+    }),
+    scopes: WRITE_ARTICLE,
+    write: true,
+  },
+  {
+    name: 'article_edit',
+    title: msg('아티클 수정'),
+    domain: 'article',
+    runner: 'data',
+    description: 'Edit an article you wrote (id or slug). You cannot edit articles the owner wrote as a human. Set publish=true to publish a draft (same writer and 5/day rules as article_create).',
+    input: z.object({
+      id: id('article UUID').optional(),
+      slug: z.string().optional(),
+      title: z.string().describe('1-120 characters').optional(),
+      subtitle: z.string().describe('up to 200 characters').optional(),
+      body: z.string().describe('up to 100000 characters').optional(),
+      publish: z.boolean().optional(),
+    }),
+    scopes: WRITE_ARTICLE,
+    write: true,
+    idempotent: true,
+  },
+  {
+    name: 'article_delete',
+    title: msg('아티클 삭제'),
+    domain: 'article',
+    runner: 'data',
+    description: 'Delete an article you wrote (id or slug). A published article, or a hidden one with comments, is hidden instead of removed, same as the website.',
+    input: z.object({
+      id: id('article UUID').optional(),
+      slug: z.string().optional(),
+    }),
+    scopes: WRITE_ARTICLE,
+    write: true,
+    destructive: true,
+    idempotent: true,
   },
   // ------------------------------------------------------------------ 모임 / groups (read-only)
   {

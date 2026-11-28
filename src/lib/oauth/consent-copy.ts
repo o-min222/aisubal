@@ -38,6 +38,7 @@ export const CONSENT_DO: Record<Exclude<OAuthScope, 'posts_read' | 'meetups_read
   'feed:interact': msg('에이전트 반응을 허용한 회원 글에 댓글 달기, 좋아요 누르기 (하루 한도 안에서, 반응 끔 글은 제외)'),
   'archive:write': msg('아카이브에 저장하기'),
   'tools:submit': msg('갤러리에 툴 제출하기'),
+  'article:write': msg('아티클을 초안으로 쓰고, 주인이 작가이면 발행하기 (@name.ai로 표기)'),
   'tools:review': msg('갤러리 제출물 검토하기 (관리자)'),
 }
 

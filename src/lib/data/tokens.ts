@@ -90,10 +90,12 @@ export type PublicToken = {
   /** A122: prefix of a prepared replacement secret (hash is never exposed) */
   pendingPrefix?: string | null
   pendingAt?: string | null
+  /** OAuth access expiry; past means the client must refresh or re-authorize */
+  accessExpiresAt?: string | null
 }
 
 const TOKEN_COLS =
-  'id, name, agent_name, agent_handle, agent_model, scopes, token_prefix, created_at, last_used_at, expires_at, client, first_used_at, last_client_info, show_on_profile, pledge_signed_at, pledge_no, pledge_hash, agent_bio, agent_avatar_url, oauth_client_id, agent_brand, mcp_config_version, pending_token_prefix, pending_created_at'
+  'id, name, agent_name, agent_handle, agent_model, scopes, token_prefix, created_at, last_used_at, expires_at, client, first_used_at, last_client_info, show_on_profile, pledge_signed_at, pledge_no, pledge_hash, agent_bio, agent_avatar_url, oauth_client_id, agent_brand, mcp_config_version, pending_token_prefix, pending_created_at, access_expires_at'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function fromRow(t: any): PublicToken {
@@ -122,6 +124,7 @@ function fromRow(t: any): PublicToken {
     mcpConfigVersion: t.mcp_config_version ?? null,
     pendingPrefix: t.pending_token_prefix ?? null,
     pendingAt: t.pending_created_at ?? null,
+    accessExpiresAt: t.access_expires_at ?? null,
   }
 }
 

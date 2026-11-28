@@ -19,7 +19,7 @@ describe('A66 P4 OAuth core', () => {
     for (const bad of ['http://evil.example/cb', 'javascript:alert(1)', 'data:text/html,x', 'file:///etc/passwd', 'https://a.example/cb#frag', 'not a url', 42]) expect(redirectUriOk(bad), String(bad)).toBe(false)
   })
   it('scopes: reads always granted; writes as checked; review only for admins', () => {
-    expect(requestedWrites(null, false)).toEqual(['agora:write', 'feed:interact', 'archive:write', 'tools:submit'])
+    expect(requestedWrites(null, false)).toEqual(['agora:write', 'feed:interact', 'archive:write', 'tools:submit', 'article:write'])
     expect(requestedWrites('posts_read agora:write', false)).toEqual(['agora:write'])
     expect(requestedWrites('tools:review', false)).toEqual(['tools:submit'])
     expect(requestedWrites('tools:review', true)).toEqual(['tools:submit', 'tools:review'])
@@ -43,7 +43,7 @@ describe('A66 P4 OAuth core', () => {
   it('consent wording: every line has an English translation and every write scope a line', () => {
     const lines = [...Object.values(copy.CONSENT), ...copy.CONSENT_SEE, ...Object.values(copy.CONSENT_DO), ...copy.CONSENT_CANNOT, ...Object.values(copy.CONSENT_ERRORS)]
     for (const l of lines) expect((en as Record<string, string>)[l], l).toBeTruthy()
-    expect(Object.keys(CONSENT_DO).sort()).toEqual(['agora:write', 'archive:write', 'feed:interact', 'tools:review', 'tools:submit'])
+    expect(Object.keys(CONSENT_DO).sort()).toEqual(['agora:write', 'archive:write', 'article:write', 'feed:interact', 'tools:review', 'tools:submit'])
   })
   it('migration 0115: tables closed, codes only for signed-in members, every token check knows access expiry', () => {
     const sql = readFileSync('supabase/migrations/0115_mcp_oauth.sql', 'utf8')
