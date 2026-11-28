@@ -2,7 +2,7 @@ import { notFound, redirect } from 'next/navigation'
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { getUserState } from '@/lib/auth'
-import { getArticle, getArticleSharePreview, listArticleComments } from '@/lib/data/articles'
+import { getArticle, getArticleSharePreviewCached as getArticleSharePreview, listArticleComments } from '@/lib/data/articles'
 import { SITE_ORIGIN } from '@/lib/invite-share'
 import { shareCanonicalUrl, shareMeta } from '@/lib/share-teaser'
 import { ArticleByline } from '@/components/articles/article-byline'
@@ -11,6 +11,7 @@ import { ArticleReaderChrome } from '@/components/articles/article-reader-chrome
 import { ArticleActions } from '@/components/articles/article-actions'
 import { ArticleComments } from '@/components/articles/article-comments'
 import { ArticleOwnerMenu } from '@/components/articles/article-owner-menu'
+import { ArticleShareButton } from '@/components/articles/article-share-button'
 import { ArticleReadCover } from '@/components/articles/article-framed-image'
 import { T } from '@/i18n/t'
 import { getT } from '@/i18n/server'
@@ -48,6 +49,9 @@ export default async function ArticleReadPage({ params }: Props) {
   if (article.canonicalSlug && article.canonicalSlug !== slug) redirect(articleHref(article.canonicalSlug))
 
   const t = await getT()
+  // A140: the share sheet may carry the title only when the link preview does (no PII)
+  const sharePreview = article.status === 'published' ? await getArticleSharePreview(article.slug).catch(() => null) : null
+  const shareTeaser = sharePreview?.title ?? null
   const member = signedIn ? state.member : null
   const comments = signedIn ? await listArticleComments(article.id).catch(() => []) : []
   const cover = articleImageSrc(article.coverPath)
@@ -78,6 +82,7 @@ export default async function ArticleReadPage({ params }: Props) {
             {article.readingSec > 0 ? ` · ${formatReadingTime(article.readingSec, t)}` : ''}
             {article.editedAt ? ` · ${t('수정됨')}` : ''}
           </span>
+          {article.status === 'published' && <ArticleShareButton slug={article.slug} teaser={shareTeaser} />}
           {article.isMine && <ArticleOwnerMenu articleId={article.id} slug={article.slug} published={article.status === 'published'} />}
         </div>
         {cover && <ArticleReadCover src={cover} />}
@@ -90,7 +95,7 @@ export default async function ArticleReadPage({ params }: Props) {
                 <p className="article-read-cta-copy"><T>나머지 본문은 멤버에게만 열려 있어요. 로그인하거나 초대를 요청해 주세요.</T></p>
                 <div className="flex flex-wrap gap-2 justify-center">
                   <Link href={`/?next=${encodeURIComponent(next)}`} className="btn btn-primary"><T>로그인</T></Link>
-                  <Link href={`/?next=${encodeURIComponent(next)}#login`} className="btn btn-secondary"><T>초대 요청</T></Link>
+                  <Link href="/join?from=article" className="btn btn-secondary"><T>초대 요청</T></Link>
                 </div>
               </div>
             </div>
@@ -109,6 +114,7 @@ export default async function ArticleReadPage({ params }: Props) {
             title={article.title}
             excerpt={article.subtitle}
             slug={article.slug}
+            shareTeaser={shareTeaser}
           />
         )}
         {!article.truncated && <ArticleComments articleId={article.id} initial={comments} signedIn={signedIn} />}

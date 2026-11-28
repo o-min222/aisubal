@@ -6,6 +6,7 @@ import { toast } from 'sonner'
 import { tn } from '@/i18n/client'
 import { SubscribeButton } from './subscribe-button'
 import { ArchiveButton } from '@/components/archive/archive-button'
+import { ArticleShareButton } from './article-share-button'
 
 export function ArticleActions({
   articleId,
@@ -19,6 +20,7 @@ export function ArticleActions({
   title,
   excerpt,
   slug,
+  shareTeaser,
 }: {
   articleId: string
   seriesId: string | null
@@ -31,6 +33,7 @@ export function ArticleActions({
   title: string
   excerpt?: string | null
   slug: string
+  shareTeaser?: string | null
 }) {
   const [liked, setLiked] = useState(likedByMe)
   const [likes, setLikes] = useState(likeCount)
@@ -64,6 +67,7 @@ export function ArticleActions({
         <MessageCircle className="w-4 h-4" />
         <span className="tabular-nums">{commentCount}</span>
       </a>
+      <ArticleShareButton slug={slug} teaser={shareTeaser} variant="pill" />
       {seriesId && signedIn && !isMine && <SubscribeButton seriesId={seriesId} initial={subscribed} />}
       {signedIn && (
         <ArchiveButton kind="article" refId={articleId} hint={{ title, excerpt: excerpt ?? undefined, url: `/articles/${slug}` }} />

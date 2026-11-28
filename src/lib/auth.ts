@@ -1,4 +1,5 @@
 import { cache } from 'react'
+import { cookies } from 'next/headers'
 import { createClient } from '@/lib/supabase/server'
 import { verifiedUser } from '@/lib/supabase/verified-user'
 import type { Member, WaitlistEntry, UserState } from '@/lib/supabase/types'
@@ -43,6 +44,8 @@ const DEV_MEMBER: Member = {
 // repeating the Supabase auth + member round trips.
 export const getUserState = cache(async function getUserState(): Promise<UserState> {
   if (isMock()) {
+    // dev only (DEV_BYPASS_AUTH signs everyone in): cookie dev_view=anon shows the signed-out experience, e.g. a shared article link
+    if (process.env.NODE_ENV !== 'production' && (await cookies()).get('dev_view')?.value === 'anon') return { type: 'unauthenticated' }
     const saved = mockProfileOf(DEV_MEMBER.id)
     const dev = { ...DEV_MEMBER, feedback_allowed: mockFeedbackPicker(), article_writer: true, article_can_publish: true, agent_interaction_default: mockAgentInteractionDefault(), post_visibility_default: mockPostVisibilityDefault() }
     return {

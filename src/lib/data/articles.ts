@@ -1,6 +1,6 @@
 import { cache } from 'react'
 import { createAnonClient } from '@/lib/supabase/anon'
-import { articleTeaserBody, canPublishArticle, firstInlineImagePath, parseArticleImageFocus, type ArticleImageFocus } from '@/lib/article-rules'
+import { articleGateTeaser, canPublishArticle, firstInlineImagePath, parseArticleImageFocus, type ArticleImageFocus } from '@/lib/article-rules'
 import { MOCK_MEMBERS } from '@/lib/mock-data'
 import { sb, isMock } from './client'
 
@@ -281,8 +281,8 @@ export async function getArticle(slug: string, opts: { teaser?: boolean } = {}):
     if (!a) return null
     if (opts.teaser) {
       if (!st.publicTeaser || a.status !== 'published') return null
-      const teaser = articleTeaserBody(a.body ?? '')
-      return { ...a, body: teaser, truncated: (a.body ?? '').length > teaser.length, likedByMe: false, isMine: false }
+      const teaser = articleGateTeaser(a.body ?? '')
+      return { ...a, body: teaser, truncated: (a.body ?? '').trim().length > teaser.length, likedByMe: false, isMine: false }
     }
     if (!mockVisible(a, 'dev-user-id')) return null
     return { ...a, isMine: a.author.id === 'dev-user-id', likedByMe: st.likes.has(`dev-user-id:${a.id}`), truncated: false }
@@ -323,6 +323,8 @@ export async function getArticleSharePreview(slug: string): Promise<ArticleShare
   if (error) return null
   return (data as ArticleSharePreview | null) ?? null
 }
+
+export const getArticleSharePreviewCached = cache(getArticleSharePreview)
 
 export async function listArticles(tab: string, page = 1, pageSize = 20): Promise<{ items: unknown[]; total: number; tab: string }> {
   if (isMock()) {

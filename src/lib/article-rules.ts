@@ -104,6 +104,18 @@ export function formatReadingTime(sec: number, t: (s: string, vars?: Record<stri
   return t('약 {n}분', { n: min })
 }
 
+/** Share of the body a non-member may read before the join gate (A140). */
+export const ARTICLE_GATE_SHARE = 0.6
+
+/**
+ * A140: what a non-member sees: at most ARTICLE_TEASER_MAX characters AND at most 60% of the body, so there is
+ * always a rest to unlock. Mirrors article__gate_teaser (0156).
+ */
+export function articleGateTeaser(body: string | null | undefined): string {
+  const len = (body ?? '').replace(/\r\n/g, '\n').trim().length
+  return articleTeaserBody(body, Math.min(ARTICLE_TEASER_MAX, Math.floor(len * ARTICLE_GATE_SHARE)))
+}
+
 /**
  * Server-side reading teaser: first `max` characters of the markdown, broken at a
  * paragraph or sentence when possible. Never returns the rest of the body.

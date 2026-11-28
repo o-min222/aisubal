@@ -135,6 +135,20 @@ function parseSlotFocus(o: Record<string, unknown>): { focus: ArticleImageFocus 
   return { focus: null, focusSet: false }
 }
 
+/**
+ * A140: published articles carry a ready-to-share absolute link. Anyone can open it: non-members read a preview
+ * and are asked to join for the rest (the public teaser RPC never returns the full body). Drafts and hidden
+ * articles have no shareUrl.
+ */
+export function withArticleShareUrl<T extends Record<string, unknown>>(d: T, origin: string): T {
+  const one = (a: Record<string, unknown>): Record<string, unknown> =>
+    a && typeof a.slug === 'string' && a.slug && (a.status === undefined || a.status === 'published')
+      ? { ...a, shareUrl: `${origin}/articles/${encodeURIComponent(a.slug)}` }
+      : a
+  const out: Record<string, unknown> = Array.isArray(d.articles) ? { ...d, articles: (d.articles as Record<string, unknown>[]).map(one) } : one(d)
+  return out as T
+}
+
 /** profile_set_avatar url: why the server refused to download it */
 const AVATAR_FETCH_ERRORS: Record<string, string> = {
   scheme_not_allowed: 'url must be https.',
@@ -493,7 +507,7 @@ export async function handleDataTool(
       case 'article_list': {
         if (isMock()) return { notice: HUMAN_UNTRUSTED_NOTICE, articles: [] as unknown[], total: 0 }
         const d = (await call('mcp_article_list', { p_limit: num(args.limit, 20, 50), p_offset: num(args.offset, 0, 10_000) })) as Record<string, unknown>
-        return { notice: HUMAN_UNTRUSTED_NOTICE, ...d }
+        return { notice: HUMAN_UNTRUSTED_NOTICE, ...withArticleShareUrl(d, origin) }
       }
       case 'article_get': {
         const slug = str(args.slug)
@@ -501,14 +515,14 @@ export async function handleDataTool(
         if (isMock()) return { error: 'not_found' }
         const d = (await call('mcp_article_get', { p_slug: slug })) as Record<string, unknown>
         if (d && d.error) return d
-        return { notice: HUMAN_UNTRUSTED_NOTICE, ...d }
+        return { notice: HUMAN_UNTRUSTED_NOTICE, ...withArticleShareUrl(d, origin) }
       }
       case 'article_search': {
         const query = str(args.query)
         if (!query || query.length < 2) return { articles: [] }
         if (isMock()) return { notice: HUMAN_UNTRUSTED_NOTICE, articles: [] }
         const d = (await call('mcp_article_search', { p_q: query, p_limit: num(args.limit, 20, 50) })) as Record<string, unknown>
-        return { notice: HUMAN_UNTRUSTED_NOTICE, ...d }
+        return { notice: HUMAN_UNTRUSTED_NOTICE, ...withArticleShareUrl(d, origin) }
       }
       case 'article_create': {
         const title = str(args.title)
@@ -527,7 +541,7 @@ export async function handleDataTool(
         if (cover && 'error' in cover) return cover
         const thumb = await resolveArticleImageSlot(call, origin, args.thumbnail, 'thumbnail', false)
         if (thumb && 'error' in thumb) return thumb
-        return (await call('mcp_article_create', {
+        const created = (await call('mcp_article_create', {
           p_title: title,
           p_subtitle: str(args.subtitle),
           p_body: body,
@@ -537,7 +551,8 @@ export async function handleDataTool(
           p_thumbnail_id: thumb && thumb.set ? thumb.set : null,
           p_cover_focus: cover && cover.focusSet ? cover.focus : null,
           p_thumbnail_focus: thumb && thumb.focusSet ? thumb.focus : null,
-        })) as Record<string, unknown>
+        }))
+        return withArticleShareUrl(created as Record<string, unknown>, origin)
       }
       case 'article_edit': {
         const id = str(args.id)
@@ -552,7 +567,7 @@ export async function handleDataTool(
         if (cover && 'error' in cover) return cover
         const thumb = await resolveArticleImageSlot(call, origin, args.thumbnail, 'thumbnail', true)
         if (thumb && 'error' in thumb) return thumb
-        return (await call('mcp_article_edit', {
+        const edited = (await call('mcp_article_edit', {
           p_id: id || null,
           p_slug: slug || null,
           p_title: title || null,
@@ -567,7 +582,8 @@ export async function handleDataTool(
           p_cover_focus_set: Boolean(cover && cover.focusSet),
           p_thumbnail_focus: thumb && thumb.focusSet ? thumb.focus : null,
           p_thumbnail_focus_set: Boolean(thumb && thumb.focusSet),
-        })) as Record<string, unknown>
+        }))
+        return withArticleShareUrl(edited as Record<string, unknown>, origin)
       }
       case 'article_delete': {
         const id = str(args.id)
